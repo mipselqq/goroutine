@@ -1,0 +1,31 @@
+version: "2"
+
+linters:
+  disable-all: true
+  enable:
+  - errcheck
+  - staticcheck
+  - govet
+  - ineffassign
+  - bodyclose
+  - revive
+  - unused
+  - gocritic
+  - prealloc
+
+  settings:
+    govet:
+      check-shadowing: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
