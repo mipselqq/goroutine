@@ -2,12 +2,12 @@ package handlers
 
 import "net/http"
 
-type HealthHandler struct {}
+type Health struct {}
 
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
+func NewHealth() *Health {
+	return &Health{}
 }
 
-func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
+func (h *Health) Health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

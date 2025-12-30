@@ -11,7 +11,7 @@ func TestHealthHandler(t *testing.T) {
 	// Arrange
 	req := httptest.NewRequest("GET", "/health", nil)
 	rr := httptest.NewRecorder()
-	handler := handlers.NewHealthHandler()
+	handler := handlers.NewHealth()
 
 	// Act
 	handler.Health(rr, req)
