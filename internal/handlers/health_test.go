@@ -9,12 +9,14 @@ import (
 
 func TestHealthHandler(t *testing.T) {
 	// Arrange
-	r := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", nil)
 	rr := httptest.NewRecorder()
-
 	handler := handlers.NewHealthHandler()
-	handler.Health(rr, r)
 
+	// Act
+	handler.Health(rr, req)
+
+	// Assert
 	if rr.Code != http.StatusOK {
 		t.Errorf("handler returned %v, expected %v", rr.Code, http.StatusOK)
 	}
