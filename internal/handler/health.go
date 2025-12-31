@@ -1,8 +1,8 @@
-package handlers
+package handler
 
 import "net/http"
 
-type Health struct {}
+type Health struct{}
 
 func NewHealth() *Health {
 	return &Health{}
