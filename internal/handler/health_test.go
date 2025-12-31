@@ -1,20 +1,23 @@
-package handlers_test
+package handler_test
 
 import (
-	"go-todo/internal/handlers"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"go-todo/internal/handler"
 )
 
 func TestHealthHandler(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 	rr := httptest.NewRecorder()
-	handler := handlers.NewHealth()
+	h := handler.NewHealth()
 
 	// Act
-	handler.Health(rr, req)
+	h.Health(rr, req)
 
 	// Assert
 	if rr.Code != http.StatusOK {
