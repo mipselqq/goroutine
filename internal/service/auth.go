@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"go-todo/repository"
+	"go-todo/internal/repository"
 
 	"github.com/alexedwards/argon2id"
 )

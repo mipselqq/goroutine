@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"go-todo/internal/repository"
 	"go-todo/internal/service"
-	"go-todo/repository"
 )
 
 type MockUserRepository struct {
