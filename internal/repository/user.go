@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,9 +31,8 @@ func (r *PgUser) Insert(ctx context.Context, email, hash string) error {
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation {
-		return ErrUniqueViolation
+		return fmt.Errorf("user repo: insert: %w", ErrUniqueViolation)
 	}
 
-	// TODO: wrap in a context
-	return ErrInternal
+	return fmt.Errorf("user repo: insert: %w", ErrInternal)
 }
