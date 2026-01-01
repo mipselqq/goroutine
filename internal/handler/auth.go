@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"go-todo/internal/service"
@@ -14,6 +15,7 @@ type AuthService interface {
 }
 
 type Auth struct {
+	logger  *slog.Logger
 	service AuthService
 }
 
@@ -40,7 +42,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Email == "" || body.Password == "" {
-		respondWithError(w, http.StatusBadRequest, errors.New("impty email or password"))
+		respondWithError(w, http.StatusBadRequest, errors.New("empty email or password"))
 		return
 	}
 
