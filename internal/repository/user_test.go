@@ -12,11 +12,13 @@ import (
 	"go-todo/internal/repository"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 func TestUserRepository_Insert(t *testing.T) {
 	// Arrange
-	t.Setenv("POSTGRES_HOST", "127.0.0.1")
+	// TODO: factor out to TestMain
+	_ = godotenv.Load("../../.env")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -26,6 +28,7 @@ func TestUserRepository_Insert(t *testing.T) {
 		t.Fatalf("Failed to parse db config from env: %v", err)
 	}
 
+	// TODO: connect once inside TestMain
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		t.Fatalf("Failed to connect to test db: %v", err)
@@ -70,6 +73,7 @@ func TestUserRepository_Insert(t *testing.T) {
 	})
 
 	t.Run("Duplicate email", func(t *testing.T) {
+		// TODO: truncate as well
 		_ = r.Insert(ctx, email, hash)
 		err := r.Insert(ctx, email, hash)
 

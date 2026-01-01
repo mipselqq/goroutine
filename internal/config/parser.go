@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 func getenvOrDefault(key string, def string) string {
 	env := os.Getenv(key)
