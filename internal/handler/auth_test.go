@@ -14,7 +14,7 @@ import (
 )
 
 type MockAuthService struct {
-	RegisterFunc func(email string, password string) (string, error)
+	RegisterFunc func(email, password string) (string, error)
 }
 
 func (m *MockAuthService) Register(ctx context.Context, email, password string) (string, error) {

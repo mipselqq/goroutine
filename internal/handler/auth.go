@@ -57,6 +57,4 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, registerResponse{Token: token})
-
-	respondWithJSON(w, http.StatusOK, registerResponse{Token: token})
 }
