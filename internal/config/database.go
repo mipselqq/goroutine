@@ -18,7 +18,7 @@ func NewPgConfigFromEnv() PgConfig {
 	return PgConfig{
 		user:     getenvOrDefault("POSTGRES_USER", "user"),
 		password: getenvOrDefault("POSTGRES_PASSWORD", "password"),
-		host:     getenvOrDefault("POSTGRES_HOST", "localhost"),
+		host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1"),
 		port:     getenvOrDefault("POSTGRES_PORT", "5432"),
 		db:       getenvOrDefault("POSTGRES_DB", "todo_db"),
 	}
