@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"go-todo/internal/logging"
 	"go-todo/internal/service"
 )
 
@@ -19,8 +20,11 @@ type Auth struct {
 	service AuthService
 }
 
-func NewAuth(s AuthService) *Auth {
-	return &Auth{service: s}
+func NewAuth(l *slog.Logger, s AuthService) *Auth {
+	return &Auth{
+		service: s,
+		logger:  logging.NewLoggerContext(l, "handler.auth"),
+	}
 }
 
 type registerBody struct {
@@ -37,12 +41,13 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, errors.New("invalid json in body"))
+		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
+		respondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
 		return
 	}
 
 	if body.Email == "" || body.Password == "" {
-		respondWithError(w, http.StatusBadRequest, errors.New("empty email or password"))
+		respondWithError(w, h.logger, http.StatusBadRequest, errors.New("empty email or password"))
 		return
 	}
 
@@ -51,12 +56,14 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			respondWithError(w, http.StatusBadRequest, err)
+			respondWithError(w, h.logger, http.StatusBadRequest, err)
 		default:
-			respondWithError(w, http.StatusInternalServerError, service.ErrInternal)
+			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
+			respondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
 		}
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, registerResponse{Token: token})
+	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
+	respondWithJSON(w, h.logger, http.StatusOK, registerResponse{Token: token})
 }
