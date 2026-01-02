@@ -29,7 +29,7 @@ func (s *Auth) Register(ctx context.Context, email, password string) error {
 
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {
-		return fmt.Errorf("auth service: register: hash password: %w", ErrInternal)
+		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
 	err = s.repository.Insert(ctx, email, hash)
@@ -38,8 +38,7 @@ func (s *Auth) Register(ctx context.Context, email, password string) error {
 	}
 
 	if err != nil {
-		// TODO: log
-		return fmt.Errorf("auth service: register: user insert: %w", ErrInternal)
+		return fmt.Errorf("auth service: register: user insert: %v: %w", err, ErrInternal)
 	}
 
 	return nil

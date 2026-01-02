@@ -5,11 +5,13 @@ package repository_test
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"testing"
 	"time"
 
 	"go-todo/internal/config"
 	"go-todo/internal/repository"
+	"go-todo/internal/testutils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -19,11 +21,15 @@ func TestUserRepository_Insert(t *testing.T) {
 	// Arrange
 	// TODO: factor out to TestMain
 	_ = godotenv.Load("../../.env")
+	logger := testutils.CreateTestLogger(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	config, err := config.NewPgConfigFromEnv().ParsePgxpoolConfig()
+	pgConfig := config.NewPGConfigFromEnv()
+	logger.Info("loaded pg config", slog.Any("config", pgConfig))
+
+	config, err := pgConfig.ParsePGXpoolConfig()
 	if err != nil {
 		t.Fatalf("Failed to parse db config from env: %v", err)
 	}

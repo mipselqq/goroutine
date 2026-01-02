@@ -34,5 +34,5 @@ func (r *PgUser) Insert(ctx context.Context, email, hash string) error {
 		return fmt.Errorf("user repo: insert: %w", ErrUniqueViolation)
 	}
 
-	return fmt.Errorf("user repo: insert: %w", ErrInternal)
+	return fmt.Errorf("user repo: insert: %v: %w", err, ErrInternal)
 }

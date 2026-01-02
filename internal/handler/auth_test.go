@@ -11,6 +11,7 @@ import (
 
 	"go-todo/internal/handler"
 	"go-todo/internal/service"
+	"go-todo/internal/testutils"
 )
 
 type MockAuthService struct {
@@ -113,7 +114,7 @@ func TestAuth_Register(t *testing.T) {
 				tt.setupMock(s)
 			}
 
-			h := handler.NewAuth(s)
+			h := handler.NewAuth(testutils.CreateTestLogger(t), s)
 			h.Register(rr, req)
 
 			// Assert
