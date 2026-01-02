@@ -20,7 +20,7 @@ import (
 func TestUserRepository_Insert(t *testing.T) {
 	// Arrange
 	// TODO: factor out to TestMain
-	_ = godotenv.Load("../../.env")
+	_ = godotenv.Load("../../.env.dev")
 	logger := testutils.CreateTestLogger(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
