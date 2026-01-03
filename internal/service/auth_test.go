@@ -5,15 +5,16 @@ import (
 	"errors"
 	"testing"
 
+	"go-todo/internal/domain"
 	"go-todo/internal/repository"
 	"go-todo/internal/service"
 )
 
 type MockUserRepository struct {
-	InsertFunc func(ctx context.Context, email, hash string) error
+	InsertFunc func(ctx context.Context, email domain.Email, hash string) error
 }
 
-func (m *MockUserRepository) Insert(ctx context.Context, email, hash string) error {
+func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
 	if m.InsertFunc != nil {
 		return m.InsertFunc(ctx, email, hash)
 	}
@@ -24,13 +25,16 @@ func TestAuthService_Register(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	email := "test@example.com"
-	password := "qwerty"
+	emailStr := "test@example.com"
+	passwordStr := "qwerty"
+
+	email, _ := domain.NewEmail(emailStr)
+	password, _ := domain.NewPassword(passwordStr)
 
 	tests := []struct {
 		name        string
-		email       string
-		password    string
+		email       domain.Email
+		password    domain.Password
 		setupMock   func(r *MockUserRepository)
 		expectedErr error
 	}{
@@ -40,34 +44,10 @@ func TestAuthService_Register(t *testing.T) {
 			password:    password,
 			expectedErr: nil,
 			setupMock: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email, hash string) error {
-					if hash == password {
+				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+					if hash == passwordStr {
 						return errors.New("service saved plaintext password!")
 					}
-					return nil
-				}
-			},
-		},
-		{
-			name:        "Empty email",
-			email:       "",
-			password:    password,
-			expectedErr: service.ErrInvalidCredentials,
-			setupMock: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email, hash string) error {
-					t.Error("Repository should not be called")
-					return nil
-				}
-			},
-		},
-		{
-			name:        "Empty password",
-			email:       email,
-			password:    "",
-			expectedErr: service.ErrInvalidCredentials,
-			setupMock: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email, hash string) error {
-					t.Error("Repository should not be called")
 					return nil
 				}
 			},
@@ -78,7 +58,7 @@ func TestAuthService_Register(t *testing.T) {
 			password:    password,
 			expectedErr: service.ErrUserAlreadyExists,
 			setupMock: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email, hash string) error {
+				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrUniqueViolation
 				}
 			},
@@ -89,7 +69,7 @@ func TestAuthService_Register(t *testing.T) {
 			password:    password,
 			expectedErr: service.ErrInternal,
 			setupMock: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email, hash string) error {
+				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrInternal
 				}
 			},
@@ -100,7 +80,7 @@ func TestAuthService_Register(t *testing.T) {
 			password:    password,
 			expectedErr: service.ErrInternal,
 			setupMock: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email, hash string) error {
+				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return errors.New("some unexpected error")
 				}
 			},

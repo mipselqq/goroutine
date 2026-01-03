@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"go-todo/internal/domain"
+
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -21,10 +23,10 @@ func NewPgUser(pool *pgxpool.Pool) *PgUser {
 
 const pgUniqueViolation = "23505"
 
-func (r *PgUser) Insert(ctx context.Context, email, hash string) error {
+func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) error {
 	const query = `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
 
-	_, err := r.pool.Exec(ctx, query, email, hash)
+	_, err := r.pool.Exec(ctx, query, email.String(), hash)
 	if err == nil {
 		return nil
 	}
