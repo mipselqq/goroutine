@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/lmittmann/tint"
 
 	"go-todo/internal/config"
 	"go-todo/internal/handler"
+	"go-todo/internal/logging"
 	"go-todo/internal/repository"
 	"go-todo/internal/service"
 )
@@ -30,35 +30,9 @@ func (a *authServiceAdapter) Register(ctx context.Context, email, password strin
 	return "simulated_token", nil
 }
 
-func parseLevel(level string) slog.Level {
-	switch level {
-	case "debug":
-		return slog.LevelDebug
-	case "info":
-		return slog.LevelInfo
-	case "warn":
-		return slog.LevelWarn
-	case "error":
-		return slog.LevelError
-	default:
-		return slog.LevelInfo
-	}
-}
-
 func main() {
 	appCfg := config.NewAppConfigFromEnv()
-
-	var logHandler slog.Handler
-	if appCfg.Env == "dev" {
-		logHandler = tint.NewHandler(os.Stdout, &tint.Options{
-			Level: parseLevel(appCfg.LogLevel),
-		})
-	} else {
-		logHandler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level: parseLevel(appCfg.LogLevel),
-		})
-	}
-	logger := slog.New(logHandler)
+	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
 
 	cfg := config.NewPGConfigFromEnv()
 
