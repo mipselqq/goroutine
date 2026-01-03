@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"go-todo/internal/app"
 	"go-todo/internal/config"
 	"go-todo/internal/domain"
@@ -31,6 +33,10 @@ func (a *authServiceAdapter) Register(ctx context.Context, email domain.Email, p
 }
 
 func main() {
+	if os.Getenv("ENV") != "prod" {
+		_ = godotenv.Load(".env.dev")
+	}
+
 	appCfg := config.NewAppConfigFromEnv()
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
 
