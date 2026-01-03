@@ -14,7 +14,7 @@ func SetupTestDB(t *testing.T) (*pgxpool.Pool, *slog.Logger) {
 	_ = godotenv.Load("../../.env.dev")
 	logger := CreateTestLogger(t)
 
-	pool, err := app.SetupDatabaseFromEnv(logger)
+	pool, err := app.SetupDatabaseFromEnv(logger, "../../migrations")
 	if err != nil {
 		t.Fatalf("Failed to setup database: %v", err)
 	}
