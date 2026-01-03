@@ -29,7 +29,6 @@ func (m *MockAuthService) Register(ctx context.Context, email domain.Email, pass
 func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	email := "test@example.com"
 	password := "qwerty"
 	expectedMime := "application/json"
@@ -104,7 +103,6 @@ func TestAuth_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Act
 			req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBuffer([]byte(tt.inputBody)))
 			req.Header.Set("Content-Type", "application/json")
 
@@ -118,7 +116,6 @@ func TestAuth_Register(t *testing.T) {
 			h := handler.NewAuth(testutils.CreateTestLogger(t), s)
 			h.Register(rr, req)
 
-			// Assert
 			if rr.Code != tt.expectedCode {
 				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
 			}
