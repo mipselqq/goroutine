@@ -7,12 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"go-todo/internal/domain"
 	"go-todo/internal/logging"
 	"go-todo/internal/service"
 )
 
 type AuthService interface {
-	Register(ctx context.Context, email, password string) (string, error)
+	Register(ctx context.Context, email domain.Email, password domain.Password) (string, error)
 }
 
 type Auth struct {
@@ -46,12 +47,19 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if body.Email == "" || body.Password == "" {
-		respondWithError(w, h.logger, http.StatusBadRequest, errors.New("empty email or password"))
+	email, err := domain.NewEmail(body.Email)
+	if err != nil {
+		respondWithError(w, h.logger, http.StatusBadRequest, err)
 		return
 	}
 
-	token, err := h.service.Register(r.Context(), body.Email, body.Password)
+	password, err := domain.NewPassword(body.Password)
+	if err != nil {
+		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		return
+	}
+
+	token, err := h.service.Register(r.Context(), email, password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),

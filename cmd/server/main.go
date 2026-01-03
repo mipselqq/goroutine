@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"go-todo/internal/config"
+	"go-todo/internal/domain"
 	"go-todo/internal/handler"
 	"go-todo/internal/logging"
 	"go-todo/internal/repository"
@@ -22,7 +23,7 @@ type authServiceAdapter struct {
 	service *service.Auth
 }
 
-func (a *authServiceAdapter) Register(ctx context.Context, email, password string) (string, error) {
+func (a *authServiceAdapter) Register(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
 	if err := a.service.Register(ctx, email, password); err != nil {
 		return "", err
 	}

@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 
+	"go-todo/internal/domain"
 	"go-todo/internal/repository"
 
 	"github.com/alexedwards/argon2id"
 )
 
 type UserRepository interface {
-	Insert(ctx context.Context, email, hash string) error
+	Insert(ctx context.Context, email domain.Email, hash string) error
 }
 
 type Auth struct {
@@ -22,12 +23,8 @@ func NewAuth(r UserRepository) *Auth {
 	return &Auth{repository: r}
 }
 
-func (s *Auth) Register(ctx context.Context, email, password string) error {
-	if email == "" || password == "" {
-		return fmt.Errorf("auth service: register: creds check: %w", ErrInvalidCredentials)
-	}
-
-	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.Password) error {
+	hash, err := argon2id.CreateHash(password.String(), argon2id.DefaultParams)
 	if err != nil {
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
