@@ -24,7 +24,6 @@ func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, has
 func TestAuthService_Register(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	emailStr := "test@example.com"
 	passwordStr := "qwerty"
 
@@ -97,10 +96,8 @@ func TestAuthService_Register(t *testing.T) {
 			}
 			s := service.NewAuth(r)
 
-			// Act
 			err := s.Register(context.Background(), tt.email, tt.password)
 
-			// Assert
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("Expected error %v, got %v", tt.expectedErr, err)
 			}
