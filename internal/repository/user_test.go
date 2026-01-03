@@ -5,47 +5,25 @@ package repository_test
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"testing"
 	"time"
 
-	"go-todo/internal/config"
 	"go-todo/internal/domain"
 	"go-todo/internal/repository"
 	"go-todo/internal/testutils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
-func TestUserRepository_Insert(t *testing.T) {
-	// Arrange
-	// TODO: factor out to TestMain
-	_ = godotenv.Load("../../.env.dev")
-	logger := testutils.CreateTestLogger(t)
+func setupUserRepository(t *testing.T) (*repository.PgUser, *pgxpool.Pool) {
+	pool, _ := testutils.SetupTestDB(t)
+
+	r := repository.NewPgUser(pool)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	pgConfig := config.NewPGConfigFromEnv()
-	logger.Info("loaded pg config", slog.Any("config", pgConfig))
-
-	config, err := pgConfig.ParsePGXpoolConfig()
-	if err != nil {
-		t.Fatalf("Failed to parse db config from env: %v", err)
-	}
-
-	// TODO: connect once inside TestMain
-	pool, err := pgxpool.NewWithConfig(ctx, config)
-	if err != nil {
-		t.Fatalf("Failed to connect to test db: %v", err)
-	}
-	defer pool.Close()
-
-	r := repository.NewPgUser(pool)
-
-	// TODO: run migrations outside?
-	_, err = pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS users (
+	_, err := pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
 		email TEXT NOT NULL UNIQUE,
 		password_hash TEXT NOT NULL
@@ -58,6 +36,16 @@ func TestUserRepository_Insert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to TRUNCATE TABLE users: %v", err)
 	}
+
+	return r, pool
+}
+
+func TestUserRepository_Insert(t *testing.T) {
+	// Arrange
+	r, pool := setupUserRepository(t)
+	defer pool.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	emailStr := "test@example.com"
 	email, _ := domain.NewEmail(emailStr)
@@ -81,9 +69,12 @@ func TestUserRepository_Insert(t *testing.T) {
 	})
 
 	t.Run("Duplicate email", func(t *testing.T) {
-		// TODO: truncate as well
+		_, err := pool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
+		if err != nil {
+			t.Fatalf("Failed to TRUNCATE TABLE users: %v", err)
+		}
 		_ = r.Insert(ctx, email, hash)
-		err := r.Insert(ctx, email, hash)
+		err = r.Insert(ctx, email, hash)
 
 		if !errors.Is(err, repository.ErrUniqueViolation) {
 			t.Errorf("Expected ErrUniqueViolation, got %v", err)
