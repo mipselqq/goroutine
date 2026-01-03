@@ -9,8 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
+	"go-todo/internal/app"
 	"go-todo/internal/config"
 	"go-todo/internal/domain"
 	"go-todo/internal/handler"
@@ -35,29 +34,13 @@ func main() {
 	appCfg := config.NewAppConfigFromEnv()
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
 
-	cfg := config.NewPGConfigFromEnv()
-
-	logger.Info("Database config", slog.Any("config", cfg))
 	logger.Info("App config", slog.Any("config", appCfg))
 
-	poolConfig, err := cfg.ParsePGXpoolConfig()
+	pool, err := app.SetupDatabaseFromEnv(logger)
 	if err != nil {
-		logger.Error("Failed to parse database config", slog.String("err", err.Error()))
-		os.Exit(1)
-	}
-
-	ctx := context.Background()
-	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
-	if err != nil {
-		logger.Error("Failed to connect to database", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 	defer pool.Close()
-
-	if err := pool.Ping(ctx); err != nil {
-		logger.Error("Failed to ping database", slog.String("err", err.Error()))
-		os.Exit(1)
-	}
 
 	userRepo := repository.NewPgUser(pool)
 	authService := service.NewAuth(userRepo)
