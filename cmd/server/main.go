@@ -42,7 +42,7 @@ func main() {
 
 	logger.Info("App config", slog.Any("config", appCfg))
 
-	pool, err := app.SetupDatabaseFromEnv(logger)
+	pool, err := app.SetupDatabaseFromEnv(logger, "migrations")
 	if err != nil {
 		os.Exit(1)
 	}

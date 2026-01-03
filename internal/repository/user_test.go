@@ -23,17 +23,7 @@ func setupUserRepository(t *testing.T) (*repository.PgUser, *pgxpool.Pool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		email TEXT NOT NULL UNIQUE,
-		password_hash TEXT NOT NULL
-	)`)
-
-	if err != nil {
-		t.Fatalf("Failed to create table users: %v", err)
-	}
-
-	_, err = pool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
+	_, err := pool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
 	if err != nil {
 		t.Fatalf("Failed to TRUNCATE TABLE users: %v", err)
 	}
