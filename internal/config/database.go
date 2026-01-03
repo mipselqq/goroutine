@@ -25,11 +25,11 @@ func NewPGConfigFromEnv() PgConfig {
 	}
 }
 
-func (c PgConfig) buildDSN() string {
+func (c *PgConfig) buildDSN() string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.user, c.password, c.host, c.port, c.db)
 }
 
-func (c PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
+func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 	config, err := pgxpool.ParseConfig(c.buildDSN())
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (c PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 	return config, nil
 }
 
-func (c PgConfig) LogValue() slog.Value {
+func (c *PgConfig) LogValue() slog.Value {
 	hiddenPassword := fmt.Sprintf("(%d chars)", len(c.password))
 
 	return slog.GroupValue(
