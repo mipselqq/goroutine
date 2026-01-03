@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-func getenvOrDefault(key string, def string) string {
+func getenvOrDefault(key, def string) string {
 	env := os.Getenv(key)
 
 	if env == "" {

@@ -9,7 +9,7 @@ type testWriter struct{ t testing.TB }
 
 func (w testWriter) Write(p []byte) (int, error) {
 	s := string(p)
-	if len(s) > 0 && s[len(s)-1] == '\n' {
+	if s != "" && s[len(s)-1] == '\n' {
 		s = s[:len(s)-1]
 	}
 	w.t.Log(s)
