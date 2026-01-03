@@ -28,6 +28,7 @@ func setupUserRepository(t *testing.T) (*repository.PgUser, *pgxpool.Pool) {
 		email TEXT NOT NULL UNIQUE,
 		password_hash TEXT NOT NULL
 	)`)
+
 	if err != nil {
 		t.Fatalf("Failed to create table users: %v", err)
 	}
@@ -41,7 +42,6 @@ func setupUserRepository(t *testing.T) (*repository.PgUser, *pgxpool.Pool) {
 }
 
 func TestUserRepository_Insert(t *testing.T) {
-	// Arrange
 	r, pool := setupUserRepository(t)
 	defer pool.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -52,7 +52,6 @@ func TestUserRepository_Insert(t *testing.T) {
 	hash := "some-secret-hash"
 
 	t.Run("Success", func(t *testing.T) {
-		// Act
 		err := r.Insert(ctx, email, hash)
 		if err != nil {
 			t.Errorf("Insert() error = %v", err)
