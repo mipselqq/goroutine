@@ -16,6 +16,8 @@ import (
 )
 
 func setupUserRepository(t *testing.T) (*repository.PgUser, *pgxpool.Pool) {
+	t.Helper()
+
 	pool, _ := testutils.SetupTestDB(t)
 
 	r := repository.NewPgUser(pool)
