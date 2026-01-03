@@ -9,16 +9,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go-todo/internal/domain"
 	"go-todo/internal/handler"
 	"go-todo/internal/service"
 	"go-todo/internal/testutils"
 )
 
 type MockAuthService struct {
-	RegisterFunc func(email, password string) (string, error)
+	RegisterFunc func(email domain.Email, password domain.Password) (string, error)
 }
 
-func (m *MockAuthService) Register(ctx context.Context, email, password string) (string, error) {
+func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
 	if m.RegisterFunc != nil {
 		return m.RegisterFunc(email, password)
 	}
@@ -30,7 +31,7 @@ func TestAuth_Register(t *testing.T) {
 
 	// Arrange
 	email := "test@example.com"
-	password := "qewrty"
+	password := "qwerty"
 	expectedMime := "application/json"
 
 	tests := []struct {
@@ -43,17 +44,17 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email, password string) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
 					return "token", nil
 				}
 			},
 			expectedCode: http.StatusOK,
 		},
 		{
-			name:      "Internal erro happened for valid body",
+			name:      "Internal error happened for valid body",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email, password string) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
 					return "", service.ErrInternal
 				}
 			},
@@ -63,7 +64,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Empty email",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, "", password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email, password string) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
 					t.Error("Service should not be called")
 					return "", nil
 				}
@@ -74,7 +75,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Empty password",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, ""),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email, password string) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
 					t.Error("Service should not be called")
 					return "", nil
 				}
@@ -91,7 +92,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "User already exists",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email, password string) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
 					return "", service.ErrUserAlreadyExists
 				}
 			},

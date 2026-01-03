@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go-todo/internal/config"
+	"go-todo/internal/domain"
 	"go-todo/internal/repository"
 	"go-todo/internal/testutils"
 
@@ -58,7 +59,8 @@ func TestUserRepository_Insert(t *testing.T) {
 		t.Fatalf("Failed to TRUNCATE TABLE users: %v", err)
 	}
 
-	email := "test@example.com"
+	emailStr := "test@example.com"
+	email, _ := domain.NewEmail(emailStr)
 	hash := "some-secret-hash"
 
 	t.Run("Success", func(t *testing.T) {
@@ -69,12 +71,12 @@ func TestUserRepository_Insert(t *testing.T) {
 		}
 
 		var dbEmail string
-		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email).Scan(&dbEmail)
+		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", emailStr).Scan(&dbEmail)
 		if err != nil {
 			t.Errorf("Failed to find user in DB: %v", err)
 		}
-		if dbEmail != email {
-			t.Errorf("Expected email %s, got %s", email, dbEmail)
+		if dbEmail != emailStr {
+			t.Errorf("Expected email %s, got %s", emailStr, dbEmail)
 		}
 	})
 
