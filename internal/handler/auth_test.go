@@ -16,14 +16,14 @@ import (
 )
 
 type MockAuthService struct {
-	RegisterFunc func(email domain.Email, password domain.Password) (string, error)
+	RegisterFunc func(email domain.Email, password domain.Password) error
 }
 
-func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
+func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.Password) error {
 	if m.RegisterFunc != nil {
 		return m.RegisterFunc(email, password)
 	}
-	return "", nil
+	return nil
 }
 
 func TestAuth_Register(t *testing.T) {
@@ -43,8 +43,8 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
-					return "token", nil
+				s.RegisterFunc = func(email domain.Email, password domain.Password) error {
+					return nil
 				}
 			},
 			expectedCode: http.StatusOK,
@@ -53,8 +53,8 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Internal error happened for valid body",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
-					return "", service.ErrInternal
+				s.RegisterFunc = func(email domain.Email, password domain.Password) error {
+					return service.ErrInternal
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
@@ -63,9 +63,9 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Empty email",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, "", password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) error {
 					t.Error("Service should not be called")
-					return "", nil
+					return nil
 				}
 			},
 			expectedCode: http.StatusBadRequest,
@@ -74,9 +74,9 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Empty password",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, ""),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
+				s.RegisterFunc = func(email domain.Email, password domain.Password) error {
 					t.Error("Service should not be called")
-					return "", nil
+					return nil
 				}
 			},
 			expectedCode: http.StatusBadRequest,
@@ -91,8 +91,8 @@ func TestAuth_Register(t *testing.T) {
 			name:      "User already exists",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
 			setupMock: func(s *MockAuthService) {
-				s.RegisterFunc = func(email domain.Email, password domain.Password) (string, error) {
-					return "", service.ErrUserAlreadyExists
+				s.RegisterFunc = func(email domain.Email, password domain.Password) error {
+					return service.ErrUserAlreadyExists
 				}
 			},
 			expectedCode: http.StatusBadRequest,

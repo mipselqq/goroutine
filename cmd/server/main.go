@@ -13,24 +13,11 @@ import (
 
 	"go-todo/internal/app"
 	"go-todo/internal/config"
-	"go-todo/internal/domain"
 	"go-todo/internal/handler"
 	"go-todo/internal/logging"
 	"go-todo/internal/repository"
 	"go-todo/internal/service"
 )
-
-type authServiceAdapter struct {
-	service *service.Auth
-}
-
-func (a *authServiceAdapter) Register(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
-	if err := a.service.Register(ctx, email, password); err != nil {
-		return "", err
-	}
-
-	return "simulated_token", nil
-}
 
 func main() {
 	if os.Getenv("ENV") != "prod" {
@@ -50,9 +37,8 @@ func main() {
 
 	userRepo := repository.NewPgUser(pool)
 	authService := service.NewAuth(userRepo)
-	authAdapter := &authServiceAdapter{service: authService}
 
-	authHandler := handler.NewAuth(logger, authAdapter)
+	authHandler := handler.NewAuth(logger, authService)
 	healthHandler := handler.NewHealth()
 
 	mux := http.NewServeMux()
