@@ -1,0 +1,72 @@
+basePath: /
+definitions:
+  handler.errorResponse:
+    properties:
+      error:
+        example: invalid email format
+        type: string
+    type: object
+  handler.registerBody:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret-password
+        type: string
+    type: object
+  handler.statusResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A todo project for learning Go-go-go-go
+  title: Go Todo API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Check if the server is alive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Health check
+      tags:
+      - health
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: Registration details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+swagger: "2.0"

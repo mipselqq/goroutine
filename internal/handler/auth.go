@@ -29,10 +29,29 @@ func NewAuth(l *slog.Logger, s AuthService) *Auth {
 }
 
 type registerBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" example:"user@example.com"`
+	Password string `json:"password" example:"secret-password"`
 }
 
+type statusResponse struct {
+	Status string `json:"status" example:"ok"`
+}
+
+type errorResponse struct {
+	Error string `json:"error" example:"invalid email format"`
+}
+
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body registerBody true "Registration details"
+// @Success 200 {object} statusResponse
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
@@ -69,5 +88,5 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
-	respondWithJSON(w, h.logger, http.StatusOK, map[string]string{"status": "ok"})
+	respondWithJSON(w, h.logger, http.StatusOK, statusResponse{Status: "ok"})
 }
