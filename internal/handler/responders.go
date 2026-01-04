@@ -17,5 +17,5 @@ func respondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, paylo
 }
 
 func respondWithError(w http.ResponseWriter, logger *slog.Logger, code int, message error) {
-	respondWithJSON(w, logger, code, map[string]string{"error": message.Error()})
+	respondWithJSON(w, logger, code, errorResponse{Error: message.Error()})
 }
