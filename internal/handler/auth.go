@@ -13,7 +13,7 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, email domain.Email, password domain.Password) (string, error)
+	Register(ctx context.Context, email domain.Email, password domain.Password) error
 }
 
 type Auth struct {
@@ -31,10 +31,6 @@ func NewAuth(l *slog.Logger, s AuthService) *Auth {
 type registerBody struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-}
-
-type registerResponse struct {
-	Token string `json:"token"`
 }
 
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +55,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.Register(r.Context(), email, password)
+	err = h.service.Register(r.Context(), email, password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
@@ -73,5 +69,5 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
-	respondWithJSON(w, h.logger, http.StatusOK, registerResponse{Token: token})
+	respondWithJSON(w, h.logger, http.StatusOK, map[string]string{"status": "ok"})
 }
