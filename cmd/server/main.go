@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	"go-todo/internal/app"
 	"go-todo/internal/config"
@@ -17,8 +18,15 @@ import (
 	"go-todo/internal/logging"
 	"go-todo/internal/repository"
 	"go-todo/internal/service"
+
+	_ "go-todo/docs"
 )
 
+// @title Go Todo API
+// @version 1.0
+// @description A todo project for learning Go-go-go-go
+// @host localhost:8080
+// @BasePath /
 func main() {
 	if os.Getenv("ENV") != "prod" {
 		_ = godotenv.Load(".env.dev")
@@ -44,6 +52,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", authHandler.Register)
 	mux.HandleFunc("GET /health", healthHandler.Health)
+	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + appCfg.Port,
