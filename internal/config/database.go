@@ -40,11 +40,9 @@ func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 
 //nolint:gocritic // Pointer receiver disables formatting
 func (c PgConfig) LogValue() slog.Value {
-	hiddenPassword := fmt.Sprintf("(%d chars)", len(c.password))
-
 	return slog.GroupValue(
 		slog.String("user", c.user),
-		slog.String("password", hiddenPassword),
+		slog.String("password", hideStringContents(c.password)),
 		slog.String("host", c.host),
 		slog.String("port", c.port),
 		slog.String("db", c.db),
