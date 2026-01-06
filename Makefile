@@ -18,12 +18,12 @@ fmt:
 swag:
 	swag init -g cmd/server/main.go
 
-migrate-up:
-	export $$(cat .env.dev | xargs) && go run github.com/pressly/goose/v3/cmd/goose@latest -dir migrations postgres "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable" up
+migrate-up migrate-down migrate-status: migrate-%:
+	export $$(cat .env.dev | xargs) && goose -dir migrations postgres "user=$$POSTGRES_USER password=$$POSTGRES_PASSWORD dbname=$$POSTGRES_DB host=$$POSTGRES_HOST sslmode=disable" $*
 
-migrate-down:
-	export $$(cat .env.dev | xargs) && go run github.com/pressly/goose/v3/cmd/goose@latest -dir migrations postgres "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable" down
-
-migrate-status:
-	export $$(cat .env.dev | xargs) && go run github.com/pressly/goose/v3/cmd/goose@latest -dir migrations postgres "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable" status
-
+tools:
+	go install github.com/pressly/goose/v3/cmd/goose@latest
+	go install github.com/swaggo/swag/cmd/swag@latest
+	go install mvdan.cc/gofumpt@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/evilmartians/lefthook@latest
