@@ -21,17 +21,11 @@ type MockAuth struct {
 }
 
 func (m *MockAuth) Register(ctx context.Context, email domain.Email, password domain.Password) error {
-	if m.RegisterFunc != nil {
-		return m.RegisterFunc(ctx, email, password)
-	}
-	return nil
+	return m.RegisterFunc(ctx, email, password)
 }
 
 func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
-	if m.LoginFunc != nil {
-		return m.LoginFunc(ctx, email, password)
-	}
-	return "", nil
+	return m.LoginFunc(ctx, email, password)
 }
 
 type TestCase struct {
