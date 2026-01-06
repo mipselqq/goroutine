@@ -19,6 +19,11 @@ type Auth struct {
 	repository UserRepository
 }
 
+// Login implements [handler.AuthService].
+func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
+	panic("unimplemented")
+}
+
 func NewAuth(r UserRepository) *Auth {
 	return &Auth{repository: r}
 }
