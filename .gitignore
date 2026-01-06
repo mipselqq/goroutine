@@ -1,3 +1,9 @@
 /bin
 .env.dev
 .env.prod
+
+# Binaries
+server
+*.exe
+*.test
+*.prof
