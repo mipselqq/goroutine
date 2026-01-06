@@ -52,6 +52,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", authHandler.Register)
 	mux.HandleFunc("GET /health", healthHandler.Health)
+	// TODO: restrict unpriviliged access
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
 	srv := &http.Server{

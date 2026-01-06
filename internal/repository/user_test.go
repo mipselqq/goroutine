@@ -10,7 +10,7 @@ import (
 
 	"go-todo/internal/domain"
 	"go-todo/internal/repository"
-	"go-todo/internal/testutils"
+	"go-todo/internal/testutil"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -18,7 +18,7 @@ import (
 func setupUserRepository(t *testing.T) (*repository.PgUser, *pgxpool.Pool) {
 	t.Helper()
 
-	pool, _ := testutils.SetupTestDB(t)
+	pool, _ := testutil.SetupTestDB(t)
 
 	r := repository.NewPgUser(pool)
 
