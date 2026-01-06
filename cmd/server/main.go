@@ -44,7 +44,7 @@ func main() {
 	defer pool.Close()
 
 	userRepo := repository.NewPgUser(pool)
-	authService := service.NewAuth(userRepo)
+	authService := service.NewAuth(userRepo, appCfg.JWTSecret)
 
 	authHandler := handler.NewAuth(logger, authService)
 	healthHandler := handler.NewHealth()

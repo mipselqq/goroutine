@@ -22,8 +22,8 @@ func NewAppConfigFromEnv() AppConfig {
 func (c AppConfig) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("port", c.Port),
-		slog.String("logLevel", c.LogLevel),
+		slog.String("log_level", c.LogLevel),
 		slog.String("env", c.Env),
-		slog.String("JWTSecret", hideStringContents(c.JWTSecret)),
+		slog.String("jwt_secret", hideStringContents(c.JWTSecret)),
 	)
 }

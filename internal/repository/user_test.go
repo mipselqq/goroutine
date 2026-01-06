@@ -72,3 +72,38 @@ func TestUserRepository_Insert(t *testing.T) {
 		}
 	})
 }
+
+func TestUserRepository_GetPasswordHashByEmail(t *testing.T) {
+	r, pool := setupUserRepository(t)
+	defer pool.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	emailStr := "test-get@example.com"
+	email, _ := domain.NewEmail(emailStr)
+	hash := "secret-hash-for-get"
+
+	t.Run("Success", func(t *testing.T) {
+		err := r.Insert(ctx, email, hash)
+		if err != nil {
+			t.Fatalf("Failed to insert user for test: %v", err)
+		}
+
+		gotHash, err := r.GetPasswordHashByEmail(ctx, email)
+		if err != nil {
+			t.Errorf("GetPasswordHashByEmail() error = %v", err)
+		}
+		if gotHash != hash {
+			t.Errorf("Expected hash %s, got %s", hash, gotHash)
+		}
+	})
+
+	t.Run("User not found", func(t *testing.T) {
+		unknownEmail, _ := domain.NewEmail("unknown@example.com")
+		_, err := r.GetPasswordHashByEmail(ctx, unknownEmail)
+
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("Expected ErrRowNotFound, got %v", err)
+		}
+	})
+}
