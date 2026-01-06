@@ -15,10 +15,7 @@ type MockUserRepository struct {
 }
 
 func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
-	if m.InsertFunc != nil {
-		return m.InsertFunc(ctx, email, hash)
-	}
-	return nil
+	return m.InsertFunc(ctx, email, hash)
 }
 
 func TestAuthService_Register(t *testing.T) {
