@@ -43,9 +43,10 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 
 func TestAppConfig_LogValue(t *testing.T) {
 	cfg := AppConfig{
-		Port:     "8080",
-		LogLevel: "info",
-		Env:      "dev",
+		Port:      "8080",
+		LogLevel:  "info",
+		Env:       "dev",
+		JWTSecret: "secret",
 	}
 
 	v := cfg.LogValue()
@@ -55,15 +56,17 @@ func TestAppConfig_LogValue(t *testing.T) {
 
 	attrs := v.Group()
 	expectedAttrs := map[string]string{
-		"port":      "8080",
-		"log_level": "info",
-		"env":       "dev",
+		"port":       "8080",
+		"log_level":  "info",
+		"env":        "dev",
+		"jwt_secret": "(6 chars)",
 	}
 
 	for _, a := range attrs {
 		expected, ok := expectedAttrs[a.Key]
 		if !ok {
 			t.Errorf("unexpected attribute %q", a.Key)
+			continue
 		}
 		if a.Value.String() != expected {
 			t.Errorf("for key %q, expected %q, got %q", a.Key, expected, a.Value.String())
