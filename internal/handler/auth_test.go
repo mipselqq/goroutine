@@ -34,6 +34,14 @@ func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domai
 	return "", nil
 }
 
+type TestCase struct {
+	name         string
+	inputBody    string
+	setupMock    func(s *MockAuth)
+	expectedCode int
+	expectedBody string
+}
+
 func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
@@ -41,13 +49,7 @@ func TestAuth_Register(t *testing.T) {
 	password := "qwerty"
 	expectedMime := "application/json"
 
-	tests := []struct {
-		name         string
-		inputBody    string
-		setupMock    func(s *MockAuth)
-		expectedCode int
-		expectedBody string
-	}{
+	tests := []TestCase {
 		{
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
@@ -166,13 +168,7 @@ func TestAuth_Login(t *testing.T) {
 	password := "qwerty"
 	expectedMime := "application/json"
 
-	tests := []struct {
-		name         string
-		inputBody    string
-		setupMock    func(s *MockAuth)
-		expectedCode int
-		expectedBody string
-	}{
+	tests := []TestCase {
 		{
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
