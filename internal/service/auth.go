@@ -8,6 +8,7 @@ import (
 
 	"go-todo/internal/domain"
 	"go-todo/internal/repository"
+	"go-todo/internal/secrecy"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"
@@ -20,10 +21,10 @@ type UserRepository interface {
 
 type Auth struct {
 	repository UserRepository
-	JWTSecret  string
+	JWTSecret  secrecy.SecretString
 }
 
-func NewAuth(r UserRepository, s string) *Auth {
+func NewAuth(r UserRepository, s secrecy.SecretString) *Auth {
 	return &Auth{repository: r, JWTSecret: s}
 }
 
@@ -61,7 +62,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Pa
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := CreateToken(email, s.JWTSecret)
+	token, err := CreateToken(email, s.JWTSecret.RevealSecret())
 	if err != nil {
 		return "", fmt.Errorf("auth service: login: create token: %v: %w", err, ErrInternal)
 	}

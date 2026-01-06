@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log/slog"
 
+	"go-todo/internal/secrecy"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PgConfig struct {
 	user     string
-	password string
+	password secrecy.SecretString
 	host     string
 	port     string
 	db       string
@@ -18,7 +20,7 @@ type PgConfig struct {
 func NewPGConfigFromEnv() PgConfig {
 	return PgConfig{
 		user:     getenvOrDefault("POSTGRES_USER", "user"),
-		password: getenvOrDefault("POSTGRES_PASSWORD", "password"),
+		password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password")),
 		host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1"),
 		port:     getenvOrDefault("POSTGRES_PORT", "5432"),
 		db:       getenvOrDefault("POSTGRES_DB", "todo_db"),
@@ -26,7 +28,7 @@ func NewPGConfigFromEnv() PgConfig {
 }
 
 func (c *PgConfig) buildDSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.user, c.password, c.host, c.port, c.db)
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.user, c.password.RevealSecret(), c.host, c.port, c.db)
 }
 
 func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
@@ -42,7 +44,7 @@ func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 func (c PgConfig) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("user", c.user),
-		slog.String("password", hideStringContents(c.password)),
+		slog.Any("password", c.password),
 		slog.String("host", c.host),
 		slog.String("port", c.port),
 		slog.String("db", c.db),
