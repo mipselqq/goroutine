@@ -14,6 +14,7 @@ import (
 
 type AuthService interface {
 	Register(ctx context.Context, email domain.Email, password domain.Password) error
+	Login(ctx context.Context, email domain.Email, password domain.Password) (string, error)
 }
 
 type Auth struct {
@@ -89,4 +90,51 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
 	respondWithJSON(w, h.logger, http.StatusOK, statusResponse{Status: "ok"})
+}
+
+type loginBody struct {
+	Email    string `json:"email" example:"user@example.com"`
+	Password string `json:"password" example:"secret-password"`
+}
+
+type loginResponse struct {
+	Token string `json:"token" example:"jwt-token"`
+}
+
+func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
+	var body loginBody
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
+		respondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+		return
+	}
+
+	email, err := domain.NewEmail(body.Email)
+	if err != nil {
+		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		return
+	}
+
+	password, err := domain.NewPassword(body.Password)
+	if err != nil {
+		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		return
+	}
+
+	token, err := h.service.Login(r.Context(), email, password)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidCredentials):
+			respondWithError(w, h.logger, http.StatusUnauthorized, err)
+		default:
+			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
+			respondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+		}
+		return
+	}
+
+	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
+	respondWithJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
