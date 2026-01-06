@@ -11,21 +11,27 @@ import (
 )
 
 type MockUserRepository struct {
-	InsertFunc func(ctx context.Context, email domain.Email, hash string) error
+	InsertFunc                 func(ctx context.Context, email domain.Email, hash string) error
+	GetPasswordHashByEmailFunc func(ctx context.Context, email domain.Email) error
 }
 
 func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
 	return m.InsertFunc(ctx, email, hash)
 }
 
+func (m *MockUserRepository) GetPasswordHashByEmail(ctx context.Context, email domain.Email, hash string) error {
+	return m.InsertFunc(ctx, email, hash)
+}
+
+var (
+	emailStr    string = "test@example.com"
+	passwordStr        = "qwerty"
+	email, _           = domain.NewEmail(emailStr)
+	password, _        = domain.NewPassword(passwordStr)
+)
+
 func TestAuthService_Register(t *testing.T) {
 	t.Parallel()
-
-	emailStr := "test@example.com"
-	passwordStr := "qwerty"
-
-	email, _ := domain.NewEmail(emailStr)
-	password, _ := domain.NewPassword(passwordStr)
 
 	tests := []struct {
 		name        string
