@@ -10,3 +10,5 @@ pre-commit:
       run: gofumpt -l -w {staged_files}
     swag:
       run: make swag
+    test:
+      run: make test
