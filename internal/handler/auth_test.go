@@ -42,14 +42,16 @@ type TestCase struct {
 	expectedBody string
 }
 
+const (
+	email        string = "test@example.com"
+	password     string = "qwerty"
+	expectedMime string = "application/json"
+)
+
 func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
-	email := "test@example.com"
-	password := "qwerty"
-	expectedMime := "application/json"
-
-	tests := []TestCase {
+	tests := []TestCase{
 		{
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
@@ -164,11 +166,7 @@ func TestAuth_Register(t *testing.T) {
 func TestAuth_Login(t *testing.T) {
 	t.Parallel()
 
-	email := "test@example.com"
-	password := "qwerty"
-	expectedMime := "application/json"
-
-	tests := []TestCase {
+	tests := []TestCase{
 		{
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
