@@ -16,6 +16,7 @@ func NewAppConfigFromEnv() AppConfig {
 	}
 }
 
+//nolint:gocritic // Pointer receiver disables formatting
 func (c AppConfig) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("port", c.Port),
