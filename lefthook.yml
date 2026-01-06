@@ -3,8 +3,10 @@ pre-commit:
   stage_fixed: true
   commands:
     lint:
-      run: make lint
+      glob: "*.go"
+      run: golangci-lint run {staged_files}
     fmt:
-      run: make fmt
+      glob: "*.go"
+      run: gofumpt -l -w {staged_files}
     swag:
       run: make swag
