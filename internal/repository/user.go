@@ -7,6 +7,7 @@ import (
 
 	"go-todo/internal/domain"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -37,4 +38,19 @@ func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) er
 	}
 
 	return fmt.Errorf("user repo: insert: %v: %w", err, ErrInternal)
+}
+
+func (r *PgUser) GetPasswordHashByEmail(ctx context.Context, email domain.Email) (string, error) {
+	const query = `SELECT password_hash FROM users WHERE email = $1`
+
+	var hash string
+	err := r.pool.QueryRow(ctx, query, email.String()).Scan(&hash)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrRowNotFound
+		}
+		return "", fmt.Errorf("user repo: get hash by email: %v: %w", err, ErrInternal)
+	}
+
+	return hash, nil
 }
