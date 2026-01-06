@@ -8,6 +8,7 @@ import (
 
 	"go-todo/internal/domain"
 	"go-todo/internal/repository"
+	"go-todo/internal/secrecy"
 	"go-todo/internal/service"
 )
 
@@ -37,7 +38,7 @@ var (
 	email, _            = domain.NewEmail(emailStr)
 	password, _         = domain.NewPassword(passwordStr)
 	anotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
-	JWTSecret           = "secret"
+	JWTSecret           = secrecy.SecretString("secret")
 )
 
 func TestAuthService_Register(t *testing.T) {
