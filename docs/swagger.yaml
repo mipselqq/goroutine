@@ -36,7 +36,6 @@ definitions:
         example: ok
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: A todo project for learning Go-go-go-go
@@ -51,6 +50,8 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
       summary: Health check
       tags:
       - health
@@ -74,7 +75,7 @@ paths:
           schema:
             $ref: '#/definitions/handler.loginResponse'
         "401":
-          description: Unauthorized
+          description: Invalid credentials
           schema:
             $ref: '#/definitions/handler.errorResponse'
         "500":
@@ -104,7 +105,7 @@ paths:
           schema:
             $ref: '#/definitions/handler.statusResponse'
         "400":
-          description: Bad Request
+          description: Invalid input (email format or password)
           schema:
             $ref: '#/definitions/handler.errorResponse'
         "500":
@@ -114,4 +115,7 @@ paths:
       summary: Register a new user
       tags:
       - auth
+schemes:
+- http
+- https
 swagger: "2.0"

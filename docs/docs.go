@@ -27,7 +27,10 @@ const docTemplate = `{
                 "summary": "Health check",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.statusResponse"
+                        }
                     }
                 }
             }
@@ -64,7 +67,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Invalid credentials",
                         "schema": {
                             "$ref": "#/definitions/handler.errorResponse"
                         }
@@ -110,7 +113,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input (email format or password)",
                         "schema": {
                             "$ref": "#/definitions/handler.errorResponse"
                         }
@@ -185,9 +188,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/",
-	Schemes:          []string{},
+	Schemes:          []string{"http", "https"},
 	Title:            "Go Todo API",
 	Description:      "A todo project for learning Go-go-go-go",
 	InfoInstanceName: "swagger",
