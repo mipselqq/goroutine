@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"go-todo/internal/domain"
 	"go-todo/internal/repository"
@@ -39,6 +40,10 @@ var (
 	password, _         = domain.NewPassword(passwordStr)
 	anotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
 	JWTSecret           = secrecy.SecretString("secret")
+	jwtOpts             = service.JWTOptions{
+		JWTSecret: JWTSecret,
+		Exp:       time.Hour,
+	}
 )
 
 func TestAuthService_Register(t *testing.T) {
@@ -92,7 +97,7 @@ func TestAuthService_Register(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, JWTSecret)
+			s := service.NewAuth(r, jwtOpts)
 
 			err := s.Register(context.Background(), email, password)
 
@@ -160,7 +165,7 @@ func TestAuth_Login(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, JWTSecret)
+			s := service.NewAuth(r, jwtOpts)
 
 			token, err := s.Login(context.Background(), email, password)
 
@@ -176,4 +181,73 @@ func TestAuth_Login(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAuthService_VerifyToken(t *testing.T) {
+	t.Parallel()
+
+	r := &MockUserRepository{
+		GetPasswordHashByEmailFunc: func(ctx context.Context, email domain.Email) (string, error) {
+			return passwordHash, nil
+		},
+	}
+	s := service.NewAuth(r, jwtOpts)
+
+	t.Run("Valid token", func(t *testing.T) {
+		t.Parallel()
+
+		token, err := service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+		if err != nil {
+			t.Fatalf("CreateToken failed: %v", err)
+		}
+
+		returnedEmail, err := s.VerifyToken(context.Background(), token)
+		if err != nil {
+			t.Fatalf("VerifyToken failed: %v", err)
+		}
+
+		if returnedEmail != email {
+			t.Errorf("Expected email %v, got %v", email, returnedEmail)
+		}
+	})
+
+	t.Run("Invalid token", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := s.VerifyToken(context.Background(), "invalid.token.here")
+		if !errors.Is(err, service.ErrInvalidToken) {
+			t.Errorf("Expected ErrInvalidToken, got %v", err)
+		}
+	})
+
+	t.Run("Invalid secret", func(t *testing.T) {
+		t.Parallel()
+
+		token, err := service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+		if err != nil {
+			t.Fatalf("CreateToken failed: %v", err)
+		}
+
+		invalidSecretService := service.NewAuth(nil, service.JWTOptions{JWTSecret: "wrong_secret", Exp: time.Hour})
+		_, err = invalidSecretService.VerifyToken(context.Background(), token)
+		if !errors.Is(err, service.ErrInvalidToken) {
+			t.Errorf("Expected ErrInvalidToken, got %v", err)
+		}
+	})
+
+	t.Run("Expired token", func(t *testing.T) {
+		t.Parallel()
+
+		token, err := service.CreateToken(email, JWTSecret.RevealSecret(), time.Second)
+		if err != nil {
+			t.Fatalf("CreateToken failed: %v", err)
+		}
+
+		time.Sleep(2 * time.Second)
+
+		_, err = s.VerifyToken(context.Background(), token)
+		if !errors.Is(err, service.ErrTokenExpired) {
+			t.Errorf("Expected ErrTokenExpired, got %v", err)
+		}
+	})
 }
