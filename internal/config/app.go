@@ -8,6 +8,7 @@ import (
 
 type AppConfig struct {
 	Port      string
+	Host      string
 	LogLevel  string
 	Env       string
 	JWTSecret secrecy.SecretString
@@ -16,6 +17,7 @@ type AppConfig struct {
 func NewAppConfigFromEnv() AppConfig {
 	return AppConfig{
 		Port:      getenvOrDefault("PORT", "8080"),
+		Host:      getenvOrDefault("HOST", "0.0.0.0"),
 		LogLevel:  getenvOrDefault("LOG_LEVEL", "info"),
 		Env:       getenvOrDefault("ENV", "dev"),
 		JWTSecret: secrecy.SecretString(getenvOrDefault("JWT_SECRET", "very_secret")),
@@ -26,8 +28,9 @@ func NewAppConfigFromEnv() AppConfig {
 func (c AppConfig) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("port", c.Port),
+		slog.String("host", c.Host),
 		slog.String("log_level", c.LogLevel),
 		slog.String("env", c.Env),
-		slog.Any("jwt_secret", c.JWTSecret),
+		slog.String("jwt_secret", c.JWTSecret.String()),
 	)
 }

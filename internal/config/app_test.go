@@ -10,6 +10,8 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		t.Setenv("PORT", "")
 		t.Setenv("LOG_LEVEL", "")
 		t.Setenv("ENV", "")
+		t.Setenv("JWT_SECRET", "")
+		t.Setenv("HOST", "")
 
 		cfg := NewAppConfigFromEnv()
 		if cfg.Port != "8080" {
@@ -20,6 +22,12 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 		if cfg.Env != "dev" {
 			t.Errorf("expected default env 'dev', got %q", cfg.Env)
+		}
+		if cfg.JWTSecret.RevealSecret() != "very_secret" {
+			t.Errorf("expected default jwt_secret 'very_secret', got %q", string(cfg.JWTSecret))
+		}
+		if cfg.Host != "0.0.0.0" {
+			t.Errorf("expected default host '0.0.0.0', got %q", cfg.Host)
 		}
 	})
 
@@ -44,6 +52,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 func TestAppConfig_LogValue(t *testing.T) {
 	cfg := AppConfig{
 		Port:      "8080",
+		Host:      "localhost",
 		LogLevel:  "info",
 		Env:       "dev",
 		JWTSecret: "secret",
@@ -57,6 +66,7 @@ func TestAppConfig_LogValue(t *testing.T) {
 	attrs := v.Group()
 	expectedAttrs := map[string]string{
 		"port":       "8080",
+		"host":       "localhost",
 		"log_level":  "info",
 		"env":        "dev",
 		"jwt_secret": "(6 chars)",

@@ -55,13 +55,14 @@ func main() {
 	// TODO: restrict unpriviliged access
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
+	addr := appCfg.Host + ":" + appCfg.Port
 	srv := &http.Server{
-		Addr:    ":" + appCfg.Port,
+		Addr:    addr,
 		Handler: mux,
 	}
 
 	go func() {
-		logger.Info("Starting server on :" + appCfg.Port)
+		logger.Info("Starting server on http://" + addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("Server failed", slog.String("err", err.Error()))
 			os.Exit(1)
