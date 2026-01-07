@@ -19,13 +19,18 @@ type UserRepository interface {
 	GetPasswordHashByEmail(ctx context.Context, email domain.Email) (string, error)
 }
 
-type Auth struct {
-	repository UserRepository
-	JWTSecret  secrecy.SecretString
+type JWTOptions struct {
+	JWTSecret secrecy.SecretString
+	Exp       time.Duration
 }
 
-func NewAuth(r UserRepository, s secrecy.SecretString) *Auth {
-	return &Auth{repository: r, JWTSecret: s}
+type Auth struct {
+	repository UserRepository
+	jwtOptions JWTOptions
+}
+
+func NewAuth(r UserRepository, opts JWTOptions) *Auth {
+	return &Auth{repository: r, jwtOptions: opts}
 }
 
 func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.Password) error {
@@ -62,21 +67,50 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Pa
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := CreateToken(email, s.JWTSecret.RevealSecret())
+	token, err := CreateToken(email, s.jwtOptions.JWTSecret.RevealSecret(), s.jwtOptions.Exp)
 	if err != nil {
 		return "", fmt.Errorf("auth service: login: create token: %v: %w", err, ErrInternal)
 	}
 	return token, nil
 }
 
-func CreateToken(email domain.Email, secret string) (string, error) {
+func CreateToken(email domain.Email, secret string, exp time.Duration) (string, error) {
 	claims := jwt.MapClaims{
-		"sub": email,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"sub": email.String(),
+		"exp": time.Now().Add(exp).Unix(),
 		"iat": time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(secret))
+}
+
+func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (domain.Email, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.jwtOptions.JWTSecret.RevealSecret()), nil
+	})
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return domain.Email{}, fmt.Errorf("auth service: verify token: %w", ErrTokenExpired)
+		}
+		return domain.Email{}, fmt.Errorf("auth service: verify token: %v: %w", err, ErrInvalidToken)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		emailStr, ok := claims["sub"].(string)
+		if !ok {
+			return domain.Email{}, fmt.Errorf("auth service: verify token: sub claim not found: %w", ErrInvalidToken)
+		}
+		email, err := domain.NewEmail(emailStr)
+		if err != nil {
+			return domain.Email{}, fmt.Errorf("auth service: verify token: invalid email in sub: %v: %w", err, ErrInvalidToken)
+		}
+		return email, nil
+	}
+
+	return domain.Email{}, fmt.Errorf("auth service: verify token: %w", ErrInvalidToken)
 }
