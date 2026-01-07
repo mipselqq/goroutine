@@ -27,3 +27,8 @@ tools:
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install github.com/evilmartians/lefthook@latest
+
+quickfuzz:
+	go test -fuzz=. -fuzztime=20s
+fuzz:
+	go test -fuzz=. -fuzztime=2m
