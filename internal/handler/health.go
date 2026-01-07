@@ -1,14 +1,18 @@
 package handler
 
 import (
-	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
-type Health struct{}
+type Health struct {
+	logger *slog.Logger
+}
 
-func NewHealth() *Health {
-	return &Health{}
+func NewHealth(logger *slog.Logger) *Health {
+	return &Health{
+		logger: logger,
+	}
 }
 
 // Health godoc
@@ -19,7 +23,5 @@ func NewHealth() *Health {
 // @Success 200 {object} statusResponse
 // @Router /health [get]
 func (h *Health) Health(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(statusResponse{Status: "ok"})
+	respondWithJSON(w, h.logger, http.StatusOK, statusResponse{Status: "ok"})
 }

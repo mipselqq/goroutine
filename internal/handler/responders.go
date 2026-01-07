@@ -19,3 +19,11 @@ func respondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, paylo
 func respondWithError(w http.ResponseWriter, logger *slog.Logger, code int, message error) {
 	respondWithJSON(w, logger, code, errorResponse{Error: message.Error()})
 }
+
+type statusResponse struct {
+	Status string `json:"status" example:"ok"`
+}
+
+type errorResponse struct {
+	Error string `json:"error" example:"invalid email format"`
+}

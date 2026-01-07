@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"go-todo/internal/handler"
+	"go-todo/internal/testutil"
 )
 
 func TestHealthHandler(t *testing.T) {
@@ -13,7 +14,7 @@ func TestHealthHandler(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 	rr := httptest.NewRecorder()
-	h := handler.NewHealth()
+	h := handler.NewHealth(testutil.CreateTestLogger(t))
 
 	h.Health(rr, req)
 

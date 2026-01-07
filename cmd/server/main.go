@@ -50,13 +50,12 @@ func main() {
 	})
 
 	authHandler := handler.NewAuth(logger, authService)
-	healthHandler := handler.NewHealth()
+	healthHandler := handler.NewHealth(logger)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", authHandler.Register)
 	mux.HandleFunc("POST /login", authHandler.Login)
 	mux.HandleFunc("GET /health", healthHandler.Health)
-	// TODO: restrict unpriviliged access
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
 	addr := appCfg.Host + ":" + appCfg.Port
