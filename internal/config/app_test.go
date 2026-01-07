@@ -3,6 +3,7 @@ package config
 import (
 	"log/slog"
 	"testing"
+	"time"
 )
 
 func TestNewAppConfigFromEnv(t *testing.T) {
@@ -28,6 +29,9 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 		if cfg.Host != "0.0.0.0" {
 			t.Errorf("expected default host '0.0.0.0', got %q", cfg.Host)
+		}
+		if cfg.JWTExp != 24*time.Hour {
+			t.Errorf("expected default jwt_exp 24h, got %v", cfg.JWTExp)
 		}
 	})
 
@@ -56,6 +60,7 @@ func TestAppConfig_LogValue(t *testing.T) {
 		LogLevel:  "info",
 		Env:       "dev",
 		JWTSecret: "secret",
+		JWTExp:    24 * time.Hour,
 	}
 
 	v := cfg.LogValue()
@@ -70,6 +75,7 @@ func TestAppConfig_LogValue(t *testing.T) {
 		"log_level":  "info",
 		"env":        "dev",
 		"jwt_secret": "(6 chars)",
+		"jwt_exp":    "24h0m0s",
 	}
 
 	for _, a := range attrs {
