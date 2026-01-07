@@ -36,6 +36,7 @@ definitions:
         example: ok
         type: string
     type: object
+host: localhost:8080
 info:
   contact: {}
   description: A todo project for learning Go-go-go-go
@@ -115,7 +116,4 @@ paths:
       summary: Register a new user
       tags:
       - auth
-schemes:
-- http
-- https
 swagger: "2.0"

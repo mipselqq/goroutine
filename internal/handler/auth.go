@@ -34,14 +34,6 @@ type registerBody struct {
 	Password string `json:"password" example:"secret-password"`
 }
 
-type statusResponse struct {
-	Status string `json:"status" example:"ok"`
-}
-
-type errorResponse struct {
-	Error string `json:"error" example:"invalid email format"`
-}
-
 // Register godoc
 // @Summary Register a new user
 // @Description Register a new user with email and password
