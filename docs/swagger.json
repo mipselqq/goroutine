@@ -1,8 +1,4 @@
 {
-    "schemes": [
-        "http",
-        "https"
-    ],
     "swagger": "2.0",
     "info": {
         "description": "A todo project for learning Go-go-go-go",
@@ -10,6 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
+    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/health": {
