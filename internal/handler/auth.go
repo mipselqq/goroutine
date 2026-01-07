@@ -101,6 +101,17 @@ type loginResponse struct {
 	Token string `json:"token" example:"jwt-token"`
 }
 
+// Login godoc
+// @Summary Login a user
+// @Description Login with email and password to get a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body loginBody true "Login credentials"
+// @Success 200 {object} loginResponse
+// @Failure 401 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
