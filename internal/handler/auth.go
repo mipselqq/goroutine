@@ -50,8 +50,8 @@ type errorResponse struct {
 // @Produce json
 // @Param body body registerBody true "Registration details"
 // @Success 200 {object} statusResponse
-// @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
+// @Failure 400 {object} errorResponse "Invalid input (email format or password)"
+// @Failure 500 {object} errorResponse "Internal Server Error"
 // @Router /register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
@@ -109,8 +109,8 @@ type loginResponse struct {
 // @Produce json
 // @Param body body loginBody true "Login credentials"
 // @Success 200 {object} loginResponse
-// @Failure 401 {object} errorResponse
-// @Failure 500 {object} errorResponse
+// @Failure 401 {object} errorResponse "Invalid credentials"
+// @Failure 500 {object} errorResponse "Internal Server Error"
 // @Router /login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
