@@ -1,4 +1,4 @@
-.PHONY: dev
+.PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools quickfuzz fuzz
 
 dev:
 	go run ./cmd/server/main.go
