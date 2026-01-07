@@ -6,6 +6,21 @@ definitions:
         example: invalid email format
         type: string
     type: object
+  handler.loginBody:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret-password
+        type: string
+    type: object
+  handler.loginResponse:
+    properties:
+      token:
+        example: jwt-token
+        type: string
+    type: object
   handler.registerBody:
     properties:
       email:
@@ -39,6 +54,36 @@ paths:
       summary: Health check
       tags:
       - health
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password to get a JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.loginResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Login a user
+      tags:
+      - auth
   /register:
     post:
       consumes:
