@@ -32,7 +32,7 @@ func TestNewRouter_Full(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.method, tt.path, nil)
+			req := httptest.NewRequest(tt.method, tt.path, http.NoBody)
 			_, pattern := router.Handler(req)
 
 			if pattern == "" {
@@ -42,7 +42,7 @@ func TestNewRouter_Full(t *testing.T) {
 	}
 
 	t.Run("Non-existing endpoint", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/non-existing", nil)
+		req := httptest.NewRequest(http.MethodGet, "/non-existing", http.NoBody)
 		_, pattern := router.Handler(req)
 
 		if pattern != "" {

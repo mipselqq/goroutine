@@ -45,7 +45,7 @@ func TestAuth_HappyPath(t *testing.T) {
 		if regResp.StatusCode != http.StatusOK {
 			t.Errorf("Expeted register status 200, got %d", regResp.StatusCode)
 		}
-		regResp.Body.Close() // What is that?
+		_ = regResp.Body.Close()
 
 		loginBody, _ := json.Marshal(map[string]string{
 			"email":    email,
@@ -56,7 +56,9 @@ func TestAuth_HappyPath(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Login request failed: %v", err)
 		}
-		defer loginResp.Body.Close()
+		defer func() {
+			_ = loginResp.Body.Close() // Calm down errcheck
+		}()
 
 		if loginResp.StatusCode != http.StatusOK {
 			t.Fatalf("Expected login status 200, got %d", loginResp.StatusCode)
