@@ -13,8 +13,10 @@ import (
 	"go-todo/internal/testutil"
 )
 
+// TODO: factor out common initialization
 func TestUserRepository_Insert(t *testing.T) {
-	r, pool := testutil.SetupUserRepository(t)
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	r := repository.NewPgUser(pool)
 	defer pool.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -51,7 +53,9 @@ func TestUserRepository_Insert(t *testing.T) {
 }
 
 func TestUserRepository_GetPasswordHashByEmail(t *testing.T) {
-	r, pool := testutil.SetupUserRepository(t)
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	r := repository.NewPgUser(pool)
+
 	defer pool.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
