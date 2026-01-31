@@ -28,7 +28,7 @@ func TestTitle(t *testing.T) {
 			expectErr: true,
 		},
 	}
-	
+
 	for _, tt := range titleTests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := domain.NewTitle(tt.input)
