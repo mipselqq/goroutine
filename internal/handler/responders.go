@@ -12,7 +12,7 @@ func respondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, paylo
 
 	err := json.NewEncoder(w).Encode(payload)
 	if err != nil {
-		logger.Error("Failed to send response:", slog.String("err", err.Error()))
+		logger.Warn("Failed to send response:", slog.String("err", err.Error()))
 	}
 }
 
