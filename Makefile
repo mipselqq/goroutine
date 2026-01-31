@@ -5,9 +5,14 @@ dev:
 test:
 	go test ./...
 test-integration:
-	sudo docker-compose up -d postgres
+	sudo docker-compose up -d
 	sleep 2
 	go test -v -tags=integration ./internal/repository/...
+test-e2e:
+	sudo docker-compose up -d
+	sleep 2
+	go test -v -tags=e2e ./tests/...
+
 build:
 	go build -o ./bin/app main.go
 
