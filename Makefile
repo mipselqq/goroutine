@@ -12,6 +12,7 @@ test-e2e:
 	sudo docker-compose up -d
 	sleep 2
 	go test -v -tags=e2e ./tests/...
+test-all: test test-integration test-e2e
 
 build:
 	go build -o ./bin/app main.go
