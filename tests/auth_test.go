@@ -1,0 +1,79 @@
+package tests
+
+import (
+	"bytes"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"go-todo/internal/app"
+	"go-todo/internal/config"
+	"go-todo/internal/testutil"
+)
+
+func TestAuth_HappyPath(t *testing.T) {
+	pool := testutil.SetupTestDB(t, "../migrations")
+	defer pool.Close()
+	testutil.TruncateTable(t, pool)
+
+	cfg := config.NewAppConfigFromEnv()
+	logger := testutil.CreateTestLogger(t)
+	logger.Info("App config", slog.Any("config", cfg))
+
+	router := app.New(logger, pool, &cfg)
+
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+	client := ts.Client()
+
+	t.Run("Full auth flow: register then login", func(t *testing.T) {
+		email := "e2e-user@example.com"
+		password := "very-strong-password"
+
+		regBody, _ := json.Marshal(map[string]string{
+			"email":    email,
+			"password": password,
+		})
+
+		regResp, err := client.Post(ts.URL+"/register", "application/json", bytes.NewBuffer(regBody))
+		if err != nil {
+			t.Fatalf("Register request failed: %v", err)
+		}
+		if regResp.StatusCode != http.StatusOK {
+			t.Errorf("Expeted register status 200, got %d", regResp.StatusCode)
+		}
+		regResp.Body.Close() // What is that?
+
+		loginBody, _ := json.Marshal(map[string]string{
+			"email":    email,
+			"password": password,
+		})
+
+		loginResp, err := client.Post(ts.URL+"/login", "application/json", bytes.NewBuffer(loginBody))
+		if err != nil {
+			t.Fatalf("Login request failed: %v", err)
+		}
+		defer loginResp.Body.Close()
+
+		if loginResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected login status 200, got %d", loginResp.StatusCode)
+		}
+
+		var respBody struct {
+			Token string `json:"token"`
+		}
+		err = json.NewDecoder(loginResp.Body).Decode(&respBody)
+		if err != nil {
+			t.Fatalf("Failed to decode login response: %v", err)
+		}
+
+		// TODO: validate token by sending a request to some protected endpoint
+		parts := strings.Split(respBody.Token, ".")
+		if len(parts) != 3 {
+			t.Fatal("Got invalid JWT token")
+		}
+	})
+}
