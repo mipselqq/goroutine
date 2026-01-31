@@ -13,10 +13,7 @@ import (
 
 	"go-todo/internal/app"
 	"go-todo/internal/config"
-	"go-todo/internal/handler"
 	"go-todo/internal/logging"
-	"go-todo/internal/repository"
-	"go-todo/internal/service"
 
 	_ "go-todo/docs"
 )
@@ -42,16 +39,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	userRepo := repository.NewPgUser(pool)
-	authService := service.NewAuth(userRepo, service.JWTOptions{
-		JWTSecret: appCfg.JWTSecret,
-		Exp:       appCfg.JWTExp,
-	})
-
-	authHandler := handler.NewAuth(logger, authService)
-	healthHandler := handler.NewHealth(logger)
-
-	router := app.NewRouter(authHandler, healthHandler)
+	router := app.New(logger, pool, &appCfg)
 
 	addr := appCfg.Host + ":" + appCfg.Port
 	srv := &http.Server{
