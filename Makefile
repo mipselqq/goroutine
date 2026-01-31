@@ -7,12 +7,14 @@ test:
 test-integration:
 	sudo docker-compose up -d
 	sleep 2
-	go test -v -tags=integration ./internal/repository/...
+	go test -tags=integration ./internal/repository/...
 test-e2e:
 	sudo docker-compose up -d
 	sleep 2
-	go test -v -tags=e2e ./tests/...
-test-all: test test-integration test-e2e
+	go test -tags=e2e ./tests/...
+test-cover:
+	go test -tags=integration -cover ./...
+test-all: test test-integration test-e2e test-cover
 
 build:
 	go build -o ./bin/app main.go
