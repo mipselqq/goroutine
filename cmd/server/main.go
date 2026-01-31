@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	"go-todo/internal/app"
 	"go-todo/internal/config"
@@ -52,16 +51,12 @@ func main() {
 	authHandler := handler.NewAuth(logger, authService)
 	healthHandler := handler.NewHealth(logger)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /register", authHandler.Register)
-	mux.HandleFunc("POST /login", authHandler.Login)
-	mux.HandleFunc("GET /health", healthHandler.Health)
-	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
+	router := app.NewRouter(authHandler, healthHandler)
 
 	addr := appCfg.Host + ":" + appCfg.Port
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: mux,
+		Handler: router,
 	}
 
 	go func() {
