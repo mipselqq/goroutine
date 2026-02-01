@@ -17,8 +17,11 @@ test-e2e:
 test-cover:
 	go test -tags=integration -cover ./...
 test-all: test test-integration test-e2e test-cover
-build:
+build: fetch-tags
 	go build -ldflags "-X main.version=$(VERSION)" -o ./bin/app ./cmd/server/main.go
+
+fetch-tags:
+	git fetch --tags
 
 lint:
 	golangci-lint run
