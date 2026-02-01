@@ -1,7 +1,9 @@
 .PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools quickfuzz fuzz
 
+VERSION := $(shell git describe --tags --always --dirty)
+
 dev:
-	go run ./cmd/server/main.go
+	go run -ldflags "-X main.version=$(VERSION)" ./cmd/server/main.go
 test:
 	go test ./...
 test-integration:
@@ -17,7 +19,7 @@ test-cover:
 test-all: test test-integration test-e2e test-cover
 
 build:
-	go build -o ./bin/app main.go
+	go build -ldflags "-X main.version=$(VERSION)" -o ./bin/app main.go
 
 lint:
 	golangci-lint run
