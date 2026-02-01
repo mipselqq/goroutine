@@ -1,4 +1,4 @@
-.PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools quickfuzz fuzz fetch-tags vuln
+.PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools fetch-tags vuln
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -17,6 +17,7 @@ test-e2e:
 test-cover:
 	go test -tags=integration -cover ./...
 test-all: test test-integration test-e2e test-cover
+
 build: fetch-tags
 	go build -ldflags "-X main.version=$(VERSION)" -o ./bin/app ./cmd/server/main.go
 
@@ -42,8 +43,3 @@ tools:
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install github.com/evilmartians/lefthook@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
-
-quickfuzz:
-	go test -fuzz=. -fuzztime=20s
-fuzz:
-	go test -fuzz=. -fuzztime=2m
