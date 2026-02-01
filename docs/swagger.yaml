@@ -41,7 +41,6 @@ info:
   contact: {}
   description: A todo project for learning Go-go-go-go
   title: Go Todo API
-  version: "1.0"
 paths:
   /health:
     get:
