@@ -1,29 +1,53 @@
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
+
+autolabeler:
+  - label: 'feat'
+    title: ['feat', 'feat:*', 'feature', 'feature:*']
+  - label: 'fix'
+    title: ['fix', 'fix:*']
+  - label: 'docs'
+    title: ['docs', 'docs:*']
+  - label: 'style'
+    title: ['style', 'style:*']
+  - label: 'refactor'
+    title: ['refactor', 'refactor:*']
+  - label: 'test'
+    title: ['test', 'test:*', 'tests', 'tests:*']
+  - label: 'ci'
+    title: ['ci', 'ci:*']
+  - label: 'build'
+    title: ['build', 'build:*']
+  - label: 'chore'
+    title: ['chore', 'chore:*']
+
 categories:
-  - title: '😼 Features'
-    labels:
-      - 'feature'
-      - 'feat'
-  - title: '👾 Bug Fixes'
-    labels:
-      - 'fix'
-  - title: '🫥 Maintenance'
-    labels:
-      - 'chore'
-      - 'test'
-      - 'build'
+  - title: '🚀 Features'
+    labels: ['feat', 'feature']
+  - title: '🐛 Bug Fixes'
+    labels: ['fix']
+  - title: '📖 Documentation'
+    labels: ['docs']
+  - title: '🎨 Style'
+    labels: ['style']
+  - title: '🔨 Refactoring'
+    labels: ['refactor']
+  - title: '🚨 Tests'
+    labels: ['test', 'tests']
+  - title: '🏗 Build & CI'
+    labels: ['build', 'ci']
+  - title: '🧹 Maintenance'
+    labels: ['chore']
+
 version-resolver:
   major:
-    labels:
-      - 'major'
+    labels: ['major']
   minor:
-    labels:
-      - 'minor'
+    labels: ['minor']
   patch:
-    labels:
-      - 'patch'
+    labels: ['patch']
   default: patch
+
 template: |
   ## Changes
   $CHANGES
