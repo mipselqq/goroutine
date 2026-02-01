@@ -18,6 +18,8 @@ import (
 	_ "go-todo/docs"
 )
 
+var version = "no version bundled by linker"
+
 // @title Go Todo API
 // @version 1.0
 // @description A todo project for learning Go-go-go-go
@@ -31,6 +33,7 @@ func main() {
 	appCfg := config.NewAppConfigFromEnv()
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
 
+	logger.Info("Running", slog.String("version", version))
 	logger.Info("App config", slog.Any("config", appCfg))
 
 	pool, err := app.SetupDatabaseFromEnv(logger, "migrations")
