@@ -4,40 +4,18 @@ tag-template: 'v$RESOLVED_VERSION'
 autolabeler:
   - label: 'feat'
     title: ['feat', 'feat:*', 'feature', 'feature:*']
-  - label: 'fix'
-    title: ['fix', 'fix:*']
-  - label: 'docs'
-    title: ['docs', 'docs:*']
-  - label: 'style'
-    title: ['style', 'style:*']
-  - label: 'refactor'
-    title: ['refactor', 'refactor:*']
-  - label: 'test'
-    title: ['test', 'test:*', 'tests', 'tests:*']
-  - label: 'ci'
-    title: ['ci', 'ci:*']
-  - label: 'build'
-    title: ['build', 'build:*']
-  - label: 'chore'
-    title: ['chore', 'chore:*']
+  - label: 'bug'
+    title: ['fix', 'fix:*', 'bug', 'bug:*']
+  - label: 'todo'
+    title: ['chore', 'chore:*', 'test', 'test:*', 'ci', 'ci:*', 'build', 'build:*', 'refactor', 'refactor:*']
 
 categories:
   - title: '🚀 Features'
     labels: ['feat', 'feature']
   - title: '🐛 Bug Fixes'
-    labels: ['fix']
-  - title: '📖 Documentation'
-    labels: ['docs']
-  - title: '🎨 Style'
-    labels: ['style']
-  - title: '🔨 Refactoring'
-    labels: ['refactor']
-  - title: '🚨 Tests'
-    labels: ['test', 'tests']
-  - title: '🏗 Build & CI'
-    labels: ['build', 'ci']
-  - title: '🧹 Maintenance'
-    labels: ['chore']
+    labels: ['bug', 'fix']
+  - title: '🧹 Tasks & Maintenance'
+    labels: ['todo', 'chore', 'test', 'ci', 'build', 'refactor']
 
 version-resolver:
   major:
