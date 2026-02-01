@@ -1,4 +1,4 @@
-.PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools quickfuzz fuzz fetch-tags
+.PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools quickfuzz fuzz fetch-tags vuln
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -25,6 +25,8 @@ fetch-tags:
 
 lint:
 	golangci-lint run
+vuln:
+	govulncheck ./...
 fmt:
 	gofumpt	-l -w .
 swag:
@@ -39,6 +41,7 @@ tools:
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install github.com/evilmartians/lefthook@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
 
 quickfuzz:
 	go test -fuzz=. -fuzztime=20s
