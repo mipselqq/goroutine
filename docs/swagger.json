@@ -3,8 +3,7 @@
     "info": {
         "description": "A todo project for learning Go-go-go-go",
         "title": "Go Todo API",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
     "host": "localhost:8080",
     "basePath": "/",
