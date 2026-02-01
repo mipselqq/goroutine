@@ -11,5 +11,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /main ./cmd/server/main.go
 FROM gcr.io/distroless/static-debian12
 
 COPY --from=builder /main /main
+COPY --from=builder /app/migrations /migrations
 
 ENTRYPOINT ["/main"]
