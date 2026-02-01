@@ -1,16 +1,37 @@
 pre-commit:
   parallel: true
-  stage_fixed: true
   commands:
-    lint:
-      run: golangci-lint run ./...
     fmt:
       glob: "*.go"
-      run: gofumpt -l -w {staged_files}
+      run: make fmt
+
     swag:
+      glob: "internal/handler/*.go"
       run: make swag
 
-pre-push:
-  commands:
+    lint:
+      glob: "*.go"
+      run: make lint
+
     test:
+      glob: "*.go"
       run: make test
+
+pre-push:
+  parallel: false
+  commands:
+    tidy:
+      glob: "*.go"
+      run: go mod tidy
+
+    lint:
+      glob: "*.go"
+      run: make lint
+
+    vuln:
+      glob: "*.go"
+      run: make vuln
+
+    test:
+      glob: "*.go"
+      run: make test-all
