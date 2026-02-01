@@ -21,7 +21,6 @@ import (
 var version = "no version bundled by linker"
 
 // @title Go Todo API
-// @version 1.0
 // @description A todo project for learning Go-go-go-go
 // @host localhost:8080
 // @BasePath /
