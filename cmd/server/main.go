@@ -11,18 +11,16 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"go-todo/docs"
 	"go-todo/internal/app"
 	"go-todo/internal/config"
 	"go-todo/internal/logging"
-
-	_ "go-todo/docs"
 )
 
 var version = "no version bundled by linker"
 
 // @title Go Todo API
 // @description A todo project for learning Go-go-go-go
-// @host localhost:8080
 // @BasePath /
 func main() {
 	if os.Getenv("ENV") != "prod" {
@@ -30,6 +28,7 @@ func main() {
 	}
 
 	appCfg := config.NewAppConfigFromEnv()
+	docs.SwaggerInfo.Host = appCfg.SwaggerHost
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
 
 	logger.Info("Running", slog.String("version", version))

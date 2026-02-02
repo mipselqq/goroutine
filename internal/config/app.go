@@ -8,12 +8,13 @@ import (
 )
 
 type AppConfig struct {
-	Port      string
-	Host      string
-	LogLevel  string
-	Env       string
-	JWTSecret secrecy.SecretString
-	JWTExp    time.Duration
+	Port        string
+	Host        string
+	LogLevel    string
+	Env         string
+	SwaggerHost string
+	JWTSecret   secrecy.SecretString
+	JWTExp      time.Duration
 }
 
 func NewAppConfigFromEnv() AppConfig {
@@ -24,12 +25,13 @@ func NewAppConfigFromEnv() AppConfig {
 	}
 
 	return AppConfig{
-		Port:      getenvOrDefault("PORT", "8080"),
-		Host:      getenvOrDefault("HOST", "0.0.0.0"),
-		LogLevel:  getenvOrDefault("LOG_LEVEL", "info"),
-		Env:       getenvOrDefault("ENV", "dev"),
-		JWTSecret: secrecy.SecretString(getenvOrDefault("JWT_SECRET", "very_secret")),
-		JWTExp:    jwtExp,
+		Port:        getenvOrDefault("PORT", "8080"),
+		Host:        getenvOrDefault("HOST", "0.0.0.0"),
+		LogLevel:    getenvOrDefault("LOG_LEVEL", "info"),
+		Env:         getenvOrDefault("ENV", "dev"),
+		SwaggerHost: getenvOrDefault("SWAGGER_HOST", "localhost:8080"),
+		JWTSecret:   secrecy.SecretString(getenvOrDefault("JWT_SECRET", "very_secret")),
+		JWTExp:      jwtExp,
 	}
 }
 
@@ -40,6 +42,7 @@ func (c AppConfig) LogValue() slog.Value {
 		slog.String("host", c.Host),
 		slog.String("log_level", c.LogLevel),
 		slog.String("env", c.Env),
+		slog.String("swagger_host", c.SwaggerHost),
 		slog.String("jwt_secret", c.JWTSecret.String()),
 		slog.Duration("jwt_exp", c.JWTExp),
 	)

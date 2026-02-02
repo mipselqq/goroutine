@@ -5,7 +5,6 @@
         "title": "Go Todo API",
         "contact": {}
     },
-    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/health": {

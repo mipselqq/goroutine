@@ -13,6 +13,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		t.Setenv("ENV", "")
 		t.Setenv("JWT_SECRET", "")
 		t.Setenv("HOST", "")
+		t.Setenv("SWAGGER_HOST", "")
 
 		cfg := NewAppConfigFromEnv()
 		if cfg.Port != "8080" {
@@ -23,6 +24,9 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 		if cfg.Env != "dev" {
 			t.Errorf("expected default env 'dev', got %q", cfg.Env)
+		}
+		if cfg.SwaggerHost != "localhost:8080" {
+			t.Errorf("expected default swagger_host 'localhost:8080', got %q", cfg.SwaggerHost)
 		}
 		if cfg.JWTSecret.RevealSecret() != "very_secret" {
 			t.Errorf("expected default jwt_secret 'very_secret', got %q", string(cfg.JWTSecret))
@@ -39,6 +43,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		t.Setenv("PORT", "3000")
 		t.Setenv("LOG_LEVEL", "debug")
 		t.Setenv("ENV", "prod")
+		t.Setenv("SWAGGER_HOST", "example.com")
 
 		cfg := NewAppConfigFromEnv()
 		if cfg.Port != "3000" {
@@ -50,17 +55,21 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		if cfg.Env != "prod" {
 			t.Errorf("expected env 'prod', got %q", cfg.Env)
 		}
+		if cfg.SwaggerHost != "example.com" {
+			t.Errorf("expected swagger_host 'example.com', got %q", cfg.SwaggerHost)
+		}
 	})
 }
 
 func TestAppConfig_LogValue(t *testing.T) {
 	cfg := AppConfig{
-		Port:      "8080",
-		Host:      "localhost",
-		LogLevel:  "info",
-		Env:       "dev",
-		JWTSecret: "secret",
-		JWTExp:    24 * time.Hour,
+		Port:        "8080",
+		Host:        "localhost",
+		LogLevel:    "info",
+		Env:         "dev",
+		SwaggerHost: "localhost:8080",
+		JWTSecret:   "secret",
+		JWTExp:      24 * time.Hour,
 	}
 
 	v := cfg.LogValue()
@@ -70,12 +79,13 @@ func TestAppConfig_LogValue(t *testing.T) {
 
 	attrs := v.Group()
 	expectedAttrs := map[string]string{
-		"port":       "8080",
-		"host":       "localhost",
-		"log_level":  "info",
-		"env":        "dev",
-		"jwt_secret": "(6 chars)",
-		"jwt_exp":    "24h0m0s",
+		"port":         "8080",
+		"host":         "localhost",
+		"log_level":    "info",
+		"env":          "dev",
+		"swagger_host": "localhost:8080",
+		"jwt_secret":   "(6 chars)",
+		"jwt_exp":      "24h0m0s",
 	}
 
 	for _, a := range attrs {
