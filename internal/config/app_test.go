@@ -25,9 +25,6 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		if cfg.Env != "dev" {
 			t.Errorf("expected default env 'dev', got %q", cfg.Env)
 		}
-		if cfg.SwaggerHost != "localhost:8080" {
-			t.Errorf("expected default swagger_host 'localhost:8080', got %q", cfg.SwaggerHost)
-		}
 		if cfg.JWTSecret.RevealSecret() != "very_secret" {
 			t.Errorf("expected default jwt_secret 'very_secret', got %q", string(cfg.JWTSecret))
 		}
@@ -36,6 +33,9 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 		if cfg.JWTExp != 24*time.Hour {
 			t.Errorf("expected default jwt_exp 24h, got %v", cfg.JWTExp)
+		}
+		if cfg.SwaggerHost != "localhost:8080" {
+			t.Errorf("expected default swagger_host 'localhost:8080', got %q", cfg.SwaggerHost)
 		}
 	})
 
@@ -67,9 +67,9 @@ func TestAppConfig_LogValue(t *testing.T) {
 		Host:        "localhost",
 		LogLevel:    "info",
 		Env:         "dev",
-		SwaggerHost: "localhost:8080",
 		JWTSecret:   "secret",
 		JWTExp:      24 * time.Hour,
+		SwaggerHost: "localhost:8080",
 	}
 
 	v := cfg.LogValue()
