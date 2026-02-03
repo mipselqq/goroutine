@@ -7,11 +7,11 @@ dev:
 test:
 	go test ./...
 test-integration:
-	sudo docker-compose up -d
+	docker-compose up -d
 	sleep 2
 	go test -tags=integration ./internal/repository/...
 test-e2e:
-	sudo docker-compose up -d
+	docker-compose up -d
 	sleep 2
 	go test -tags=e2e ./tests/...
 test-cover:
