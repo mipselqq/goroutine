@@ -22,7 +22,7 @@ pre-push:
   commands:
     tidy:
       glob: "*.go"
-      run: go mod tidy
+      run: go mod tidy && git diff --exit-code
 
     lint:
       glob: "*.go"
