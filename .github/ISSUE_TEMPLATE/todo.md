@@ -1,7 +1,7 @@
 ---
 name: Todo
 about: Other tasks and maintenance.
-title: 'type: description'
+title: 'Description of the changes'
 labels: 'todo'
 assignees: 'mipselqq'
 ---
