@@ -7,6 +7,7 @@ dev:
 test:
 	go test ./...
 prepare-test-env:
+	test -f .env.dev || cp .env.example .env.dev
 	docker compose up -d
 	sleep 2
 test-integration: prepare-test-env
