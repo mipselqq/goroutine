@@ -6,17 +6,23 @@ dev:
 	go run -ldflags "-X main.version=$(VERSION)" ./cmd/server/main.go
 test:
 	go test ./...
-test-integration:
-	docker-compose up -d
+prepare-test-env:
+	test -f .env.dev || cp .env.example .env.dev
+	docker compose up -d
 	sleep 2
+test-integration: prepare-test-env
 	go test -tags=integration ./internal/repository/...
-test-e2e:
-	docker-compose up -d
-	sleep 2
+test-e2e: prepare-test-env
 	go test -tags=e2e ./tests/...
 test-cover:
 	go test -tags=integration -cover ./...
-test-all: test test-integration test-e2e test-cover
+test-all: test test-integration test-e2e
+
+test-race:
+	go test -race ./...
+test-integration-race: prepare-test-env
+	go test -race -tags=integration ./internal/repository/...
+test-some-race: test-race test-integration-race
 
 build: fetch-tags
 	go build -ldflags "-X main.version=$(VERSION)" -o ./bin/app ./cmd/server/main.go
