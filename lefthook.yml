@@ -15,14 +15,14 @@ pre-commit:
 
     test:
       glob: "*.go"
-      run: make test
+      run: make test-all
 
 pre-push:
   parallel: false
   commands:
     tidy:
       glob: "*.go"
-      run: go mod tidy
+      run: go mod tidy && git diff --exit-code
 
     lint:
       glob: "*.go"
@@ -32,6 +32,6 @@ pre-push:
       glob: "*.go"
       run: make vuln
 
-    test:
+    test-race:
       glob: "*.go"
-      run: make test-all
+      run: make test-some-race
