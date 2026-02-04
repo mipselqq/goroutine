@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   build-and-push:
+    name: Build and push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +31,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:latest
 
   deploy:
+    name: Deploy
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
