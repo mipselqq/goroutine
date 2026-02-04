@@ -6,13 +6,12 @@ dev:
 	go run -ldflags "-X main.version=$(VERSION)" ./cmd/server/main.go
 test:
 	go test ./...
-test-integration:
+prepare-test-env:
 	docker-compose up -d
 	sleep 2
+test-integration: prepare-test-env
 	go test -tags=integration ./internal/repository/...
-test-e2e:
-	docker-compose up -d
-	sleep 2
+test-e2e: prepare-test-env
 	go test -tags=e2e ./tests/...
 test-cover:
 	go test -tags=integration -cover ./...
