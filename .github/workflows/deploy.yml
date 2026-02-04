@@ -3,6 +3,19 @@ name: Deploy to VDS
 on:
   push:
     branches: [ main ]
+    paths:
+      - Dockerfile
+      - docker-compose.yml
+      - .github/workflows/deploy.yml
+      - internal/**
+      - cmd/**
+  pull_request:
+    paths:
+      - Dockerfile
+      - docker-compose.yml
+      - .github/workflows/deploy.yml
+      - internal/**
+      - cmd/**
 
 permissions:
   contents: read
