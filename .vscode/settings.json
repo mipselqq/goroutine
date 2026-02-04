@@ -1,3 +1,8 @@
 {
-    "go.formatTool": "gofumpt"
+    "go.formatTool": "gofumpt",
+    "gopls": {
+        "build.buildFlags": [
+            "-tags=integration,e2e"
+        ]
+    }
 }
