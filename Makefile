@@ -7,7 +7,7 @@ dev:
 test:
 	go test ./...
 prepare-test-env:
-	docker-compose up -d
+	docker compose up -d
 	sleep 2
 test-integration: prepare-test-env
 	go test -tags=integration ./internal/repository/...
