@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 about: Any misbehaviors.
-title: 'fix: description of the issue'
+title: 'Description of the issue'
 labels: 'bug'
 assignees: 'mipselqq'
 ---
