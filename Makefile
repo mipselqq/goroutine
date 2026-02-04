@@ -21,7 +21,7 @@ test-race:
 	got test -race ./...
 test-integration-race: prepare-test-env
 	go test -race -tags=integration ./internal/repository/...
-test-all-race: test-race test-integration-race
+test-some-race: test-race test-integration-race
 
 build: fetch-tags
 	go build -ldflags "-X main.version=$(VERSION)" -o ./bin/app ./cmd/server/main.go
