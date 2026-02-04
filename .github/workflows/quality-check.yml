@@ -2,43 +2,9 @@ name: Check code quality
 
 on:
   push:
-    branches: # Post-merge check
+    branches:
       - main
-    pull_request: # Check any pull
-
-jobs:
-  tests:
-    name: Run all tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      - name: Run all tests
-        run: make test-all
-
-  race-detect:
-    name: Run some tests with race detector
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      - name: Run tests
-        run: make test-some-race
-name: Check code quality
-
-on:
-  push:
-    branches: # Post-merge check
-      - main
-    pull_request: # Check any pull
+  pull_request:
 
 jobs:
   tests:

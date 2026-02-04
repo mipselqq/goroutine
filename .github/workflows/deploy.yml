@@ -29,8 +29,8 @@ jobs:
           name: todo-app-image
           path: /tmp/todo-app.tar
 
-  audit:
-    name: Security audit
+  security_scan:
+    name: Security Scan
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -46,9 +46,9 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
 
-  push:
+  publish:
     name: Push to GHCR
-    needs: security-scan
+    needs: security_scan
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
@@ -69,7 +69,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: push
+    needs: publish
     runs-on: ubuntu-latest
     steps:
       - name: Executing remote ssh
