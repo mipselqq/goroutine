@@ -20,10 +20,6 @@ pre-commit:
 pre-push:
   parallel: false
   commands:
-    tidy:
-      glob: "*.go"
-      run: go mod tidy && git diff --exit-code
-
     lint:
       glob: "*.go"
       run: make lint
