@@ -5,7 +5,7 @@ import (
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
-	"go-todo/internal/handler"
+	"goroutine/internal/handler"
 )
 
 func NewRouter(authHandler *handler.Auth, healthHandler *handler.Health) *http.ServeMux {

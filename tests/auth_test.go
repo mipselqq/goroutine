@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"go-todo/internal/app"
-	"go-todo/internal/config"
-	"go-todo/internal/testutil"
+	"goroutine/internal/app"
+	"goroutine/internal/config"
+	"goroutine/internal/testutil"
 )
 
 func TestAuth_HappyPath(t *testing.T) {

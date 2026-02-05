@@ -1,4 +1,4 @@
-module go-todo
+module goroutine
 
 go 1.25.5
 

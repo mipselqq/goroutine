@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"go-todo/internal/secrecy"
+	"goroutine/internal/secrecy"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

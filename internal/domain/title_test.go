@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	"go-todo/internal/domain"
+	"goroutine/internal/domain"
 )
 
 func TestTitle(t *testing.T) {

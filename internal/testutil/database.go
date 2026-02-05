@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go-todo/internal/app"
+	"goroutine/internal/app"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
