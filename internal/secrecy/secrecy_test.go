@@ -14,14 +14,14 @@ func TestSecretString(t *testing.T) {
 	ssRevealed := ss.RevealSecret()
 
 	if ss.RevealSecret() != s {
-		t.Fatalf("Expected '%s' after reveal, got '%s'", s, ssRevealed)
+		t.Errorf("Expected '%s' after reveal, got '%s'", s, ssRevealed)
 	}
 
 	ssHiddenRepr := ss.String()
 	ssLogged := ss.LogValue().String()
 
 	if ssLogged != ssHiddenRepr {
-		t.Fatalf("Expected LogValue '%s' == String '%s'", ssLogged, ssHiddenRepr)
+		t.Errorf("Expected LogValue '%s' == String '%s'", ssLogged, ssHiddenRepr)
 	}
 
 	sLower := strings.ToLower(s)
@@ -32,6 +32,6 @@ func TestSecretString(t *testing.T) {
 	right := sLower[:mid]
 
 	if strings.Contains(ssLower, left) || strings.Contains(ssLower, right) {
-		t.Fatalf("Secret representation '%s' contains half of original '%s'", ss, s)
+		t.Errorf("Secret representation '%s' contains half of original '%s'", ss, s)
 	}
 }
