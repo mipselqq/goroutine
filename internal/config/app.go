@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"go-todo/internal/secrecy"
+	"goroutine/internal/secrecy"
 )
 
 type AppConfig struct {

@@ -7,9 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"go-todo/internal/domain"
-	"go-todo/internal/logging"
-	"go-todo/internal/service"
+	"goroutine/internal/domain"
+	"goroutine/internal/logging"
+	"goroutine/internal/service"
 )
 
 type AuthService interface {

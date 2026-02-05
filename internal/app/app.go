@@ -4,10 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"go-todo/internal/config"
-	"go-todo/internal/handler"
-	"go-todo/internal/repository"
-	"go-todo/internal/service"
+	"goroutine/internal/config"
+	"goroutine/internal/handler"
+	"goroutine/internal/repository"
+	"goroutine/internal/service"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

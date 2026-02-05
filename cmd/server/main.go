@@ -11,16 +11,16 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"go-todo/docs"
-	"go-todo/internal/app"
-	"go-todo/internal/config"
-	"go-todo/internal/logging"
+	"goroutine/docs"
+	"goroutine/internal/app"
+	"goroutine/internal/config"
+	"goroutine/internal/logging"
 )
 
 var version = "no version bundled by linker"
 
-// @title Go Todo API
-// @description A todo project for learning Go-go-go-go
+// @title Goroutine kanban API
+// @description A nice kanban board with a beautiful heart ✨
 // @BasePath /
 func main() {
 	if os.Getenv("ENV") != "prod" {

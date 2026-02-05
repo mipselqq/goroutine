@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"go-todo/internal/domain"
-	"go-todo/internal/repository"
-	"go-todo/internal/secrecy"
-	"go-todo/internal/service"
+	"goroutine/internal/domain"
+	"goroutine/internal/repository"
+	"goroutine/internal/secrecy"
+	"goroutine/internal/service"
 )
 
 type TestCase struct {

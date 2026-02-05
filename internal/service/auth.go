@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"go-todo/internal/domain"
-	"go-todo/internal/repository"
-	"go-todo/internal/secrecy"
+	"goroutine/internal/domain"
+	"goroutine/internal/repository"
+	"goroutine/internal/secrecy"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"

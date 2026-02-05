@@ -9,10 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go-todo/internal/domain"
-	"go-todo/internal/handler"
-	"go-todo/internal/service"
-	"go-todo/internal/testutil"
+	"goroutine/internal/domain"
+	"goroutine/internal/handler"
+	"goroutine/internal/service"
+	"goroutine/internal/testutil"
 )
 
 type TestCase struct {

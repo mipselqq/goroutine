@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go-todo/internal/handler"
-	"go-todo/internal/testutil"
+	"goroutine/internal/handler"
+	"goroutine/internal/testutil"
 )
 
 func TestHealthHandler(t *testing.T) {
