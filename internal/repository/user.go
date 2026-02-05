@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"go-todo/internal/domain"
+	"goroutine/internal/domain"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"

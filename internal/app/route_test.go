@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go-todo/internal/app"
-	"go-todo/internal/handler"
-	"go-todo/internal/testutil"
+	"goroutine/internal/app"
+	"goroutine/internal/handler"
+	"goroutine/internal/testutil"
 )
 
 func TestNewRouter_Full(t *testing.T) {

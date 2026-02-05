@@ -3,7 +3,7 @@ package service_test
 import (
 	"context"
 
-	"go-todo/internal/domain"
+	"goroutine/internal/domain"
 )
 
 type MockUserRepository struct {

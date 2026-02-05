@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"go-todo/internal/domain"
-	"go-todo/internal/repository"
-	"go-todo/internal/testutil"
+	"goroutine/internal/domain"
+	"goroutine/internal/repository"
+	"goroutine/internal/testutil"
 )
 
 // TODO: factor out common initialization

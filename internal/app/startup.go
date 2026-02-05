@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"go-todo/internal/config"
-	"go-todo/internal/logging"
+	"goroutine/internal/config"
+	"goroutine/internal/logging"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
