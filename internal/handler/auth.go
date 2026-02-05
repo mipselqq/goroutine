@@ -131,6 +131,8 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
 			respondWithError(w, h.logger, http.StatusUnauthorized, err)
+		case errors.Is(err, service.ErrUserNotFound):
+			respondWithError(w, h.logger, http.StatusUnauthorized, err)
 		default:
 			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
 			respondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)

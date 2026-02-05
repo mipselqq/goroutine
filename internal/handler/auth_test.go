@@ -184,8 +184,8 @@ func TestAuth_Login(t *testing.T) {
 					return "", service.ErrUserNotFound // Enumeration and timing attacks are known, this is fine
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: `{"error":"internal error happened"}`,
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: `{"error":"user not found"}`,
 		},
 		{
 			name:      "Internal error",
