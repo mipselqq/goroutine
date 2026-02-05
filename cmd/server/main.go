@@ -19,8 +19,8 @@ import (
 
 var version = "no version bundled by linker"
 
-// @title Go Todo API
-// @description A todo project for learning Go-go-go-go
+// @title Goroutine kanban API
+// @description A nice kanban board with a beautiful heart ✨
 // @BasePath /
 func main() {
 	if os.Getenv("ENV") != "prod" {
