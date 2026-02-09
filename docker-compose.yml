@@ -20,6 +20,8 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    extra_hosts:
+      - "app:host-gateway"
 
   grafana:
     image: grafana/grafana:12.3.2
