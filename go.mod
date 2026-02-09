@@ -1,6 +1,6 @@
 module goroutine
 
-go 1.25.5
+go 1.25.7
 
 require (
 	github.com/alexedwards/argon2id v1.0.0
@@ -41,7 +41,7 @@ require (
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.yaml.in/yaml/v2 v2.4.3 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/mod v0.31.0 // indirect
