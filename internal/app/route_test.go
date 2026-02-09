@@ -28,6 +28,7 @@ func TestNewRouter_Full(t *testing.T) {
 		{"Login endpoint", http.MethodPost, "/login"},
 		{"Health endpoint", http.MethodGet, "/health"},
 		{"Swagger endpoint", http.MethodGet, "/swagger/"},
+		{"Metrics endpoint", http.MethodGet, "/metrics"},
 	}
 
 	for _, tt := range tests {
