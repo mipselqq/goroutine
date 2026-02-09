@@ -31,7 +31,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
   node_exporter:
-    image: prom/node_exporter:latest
+    image: prom/node-exporter:latest
     ports:
       - "9100:9100"
 

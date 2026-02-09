@@ -43,7 +43,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_ASAP
 
   node_exporter:
-    image: prom/node_exporter:latest
+    image: prom/node-exporter:latest
     restart: always
     volumes:
       - /proc:/host/proc:ro
