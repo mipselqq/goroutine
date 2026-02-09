@@ -35,12 +35,15 @@ services:
   grafana:
     image: grafana/grafana:12.3.2
     restart: always
-    volumes:
-      - grafana_data_prod:/var/lib/grafana
     ports:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_ASAP
+    volumes:
+      - grafana_data_prod:/var/lib/grafana
+      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards
 
   node_exporter:
     image: prom/node-exporter:v1.10.2
