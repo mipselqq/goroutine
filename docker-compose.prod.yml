@@ -23,7 +23,7 @@ services:
       - "8080:8080"
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.9.1
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -33,7 +33,7 @@ services:
       - '--storage.tsdb.retention.time=15d'
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.3.2
     restart: always
     volumes:
       - grafana_data_prod:/var/lib/grafana
@@ -43,7 +43,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_ASAP
 
   node_exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.10.2
     restart: always
     volumes:
       - /proc:/host/proc:ro
