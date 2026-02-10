@@ -2,6 +2,8 @@ services:
   postgres:
     image: postgres:18-alpine
     container_name: go_todo_db_dev
+    cpu_shares: 1024
+    oom_score_adj: -800
     env_file:
       - .env.dev
     ports:
@@ -16,6 +18,8 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.9.1
+    cpu_shares: 512
+    oom_score_adj: 100
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -30,6 +34,8 @@ services:
 
   grafana:
     image: grafana/grafana:12.3.2
+    cpu_shares: 256
+    oom_score_adj: 200
     env_file:
       - .env.dev
     ports:
@@ -48,6 +54,8 @@ services:
 
   node_exporter:
     image: prom/node-exporter:v1.10.2
+    cpu_shares: 128
+    oom_score_adj: 500
     ports:
       - "9100:9100"
     healthcheck:
@@ -58,6 +66,8 @@ services:
 
   loki:
     image: grafana/loki:3.3.2
+    cpu_shares: 256
+    oom_score_adj: 300
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -71,6 +81,8 @@ services:
 
   alloy:
     image: grafana/alloy:v1.6.1
+    cpu_shares: 128
+    oom_score_adj: 400
     volumes:
       - ./infra/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
