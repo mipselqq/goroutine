@@ -34,11 +34,11 @@ services:
 
   grafana:
     image: grafana/grafana:12.3.2
+    env_file:
+      - .env.prod
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_ASAP
     volumes:
       - grafana_data_prod:/var/lib/grafana
       - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources

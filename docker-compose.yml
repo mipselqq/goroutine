@@ -25,12 +25,12 @@ services:
 
   grafana:
     image: grafana/grafana:12.3.2
+    env_file:
+      - .env.dev
     ports:
       - "3000:3000"
     depends_on:
       - prometheus
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
