@@ -31,6 +31,11 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=15d'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   grafana:
     image: grafana/grafana:12.3.2
@@ -44,6 +49,11 @@ services:
       - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./infra/grafana/dashboards:/etc/grafana/dashboards
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   node_exporter:
     image: prom/node-exporter:v1.10.2
@@ -56,6 +66,11 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:9100/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   loki:
     image: grafana/loki:3.3.2
@@ -65,6 +80,11 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data_prod:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   alloy:
     image: grafana/alloy:v1.6.1
