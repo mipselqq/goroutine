@@ -6,3 +6,8 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     uid: Prometheus
+  - name: Loki
+    type: loki
+    url: http://loki:3100
+    uid: Loki
+    uid: Prometheus

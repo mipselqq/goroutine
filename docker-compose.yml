@@ -41,5 +41,26 @@ services:
     ports:
       - "9100:9100"
 
+  loki:
+    image: grafana/loki:3.3.2
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data_dev:/loki
+
+  alloy:
+    image: grafana/alloy:v1.6.1
+    volumes:
+      - ./infra/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data_dev:/var/lib/alloy/data
+    command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    user: root # To read /var/lib/docker/containers logs
+    depends_on:
+      - loki
+
 volumes:
   postgres_data_dev:
+  loki_data_dev:
+  alloy_data_dev:

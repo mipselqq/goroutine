@@ -57,7 +57,30 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
 
+  loki:
+    image: grafana/loki:3.3.2
+    restart: always
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data_prod:/loki
+
+  alloy:
+    image: grafana/alloy:v1.6.1
+    restart: always
+    volumes:
+      - ./infra/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data_prod:/var/lib/alloy/data
+    command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    user: root
+    depends_on:
+      - loki
+
 volumes:
   postgres_data_prod:
   prometheus_data_prod:
   grafana_data_prod:
+  loki_data_prod:
+  alloy_data_prod:
