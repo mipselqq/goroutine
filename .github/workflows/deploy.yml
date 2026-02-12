@@ -4,18 +4,22 @@ on:
   push:
     branches: [ main ]
     paths:
-      - Dockerfile
-      - docker-compose.yml
-      - .github/workflows/deploy.yml
-      - internal/**
-      - cmd/**
+      - 'Dockerfile'
+      - 'docker-compose*'
+      - '.github/workflows/deploy.yml'
+      - 'prometheus.yml'
+      - 'infra/**'
+      - 'internal/**'
+      - 'cmd/**'
   pull_request:
     paths:
-      - Dockerfile
-      - docker-compose.yml
-      - .github/workflows/deploy.yml
-      - internal/**
-      - cmd/**
+      - 'Dockerfile'
+      - 'docker-compose*'
+      - '.github/workflows/deploy.yml'
+      - 'prometheus.yml'
+      - 'infra/**'
+      - 'internal/**'
+      - 'cmd/**'
 
 permissions:
   contents: read
@@ -85,6 +89,17 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy config files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.prod.yml,prometheus.yml,infra/"
+          target: "/home/mipselqq/apps/todo-go"
+
       - name: Executing remote ssh
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -93,5 +108,5 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/mipselqq/apps/todo-go
-            docker compose pull app
-            docker compose up -d
+            docker compose -f docker-compose.prod.yml pull app
+            docker compose -f docker-compose.prod.yml up -d

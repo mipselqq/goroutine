@@ -2,6 +2,8 @@
 
 VERSION := $(shell git describe --tags --always --dirty)
 
+# NOTE: one must allow request from 172.16.0.0/12 in their host firewall
+# to make prometheus see metrics from the app on the host.
 dev:
 	go run -ldflags "-X main.version=$(VERSION)" ./cmd/server/main.go
 test:
