@@ -20,35 +20,18 @@ func TestMetrics_Collection(t *testing.T) {
 		path         string
 		method       string
 		expectedCode string
-		shouldCount  bool
 	}{
 		{
 			name:         "Count successful register",
 			path:         "/register",
 			method:       http.MethodPost,
 			expectedCode: "200",
-			shouldCount:  true,
 		},
 		{
 			name:         "Count failed health",
 			path:         "/health",
 			method:       http.MethodGet,
 			expectedCode: "403",
-			shouldCount:  true,
-		},
-		{
-			name:         "Don't count successful metrics request",
-			path:         "/metrics",
-			method:       http.MethodGet,
-			expectedCode: "200",
-			shouldCount:  false,
-		},
-		{
-			name:         "Don't count failed swagger request",
-			path:         "/swagger",
-			method:       http.MethodGet,
-			expectedCode: "403",
-			shouldCount:  false,
 		},
 	}
 
@@ -81,12 +64,12 @@ func TestMetrics_Collection(t *testing.T) {
 				"status": tt.expectedCode,
 			}))
 
-			if tt.shouldCount && count != 1 {
+			if count != 1 {
 				t.Errorf("Expected count = 1, got %f", count)
 			}
 
 			histCount := testutil.CollectAndCount(mw.HttpDuration)
-			if tt.shouldCount && histCount == 0 {
+			if histCount == 0 {
 				t.Errorf("Expected histogram to capture observation")
 			}
 		})

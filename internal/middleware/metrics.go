@@ -13,7 +13,7 @@ type Metrics struct {
 	HttpDuration *prometheus.HistogramVec
 }
 
-func NewMetrics(reg prometheus.Registerer) Metrics {
+func NewMetrics(reg prometheus.Registerer) *Metrics {
 	m := Metrics{
 		HttpRequests: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
@@ -33,7 +33,7 @@ func NewMetrics(reg prometheus.Registerer) Metrics {
 	}
 	reg.MustRegister(m.HttpRequests, m.HttpDuration)
 
-	return m
+	return &m
 }
 
 type StatusSpyWriter struct {

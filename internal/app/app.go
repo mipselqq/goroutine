@@ -26,5 +26,5 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) http.Ha
 
 	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 
-	return metricsMiddleware.Wrap(NewRouter(authHandler, healthHandler))
+	return NewRouter(metricsMiddleware, authHandler, healthHandler)
 }
