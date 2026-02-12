@@ -1,6 +1,6 @@
 FROM golang:1.25.7-alpine AS builder
 
-RUN apk add --no-cache make
+RUN apk add --no-cache make=4.4.1-r4
 
 ARG VERSION=unknown
 WORKDIR /app
