@@ -31,13 +31,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build and export
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true # Загружаем в локальный докер для экспорта
+          load: true
           tags: todo-app:temp
           outputs: type=docker,dest=/tmp/todo-app.tar
       - name: Upload artifact

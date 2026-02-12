@@ -1,0 +1,3 @@
+ignored:
+  - DL3018 # Requres to freeze apline package verion, which is annoying, because the official mirror doesn't store older versions
+           # So even a small patch can break everything (package pinning syntax is not a solution due to lack of flexibility)

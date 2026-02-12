@@ -1,6 +1,6 @@
-.PHONY: dev test test-integration build lint fmt swag migrate-up migrate-down migrate-status tools fetch-tags vuln
+.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down migrate-status tools try-fetch-tags vuln
 
-VERSION := $(shell git describe --tags --always --dirty)
+VERSION := $(shell git describe --tags --always --dirty || "")
 
 # NOTE: one must allow request from 172.16.0.0/12 in their host firewall
 # to make prometheus see metrics from the app on the host.
@@ -26,11 +26,15 @@ test-integration-race: prepare-test-env
 	go test -race -tags=integration ./internal/repository/...
 test-some-race: test-race test-integration-race
 
-build: fetch-tags
-	go build -ldflags "-X main.version=$(VERSION)" -o ./bin/app ./cmd/server/main.go
+build-bin: try-fetch-tags
+	CGO_ENABLED=0 \
+	GOOS=linux \
+	go build \
+	-ldflags "-X main.version=$(VERSION)" \
+	-o /bin/app ./cmd/server/main.go
 
-fetch-tags:
-	git fetch --tags
+try-fetch-tags:
+	git fetch --tags || true
 
 lint:
 	golangci-lint run
