@@ -7,10 +7,10 @@ assignees: 'mipselqq'
 ---
 
 ### Description
-<!-- Provide a clear description of what kind of task needs to be implemented-->
+<!-- Provide a high-level explanation: what are we doing and why? (Business or maintenance value) -->
 
 ### Tasks
-<!-- Checklist of implementation steps -->
+<!-- Checklist of implementation steps for developers -->
 - [ ] Task 1
 - [ ] Task 2
 
