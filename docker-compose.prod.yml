@@ -3,6 +3,7 @@ services:
     image: postgres:18-alpine
     cpu_shares: 1024
     oom_score_adj: -800
+    restart: unless-stopped
     env_file:
       - .env.prod
     healthcheck:
@@ -17,7 +18,7 @@ services:
     image: ghcr.io/mipselqq/goroutine:latest
     cpu_shares: 1024
     oom_score_adj: -900
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env.prod
     depends_on:
@@ -30,7 +31,7 @@ services:
     image: prom/prometheus:v3.9.1
     cpu_shares: 512
     oom_score_adj: 100
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data_prod:/prometheus
@@ -49,7 +50,7 @@ services:
     oom_score_adj: 200
     env_file:
       - .env.prod
-    restart: always
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
@@ -67,7 +68,7 @@ services:
     image: prom/node-exporter:v1.10.2
     cpu_shares: 128
     oom_score_adj: 500
-    restart: always
+    restart: unless-stopped
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -86,7 +87,7 @@ services:
     image: grafana/loki:3.3.2
     cpu_shares: 256
     oom_score_adj: 300
-    restart: always
+    restart: unless-stopped
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -102,7 +103,7 @@ services:
     image: grafana/alloy:v1.6.1
     cpu_shares: 128
     oom_score_adj: 400
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./infra/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
