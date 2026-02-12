@@ -1,15 +1,14 @@
 FROM golang:1.25.7-alpine AS builder
 
-RUN apk add --no-cache make=4.4.1-r4
+RUN apk add --no-cache make=4.4.1-r4 2.53.0-r0
 
-ARG VERSION=unknown
 WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN make build VERSION=${VERSION}
+RUN make build-bin
 
 FROM gcr.io/distroless/static-debian12@sha256:cd64bec9cec257044ce3a8dd3620cf83b387920100332f2b041f19c4d2febf93
 

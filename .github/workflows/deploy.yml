@@ -31,20 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Generate version
-        id: vars
-        run: echo "VERSION=$(git describe --tags --always)" >> $GITHUB_OUTPUT
       - name: Build and export
         uses: docker/build-push-action@v5
         with:
           context: .
           load: true
           tags: todo-app:temp
-          build-args: VERSION=${{ steps.vars.outputs.VERSION }}
           outputs: type=docker,dest=/tmp/todo-app.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v4
