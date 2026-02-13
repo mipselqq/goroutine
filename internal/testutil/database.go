@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,12 +25,14 @@ func SetupTestDB(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	return pool
 }
 
-func TruncateTable(t *testing.T, pool *pgxpool.Pool) {
+func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := pool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
+	query := fmt.Sprintf("TRUNCATE TABLE %s CASCADE", name)
+
+	_, err := pool.Exec(ctx, query)
 	if err != nil {
-		t.Fatalf("Failed to TRUNCATE TABLE users: %v", err)
+		t.Fatalf("Failed to TRUNCATE TABLE %s: %v", name, err)
 	}
 }

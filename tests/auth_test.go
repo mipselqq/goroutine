@@ -19,7 +19,6 @@ import (
 func TestAuth_HappyPath(t *testing.T) {
 	pool := testutil.SetupTestDB(t, "../migrations")
 	defer pool.Close()
-	testutil.TruncateTable(t, pool)
 
 	cfg := config.NewAppConfigFromEnv()
 	logger := testutil.CreateTestLogger(t)
@@ -32,6 +31,8 @@ func TestAuth_HappyPath(t *testing.T) {
 	client := ts.Client()
 
 	t.Run("Full auth flow: register then login", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "users")
+
 		email := "e2e-user@example.com"
 		password := "very-strong-password"
 
