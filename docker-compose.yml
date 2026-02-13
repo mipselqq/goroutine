@@ -5,8 +5,12 @@ services:
     cpu_shares: 1024
     oom_score_adj: -800
     restart: unless-stopped
-    env_file:
-      - .env.dev
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
     ports:
       - "5432:5432"
     healthcheck:
@@ -39,8 +43,8 @@ services:
     cpu_shares: 256
     oom_score_adj: 200
     restart: unless-stopped
-    env_file:
-      - .env.dev
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD
     ports:
       - "3000:3000"
     depends_on:

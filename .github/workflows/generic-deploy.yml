@@ -49,6 +49,21 @@ jobs:
             --private-key ~/.ssh/id_rsa \
             ansible/server-setup.yml
 
+      - name: Create .env.prod file
+        run: |
+          cat <<EOF > .env.prod
+          ENV=${{ vars.ENV }}
+          HOST=${{ vars.HOST }}
+          LOG_LEVEL=${{ vars.LOG_LEVEL }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
+          SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
+          GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          EOF
+
       - name: Copy config files
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -56,7 +71,7 @@ jobs:
           username: ${{ inputs.username }}
           key: ${{ secrets.SSH_KEY }}
 
-          source: "docker-compose.prod.yml,prometheus.yml,infra/"
+          source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
           target: "/home/${{ inputs.username }}/apps/goroutine"
 
       - name: Start Application
@@ -68,5 +83,5 @@ jobs:
           script: |
             cd /home/${{ inputs.username }}/apps/goroutine
 
-            docker compose -f docker-compose.prod.yml pull app
-            docker compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml --env-file .env.prod pull app
+          docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
