@@ -6,6 +6,9 @@ VERSION := $(shell git describe --tags --always --dirty || "")
 # to make prometheus see metrics from the app on the host.
 dev:
 	go run -ldflags "-X main.version=$(VERSION)" ./cmd/server/main.go
+dev-env:
+	docker compose --env-file .env.dev up -d
+
 test:
 	go test ./...
 prepare-test-env:

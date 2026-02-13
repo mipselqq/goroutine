@@ -4,8 +4,12 @@ services:
     cpu_shares: 1024
     oom_score_adj: -800
     restart: unless-stopped
-    env_file:
-      - .env.prod
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -19,8 +23,16 @@ services:
     cpu_shares: 1024
     oom_score_adj: -900
     restart: unless-stopped
-    env_file:
-      - .env.prod
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - ENV
+      - LOG_LEVEL
+      - SWAGGER_HOST
+      - HOST
     depends_on:
       db:
         condition: service_healthy
@@ -48,8 +60,8 @@ services:
     image: grafana/grafana:12.3.2
     cpu_shares: 256
     oom_score_adj: 200
-    env_file:
-      - .env.prod
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD
     restart: unless-stopped
     ports:
       - "3000:3000"
