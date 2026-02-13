@@ -83,5 +83,5 @@ jobs:
           script: |
             cd /home/${{ inputs.username }}/apps/goroutine
 
-          docker compose -f docker-compose.prod.yml --env-file .env.prod pull app
-          docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull app
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
