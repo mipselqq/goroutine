@@ -1,0 +1,115 @@
+- name: Server Setup
+  hosts: all
+  become: yes
+
+  roles:
+    - dev-sec.os-hardening
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required system packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - ufw
+          - fail2ban
+        state: present
+
+
+    - name: Configure Fail2Ban (Strict Rules)
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          bantime = 2h
+          findtime = 30m
+          maxretry = 4
+          ignoreip = 127.0.0.1/8 ::1
+
+          [sshd]
+          enabled = true
+          port = ssh
+          backend = systemd
+      notify: Restart Fail2Ban
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Setup UFW
+      ufw:
+        state: enabled
+        policy: deny
+        rule: allow
+        name: OpenSSH
+
+    - name: Allow HTTP/HTTPS
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - 80
+        - 443
+        - 8080
+        - 3000
+
+    - name: Create a new user for deployment
+      user:
+        name: deployer
+        shell: /bin/bash
+        groups: sudo,docker
+        append: yes
+        create_home: yes
+        state: present
+
+    - name: Set up authorized keys for the deployer user
+      authorized_key:
+        user: deployer
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}" 
+
+    - name: SSH Hardening - Disable Root Login
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
+
+    - name: Restart Fail2Ban
+      service:
+        name: fail2ban
+        state: restarted
