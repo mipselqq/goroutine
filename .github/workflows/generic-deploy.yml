@@ -1,0 +1,72 @@
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      host:
+        required: true
+        type: string
+      username:
+        required: true
+        type: string
+        default: 'deployer'
+      env_name:
+        required: true
+        type: string
+    secrets:
+      SSH_KEY:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Generate pulic key from private key
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+          ssh-keyscan -H ${{ inputs.host }} >> ~/.ssh/known_hosts
+
+      - name: Run Ansible Playbook
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+          
+          ansible-galaxy install -r ansible/requirements.yml
+
+          ansible-playbook -i "${{ inputs.host }}," \
+            -u ${{ inputs.username }} \
+            --private-key ~/.ssh/id_rsa \
+            ansible/server-setup.yml
+
+      - name: Copy config files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ inputs.host }}
+          username: ${{ inputs.username }}
+          key: ${{ secrets.SSH_KEY }}
+
+          source: "docker-compose.prod.yml,prometheus.yml,infra/"
+          target: "/home/${{ inputs.username }}/apps/goroutine"
+
+      - name: Start Application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ inputs.host }}
+          username: ${{ inputs.username }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/${{ inputs.username }}/apps/goroutine
+
+            docker compose -f docker-compose.prod.yml pull app
+            docker compose -f docker-compose.prod.yml up -d
