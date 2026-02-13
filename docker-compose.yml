@@ -2,6 +2,9 @@ services:
   postgres:
     image: postgres:18-alpine
     container_name: go_todo_db_dev
+    cpu_shares: 1024
+    oom_score_adj: -800
+    restart: unless-stopped
     env_file:
       - .env.dev
     ports:
@@ -14,5 +17,88 @@ services:
     volumes:
       - postgres_data_dev:/var/lib/postgresql
 
+  prometheus:
+    image: prom/prometheus:v3.9.1
+    cpu_shares: 512
+    oom_score_adj: 100
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "app:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:12.3.2
+    cpu_shares: 256
+    oom_score_adj: 200
+    restart: unless-stopped
+    env_file:
+      - .env.dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  node_exporter:
+    image: prom/node-exporter:v1.10.2
+    cpu_shares: 128
+    oom_score_adj: 500
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:9100/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  loki:
+    image: grafana/loki:3.3.2
+    cpu_shares: 256
+    oom_score_adj: 300
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data_dev:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  alloy:
+    image: grafana/alloy:v1.6.1
+    cpu_shares: 128
+    oom_score_adj: 400
+    restart: unless-stopped
+    volumes:
+      - ./infra/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data_dev:/var/lib/alloy/data
+    command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    user: root # To read /var/lib/docker/containers logs
+    depends_on:
+      - loki
+
 volumes:
   postgres_data_dev:
+  loki_data_dev:
+  alloy_data_dev:

@@ -6,14 +6,16 @@ labels: 'feat'
 assignees: 'mipselqq'
 ---
 
-### Problem Statement
-<!-- Is your feature request related to a problem? Please describe -->
+### Description
+<!-- Provide a high-level explanation for non-developers (managers). What is the business value or user need? -->
 
 ### Proposed Solution
-<!-- A clear and concise description of what you want to happen -->
+<!-- A clear and concise description of the intended technical approach. -->
 
-### Implementation Details
-<!-- List of tasks to implement this feature -->
+### Technical Details (optional)
+<!-- Specific implementation notes for developers (internal logic, database changes, etc) -->
+
+### Tasks
 - [ ] Task 1
 - [ ] Task 2
 
