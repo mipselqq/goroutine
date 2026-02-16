@@ -17,8 +17,26 @@
           - software-properties-common
           - ufw
           - fail2ban
+          - unattended-upgrades
         state: present
 
+    - name: Install unattended-upgrades
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Ensure unattended-upgrades is running
+      service:
+        name: unattended-upgrades
+        state: started
+        enabled: yes
+
+    - name: SSH Hardening - Disable Password Authentication
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: Restart SSH
 
     - name: Configure Fail2Ban (Strict Rules)
       copy:
