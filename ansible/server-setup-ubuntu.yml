@@ -133,13 +133,19 @@
         policy: deny
         direction: incoming
 
-    - name: Allow Services
+    - name: Allow direct SSH access
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+
+    - name: Allow public ports (forwarded to Docker)
       ufw:
         rule: allow
         port: "{{ item | string }}"
         proto: tcp
+        route: yes
       loop:
-        - 22
         - 80
         - 443
         - 8080
