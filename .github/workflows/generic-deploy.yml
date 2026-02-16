@@ -42,15 +42,18 @@ jobs:
         run: |
           cat <<EOF > .env.prod
           ENV=${{ vars.ENV }}
-          HOST=${{ vars.HOST }}
           LOG_LEVEL=${{ vars.LOG_LEVEL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          HOST=${{ vars.HOST }}
+          SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
+
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB=${{ vars.POSTGRES_DB }}
           POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
-          POSTGRES_USER=${{ vars.POSTGRES_USER }}
-          SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
+          POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
+
           GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           EOF
 
       - name: Copy config files
