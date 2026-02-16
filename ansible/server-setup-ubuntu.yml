@@ -158,8 +158,8 @@
       user:
         name: "{{ target_deploy_user }}"
         shell: /bin/bash
-        groups: sudo,docker
-        append: yes
+        groups: docker
+        append: no
         create_home: yes
         state: present
 
