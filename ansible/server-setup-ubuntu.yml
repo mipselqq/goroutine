@@ -110,6 +110,23 @@
         state: started
         enabled: yes
 
+    - name: Prevent Docker from bypassing UFW
+      blockinfile:
+        path: /etc/ufw/after.rules
+        insertbefore: "^# Don't delete these lines"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK: DOCKER-UFW-FIX"
+        block: |
+          *filter
+          :ufw-user-forward - [0:0]
+          :DOCKER-USER - [0:0]
+          -A DOCKER-USER -j RETURN -s 10.0.0.0/8
+          -A DOCKER-USER -j RETURN -s 172.16.0.0/12
+          -A DOCKER-USER -j RETURN -s 192.168.0.0/16
+          -A DOCKER-USER -j ufw-user-forward
+          -A DOCKER-USER -j DROP
+          COMMIT
+      notify: Reload UFW
+
     - name: Setup UFW Policy
       ufw:
         state: enabled
@@ -158,3 +175,6 @@
       service:
         name: docker
         state: restarted
+
+    - name: Reload UFW
+      command: ufw reload
