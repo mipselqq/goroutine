@@ -93,11 +93,8 @@ jobs:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     uses: ./.github/workflows/generic-deploy.yml
     with:
-      host: ${{ vars.DEPLOY_HOST }}
-      username: ${{ vars.DEPLOY_USERNAME }}
       env_name: staging
-    secrets:
-      SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+    secrets: inherit
 
   deploy-prod:
     name: Deploy Production
@@ -105,8 +102,5 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/generic-deploy.yml
     with:
-      host: ${{ vars.DEPLOY_HOST }}
-      username: ${{ vars.DEPLOY_USERNAME }}
       env_name: production
-    secrets:
-      SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+    secrets: inherit
