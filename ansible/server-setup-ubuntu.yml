@@ -4,7 +4,6 @@
 
   vars:
     target_deploy_user: "{{ deploy_username | default('deployer') }}"
-    target_deploy_pubkey: "{{ deploy_public_key | default(lookup('file', '~/.ssh/id_rsa.pub')) }}"
 
   tasks:
     - name: Update apt cache
@@ -168,7 +167,7 @@
       authorized_key:
         user: "{{ target_deploy_user }}"
         state: present
-        key: "{{ target_deploy_pubkey }}"
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') | trim }}"
 
     - name: Ensure app directory exists
       file:

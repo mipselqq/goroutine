@@ -34,7 +34,6 @@ jobs:
             -u "root" \
             --private-key ~/.ssh/id_rsa \
             -e "deploy_username=${{ vars.DEPLOY_USERNAME }}" \
-            -e "deploy_public_key=$(cat ~/.ssh/id_rsa.pub)" \
             ansible/server-setup-ubuntu.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
