@@ -65,6 +65,11 @@ jobs:
           source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
           target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
 
+      - name: Set Grafana permissions
+        run: |
+          find infra/grafana -type d -exec chmod 755 {} +
+          find infra/grafana -type f -exec chmod 644 {} +
+
       - name: Start Application
         uses: appleboy/ssh-action@v1.0.3
         with:
