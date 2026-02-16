@@ -169,7 +169,7 @@
   handlers:
     - name: Restart SSH
       service:
-        name: sshd
+        name: ssh
         state: restarted
 
     - name: Restart Fail2Ban
