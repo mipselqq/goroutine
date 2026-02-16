@@ -2,6 +2,10 @@
   hosts: all
   become: yes
 
+  vars:
+    target_deploy_user: "{{ deploy_username | default('deployer') }}"
+    target_deploy_pubkey: "{{ deploy_public_key | default(lookup('file', '~/.ssh/id_rsa.pub')) }}"
+
   tasks:
     - name: Update apt cache
       apt:
@@ -153,7 +157,7 @@
 
     - name: Create a new user for deployment
       user:
-        name: deployer
+        name: "{{ target_deploy_user }}"
         shell: /bin/bash
         groups: sudo,docker
         append: yes
@@ -162,9 +166,17 @@
 
     - name: Set up authorized keys for the deployer user
       authorized_key:
-        user: deployer
+        user: "{{ target_deploy_user }}"
         state: present
-        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}" 
+        key: "{{ target_deploy_pubkey }}"
+
+    - name: Ensure app directory exists
+      file:
+        path: "/home/{{ target_deploy_user }}/apps/goroutine"
+        state: directory
+        owner: "{{ target_deploy_user }}"
+        group: "{{ target_deploy_user }}"
+        mode: '0755'
 
   handlers:
     - name: Restart SSH

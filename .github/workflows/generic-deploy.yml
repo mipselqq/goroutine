@@ -31,8 +31,10 @@ jobs:
           sudo apt-get install -y ansible
 
           ansible-playbook -i "${{ vars.DEPLOY_HOST }}," \
-            -u "${{ vars.DEPLOY_USERNAME }}" \
+            -u "root" \
             --private-key ~/.ssh/id_rsa \
+            -e "deploy_username=${{ vars.DEPLOY_USERNAME }}" \
+            -e "deploy_public_key=$(cat ~/.ssh/id_rsa.pub)" \
             ansible/server-setup-ubuntu.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
@@ -56,19 +58,30 @@ jobs:
           GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
           EOF
 
-      - name: Copy config files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: ${{ vars.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
-          target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
-
       - name: Set Grafana permissions
         run: |
           find infra/grafana -type d -exec chmod 755 {} +
           find infra/grafana -type f -exec chmod 644 {} +
+
+      - name: Copy config files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
+          target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
+
+      - name: Fix ownership and permissions on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            chown -R "${{ vars.DEPLOY_USERNAME }}:${{ vars.DEPLOY_USERNAME }}" /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine
+            find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type d -exec chmod 755 {} +
+            find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type f -exec chmod 644 {} +
 
       - name: Start Application
         uses: appleboy/ssh-action@v1.0.3
