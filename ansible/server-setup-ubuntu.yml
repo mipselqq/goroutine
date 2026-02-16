@@ -19,49 +19,6 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Configure unattended-upgrades (Daily Schedule)
-      copy:
-        dest: /etc/apt/apt.conf.d/20auto-upgrades
-        content: |
-          APT::Periodic::Update-Package-Lists "1";
-          APT::Periodic::Download-Upgradeable-Packages "1";
-          APT::Periodic::AutocleanInterval "7";
-          APT::Periodic::Unattended-Upgrade "1";
-
-    - name: Ensure unattended-upgrades is running
-      service:
-        name: unattended-upgrades
-        state: started
-        enabled: yes
-
-    - name: SSH Hardening
-      lineinfile:
-        dest: /etc/ssh/sshd_config
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        state: present
-      loop:
-        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
-        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' } # Set to no for true production use
-        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
-      notify: Restart SSH
-
-    - name: Configure Fail2Ban (Strict Rules)
-      copy:
-        dest: /etc/fail2ban/jail.local
-        content: |
-          [DEFAULT]
-          bantime = 2h
-          findtime = 30m
-          maxretry = 4
-          ignoreip = 127.0.0.1/8 ::1
-
-          [sshd]
-          enabled = true
-          port = ssh
-          backend = systemd
-      notify: Restart Fail2Ban
-
     - name: Ensure /etc/apt/keyrings directory exists
       file:
         path: /etc/apt/keyrings
@@ -96,6 +53,37 @@
           - docker-compose-plugin
         state: present
 
+    - name: Configure unattended-upgrades (Daily Schedule)
+      copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::AutocleanInterval "7";
+          APT::Periodic::Unattended-Upgrade "1";
+
+    - name: Ensure unattended-upgrades is running
+      service:
+        name: unattended-upgrades
+        state: started
+        enabled: yes
+   
+    - name: Configure Fail2Ban (Strict Rules)
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          bantime = 2h
+          findtime = 30m
+          maxretry = 4
+          ignoreip = 127.0.0.1/8 ::1
+
+          [sshd]
+          enabled = true
+          port = ssh
+          backend = systemd
+      notify: Restart Fail2Ban
+
     - name: Configure Docker daemon (Log Rotation)
       copy:
         dest: /etc/docker/daemon.json
@@ -115,6 +103,18 @@
         name: docker
         state: started
         enabled: yes
+
+    - name: SSH Hardening
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' } # Set to no for true production use
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+      notify: Restart SSH
 
     - name: Prevent Docker from bypassing UFW
       blockinfile:
