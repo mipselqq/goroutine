@@ -154,8 +154,7 @@
         name: fail2ban
         state: restarted
 
-    - handlers:
-        - name: Restart Docker
-          service:
-            name: docker
-            state: restarted
+    - name: Restart Docker
+      service:
+        name: docker
+        state: restarted
