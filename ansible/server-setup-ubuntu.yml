@@ -20,10 +20,14 @@
           - unattended-upgrades
         state: present
 
-    - name: Install unattended-upgrades
-      apt:
-        name: unattended-upgrades
-        state: present
+    - name: Configure unattended-upgrades (Daily Schedule)
+      copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::AutocleanInterval "7";
+          APT::Periodic::Unattended-Upgrade "1";
 
     - name: Ensure unattended-upgrades is running
       service:
@@ -31,11 +35,16 @@
         state: started
         enabled: yes
 
-    - name: SSH Hardening - Disable Password Authentication
+    - name: SSH Hardening
       lineinfile:
         dest: /etc/ssh/sshd_config
-        regexp: '^#?PasswordAuthentication'
-        line: 'PasswordAuthentication no'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' } # Set to no for true production use
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
       notify: Restart SSH
 
     - name: Configure Fail2Ban (Strict Rules)
@@ -55,19 +64,19 @@
       notify: Restart Fail2Ban
 
     - name: Ensure /etc/apt/keyrings directory exists
-      ansible.builtin.file:
+      file:
         path: /etc/apt/keyrings
         state: directory
         mode: '0755'
 
     - name: Add Docker GPG key
-      ansible.builtin.get_url:
+      get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/keyrings/docker.asc
         mode: '0644'
     
     - name: Add Docker Repository
-      ansible.builtin.apt_repository:
+      apt_repository:
         repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
         filename: docker
@@ -78,6 +87,7 @@
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - docker-compose-plugin
         state: present
 
     - name: Ensure Docker is running
@@ -86,24 +96,25 @@
         state: started
         enabled: yes
 
-    - name: Setup UFW
+    - name: Setup UFW Policy
       ufw:
         state: enabled
         policy: deny
-        rule: allow
-        name: OpenSSH
+        direction: incoming
 
-    - name: Allow HTTP/HTTPS
+    - name: Allow Services
       ufw:
         rule: allow
-        port: "{{ item }}"
+        port: "{{ item | string }}"
         proto: tcp
       loop:
+        - 22
         - 80
         - 443
         - 8080
         - 3000
 
+    # USER SETUP
     - name: Create a new user for deployment
       user:
         name: deployer
@@ -118,13 +129,6 @@
         user: deployer
         state: present
         key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}" 
-
-    - name: SSH Hardening - Disable Root Login
-      lineinfile:
-        dest: /etc/ssh/sshd_config
-        regexp: '^#?PermitRootLogin'
-        line: 'PermitRootLogin no'
-      notify: Restart SSH
 
   handlers:
     - name: Restart SSH
