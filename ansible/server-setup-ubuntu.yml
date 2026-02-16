@@ -169,6 +169,14 @@
         state: present
         key: "{{ lookup('file', '~/.ssh/id_rsa.pub') | trim }}"
 
+    - name: Allow containers to traverse deploy user home directory
+      file:
+        path: "/home/{{ target_deploy_user }}"
+        state: directory
+        owner: "{{ target_deploy_user }}"
+        group: "{{ target_deploy_user }}"
+        mode: '0751'
+
     - name: Ensure app directory exists
       file:
         path: "/home/{{ target_deploy_user }}/apps/goroutine"
