@@ -35,6 +35,7 @@ jobs:
             ansible/server-setup-ubuntu.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_PIPELINING: True
 
       - name: Create .env file from GitHub Vars/Secrets
         run: |
