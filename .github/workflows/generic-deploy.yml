@@ -27,8 +27,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible
-          ansible-galaxy install -r ansible/requirements.yml
-          
+
           ansible-playbook -i "${{ vars.DEPLOY_HOST }}," \
             -u "${{ vars.DEPLOY_USERNAME }}" \
             --private-key ~/.ssh/id_rsa \

@@ -2,9 +2,6 @@
   hosts: all
   become: yes
 
-  roles:
-    - dev-sec.os-hardening
-
   tasks:
     - name: Update apt cache
       apt:
