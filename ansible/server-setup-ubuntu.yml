@@ -5,23 +5,19 @@
   vars:
     target_deploy_user: "{{ deploy_username | default('deployer') }}"
 
+  gather_facts: false
+
+  pre_tasks:
+    - name: "Gather minimal facts"
+      setup:
+        filter: 'ansible_distribution_release'
+        gather_subset: '!all,min'
+
   tasks:
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
-
-    - name: Install required system packages
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-          - ufw
-          - fail2ban
-          - unattended-upgrades
-        state: present
 
     - name: Configure unattended-upgrades (Daily Schedule)
       copy:
@@ -84,9 +80,16 @@
         state: present
         filename: docker
 
-    - name: Install Docker
+    - name: Install system packages
       apt:
         name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - ufw
+          - fail2ban
+          - unattended-upgrades
           - docker-ce
           - docker-ce-cli
           - containerd.io
