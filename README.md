@@ -4,8 +4,8 @@ Want to join the poject? Check the guidelines first:
 Blah blah blah
 
 ## Table of Contents
-- [Quick Start](#quick-start)
 - [Keywords](#keywords)
+- [Quick Start](#quick-start)
 - [Architecture](#architecture)
 - [Test suite](#test-suite)
 - [Linting](#linting)
@@ -15,6 +15,18 @@ Blah blah blah
 - [Observability](#observability)
 - [Worflow](#worflow)
 - [LLM usage](#llm-usage)
+
+## Keywords
+All technologies and methodologies used in the project:
+- **Languages:** Go
+- **Architecture & Design:** Clean Architecture, TDD, Clean Code
+- **Database:** PostgreSQL, Goose (Migrations)
+- **Infrastructure:** Docker, Docker Compose, Ansible, Makefile, Staging & Production
+- **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
+- **Observability** Prometheus, Grafana, Loki, Node Exporter
+- **Security:** Argon2id, JWT, Secrecy (Custom package), Trivy, Hadolint
+- **Quality Assurance:** GolangCI-Lint, Gofumpt, Govulncheck, Race Detection
+- **Documentation:** Swagger
 
 ## Quick Start
 
@@ -41,46 +53,43 @@ To get started with this project, follow the steps below:
    ```sh
    make dev
    ```
-
-## Keywords
-All technologies and methodologies used in the project:
-- **Languages:** Go
-- **Architecture & Design:** Clean Architecture, TDD, Clean Code
-- **Database:** PostgreSQL, Goose (Migrations)
-- **Infrastructure:** Docker, Docker Compose, Ansible, Makefile, Staging & Production
-- **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
-- **Observability** Prometheus, Grafana, Loki, Node Exporter
-- **Security:** Argon2id, JWT, Secrecy (Custom package), Trivy, Hadolint
-- **Quality Assurance:** GolangCI-Lint, Gofumpt, Govulncheck, Race Detection
-- **Documentation:** Swagger
-
 ## Architecture
 
 ```mermaid
 graph TD
-    Driver[Driver / Protocols]:::driver
+    Main[cmd/server/main.go]:::config
     Handler[Handler / Presentation]:::handler
     Service[Service / Use Cases]:::service
     Repo[Repository / Data Access]:::repo
     Domain[Domain / Entities]:::domain
+    Driver[Driver / Pgx]:::driver
     DB[(Database)]:::db
 
-    %% Связи
-    Driver -->|Calls| Handler
+    %% Injection
+    Main -.->|Creates| Repo
+    Main -.->|Injects Repo| Service
+    Main -.->|Injects Service| Handler
+    Main -->|Registers| Handler
+
+    %% Runtime Flow
     Handler -->|Calls| Service
     Service -->|Calls| Repo
-    Repo -->|Interacts| DB
+    Repo -->|Interacts| Driver
+    Driver -->|Interacts| DB
 
+    %% Domain Dependencies
     Handler -.->|Uses| Domain
     Service -.->|Uses| Domain
     Repo -.->|Uses| Domain
 
+    classDef driver fill:#000,stroke:#000,color:#fff;
     classDef handler fill:#87CEEB,stroke:#4682B4,color:#000;
     classDef service fill:#FFA500,stroke:#D2691E,color:#000;
     classDef repo fill:#90EE90,stroke:#2E8B57,color:#000;
-    classDef domain fill:#FFFFE0,stroke:#DAA520,stroke-width:2px,color:#000;
     classDef db fill:#D3D3D3,stroke:#696969,color:#000;
-    classDef driver fill:#D3D3D3,stroke:#696969,color:#000;
+    classDef domain fill:#FFFFE0,stroke:#DAA520,stroke-width:2px,color:#000;
+    classDef config fill:#9370DB,stroke:#4B0082,color:#fff;
+    linkStyle 3,4,5,6,7 stroke:#FFA500,stroke-width:2px;
 ```
 
 ##### This project uses clean architecture with rings as such:
