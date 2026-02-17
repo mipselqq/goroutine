@@ -1,9 +1,10 @@
 # Goroutine
 
 Want to join the poject? Check the guidelines first:
-Blah blah blah
+[Developer Guidelines](DEVELOPER_GUIDELINES.md)
 
 ## Table of Contents
+- [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 - [Keywords](#keywords)
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
