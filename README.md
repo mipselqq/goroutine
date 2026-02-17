@@ -145,40 +145,41 @@ To regenerate specs after changing code comments:
 </details>
 
 ## Test suite
-##### The project has 3 types of tests and follows testing pyramid principle:
-- Unit tests cover all the independent code blocks. Runs with race detection.
-- Integration tests verify interaction between a repository and a database. Runs with race detection.
-- End-to-end tests check some happy paths to catch tricky infrastructure issues.
+##### Project has 3 types of tests and follows testing pyramid principle:
+- Unit tests: Cover all independent code blocks. Run with race detection
+- Integration tests: Verify interaction between repository and database. Run with race detection
+- End-to-end tests: Check happy paths to catch tricky infrastructure issues
 
 <details>
 <summary>Why</summary>
 
 ##### Why:
-- Ensures no regressions or manual testing is done, which pays off quickly.
-- Automates CI process.
+- Ensures no regressions and replaces manual testing
+- Automates CI process
 </details>
 
 <details>
 <summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
-- More code to maintain.
-- Slightly slower development at first.
+- More code to maintain
+- Slightly slower development at first
 </details>
 
 ## Linting
-##### Linting is exstensively used:
-- ColangCi-lint for code checks, including govet, gocritic, gorevive, staticcheck, errcheck and others
-- Hadolint for static Dockerfile checks
-- Trivy for built container image analysis
-- Gofumpt for strict style enforcement
+##### Linting is extensively used:
+- GolangCI-Lint: Code checks (govet, gocritic, gorevive, staticcheck, errcheck)
+- Hadolint: Static Dockerfile checks
+- Trivy: Container image analysis
+- Gofumpt: Strict style enforcement
 
 <details>
 <summary>Why</summary>
 
 ##### Why:
-- Easy way to find potential problems early
+- Finds potential problems early
 </details>
+
 
 <details>
 <summary>Tradeoffs</summary>
@@ -189,15 +190,15 @@ To regenerate specs after changing code comments:
 </details>
 
 ## Security
-- There's a 'secrecy' package that allows to incapsulate sensible data (primarily tokens) the way it can't be accidentally printed in logs, showing a placeholder instead.
-- Many edge cases are covered by the test suite, avoiding unexpected responses.
-- The server is automatically hardened during CD
+- **Secrecy:** Custom package to encapsulate sensitive data (tokens) and prevent accidental logging
+- **Coverage:** Edge cases covered by test suite to avoid unexpected responses
+- **Hardening:** Server automatically hardened during CD
 
 <details>
 <summary>Why</summary>
 
 ##### Why:
-- It's absolutely crucial to protect the app from scholars hacking it in an hour after release
+- Crucial to protect app from hacking immediately after release
 - Prevents unintended money loss
 </details>
 
@@ -205,21 +206,23 @@ To regenerate specs after changing code comments:
 <summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
-- More input checks to be done
+- More input checks
 </details>
 
 ## CI
-- The repository follows the trunk-based development methodology, fully automating integration process
+- Trunk-based development
+- Fully automated integration process
 
-- Lefthook is used to make basic checks locally for quicker response. More advanced checks are performed remotely after push
-- Release drafter automatically generates changelogs from PR
-- The app is built using docker
-- Makefile ensures build and tooling is consistent across different environments and developers
+- **Lefthook:** Basic local checks for quick response
+- **Remote checks:** Advanced checks performed after push
+- **Release Drafter:** Automatically generates changelogs from PR
+- **Docker:** Used for building the app
+- **Makefile:** Ensures build and tooling is consistent across environments
 
-##### The branch protection rules on GitHub are configured the way that only verified code can be deployed:
+##### Branch protection rules (GitHub):
 - Forbid direct pushes to main
 - Forbid administrator overrides
-- Set required check jobs to be green before merge
+- Require green check jobs before merge
 
 <details>
 <summary>Why</summary>
@@ -235,28 +238,28 @@ To regenerate specs after changing code comments:
 <summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
-- Writing the pipeline takes some time
+- Pipeline setup takes time
 </details>
 
 ## CD
-##### The whole CD pipeline is almost fully automated as well:
-- Get a VDS server, generate ssh id keys and copy the public one (manual)
-- Set up config in GitHub secrets storage (manual)
+##### CD pipeline is almost fully automated:
+- Get VDS server, generate SSH keys, copy public key (manual)
+- Set up config in GitHub secrets (manual)
 - Install required packages
-- Configure unattended upgrades for automates
+- Configure unattended upgrades
 - Configure fail2ban
 - Configure log rotation
 - Start docker service
-- Disable root login, password authentication
-- Opt-in ports
-- Create a user and an app directory
-- Copy configs and run the app
+- Disable root login and password authentication
+- Open required ports
+- Create user and app directory
+- Copy configs and run app
 
 <details>
 <summary>Why</summary>
 
 ##### Why:
-- It's secure and convenient to start with a stock server and end up with hardened one with app running within minutes
+- Secure and convenient way to get hardened server with running app
 - No human factor
 </details>
 
@@ -268,27 +271,27 @@ To regenerate specs after changing code comments:
 </details>
 
 ## Observability
-Prometheus, Loki, Node-exporter and Grafana are used for clear and remote observability:
-- Detailed resource usage of a machine
-- Logs can be read remotely for all containers
-- RED: core app metrics such as RPS, erorr rate, duration are collected
+Prometheus, Loki, Node-exporter, and Grafana provide clear remote observability:
+- Detailed resource usage of machine
+- Remote logs for all containers
+- **RED:** Core app metrics (RPS, error rate, duration)
 
 > **Tip:** To see metrics on local dev in Grafana, ensure your firewall allows requests from `172.16.0.0/12`.
 
-## Worflow
-This project follows a issue-pull model to track existing issues and create solutions.
+## Workflow
+Project follows issue-pull model to track issues and create solutions.
 
 <details>
 <summary>Why</summary>
 
 ##### Why:
-- It allows for atomic changes that can be easily reviewed by human and machine.
+- Allows atomic changes easily reviewed by human and machine
 - Cleaner history
-- Less of a human factor
+- Less human factor
 </details>
 
 ## LLM usage
-I utilized LLMs as an interactive documentation, rarely letting them to write some configs or code under guidance.
+LLMs utilized as interactive documentation. Rarely used for writing configs or code under guidance.
 
 <details>
 <summary>Why</summary>
