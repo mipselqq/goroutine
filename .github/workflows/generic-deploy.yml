@@ -1,0 +1,94 @@
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      env_name:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+          ssh-keyscan -H "${{ vars.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Run Ansible Playbook
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+          ansible-playbook -i "${{ vars.DEPLOY_HOST }}," \
+            -u "root" \
+            --private-key ~/.ssh/id_rsa \
+            -e "deploy_username=${{ vars.DEPLOY_USERNAME }}" \
+            ansible/server-setup-ubuntu.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_PIPELINING: True
+
+      - name: Create .env file from GitHub Vars/Secrets
+        run: |
+          cat <<EOF > .env.prod
+          ENV=${{ vars.ENV }}
+          LOG_LEVEL=${{ vars.LOG_LEVEL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          HOST=${{ vars.HOST }}
+          SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
+
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
+          POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
+
+          GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+          EOF
+
+      - name: Set Grafana permissions
+        run: |
+          find infra/grafana -type d -exec chmod 755 {} +
+          find infra/grafana -type f -exec chmod 644 {} +
+
+      - name: Copy config files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
+          target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
+
+      - name: Fix ownership and permissions on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            chown -R "${{ vars.DEPLOY_USERNAME }}:${{ vars.DEPLOY_USERNAME }}" /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine
+            find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type d -exec chmod 755 {} +
+            find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type f -exec chmod 644 {} +
+
+      - name: Start Application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull app
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d

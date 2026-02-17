@@ -40,13 +40,13 @@ jobs:
         with:
           context: .
           load: true
-          tags: todo-app:temp
-          outputs: type=docker,dest=/tmp/todo-app.tar
+          tags: goroutine:temp
+          outputs: type=docker,dest=/tmp/goroutine.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: todo-app-image
-          path: /tmp/todo-app.tar
+          name: goroutine-image
+          path: /tmp/goroutine.tar
 
   security_scan:
     name: Security Scan
@@ -55,13 +55,13 @@ jobs:
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
-        with: { name: todo-app-image, path: /tmp }
+        with: { name: goroutine-image, path: /tmp }
       - name: Load image
-        run: docker load --input /tmp/todo-app.tar
+        run: docker load --input /tmp/goroutine.tar
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'todo-app:temp'
+          image-ref: 'goroutine:temp'
           format: 'table'
           severity: 'CRITICAL,HIGH'
 
@@ -72,9 +72,9 @@ jobs:
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
-        with: { name: todo-app-image, path: /tmp }
+        with: { name: goroutine-image, path: /tmp }
       - name: Load image
-        run: docker load --input /tmp/todo-app.tar
+        run: docker load --input /tmp/goroutine.tar
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -83,47 +83,23 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Tag and Push
         run: |
-          docker tag todo-app:temp ghcr.io/${{ github.repository }}:latest
+          docker tag goroutine:temp ghcr.io/${{ github.repository }}:latest
           docker push ghcr.io/${{ github.repository }}:latest
 
-  deploy:
-    name: Deploy
+  deploy-staging:
+    name: Deploy Staging
     needs: publish
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/generic-deploy.yml
+    with:
+      env_name: staging
+    secrets: inherit
 
-      - name: Create .env.prod file
-        run: |
-          cat <<EOF > .env.prod
-          ENV=${{ vars.ENV }}
-          HOST=${{ vars.HOST }}
-          LOG_LEVEL=${{ vars.LOG_LEVEL }}
-          POSTGRES_DB=${{ vars.POSTGRES_DB }}
-          POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
-          POSTGRES_USER=${{ vars.POSTGRES_USER }}
-          SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
-          GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          EOF
-
-      - name: Copy config files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
-          target: "/home/mipselqq/apps/todo-go"
-
-      - name: Executing remote ssh
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd /home/mipselqq/apps/todo-go
-            docker compose -f docker-compose.prod.yml --env-file .env.prod pull app
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+  deploy-prod:
+    name: Deploy Production
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/generic-deploy.yml
+    with:
+      env_name: production
+    secrets: inherit
