@@ -128,6 +128,7 @@ All technologies and methodologies used in the project:
 - Lefthook is used to make basic checks locally for quicker response. More advanced checks are performed remotely after push
 - Release drafter automatically generates changelogs from PR
 - The app is built using docker
+- Makefile ensures build and tooling is consistent across different environments and developers
 
 ##### The branch protection rules on GitHub are configured the way that only verified code can be deployed:
 - Forbid direct pushes to main
