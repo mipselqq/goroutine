@@ -6,6 +6,8 @@ Blah blah blah
 ## Table of Contents
 - [Keywords](#keywords)
 - [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [API Documentation](#api-documentation)
 - [Architecture](#architecture)
 - [Test suite](#test-suite)
 - [Linting](#linting)
@@ -53,6 +55,32 @@ To get started with this project, follow the steps below:
    ```sh
    make dev
    ```
+
+## Project Structure
+Annotated overview of the repository layout:
+- `ansible/` - Server provisioning and configuration management.
+- `cmd/` - Entry points (main.go).
+- `docs/` - Generated Swagger UI documentation and OpenAPI specs.
+- `infra/` - Observability configurations (Grafana, Loki, Prometheus).
+- `internal/` - Private application code.
+  - `app/` - Application-level components (routing, startup).
+  - `domain/` - Core business entities with invariants (email, password).
+  - `handler/` - Http handlers (API endpoints).
+  - `middleware/` - Http middlewares (metrics, auth).
+  - `repository/` - Persistence layer (database interactions).
+  - `service/` - Use case layer (business rules).
+- `migrations/` - SQL migration files managed by Goose.
+- `tests/` - End-to-end test suites.
+
+## API Documentation
+The API is documented using Swagger (OpenAPI 3.0).
+- **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html).
+- **Remote Swagger UI** Go to /swagger on host specified in the description of this repo.
+- **Specs:** Generated files are located in [docs/](docs/).
+To regenerate specs after changing code comments:
+```sh
+```
+
 ## Architecture
 
 ```mermaid
@@ -244,6 +272,8 @@ Prometheus, Loki, Node-exporter and Grafana are used for clear and remote observ
 - Detailed resource usage of a machine
 - Logs can be read remotely for all containers
 - RED: core app metrics such as RPS, erorr rate, duration are collected
+
+> **Tip:** To see metrics on local dev in Grafana, ensure your firewall allows requests from `172.16.0.0/12`.
 
 ## Worflow
 This project follows a issue-pull model to track existing issues and create solutions.
