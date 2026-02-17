@@ -28,6 +28,34 @@ All technologies and methodologies used in the project:
 - **Documentation:** Swagger
 
 ## Architecture
+
+```mermaid
+graph TD
+    Driver[Driver / Protocols]:::driver
+    Handler[Handler / Presentation]:::handler
+    Service[Service / Use Cases]:::service
+    Repo[Repository / Data Access]:::repo
+    Domain[Domain / Entities]:::domain
+    DB[(Database)]:::db
+
+    %% Связи
+    Driver -->|Calls| Handler
+    Handler -->|Calls| Service
+    Service -->|Calls| Repo
+    Repo -->|Interacts| DB
+
+    Handler -.->|Uses| Domain
+    Service -.->|Uses| Domain
+    Repo -.->|Uses| Domain
+
+    classDef handler fill:#87CEEB,stroke:#4682B4,color:#000;
+    classDef service fill:#FFA500,stroke:#D2691E,color:#000;
+    classDef repo fill:#90EE90,stroke:#2E8B57,color:#000;
+    classDef domain fill:#FFFFE0,stroke:#DAA520,stroke-width:2px,color:#000;
+    classDef db fill:#D3D3D3,stroke:#696969,color:#000;
+    classDef driver fill:#D3D3D3,stroke:#696969,color:#000;
+```
+
 ##### This project uses clean architecture with rings as such:
 - Domain, containing critical buisness entities with invariants ensuring validity
 - Handler, which is responsible for parsing requests and sending responses
