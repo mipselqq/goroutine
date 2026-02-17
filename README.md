@@ -63,12 +63,6 @@ graph TD
 - Repository, hiding database implementation details
 - Driver, managing protocols, done with external modules
 
-##### Hierarchy:
-- Driver knows nothing about repository
-- Repository knows nothing about service
-- Service knows nothing about handler
-- Domain knows nothing
-
 <details>
 <summary>Why</summary>
 
