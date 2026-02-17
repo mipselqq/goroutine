@@ -16,7 +16,7 @@ Want to join the project? Check the guidelines first:
 - [CI](#ci)
 - [CD](#cd)
 - [Observability](#observability)
-- [Worflow](#worflow)
+- [Workflow](#workflow)
 - [LLM usage](#llm-usage)
 
 ## Keywords
@@ -116,7 +116,7 @@ graph TD
 
 ##### Tradeoffs:
 - Slightly more boilerplate code
-- Increased complexity af first
+- Increased complexity at first
 </details>
 
 ## Project Structure
