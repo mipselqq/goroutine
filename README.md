@@ -4,6 +4,7 @@ Want to join the poject? Check the guidelines first:
 Blah blah blah
 
 ## Table of Contents
+- [Keywords](#keywords)
 - [Architecture](#architecture)
 - [Test suite](#test-suite)
 - [Linting](#linting)
@@ -13,6 +14,18 @@ Blah blah blah
 - [Observability](#observability)
 - [Worflow](#worflow)
 - [LLM usage](#llm-usage)
+
+## Keywords
+All technologies and methodologies used in the project:
+- **Languages:** Go
+- **Architecture & Design:** Clean Architecture, TDD, Clean Code
+- **Database:** PostgreSQL, Goose (Migrations)
+- **Infrastructure:** Docker, Docker Compose, Ansible, Makefile, Staging & Production
+- **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
+- **Observability** Prometheus, Grafana, Loki, Node Exporter
+- **Security:** Argon2id, JWT, Secrecy (Custom package), Trivy, Hadolint
+- **Quality Assurance:** GolangCI-Lint, Gofumpt, Govulncheck, Race Detection
+- **Documentation:** Swagger
 
 ## Architecture
 ##### This project uses clean architecture with rings as such:
