@@ -276,7 +276,8 @@ Prometheus, Loki, Node-exporter, and Grafana provide clear remote observability:
 - Remote logs for all containers
 - **RED:** Core app metrics (RPS, error rate, duration)
 
-> **Tip:** To see metrics on local dev in Grafana, ensure your firewall allows requests from `172.16.0.0/12`.
+> [!WARNING]
+> To see metrics on local dev in Grafana, ensure your firewall allows requests from `172.16.0.0/12`.
 
 ## Workflow
 Project follows issue-pull model to track issues and create solutions.
