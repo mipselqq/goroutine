@@ -3,12 +3,11 @@ pre-commit:
   commands:
     fmt:
       glob: "*.go"
-      run: make fmt
+      run: make fmt && git diff --exit-code {staged_files} || (echo "Code formatting autofixed. Please stage the changes and try again." && exit 1)
 
     swag:
       glob: "internal/handler/*.go"
-      run: make swag
-
+      run: make swag && git diff --exit-code docs/ || (echo "Swagger documentation regenerated. Please stage the changes in docs/ and try again." && exit 1)
     lint:
       glob: "*.go"
       run: make lint
@@ -18,12 +17,8 @@ pre-commit:
       run: make test-all
 
 pre-push:
-  parallel: false
+  parallel: true
   commands:
-    lint:
-      glob: "*.go"
-      run: make lint
-
     vuln:
       glob: "*.go"
       run: make vuln
