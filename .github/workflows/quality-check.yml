@@ -4,15 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '**.go'
-      - Dockerfile
-      - .github/workflows/quality-check.yml
   pull_request:
-    paths:
-      - '**.go'
-      - Dockerfile
-      - .github/workflows/quality-check.yml
 jobs:
   tests:
     name: Run all tests
