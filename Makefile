@@ -11,8 +11,8 @@ test:
 	go test ./...
 prepare-test-env:
 	test -f .env.dev || cp .env.example .env.dev
-	docker compose up -d
-	sleep 2
+	docker compose --env-file .env.dev up -d --wait
+
 test-integration: prepare-test-env
 	go test -tags=integration ./internal/repository/...
 test-e2e: prepare-test-env
