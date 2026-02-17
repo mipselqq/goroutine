@@ -6,9 +6,9 @@ Blah blah blah
 ## Table of Contents
 - [Keywords](#keywords)
 - [Quick Start](#quick-start)
+- [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
-- [Architecture](#architecture)
 - [Test suite](#test-suite)
 - [Linting](#linting)
 - [Security](#security)
@@ -31,7 +31,6 @@ All technologies and methodologies used in the project:
 - **Documentation:** Swagger
 
 ## Quick Start
-
 To get started with this project, follow the steps below:
 
 0. Clone the Repository:
@@ -55,31 +54,6 @@ To get started with this project, follow the steps below:
    ```sh
    make dev
    ```
-
-## Project Structure
-Annotated overview of the repository layout:
-- `ansible/` - Server provisioning and configuration management.
-- `cmd/` - Entry points (main.go).
-- `docs/` - Generated Swagger UI documentation and OpenAPI specs.
-- `infra/` - Observability configurations (Grafana, Loki, Prometheus).
-- `internal/` - Private application code.
-  - `app/` - Application-level components (routing, startup).
-  - `domain/` - Core business entities with invariants (email, password).
-  - `handler/` - Http handlers (API endpoints).
-  - `middleware/` - Http middlewares (metrics, auth).
-  - `repository/` - Persistence layer (database interactions).
-  - `service/` - Use case layer (business rules).
-- `migrations/` - SQL migration files managed by Goose.
-- `tests/` - End-to-end test suites.
-
-## API Documentation
-The API is documented using Swagger (OpenAPI 3.0).
-- **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html).
-- **Remote Swagger UI** Go to /swagger on host specified in the description of this repo.
-- **Specs:** Generated files are located in [docs/](docs/).
-To regenerate specs after changing code comments:
-```sh
-```
 
 ## Architecture
 
@@ -119,6 +93,32 @@ graph TD
     classDef config fill:#9370DB,stroke:#4B0082,color:#fff;
     linkStyle 3,4,5,6,7 stroke:#FFA500,stroke-width:2px;
 ```
+## Project Structure
+Annotated overview of the repository layout:
+- `ansible/` - Server provisioning and configuration management.
+- `cmd/` - Entry points (main.go).
+- `docs/` - Generated Swagger UI documentation and OpenAPI specs.
+- `infra/` - Observability configurations (Grafana, Loki, Prometheus).
+- `internal/` - Private application code.
+  - `app/` - Application-level components (routing, startup).
+  - `domain/` - Core business entities with invariants (email, password).
+  - `handler/` - Http handlers (API endpoints).
+  - `middleware/` - Http middlewares (metrics, auth).
+  - `repository/` - Persistence layer (database interactions).
+  - `service/` - Use case layer (business rules).
+- `migrations/` - SQL migration files managed by Goose.
+- `tests/` - End-to-end test suites.
+
+## API Documentation
+The API is documented using Swagger (OpenAPI 3.0).
+- **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html).
+- **Remote Swagger UI** Go to /swagger on host specified in the description of this repo.
+- **Specs:** Generated files are located in [docs/](docs/).
+To regenerate specs after changing code comments:
+```sh
+```
+
+
 
 ##### This project uses clean architecture with rings as such:
 - Domain, containing critical buisness entities with invariants ensuring validity
