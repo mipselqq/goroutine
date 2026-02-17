@@ -3,6 +3,17 @@
 Want to join the poject? Check the guidelines first:
 Blah blah blah
 
+## Table of Contents
+- [Architecture](#architecture)
+- [Test suite](#test-suite)
+- [Linting](#linting)
+- [Security](#security)
+- [CI](#ci)
+- [CD](#cd)
+- [Observability](#observability)
+- [Worflow](#worflow)
+- [LLM usage](#llm-usage)
+
 ## Architecture
 ##### This project uses clean architecture with rings as such:
 - Domain, containing critical buisness entities with invariants ensuring validity
@@ -40,7 +51,7 @@ Blah blah blah
 - More code to maintain.
 - Slightly slower development at first.
 
-# Linting
+## Linting
 ##### Linting is exstensively used:
 - ColangCi-lint for code checks, including govet, gocritic, gorevive, staticcheck, errcheck and others
 - Hadolint for static Dockerfile checks
