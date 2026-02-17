@@ -38,7 +38,7 @@ To get started with this project, follow the steps below:
     ```sh
     git clone git@github.com:mipselqq/goroutine.git
     ```
-1. Install Go and ensure the binaries directory is added to your `PATH`.
+1. Install Go and ensure the binaries directory is added to your `PATH`, install Docker.
 2. Install required tools:
    ```sh
    make tools
