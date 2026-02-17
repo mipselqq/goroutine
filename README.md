@@ -4,6 +4,7 @@ Want to join the poject? Check the guidelines first:
 Blah blah blah
 
 ## Table of Contents
+- [Quick Start](#quick-start)
 - [Keywords](#keywords)
 - [Architecture](#architecture)
 - [Test suite](#test-suite)
@@ -14,6 +15,32 @@ Blah blah blah
 - [Observability](#observability)
 - [Worflow](#worflow)
 - [LLM usage](#llm-usage)
+
+## Quick Start
+
+To get started with this project, follow the steps below:
+
+0. Clone the Repository:
+    ```sh
+    git clone git@github.com:mipselqq/goroutine.git
+    ```
+1. Install Go and ensure the binaries directory is added to your `PATH`.
+2. Install required tools:
+   ```sh
+   make tools
+   ```
+3. Create a `.env.dev` file based on the provided `.env.example`:
+   ```sh
+   cp .env.example .env.dev
+   ```
+4. Start the development environment:
+   ```sh
+   make dev-env
+   ```
+5. Run the development server:
+   ```sh
+   make dev
+   ```
 
 ## Keywords
 All technologies and methodologies used in the project:
