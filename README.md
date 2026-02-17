@@ -288,7 +288,7 @@ This project follows a issue-pull model to track existing issues and create solu
 </details>
 
 ## LLM usage
-I utilized LLMs as an interactive documentation, rarely letting them to write some configs or code under guidance. This readme is 100% written by me btw :3
+I utilized LLMs as an interactive documentation, rarely letting them to write some configs or code under guidance.
 
 <details>
 <summary>Why</summary>
