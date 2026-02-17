@@ -28,14 +28,22 @@ Blah blah blah
 - Service knows nothing about handler
 - Domain knows nothing
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - Leads to decoupling of components, ensuring that every part is testable with mocks.
 - The core of the app (domain, use cases) can't break due to more of an infrustructual change, say, replacing the standard router, or migrating to another database
 - Maintainability improves significantly
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - Slightly more boilerplate code
 - Increased complexity af first
+</details>
 
 ## Test suite
 ##### The project has 3 types of tests and follows testing pyramid principle:
@@ -43,13 +51,21 @@ Blah blah blah
 - Integration tests verify interaction between a repository and a database. Runs with race detection.
 - End-to-end tests check some happy paths to catch tricky infrastructure issues.
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - Ensures no regressions or manual testing is done, which pays off quickly.
 - Automates CI process.
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - More code to maintain.
 - Slightly slower development at first.
+</details>
 
 ## Linting
 ##### Linting is exstensively used:
@@ -58,24 +74,40 @@ Blah blah blah
 - Trivy for built container image analysis
 - Gofumpt for strict style enforcement
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - Easy way to find potential problems early
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - More configs to create
 - Checks take some time
+</details>
 
 ## Security
 - There's a 'secrecy' package that allows to incapsulate sensible data (primarily tokens) the way it can't be accidentally printed in logs, showing a placeholder instead.
 - Many edge cases are covered by the test suite, avoiding unexpected responses.
 - The server is automatically hardened during CD
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - It's absolutely crucial to protect the app from scholars hacking it in an hour after release
 - Prevents unintended money loss
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - More input checks to be done
+</details>
 
 ## CI
 - The repository follows the trunk-based development methodology, fully automating integration process
@@ -89,14 +121,22 @@ Blah blah blah
 - Forbid administrator overrides
 - Set required check jobs to be green before merge
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - Fewer conflicts
 - Faster iteration speed
 - No broken windows effect
 - No human factor
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - Writing the pipeline takes some time
+</details>
 
 ## CD
 ##### The whole CD pipeline is almost fully automated as well:
@@ -112,12 +152,20 @@ Blah blah blah
 - Create a user and an app directory
 - Copy configs and run the app
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - It's secure and convenient to start with a stock server and end up with hardened one with app running within minutes
 - No human factor
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - Writing the pipeline takes some time
+</details>
 
 ## Observability
 Prometheus, Loki, Node-exporter and Grafana are used for clear and remote observability:
@@ -128,13 +176,20 @@ Prometheus, Loki, Node-exporter and Grafana are used for clear and remote observ
 ## Worflow
 This project follows a issue-pull model to track existing issues and create solutions.
 
+<details>
+<summary>Why</summary>
+
 ##### Why:
 - It allows for atomic changes that can be easily reviewed by human and machine.
 - Cleaner history
 - Less of a human factor
+</details>
 
 ## LLM usage
 I utilized LLMs as an interactive documentation, rarely letting them to write some configs or code under guitance. This readme is 100% written by me btw :3
+
+<details>
+<summary>Why</summary>
 
 ##### Why:
 - No copy-paste can teach you something
@@ -142,6 +197,11 @@ I utilized LLMs as an interactive documentation, rarely letting them to write so
 - The responses are correct most of the time
 - Interactive learning
 - AI can't write good code without a detailed promt (code written in spoken english with some slight details ommitted), that's why it's easier to write Go code, which is structured and unambigous
+</details>
+
+<details>
+<summary>Tradeoffs</summary>
 
 ##### Tradeoffs:
 - It fails to warn that some features are deprecated, luckily, most tools do that themselves
+</details>
