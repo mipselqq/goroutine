@@ -1,6 +1,6 @@
 # Goroutine
 
-Want to join the poject? Check the guidelines first:
+Want to join the project? Check the guidelines first:
 [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 
 ## Table of Contents
@@ -96,7 +96,7 @@ graph TD
 ```
 
 ##### This project uses clean architecture with rings as such:
-- Domain, containing critical buisness entities with invariants ensuring validity
+- Domain, containing critical business entities with invariants ensuring validity
 - Handler, which is responsible for parsing requests and sending responses
 - Service, implementing use cases
 - Repository, hiding database implementation details
@@ -300,7 +300,7 @@ LLMs utilized as interactive documentation. Rarely used for writing configs or c
 - No need to search the documentation
 - The responses are correct most of the time
 - Interactive learning
-- AI can't write good code without a detailed promt (code written in spoken english with some slight details ommitted), that's why it's easier to write Go code, which is structured and unambigous
+- AI can't write good code without a detailed prompt (code written in spoken english with some slight details ommitted), that's why it's easier to write Go code, which is structured and unambigous
 </details>
 
 <details>
