@@ -3,7 +3,7 @@ name: Deploy to VDS
 on:
   push:
     branches: [ main ]
-    paths:
+    paths: # Main is locked in GitHub settings, don't bother runner on some checks passed in pull_request
       - 'Dockerfile'
       - 'docker-compose*'
       - '.github/workflows/deploy.yml'
@@ -11,15 +11,8 @@ on:
       - 'infra/**'
       - 'internal/**'
       - 'cmd/**'
-  pull_request:
-    paths:
-      - 'Dockerfile'
-      - 'docker-compose*'
-      - '.github/workflows/deploy.yml'
-      - 'prometheus.yml'
-      - 'infra/**'
-      - 'internal/**'
-      - 'cmd/**'
+  pull_request: # Run all checks despite changes so required checks are always satisfied
+                # There's no need to make this more complicated since the checks are fast (for now) and parallel
 
 permissions:
   contents: read
