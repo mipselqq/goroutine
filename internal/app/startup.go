@@ -61,7 +61,7 @@ func RunBackgroundServer(logger *slog.Logger, name string, addr string, handler 
 	}
 
 	go func() {
-		logger.Info("Starting "+name+" on http://"+addr)
+		logger.Info("Starting " + name + " on http://" + addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error(name+" failed", slog.String("err", err.Error()))
 			os.Exit(1)
