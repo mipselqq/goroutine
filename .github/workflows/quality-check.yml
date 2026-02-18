@@ -51,3 +51,24 @@ jobs:
         with:
           dockerfile: Dockerfile
           config: .hadolint.yaml
+
+  format-check:
+    name: Check code formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Install gofumpt
+        run: go install mvdan.cc/gofumpt@latest
+      - name: Run formatting
+        run: |
+          CHANGED_FILES=$(gofumpt -l .)
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "The following files are not formatted with gofumpt:"
+            echo "$CHANGED_FILES"
+            exit 1
+          fi
