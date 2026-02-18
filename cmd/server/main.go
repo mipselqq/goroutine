@@ -41,8 +41,8 @@ func main() {
 
 	application := app.New(logger, pool, &appCfg)
 
-	srv := app.RunServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
-	adminSrv := app.RunServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)
+	srv := app.RunBackgroundServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
+	adminSrv := app.RunBackgroundServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
