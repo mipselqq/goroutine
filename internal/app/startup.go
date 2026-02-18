@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"log/slog"
+	"net/http"
+	"os"
 
 	"goroutine/internal/config"
 	"goroutine/internal/logging"
@@ -50,4 +52,21 @@ func SetupDatabaseFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 	}
 
 	return pool, nil
+}
+
+func RunBackgroundServer(logger *slog.Logger, name string, addr string, handler http.Handler) *http.Server {
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: handler,
+	}
+
+	go func() {
+		logger.Info("Starting "+name+" on http://"+addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error(name+" failed", slog.String("err", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
+	return srv
 }
