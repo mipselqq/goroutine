@@ -47,6 +47,7 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           HOST=${{ vars.HOST }}
           SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
+          ADMIN_PORT=${{ vars.ADMIN_PORT }}
 
           POSTGRES_USER=${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}

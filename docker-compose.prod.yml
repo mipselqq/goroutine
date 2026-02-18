@@ -33,11 +33,13 @@ services:
       - LOG_LEVEL
       - SWAGGER_HOST
       - HOST
+      - PORT
+      - ADMIN_PORT
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${PORT}:${PORT}"
 
   prometheus:
     image: prom/prometheus:v3.9.1
