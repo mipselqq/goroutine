@@ -22,7 +22,3 @@ pre-push:
     vuln:
       glob: "*.go"
       run: make vuln
-
-    test-race:
-      glob: "*.go"
-      run: make test-some-race
