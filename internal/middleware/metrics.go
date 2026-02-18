@@ -49,10 +49,6 @@ func (w *StatusSpyWriter) WriteHeader(code int) {
 func (m *Metrics) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		if path == "/metrics" || path == "/swagger" {
-			next.ServeHTTP(w, r)
-			return
-		}
 
 		startTime := time.Now()
 		spy := &StatusSpyWriter{ResponseWriter: w, StatusCode: http.StatusOK}
