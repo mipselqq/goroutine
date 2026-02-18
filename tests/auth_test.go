@@ -24,7 +24,7 @@ func TestAuth_HappyPath(t *testing.T) {
 	logger := testutil.CreateTestLogger(t)
 	logger.Info("App config", slog.Any("config", cfg))
 
-	router := app.New(logger, pool, &cfg)
+	router, _ := app.New(logger, pool, &cfg)
 
 	ts := httptest.NewServer(router)
 	defer ts.Close()
