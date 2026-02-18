@@ -14,7 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) http.Handler {
+func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) (http.Handler, http.Handler) {
 	userRepo := repository.NewPgUser(pool)
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret: cfg.JWTSecret,
@@ -26,5 +26,5 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) http.Ha
 
 	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 
-	return NewRouter(metricsMiddleware, authHandler, healthHandler)
+	return NewRouter(metricsMiddleware, authHandler, healthHandler), NewAdminRouter()
 }

@@ -40,7 +40,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	router := app.New(logger, pool, &appCfg)
+	router, adminRouter := app.New(logger, pool, &appCfg)
 
 	addr := appCfg.Host + ":" + appCfg.Port
 	srv := &http.Server{
@@ -48,10 +48,24 @@ func main() {
 		Handler: router,
 	}
 
+	adminAddr := appCfg.Host + ":" + appCfg.AdminPort
+	adminSrv := &http.Server{
+		Addr:    adminAddr,
+		Handler: adminRouter,
+	}
+
 	go func() {
 		logger.Info("Starting server on http://" + addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("Server failed", slog.String("err", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		logger.Info("Starting admin server on http://" + adminAddr)
+		if err := adminSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("Admin server failed", slog.String("err", err.Error()))
 			os.Exit(1)
 		}
 	}()
@@ -68,6 +82,11 @@ func main() {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("Server forced to shutdown", slog.String("err", err.Error()))
 	}
+
+	if err := adminSrv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Admin server forced to shutdown", slog.String("err", err.Error()))
+	}
+
 
 	logger.Info("Server exited")
 }
