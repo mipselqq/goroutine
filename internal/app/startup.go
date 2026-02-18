@@ -54,7 +54,7 @@ func SetupDatabaseFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 	return pool, nil
 }
 
-func RunBackgroundServer(logger *slog.Logger, name string, addr string, handler http.Handler) *http.Server {
+func RunBackgroundServer(logger *slog.Logger, name, addr string, handler http.Handler) *http.Server {
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: handler,

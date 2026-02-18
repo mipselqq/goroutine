@@ -26,7 +26,7 @@ func TestAuth_HappyPath(t *testing.T) {
 
 	application := app.New(logger, pool, &cfg)
 
-	ts := httptest.NewServer(application.AdminRouter)
+	ts := httptest.NewServer(application.Router)
 	defer ts.Close()
 	client := ts.Client()
 
