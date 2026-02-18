@@ -8,8 +8,9 @@ import (
 )
 
 type AppConfig struct {
-	Port        string
-	Host        string
+	Port      string
+	AdminPort string
+	Host      string
 	LogLevel    string
 	Env         string
 	SwaggerHost string
@@ -25,8 +26,9 @@ func NewAppConfigFromEnv() AppConfig {
 	}
 
 	return AppConfig{
-		Port:        getenvOrDefault("PORT", "8080"),
-		Host:        getenvOrDefault("HOST", "0.0.0.0"),
+		Port:      getenvOrDefault("PORT", "8080"),
+		AdminPort: getenvOrDefault("ADMIN_PORT", "9090"),
+		Host:      getenvOrDefault("HOST", "0.0.0.0"),
 		LogLevel:    getenvOrDefault("LOG_LEVEL", "info"),
 		Env:         getenvOrDefault("ENV", "dev"),
 		SwaggerHost: getenvOrDefault("SWAGGER_HOST", "localhost:8080"),
