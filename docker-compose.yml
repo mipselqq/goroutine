@@ -26,6 +26,8 @@ services:
     cpu_shares: 512
     oom_score_adj: 100
     restart: unless-stopped
+    extra_hosts:
+      - "app:host-gateway"
     volumes:
       - ./prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
       - prometheus_data_dev:/prometheus
