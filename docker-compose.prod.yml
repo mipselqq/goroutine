@@ -47,7 +47,7 @@ services:
     oom_score_adj: 100
     restart: unless-stopped
     volumes:
-      - ./prometheus.yml.template:/etc/prometheus/prometheus.yml.template:ro
+      - ./prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
       - prometheus_data_prod:/prometheus
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
@@ -56,10 +56,11 @@ services:
       retries: 3
     environment:
       - ADMIN_PORT
+    user: root
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        envsubst '$$ADMIN_PORT' < /etc/prometheus/prometheus.yml.template > /etc/prometheus/prometheus.yml && \
+        sed "s/\$${ADMIN_PORT}/$$ADMIN_PORT/g" /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml && \
         /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=15d
 
   grafana:
