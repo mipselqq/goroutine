@@ -14,6 +14,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		t.Setenv("JWT_SECRET", "")
 		t.Setenv("HOST", "")
 		t.Setenv("SWAGGER_HOST", "")
+		t.Setenv("ADMIN_PORT", "")
 
 		cfg := NewAppConfigFromEnv()
 		if cfg.Port != "8080" {
@@ -37,6 +38,9 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		if cfg.SwaggerHost != "localhost:8080" {
 			t.Errorf("expected default swagger_host 'localhost:8080', got %q", cfg.SwaggerHost)
 		}
+		if cfg.AdminPort != "9091" {
+			t.Errorf("expected default admin_port '9091', got %q", cfg.AdminPort)
+		}
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
@@ -44,6 +48,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		t.Setenv("LOG_LEVEL", "debug")
 		t.Setenv("ENV", "prod")
 		t.Setenv("SWAGGER_HOST", "example.com")
+		t.Setenv("ADMIN_PORT", "9091")
 
 		cfg := NewAppConfigFromEnv()
 		if cfg.Port != "3000" {
@@ -58,12 +63,16 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		if cfg.SwaggerHost != "example.com" {
 			t.Errorf("expected swagger_host 'example.com', got %q", cfg.SwaggerHost)
 		}
+		if cfg.AdminPort != "9091" {
+			t.Errorf("expected admin_port '9091', got %q", cfg.AdminPort)
+		}
 	})
 }
 
 func TestAppConfig_LogValue(t *testing.T) {
 	cfg := AppConfig{
 		Port:        "8080",
+		AdminPort:   "9091",
 		Host:        "localhost",
 		LogLevel:    "info",
 		Env:         "dev",
@@ -80,6 +89,7 @@ func TestAppConfig_LogValue(t *testing.T) {
 	attrs := v.Group()
 	expectedAttrs := map[string]string{
 		"port":         "8080",
+		"admin_port":   "9091",
 		"host":         "localhost",
 		"log_level":    "info",
 		"env":          "dev",

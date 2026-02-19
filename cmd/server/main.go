@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -40,33 +39,26 @@ func main() {
 	}
 	defer pool.Close()
 
-	router := app.New(logger, pool, &appCfg)
+	application := app.New(logger, pool, &appCfg)
 
-	addr := appCfg.Host + ":" + appCfg.Port
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: router,
-	}
-
-	go func() {
-		logger.Info("Starting server on http://" + addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("Server failed", slog.String("err", err.Error()))
-			os.Exit(1)
-		}
-	}()
+	srv := app.RunBackgroundServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
+	adminSrv := app.RunBackgroundServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	logger.Info("Shutting down server...")
+	logger.Info("Shutting down servers...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("Server forced to shutdown", slog.String("err", err.Error()))
+	}
+
+	if err := adminSrv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Admin server forced to shutdown", slog.String("err", err.Error()))
 	}
 
 	logger.Info("Server exited")

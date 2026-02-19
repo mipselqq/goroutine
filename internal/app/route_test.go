@@ -39,7 +39,6 @@ func TestNewRouter_Full(t *testing.T) {
 		{"Login endpoint", http.MethodPost, "/login", true},
 		{"Health endpoint", http.MethodGet, "/health", true},
 		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false},
-		{"Metrics endpoint", http.MethodGet, "/metrics", false},
 	}
 
 	for _, tt := range tests {
@@ -68,4 +67,17 @@ func TestNewRouter_Full(t *testing.T) {
 			t.Errorf("Non-existing path registered in router")
 		}
 	})
+}
+
+func TestNewAdminRouter(t *testing.T) {
+	t.Parallel()
+
+	router := app.NewAdminRouter()
+
+	req := httptest.NewRequest(http.MethodGet, "/metrics", http.NoBody)
+	_, pattern := router.Handler(req)
+
+	if pattern == "" {
+		t.Errorf("Path GET /metrics not registered in admin router")
+	}
 }

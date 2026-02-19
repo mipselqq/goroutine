@@ -7,7 +7,7 @@ on:
       - 'Dockerfile'
       - 'docker-compose*'
       - '.github/workflows/deploy.yml'
-      - 'prometheus.yml'
+      - 'prometheus.template.yml'
       - 'infra/**'
       - 'internal/**'
       - 'cmd/**'

@@ -26,17 +26,26 @@ services:
     cpu_shares: 512
     oom_score_adj: 100
     restart: unless-stopped
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
     extra_hosts:
       - "app:host-gateway"
+    volumes:
+      - ./prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - prometheus_data_dev:/prometheus
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
       interval: 10s
       timeout: 5s
       retries: 3
+    ports:
+      - "9090:9090"
+    environment:
+      - ADMIN_PORT
+    user: root
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed "s/\$${ADMIN_PORT}/$$ADMIN_PORT/g" /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml && \
+        /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=15d
 
   grafana:
     image: grafana/grafana:12.3.2
@@ -104,5 +113,6 @@ services:
 
 volumes:
   postgres_data_dev:
+  prometheus_data_dev:
   loki_data_dev:
   alloy_data_dev:

@@ -47,6 +47,8 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           HOST=${{ vars.HOST }}
           SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
+          PORT=${{ vars.PORT }}
+          ADMIN_PORT=${{ vars.ADMIN_PORT }}
 
           POSTGRES_USER=${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -68,7 +70,7 @@ jobs:
           host: ${{ vars.DEPLOY_HOST }}
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: "docker-compose.prod.yml,prometheus.yml,infra/,.env.prod"
+          source: "docker-compose.prod.yml,prometheus.template.yml,infra/,.env.prod"
           target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
 
       - name: Fix ownership and permissions on server

@@ -20,7 +20,12 @@ func NewRouter(metricsMiddleware Middleware, authHandler *handler.Auth, healthHa
 	mux.HandleFunc("POST /login", metricsMiddleware.Wrap(http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("GET /health", metricsMiddleware.Wrap(http.HandlerFunc(healthHandler.Health)))
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
-	mux.Handle("GET /metrics", promhttp.Handler())
 
+	return mux
+}
+
+func NewAdminRouter() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.Handle("GET /metrics", promhttp.Handler())
 	return mux
 }

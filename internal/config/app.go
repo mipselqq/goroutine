@@ -9,6 +9,7 @@ import (
 
 type AppConfig struct {
 	Port        string
+	AdminPort   string
 	Host        string
 	LogLevel    string
 	Env         string
@@ -26,6 +27,7 @@ func NewAppConfigFromEnv() AppConfig {
 
 	return AppConfig{
 		Port:        getenvOrDefault("PORT", "8080"),
+		AdminPort:   getenvOrDefault("ADMIN_PORT", "9091"),
 		Host:        getenvOrDefault("HOST", "0.0.0.0"),
 		LogLevel:    getenvOrDefault("LOG_LEVEL", "info"),
 		Env:         getenvOrDefault("ENV", "dev"),
@@ -39,6 +41,7 @@ func NewAppConfigFromEnv() AppConfig {
 func (c AppConfig) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("port", c.Port),
+		slog.String("admin_port", c.AdminPort),
 		slog.String("host", c.Host),
 		slog.String("log_level", c.LogLevel),
 		slog.String("env", c.Env),
