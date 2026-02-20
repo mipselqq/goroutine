@@ -1,87 +1,70 @@
-package config
+package config_test
 
 import (
 	"log/slog"
 	"testing"
 	"time"
+
+	"goroutine/internal/config"
+	"goroutine/internal/secrecy"
+
+	"goroutine/internal/testutil"
+
+	"github.com/google/go-cmp/cmp"
 )
+
+var defaultAppConfig = config.AppConfig{
+	Port:        "8080",
+	AdminPort:   "9091",
+	Host:        "0.0.0.0",
+	SwaggerHost: "localhost:8080",
+	LogLevel:    "info",
+	Env:         "dev",
+	JWTSecret:   secrecy.SecretString("very_secret"),
+	JWTExp:      24 * time.Hour,
+}
 
 func TestNewAppConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
-		t.Setenv("PORT", "")
-		t.Setenv("LOG_LEVEL", "")
-		t.Setenv("ENV", "")
-		t.Setenv("JWT_SECRET", "")
-		t.Setenv("HOST", "")
-		t.Setenv("SWAGGER_HOST", "")
-		t.Setenv("ADMIN_PORT", "")
+		testutil.UnsetEnv(t, "PORT", "LOG_LEVEL", "ENV", "JWT_SECRET", "HOST", "SWAGGER_HOST", "ADMIN_PORT", "JWT_EXP")
 
-		cfg := NewAppConfigFromEnv()
-		if cfg.Port != "8080" {
-			t.Errorf("expected default port '8080', got %q", cfg.Port)
-		}
-		if cfg.LogLevel != "info" {
-			t.Errorf("expected default log_level 'info', got %q", cfg.LogLevel)
-		}
-		if cfg.Env != "dev" {
-			t.Errorf("expected default env 'dev', got %q", cfg.Env)
-		}
-		if cfg.JWTSecret.RevealSecret() != "very_secret" {
-			t.Errorf("expected default jwt_secret 'very_secret', got %q", string(cfg.JWTSecret))
-		}
-		if cfg.Host != "0.0.0.0" {
-			t.Errorf("expected default host '0.0.0.0', got %q", cfg.Host)
-		}
-		if cfg.JWTExp != 24*time.Hour {
-			t.Errorf("expected default jwt_exp 24h, got %v", cfg.JWTExp)
-		}
-		if cfg.SwaggerHost != "localhost:8080" {
-			t.Errorf("expected default swagger_host 'localhost:8080', got %q", cfg.SwaggerHost)
-		}
-		if cfg.AdminPort != "9091" {
-			t.Errorf("expected default admin_port '9091', got %q", cfg.AdminPort)
+		cfg := config.NewAppConfigFromEnv()
+
+		diff := cmp.Diff(defaultAppConfig, cfg)
+		if diff != "" {
+			t.Errorf("invalid defaults (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
 		t.Setenv("PORT", "3000")
+		t.Setenv("ADMIN_PORT", "9091")
 		t.Setenv("LOG_LEVEL", "debug")
 		t.Setenv("ENV", "prod")
 		t.Setenv("SWAGGER_HOST", "example.com")
-		t.Setenv("ADMIN_PORT", "9091")
+		t.Setenv("JWT_EXP", "1h")
 
-		cfg := NewAppConfigFromEnv()
-		if cfg.Port != "3000" {
-			t.Errorf("expected port '3000', got %q", cfg.Port)
+		expectedCfg := config.AppConfig{
+			Port:        "3000",
+			AdminPort:   "9091",
+			Host:        "0.0.0.0",
+			SwaggerHost: "example.com",
+			LogLevel:    "debug",
+			Env:         "prod",
+			JWTSecret:   secrecy.SecretString("very_secret"),
+			JWTExp:      time.Hour,
 		}
-		if cfg.LogLevel != "debug" {
-			t.Errorf("expected log_level 'debug', got %q", cfg.LogLevel)
-		}
-		if cfg.Env != "prod" {
-			t.Errorf("expected env 'prod', got %q", cfg.Env)
-		}
-		if cfg.SwaggerHost != "example.com" {
-			t.Errorf("expected swagger_host 'example.com', got %q", cfg.SwaggerHost)
-		}
-		if cfg.AdminPort != "9091" {
-			t.Errorf("expected admin_port '9091', got %q", cfg.AdminPort)
+
+		cfg := config.NewAppConfigFromEnv()
+		diff := cmp.Diff(expectedCfg, cfg)
+		if diff != "" {
+			t.Errorf("invalid defaults (-want +got):\n%s", diff)
 		}
 	})
 }
 
 func TestAppConfig_LogValue(t *testing.T) {
-	cfg := AppConfig{
-		Port:        "8080",
-		AdminPort:   "9091",
-		Host:        "localhost",
-		LogLevel:    "info",
-		Env:         "dev",
-		JWTSecret:   "secret",
-		JWTExp:      24 * time.Hour,
-		SwaggerHost: "localhost:8080",
-	}
-
-	v := cfg.LogValue()
+	v := defaultAppConfig.LogValue()
 	if v.Kind() != slog.KindGroup {
 		t.Fatalf("expected Group kind, got %v", v.Kind())
 	}
@@ -90,27 +73,13 @@ func TestAppConfig_LogValue(t *testing.T) {
 	expectedAttrs := map[string]string{
 		"port":         "8080",
 		"admin_port":   "9091",
-		"host":         "localhost",
+		"host":         "0.0.0.0",
 		"log_level":    "info",
 		"env":          "dev",
 		"swagger_host": "localhost:8080",
-		"jwt_secret":   "(6 chars)",
+		"jwt_secret":   "(11 chars)",
 		"jwt_exp":      "24h0m0s",
 	}
 
-	for _, a := range attrs {
-		expected, ok := expectedAttrs[a.Key]
-		if !ok {
-			t.Errorf("unexpected attribute %q", a.Key)
-			continue
-		}
-		if a.Value.String() != expected {
-			t.Errorf("for key %q, expected %q, got %q", a.Key, expected, a.Value.String())
-		}
-		delete(expectedAttrs, a.Key)
-	}
-
-	for key := range expectedAttrs {
-		t.Errorf("missing attribute %q", key)
-	}
+	testutil.FailOnInvalidLogValue(t, attrs, expectedAttrs)
 }
