@@ -10,29 +10,29 @@ import (
 )
 
 type PgConfig struct {
-	user     string
-	password secrecy.SecretString
-	host     string
-	port     string
-	db       string
+	User     string
+	Password secrecy.SecretString
+	Host     string
+	Port     string
+	DB       string
 }
 
 func NewPGConfigFromEnv() PgConfig {
 	return PgConfig{
-		user:     getenvOrDefault("POSTGRES_USER", "user"),
-		password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password")),
-		host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1"),
-		port:     getenvOrDefault("POSTGRES_PORT", "5432"),
-		db:       getenvOrDefault("POSTGRES_DB", "todo_db"),
+		User:     getenvOrDefault("POSTGRES_USER", "user"),
+		Password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password")),
+		Host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1"),
+		Port:     getenvOrDefault("POSTGRES_PORT", "5432"),
+		DB:       getenvOrDefault("POSTGRES_DB", "todo_db"),
 	}
 }
 
-func (c *PgConfig) buildDSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.user, c.password.RevealSecret(), c.host, c.port, c.db)
+func (c *PgConfig) BuildDSN() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.User, c.Password.RevealSecret(), c.Host, c.Port, c.DB)
 }
 
 func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
-	config, err := pgxpool.ParseConfig(c.buildDSN())
+	config, err := pgxpool.ParseConfig(c.BuildDSN())
 	if err != nil {
 		return nil, err
 	}
@@ -43,10 +43,10 @@ func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 //nolint:gocritic // Pointer receiver disables formatting
 func (c PgConfig) LogValue() slog.Value {
 	return slog.GroupValue(
-		slog.String("user", c.user),
-		slog.Any("password", c.password),
-		slog.String("host", c.host),
-		slog.String("port", c.port),
-		slog.String("db", c.db),
+		slog.String("user", c.User),
+		slog.Any("password", c.Password),
+		slog.String("host", c.Host),
+		slog.String("port", c.Port),
+		slog.String("db", c.DB),
 	)
 }
