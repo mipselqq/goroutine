@@ -14,7 +14,7 @@ func TestHealthHandler(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 	rr := httptest.NewRecorder()
-	h := handler.NewHealth(testutil.CreateTestLogger(t))
+	h := handler.NewHealth(testutil.NewTestLogger(t))
 
 	h.Health(rr, req)
 

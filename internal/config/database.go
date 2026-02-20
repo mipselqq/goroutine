@@ -17,13 +17,13 @@ type PgConfig struct {
 	DB       string
 }
 
-func NewPGConfigFromEnv() PgConfig {
+func NewPGConfigFromEnv(logger *slog.Logger) PgConfig {
 	return PgConfig{
-		User:     getenvOrDefault("POSTGRES_USER", "user"),
-		Password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password")),
-		Host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1"),
-		Port:     getenvOrDefault("POSTGRES_PORT", "5432"),
-		DB:       getenvOrDefault("POSTGRES_DB", "todo_db"),
+		User:     getenvOrDefault("POSTGRES_USER", "user", logger),
+		Password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password", logger)),
+		Host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1", logger),
+		Port:     getenvOrDefault("POSTGRES_PORT", "5432", logger),
+		DB:       getenvOrDefault("POSTGRES_DB", "todo_db", logger),
 	}
 }
 

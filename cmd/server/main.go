@@ -26,7 +26,8 @@ func main() {
 		_ = godotenv.Load(".env.dev")
 	}
 
-	appCfg := config.NewAppConfigFromEnv()
+	bootLogger := logging.NewTintStdoutLogger("info")
+	appCfg := config.NewAppConfigFromEnv(bootLogger)
 	docs.SwaggerInfo.Host = appCfg.SwaggerHost
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
 

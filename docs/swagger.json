@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "A todo project for learning Go-go-go-go",
-        "title": "Go Todo API",
+        "description": "A nice kanban board with a beautiful heart ✨",
+        "title": "Goroutine kanban API",
         "contact": {}
     },
     "basePath": "/",

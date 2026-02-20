@@ -15,7 +15,7 @@ import (
 func SetupTestDB(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	t.Helper()
 	_ = godotenv.Load("../../.env.dev")
-	logger := CreateTestLogger(t)
+	logger := NewTestLogger(t)
 
 	pool, err := app.SetupDatabaseFromEnv(logger, migrationsDir)
 	if err != nil {

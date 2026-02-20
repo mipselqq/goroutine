@@ -118,7 +118,7 @@ func TestAuth_Register(t *testing.T) {
 				tt.setupMock(&s)
 			}
 
-			h := handler.NewAuth(testutil.CreateTestLogger(t), &s)
+			h := handler.NewAuth(testutil.NewTestLogger(t), &s)
 			h.Register(rr, req)
 
 			if rr.Code != tt.expectedCode {
@@ -238,7 +238,7 @@ func TestAuth_Login(t *testing.T) {
 				tt.setupMock(s)
 			}
 
-			h := handler.NewAuth(testutil.CreateTestLogger(t), s)
+			h := handler.NewAuth(testutil.NewTestLogger(t), s)
 			h.Login(rr, req)
 
 			if rr.Code != tt.expectedCode {

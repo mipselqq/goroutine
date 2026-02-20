@@ -22,7 +22,7 @@ func (s *spyMetricsMiddleware) Wrap(next http.Handler) http.HandlerFunc {
 func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
-	logger := testutil.CreateTestLogger(t)
+	logger := testutil.NewTestLogger(t)
 	authHandler := handler.NewAuth(logger, nil)
 	healthHandler := handler.NewHealth(logger)
 	metricsMiddleware := &spyMetricsMiddleware{}
