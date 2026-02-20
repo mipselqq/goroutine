@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"log/slog"
+	"strings"
 	"testing"
 
 	"goroutine/internal/config"
@@ -19,11 +20,13 @@ var defaultPgConfig = config.PgConfig{
 	DB:       "todo_db",
 }
 
+var pgEnvVars = []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_HOST", "POSTGRES_PORT", "POSTGRES_DB"}
+
 func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
-		testutil.UnsetEnv(t, "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_HOST", "POSTGRES_PORT", "POSTGRES_DB")
+		testutil.UnsetEnv(t, pgEnvVars...)
 
-		cfg := config.NewPGConfigFromEnv()
+		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
 
 		diff := cmp.Diff(defaultPgConfig, cfg)
 		if diff != "" {
@@ -38,7 +41,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		t.Setenv("POSTGRES_PORT", "5433")
 		t.Setenv("POSTGRES_DB", "custom_db")
 
-		cfg := config.NewPGConfigFromEnv()
+		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
 		expectedCfg := config.PgConfig{
 			User:     "custom_user",
 			Password: secrecy.SecretString("custom_pass"),
@@ -49,6 +52,17 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		diff := cmp.Diff(expectedCfg, cfg)
 		if diff != "" {
 			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("warns unset variables", func(t *testing.T) {
+		logger, buf := testutil.NewBufJsonLogger(t)
+		_ = config.NewPGConfigFromEnv(logger)
+
+		for _, envVar := range pgEnvVars {
+			if !strings.Contains(buf.String(), envVar) {
+				t.Errorf("expected warn on unset %s", envVar)
+			}
 		}
 	})
 }

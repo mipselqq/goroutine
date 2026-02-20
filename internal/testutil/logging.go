@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"bytes"
 	"log/slog"
 	"testing"
 )
@@ -16,8 +17,19 @@ func (w testWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func CreateTestLogger(t testing.TB) *slog.Logger {
+func NewTestLogger(t testing.TB) *slog.Logger {
 	return slog.New(slog.NewTextHandler(testWriter{t}, nil))
+}
+
+func NewBufJsonLogger(t testing.TB) (*slog.Logger, *bytes.Buffer) {
+	var buf bytes.Buffer
+	h := slog.NewJSONHandler(&buf, nil)
+	logger := slog.New(h)
+	return logger, &buf
+}
+
+func NewDiscardLogger() *slog.Logger {
+	return slog.New(slog.DiscardHandler)
 }
 
 func FailOnInvalidLogValue(t *testing.T, attrs []slog.Attr, expectedAttrs map[string]string) {

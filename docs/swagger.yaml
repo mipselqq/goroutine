@@ -38,8 +38,8 @@ definitions:
     type: object
 info:
   contact: {}
-  description: A todo project for learning Go-go-go-go
-  title: Go Todo API
+  description: A nice kanban board with a beautiful heart ✨
+  title: Goroutine kanban API
 paths:
   /health:
     get:

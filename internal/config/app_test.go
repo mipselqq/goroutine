@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,11 +25,13 @@ var defaultAppConfig = config.AppConfig{
 	JWTExp:      24 * time.Hour,
 }
 
+var appEnvVars = []string{"PORT", "ADMIN_PORT", "HOST", "SWAGGER_HOST", "LOG_LEVEL", "ENV", "JWT_SECRET", "JWT_EXP"}
+
 func TestNewAppConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
-		testutil.UnsetEnv(t, "PORT", "LOG_LEVEL", "ENV", "JWT_SECRET", "HOST", "SWAGGER_HOST", "ADMIN_PORT", "JWT_EXP")
+		testutil.UnsetEnv(t, appEnvVars...)
 
-		cfg := config.NewAppConfigFromEnv()
+		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
 
 		diff := cmp.Diff(defaultAppConfig, cfg)
 		if diff != "" {
@@ -44,6 +47,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		t.Setenv("SWAGGER_HOST", "example.com")
 		t.Setenv("JWT_EXP", "1h")
 
+		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
 		expectedCfg := config.AppConfig{
 			Port:        "3000",
 			AdminPort:   "9091",
@@ -54,11 +58,20 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 			JWTSecret:   secrecy.SecretString("very_secret"),
 			JWTExp:      time.Hour,
 		}
-
-		cfg := config.NewAppConfigFromEnv()
 		diff := cmp.Diff(expectedCfg, cfg)
 		if diff != "" {
 			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("warns unset variables", func(t *testing.T) {
+		logger, buf := testutil.NewBufJsonLogger(t)
+		_ = config.NewAppConfigFromEnv(logger)
+
+		for _, envVar := range appEnvVars {
+			if !strings.Contains(buf.String(), envVar) {
+				t.Errorf("expected warn on unset %s", envVar)
+			}
 		}
 	})
 }

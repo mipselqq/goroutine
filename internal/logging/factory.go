@@ -11,10 +11,6 @@ func NewLoggerContext(logger *slog.Logger, module string) *slog.Logger {
 	return logger.With(slog.String("module", module))
 }
 
-func NewDiscardLogger() *slog.Logger {
-	return slog.New(slog.DiscardHandler)
-}
-
 func parseLevel(level string) slog.Level {
 	switch level {
 	case "debug":
@@ -30,11 +26,17 @@ func parseLevel(level string) slog.Level {
 	}
 }
 
+func NewTintStdoutHandler(logLevel string) slog.Handler {
+	return tint.NewHandler(os.Stdout, &tint.Options{Level: parseLevel(logLevel)})
+}
+
+func NewTintStdoutLogger(logLevel string) *slog.Logger {
+	return slog.New(NewTintStdoutHandler(logLevel))
+}
+
 func NewHandler(env, logLevel string) slog.Handler {
 	if env == "dev" {
-		return tint.NewHandler(os.Stdout, &tint.Options{
-			Level: parseLevel(logLevel),
-		})
+		return NewTintStdoutHandler(logLevel)
 	}
 	return slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: parseLevel(logLevel),
