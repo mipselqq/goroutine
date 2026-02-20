@@ -20,7 +20,7 @@ func CreateTestLogger(t testing.TB) *slog.Logger {
 	return slog.New(slog.NewTextHandler(testWriter{t}, nil))
 }
 
-func VerifyLogValue(t *testing.T, attrs []slog.Attr, expectedAttrs map[string]string) {
+func FailOnInvalidLogValue(t *testing.T, attrs []slog.Attr, expectedAttrs map[string]string) {
 	t.Helper()
 
 	for _, a := range attrs {

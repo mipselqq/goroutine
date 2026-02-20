@@ -74,5 +74,5 @@ func TestPgConfig_LogValue(t *testing.T) {
 		"db":       "todo_db",
 	}
 
-	testutil.VerifyLogValue(t, v.Group(), expectedAttrs)
+	testutil.FailOnInvalidLogValue(t, v.Group(), expectedAttrs)
 }

@@ -81,5 +81,5 @@ func TestAppConfig_LogValue(t *testing.T) {
 		"jwt_exp":      "24h0m0s",
 	}
 
-	testutil.VerifyLogValue(t, attrs, expectedAttrs)
+	testutil.FailOnInvalidLogValue(t, attrs, expectedAttrs)
 }
