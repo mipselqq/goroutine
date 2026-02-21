@@ -18,6 +18,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build Image
@@ -36,7 +40,7 @@ jobs:
           tags: goroutine:temp
           outputs: type=docker,dest=/tmp/goroutine.tar
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: goroutine-image
           path: /tmp/goroutine.tar
