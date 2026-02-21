@@ -130,6 +130,11 @@
         - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
       notify: Restart SSH
 
+    - name: Reset all ufw rules
+      ufw:
+        state: reset
+      notify: Reload UFW
+
     - name: Prevent Docker from bypassing UFW
       blockinfile:
         path: /etc/ufw/after.rules
@@ -147,17 +152,19 @@
           COMMIT
       notify: Reload UFW
 
+    - name: Allow SSH access
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+      notify: Reload UFW
+
     - name: Setup UFW Policy
       ufw:
         state: enabled
         policy: deny
         direction: incoming
-
-    - name: Allow direct SSH access
-      ufw:
-        rule: allow
-        port: 22
-        proto: tcp
+      notify: Reload UFW
 
     - name: Allow public ports (forwarded to Docker)
       ufw:
@@ -170,6 +177,7 @@
         - 443
         - 8080
         - 3000
+      notify: Reload UFW
 
     - name: Create a new user for deployment
       user:
