@@ -104,6 +104,20 @@
         state: started
         enabled: yes
 
+    # For logging during deployment
+    - name: Check for SSH overrides in sshd_config.d
+      find:
+        paths: /etc/ssh/sshd_config.d
+        patterns: "*.conf"
+      register: sshd_overrides
+
+    - name: Remove SSH configuration overrides
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ sshd_overrides.files }}"
+      notify: Restart SSH
+
     - name: SSH Hardening
       lineinfile:
         dest: /etc/ssh/sshd_config
