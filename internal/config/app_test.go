@@ -46,7 +46,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 
 		diff := cmp.Diff(defaultAppConfig, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("app used unexpected values instead of defaults (-want +got):\n%s", diff)
 		}
 	})
 
@@ -66,7 +66,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 		diff := cmp.Diff(expectedCfg, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("app config used unexpected values instead of env vars (-want +got):\n%s", diff)
 		}
 	})
 

@@ -38,7 +38,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 		diff := cmp.Diff(defaultPgConfig, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("pg config used unexpected values instead of defaults (-want +got):\n%s", diff)
 		}
 	})
 
@@ -55,7 +55,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		}
 		diff := cmp.Diff(expectedCfg, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("pg config used unexpected values instead of env vars (-want +got):\n%s", diff)
 		}
 	})
 
