@@ -36,7 +36,7 @@ jobs:
           tags: goroutine:temp
           outputs: type=docker,dest=/tmp/goroutine.tar
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: goroutine-image
           path: /tmp/goroutine.tar
