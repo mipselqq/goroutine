@@ -70,7 +70,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 	})
 
-	t.Run("warns unset variables", func(t *testing.T) {
+	t.Run("warnings unset variables", func(t *testing.T) {
 		testutil.UnsetEnv(t, appEnvVars...)
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewAppConfigFromEnv(logger)
@@ -82,14 +82,14 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 	})
 
-	t.Run("no warns if all variables are set", func(t *testing.T) {
+	t.Run("no warnings if all variables are set", func(t *testing.T) {
 		setCustomAppEnvVars(t)
 
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewAppConfigFromEnv(logger)
 
 		if buf.String() != "" {
-			t.Errorf("expected no warns, got %s", buf.String())
+			t.Errorf("expected no warnings, got %s", buf.String())
 		}
 	})
 }

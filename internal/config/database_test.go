@@ -59,7 +59,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		}
 	})
 
-	t.Run("warns unset variables", func(t *testing.T) {
+	t.Run("warnings unset variables", func(t *testing.T) {
 		testutil.UnsetEnv(t, pgEnvVars...)
 
 		logger, buf := testutil.NewBufJsonLogger(t)
