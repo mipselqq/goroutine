@@ -33,6 +33,10 @@ build-bin: try-fetch-tags
 	go build \
 	-ldflags "-X main.version=$(VERSION)" \
 	-o /bin/app ./cmd/server/main.go
+	CGO_ENABLED=0 \
+	GOOS=linux \
+	go build \
+	-o /bin/ping ./cmd/ping/main.go
 
 try-fetch-tags:
 	git fetch --tags || true

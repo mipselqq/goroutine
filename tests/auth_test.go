@@ -20,8 +20,8 @@ func TestAuth_HappyPath(t *testing.T) {
 	pool := testutil.SetupTestDB(t, "../migrations")
 	defer pool.Close()
 
-	cfg := config.NewAppConfigFromEnv(testutil.NewTestLogger(t))
 	logger := testutil.NewTestLogger(t)
+	cfg := config.NewAppConfigFromEnv(logger)
 	logger.Info("App config", slog.Any("config", cfg))
 
 	application := app.New(logger, pool, &cfg)

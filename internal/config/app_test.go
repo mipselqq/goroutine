@@ -27,6 +27,17 @@ var defaultAppConfig = config.AppConfig{
 
 var appEnvVars = []string{"PORT", "ADMIN_PORT", "HOST", "SWAGGER_HOST", "LOG_LEVEL", "ENV", "JWT_SECRET", "JWT_EXP"}
 
+func setCustomAppEnvVars(t *testing.T) {
+	t.Setenv("PORT", "3000")
+	t.Setenv("HOST", "127.0.0.1")
+	t.Setenv("ADMIN_PORT", "9092")
+	t.Setenv("LOG_LEVEL", "debug")
+	t.Setenv("ENV", "prod")
+	t.Setenv("SWAGGER_HOST", "example.com")
+	t.Setenv("JWT_SECRET", "more_secret")
+	t.Setenv("JWT_EXP", "1h")
+}
+
 func TestNewAppConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
 		testutil.UnsetEnv(t, appEnvVars...)
@@ -35,36 +46,32 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 
 		diff := cmp.Diff(defaultAppConfig, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("app used unexpected values instead of defaults (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
-		t.Setenv("PORT", "3000")
-		t.Setenv("ADMIN_PORT", "9091")
-		t.Setenv("LOG_LEVEL", "debug")
-		t.Setenv("ENV", "prod")
-		t.Setenv("SWAGGER_HOST", "example.com")
-		t.Setenv("JWT_EXP", "1h")
+		setCustomAppEnvVars(t)
 
 		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
 		expectedCfg := config.AppConfig{
 			Port:        "3000",
-			AdminPort:   "9091",
-			Host:        "0.0.0.0",
+			AdminPort:   "9092",
+			Host:        "127.0.0.1",
 			SwaggerHost: "example.com",
 			LogLevel:    "debug",
 			Env:         "prod",
-			JWTSecret:   secrecy.SecretString("very_secret"),
+			JWTSecret:   secrecy.SecretString("more_secret"),
 			JWTExp:      time.Hour,
 		}
 		diff := cmp.Diff(expectedCfg, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("app config used unexpected values instead of env vars (-want +got):\n%s", diff)
 		}
 	})
 
-	t.Run("warns unset variables", func(t *testing.T) {
+	t.Run("warnings on unset variables", func(t *testing.T) {
+		testutil.UnsetEnv(t, appEnvVars...)
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewAppConfigFromEnv(logger)
 
@@ -72,6 +79,17 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 			if !strings.Contains(buf.String(), envVar) {
 				t.Errorf("expected warn on unset %s", envVar)
 			}
+		}
+	})
+
+	t.Run("no warnings on all variables are set", func(t *testing.T) {
+		setCustomAppEnvVars(t)
+
+		logger, buf := testutil.NewBufJsonLogger(t)
+		_ = config.NewAppConfigFromEnv(logger)
+
+		if buf.String() != "" {
+			t.Errorf("expected no warnings on all variables are set, got %s", buf.String())
 		}
 	})
 }
