@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
 	// This code does not reuse the config package because
 	// getEnvOrDefault is not exported and covered by tests.
-	// It doesn't worth to refactor the config package.
+	// It isn't worth refactoring the config package.
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -21,7 +22,10 @@ func main() {
 	}
 
 	url := fmt.Sprintf("http://%s:%s/health", host, port)
-	resp, err := http.Get(url)
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "healthcheck failed: %v\n", err)
 		os.Exit(1)
