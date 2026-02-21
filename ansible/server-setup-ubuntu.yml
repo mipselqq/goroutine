@@ -133,7 +133,7 @@
     - name: Reset all ufw rules
       ufw:
         state: reset
-        notify: Reload UFW
+      notify: Reload UFW
 
     - name: Prevent Docker from bypassing UFW
       blockinfile:
@@ -227,4 +227,4 @@
         state: restarted
 
     - name: Reload UFW
-        state: restarted
+      command: ufw reload
