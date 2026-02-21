@@ -22,6 +22,14 @@ var defaultPgConfig = config.PgConfig{
 
 var pgEnvVars = []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_HOST", "POSTGRES_PORT", "POSTGRES_DB"}
 
+func setCustomPgEnvVars(t *testing.T) {
+	t.Setenv("POSTGRES_USER", "custom_user")
+	t.Setenv("POSTGRES_PASSWORD", "custom_pass")
+	t.Setenv("POSTGRES_HOST", "custom_host")
+	t.Setenv("POSTGRES_PORT", "5433")
+	t.Setenv("POSTGRES_DB", "custom_db")
+}
+
 func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
 		testutil.UnsetEnv(t, pgEnvVars...)
@@ -30,16 +38,12 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 		diff := cmp.Diff(defaultPgConfig, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("pg config used unexpected values instead of defaults (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
-		t.Setenv("POSTGRES_USER", "custom_user")
-		t.Setenv("POSTGRES_PASSWORD", "custom_pass")
-		t.Setenv("POSTGRES_HOST", "custom_host")
-		t.Setenv("POSTGRES_PORT", "5433")
-		t.Setenv("POSTGRES_DB", "custom_db")
+		setCustomPgEnvVars(t)
 
 		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
 		expectedCfg := config.PgConfig{
@@ -51,11 +55,13 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		}
 		diff := cmp.Diff(expectedCfg, cfg)
 		if diff != "" {
-			t.Errorf("invalid defaults (-want +got):\n%s", diff)
+			t.Errorf("pg config used unexpected values instead of env vars (-want +got):\n%s", diff)
 		}
 	})
 
-	t.Run("warns unset variables", func(t *testing.T) {
+	t.Run("warnings on unset variables", func(t *testing.T) {
+		testutil.UnsetEnv(t, pgEnvVars...)
+
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewPGConfigFromEnv(logger)
 
@@ -63,6 +69,17 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 			if !strings.Contains(buf.String(), envVar) {
 				t.Errorf("expected warn on unset %s", envVar)
 			}
+		}
+	})
+
+	t.Run("no warnings if all variables are set", func(t *testing.T) {
+		setCustomPgEnvVars(t)
+
+		logger, buf := testutil.NewBufJsonLogger(t)
+		_ = config.NewPGConfigFromEnv(logger)
+
+		if buf.String() != "" {
+			t.Errorf("expected no warnings, got %s", buf.String())
 		}
 	})
 }
