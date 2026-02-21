@@ -65,7 +65,7 @@ jobs:
           find infra/grafana -type f -exec chmod 644 {} +
 
       - name: Copy config files
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ vars.DEPLOY_HOST }}
           username: root
