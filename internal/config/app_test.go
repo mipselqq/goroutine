@@ -27,6 +27,17 @@ var defaultAppConfig = config.AppConfig{
 
 var appEnvVars = []string{"PORT", "ADMIN_PORT", "HOST", "SWAGGER_HOST", "LOG_LEVEL", "ENV", "JWT_SECRET", "JWT_EXP"}
 
+func setCustomAppEnvVars(t *testing.T) {
+	t.Setenv("PORT", "3000")
+	t.Setenv("HOST", "127.0.0.1")
+	t.Setenv("ADMIN_PORT", "9091")
+	t.Setenv("LOG_LEVEL", "debug")
+	t.Setenv("ENV", "prod")
+	t.Setenv("SWAGGER_HOST", "example.com")
+	t.Setenv("JWT_SECRET", "very_secret")
+	t.Setenv("JWT_EXP", "1h")
+}
+
 func TestNewAppConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
 		testutil.UnsetEnv(t, appEnvVars...)
@@ -40,18 +51,13 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
-		t.Setenv("PORT", "3000")
-		t.Setenv("ADMIN_PORT", "9091")
-		t.Setenv("LOG_LEVEL", "debug")
-		t.Setenv("ENV", "prod")
-		t.Setenv("SWAGGER_HOST", "example.com")
-		t.Setenv("JWT_EXP", "1h")
+		setCustomAppEnvVars(t)
 
 		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
 		expectedCfg := config.AppConfig{
 			Port:        "3000",
 			AdminPort:   "9091",
-			Host:        "0.0.0.0",
+			Host:        "127.0.0.1",
 			SwaggerHost: "example.com",
 			LogLevel:    "debug",
 			Env:         "prod",
@@ -72,6 +78,17 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 			if !strings.Contains(buf.String(), envVar) {
 				t.Errorf("expected warn on unset %s", envVar)
 			}
+		}
+	})
+
+	t.Run("no warns if all variables are set", func(t *testing.T) {
+		setCustomAppEnvVars(t)
+
+		logger, buf := testutil.NewBufJsonLogger(t)
+		_ = config.NewAppConfigFromEnv(logger)
+
+		if buf.String() != "" {
+			t.Errorf("expected no warns, got %s", buf.String())
 		}
 	})
 }
