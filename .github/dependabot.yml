@@ -23,7 +23,6 @@ updates:
     labels:
       - "chore"
       - "go"
-    versioning-strategy: increase
     commit-message:
       prefix: "deps(go)"
 
