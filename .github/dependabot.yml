@@ -12,6 +12,13 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "deps(actions)"
+    groups:
+      actions-safe:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "gomod"
     directory: "/"
@@ -25,6 +32,13 @@ updates:
       - "go"
     commit-message:
       prefix: "deps(go)"
+    groups:
+      go-safe:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -38,3 +52,10 @@ updates:
       - "docker"
     commit-message:
       prefix: "deps(docker)"
+    groups:
+      docker-safe:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
