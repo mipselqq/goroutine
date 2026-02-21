@@ -1,1 +1,2 @@
-infra/grafana/dashboards/*
+infra/grafana/dashboards
+.vscode
