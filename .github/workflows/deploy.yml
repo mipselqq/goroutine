@@ -18,6 +18,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build Image
