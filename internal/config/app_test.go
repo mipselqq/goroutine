@@ -40,8 +40,6 @@ func setCustomAppEnvVars(t *testing.T) {
 
 func TestNewAppConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
-		testutil.UnsetEnv(t, appEnvVars...)
-
 		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
 
 		diff := cmp.Diff(defaultAppConfig, cfg)
