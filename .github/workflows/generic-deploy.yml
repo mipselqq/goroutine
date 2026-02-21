@@ -74,7 +74,7 @@ jobs:
           target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
 
       - name: Fix ownership and permissions on server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ vars.DEPLOY_HOST }}
           username: root
@@ -85,7 +85,7 @@ jobs:
             find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type f -exec chmod 644 {} +
 
       - name: Start Application
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ vars.DEPLOY_HOST }}
           username: ${{ vars.DEPLOY_USERNAME }}
