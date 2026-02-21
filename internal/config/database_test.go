@@ -22,6 +22,14 @@ var defaultPgConfig = config.PgConfig{
 
 var pgEnvVars = []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_HOST", "POSTGRES_PORT", "POSTGRES_DB"}
 
+func setCustomPgEnvVars(t *testing.T) {
+	t.Setenv("POSTGRES_USER", "custom_user")
+	t.Setenv("POSTGRES_PASSWORD", "custom_pass")
+	t.Setenv("POSTGRES_HOST", "custom_host")
+	t.Setenv("POSTGRES_PORT", "5433")
+	t.Setenv("POSTGRES_DB", "custom_db")
+}
+
 func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
 		testutil.UnsetEnv(t, pgEnvVars...)
@@ -35,11 +43,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
-		t.Setenv("POSTGRES_USER", "custom_user")
-		t.Setenv("POSTGRES_PASSWORD", "custom_pass")
-		t.Setenv("POSTGRES_HOST", "custom_host")
-		t.Setenv("POSTGRES_PORT", "5433")
-		t.Setenv("POSTGRES_DB", "custom_db")
+		setCustomPgEnvVars(t)
 
 		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
 		expectedCfg := config.PgConfig{
@@ -63,6 +67,17 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 			if !strings.Contains(buf.String(), envVar) {
 				t.Errorf("expected warn on unset %s", envVar)
 			}
+		}
+	})
+
+	t.Run("no warns if all variables are set", func(t *testing.T) {
+		setCustomPgEnvVars(t)
+
+		logger, buf := testutil.NewBufJsonLogger(t)
+		_ = config.NewPGConfigFromEnv(logger)
+
+		if buf.String() != "" {
+			t.Errorf("expected no warns, got %s", buf.String())
 		}
 	})
 }
