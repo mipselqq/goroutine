@@ -70,14 +70,14 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		}
 	})
 
-	t.Run("no warns if all variables are set", func(t *testing.T) {
+	t.Run("no warnings if all variables are set", func(t *testing.T) {
 		setCustomPgEnvVars(t)
 
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewPGConfigFromEnv(logger)
 
 		if buf.String() != "" {
-			t.Errorf("expected no warns, got %s", buf.String())
+			t.Errorf("expected no warnings, got %s", buf.String())
 		}
 	})
 }
