@@ -35,9 +35,9 @@ jobs:
 
       - name: Install Ansible Core & Collections
         if: steps.cache-ansible.outputs.cache-hit != 'true'
-        run: |
-          pip install --user ansible-core
-          ansible-galaxy collection install community.general ansible.posix
+        run: | # WARN: Dependabot won't update these versions, manual bump required. Last bump: 22.02.2026
+          pip install --user ansible-core==2.20.2
+          ansible-galaxy collection install community.general:12.3.0 ansible.posix:2.1.0
 
       - name: Run Ansible Playbook
         shell: bash
