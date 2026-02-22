@@ -24,12 +24,25 @@ jobs:
           ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
           ssh-keyscan -H "${{ vars.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Cache Ansible
+        id: cache-ansible
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local
+            ~/.ansible/collections
+          key: ${{ runner.os }}-ansible-${{ hashFiles('ansible/server-setup-ubuntu.yml') }}
+
+      - name: Install Ansible Core & Collections
+        if: steps.cache-ansible.outputs.cache-hit != 'true'
+        run: |
+          pip install --user ansible-core
+          ansible-galaxy collection install community.general
+
       - name: Run Ansible Playbook
         shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible
-
+          export PATH="$HOME/.local/bin:$PATH"
           ansible-playbook -i "${{ vars.DEPLOY_HOST }}," \
             -u "root" \
             --private-key ~/.ssh/id_rsa \
