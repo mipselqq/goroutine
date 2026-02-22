@@ -56,7 +56,7 @@ jobs:
           path: /tmp/trivy-db
           key: trivy-db-${{ github.run_number }} # Save installation with always unique keys
           restore-keys: | # Restore previous installation
-            trivy-db- 
+            trivy-db-
 
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@0.34.1
