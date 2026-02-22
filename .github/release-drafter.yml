@@ -6,43 +6,37 @@ autolabeler:
     title: ['/feat(\(.*\))?:/i', '/feature(\(.*\))?:/i']
   - label: 'bug'
     title: ['/fix(\(.*\))?:/i', '/bug(\(.*\))?:/i']
-  - label: 'documentation'
-    title: ['/docs/i', '/doc/i', '/documentation/i']
-  - label: 'refactor'
-    title: ['/refactor/i']
-  - label: 'todo'
-    title: ['/chore/i', '/test/i', '/ci/i']
-  - label: 'docker'
-    title: ['/docker/i', '/deps\(docker\)/i']
-  - label: 'github-actions'
-    title: ['/actions/i', '/deps\(actions\)/i']
-  - label: 'go'
-    title: ['/go/i', '/deps\(go\)/i']
   - label: 'security'
     title: ['/security/i']
-  - label: 'enhancement'
-    title: ['/enhancement/i']
+  - label: 'documentation'
+    title: ['/doc(s|umentation)?/i']
+  - label: 'go'
+    title: ['/deps\(go\)/i']
+  - label: 'docker'
+    title: ['/deps\(docker\)/i']
+  - label: 'github-actions'
+    title: ['/deps\(actions\)/i']
+  - label: 'maintenance'
+    title: ['/chore/i', '/test/i', '/ci/i', '/refactor/i', '/enhancement/i', '/todo/i']
 
 categories:
   - title: '🚀 Features'
-    labels: ['feat', 'enhancement']
+    labels: ['feat']
   - title: '🐛 Bug Fixes'
     labels: ['bug', 'fix']
-  - title: '🔒 Security Improvements'
+  - title: '🔒 Security'
     labels: ['security']
-  - title: '📦 Dependency Updates'
+  - title: '📦 Dependencies'
     labels: ['go', 'docker', 'github-actions']
-  - title: '📝 Documentation'
+  - title: '📝 Docs'
     labels: ['documentation']
-  - title: '🛠 Refactoring & Maintenance'
-    labels: ['refactor', 'todo', 'chore', 'build', 'ci']
+  - title: '🛠 Maintenance & Refactoring'
+    labels: ['maintenance', 'todo', 'enhancement', 'chore', 'refactor', 'ci', 'test']
 
 exclude-labels:
   - 'WIP'
   - 'wontfix'
   - 'invalid'
-  - 'low priority'
-  - 'help wanted'
 
 version-resolver:
   major:
@@ -58,5 +52,3 @@ change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
 template: |
   ## Changes
   $CHANGES
-
-  ## Other changes
