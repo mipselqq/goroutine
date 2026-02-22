@@ -59,7 +59,7 @@ jobs:
             trivy-db- 
 
       - name: Trivy Scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: 'goroutine:temp'
           format: 'table'
