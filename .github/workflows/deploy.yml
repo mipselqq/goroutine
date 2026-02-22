@@ -23,61 +23,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build Image
+  build-scan-push:
+    name: Build, Scan & Push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build and export
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: goroutine:temp
-          outputs: type=docker,dest=/tmp/goroutine.tar
-      - name: Upload artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: goroutine-image
-          path: /tmp/goroutine.tar
 
-  security_scan:
-    name: Security Scan
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with: { name: goroutine-image, path: /tmp }
-      - name: Load image
-        run: docker load --input /tmp/goroutine.tar
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'goroutine:temp'
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
-
-  publish:
-    name: Push to GHCR
-    needs: security_scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with: { name: goroutine-image, path: /tmp }
-      - name: Load image
-        run: docker load --input /tmp/goroutine.tar
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: goroutine:temp
+          cache-from: type=gha
+          cache-to: type=gha,mode=max # Cache Docker layers in GitHub Actions cache
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v4
+        with:
+          path: /tmp/trivy-db
+          key: trivy-db-${{ github.run_number }} # Save installation with always unique keys
+          restore-keys: | # Restore previous installation
+            trivy-db-
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@0.34.1
+        with:
+          image-ref: 'goroutine:temp'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          cache-dir: /tmp/trivy-db # Download only deltas
+
       - name: Tag and Push
         run: |
           docker tag goroutine:temp ghcr.io/${{ github.repository }}:latest
@@ -85,7 +73,7 @@ jobs:
 
   deploy-staging:
     name: Deploy Staging
-    needs: publish
+    needs: build-scan-push
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/generic-deploy.yml
     with:
@@ -94,7 +82,7 @@ jobs:
 
   deploy-prod:
     name: Deploy Production
-    needs: publish
+    needs: build-scan-push
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/generic-deploy.yml
     with:
