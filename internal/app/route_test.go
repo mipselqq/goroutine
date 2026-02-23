@@ -10,15 +10,6 @@ import (
 	"goroutine/internal/testutil"
 )
 
-type spyMetricsMiddleware struct{}
-
-func (s *spyMetricsMiddleware) Wrap(next http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Metrics-Tracked", "true")
-		next.ServeHTTP(w, r)
-	}
-}
-
 func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
@@ -26,19 +17,21 @@ func TestNewRouter_Full(t *testing.T) {
 	authHandler := handler.NewAuth(logger, nil)
 	healthHandler := handler.NewHealth(logger)
 	metricsMiddleware := &spyMetricsMiddleware{}
+	corsMiddleware := &spyCorsMiddleware{}
 
-	router := app.NewRouter(metricsMiddleware, authHandler, healthHandler)
+	router := app.NewRouter(metricsMiddleware, corsMiddleware, authHandler, healthHandler)
 
 	tests := []struct {
 		name        string
 		method      string
 		path        string
 		wantMetrics bool
+		wantCors    bool
 	}{
-		{"Register endpoint", http.MethodPost, "/register", true},
-		{"Login endpoint", http.MethodPost, "/login", true},
-		{"Health endpoint", http.MethodGet, "/health", true},
-		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false},
+		{"Register endpoint", http.MethodPost, "/register", true, true},
+		{"Login endpoint", http.MethodPost, "/login", true, true},
+		{"Health endpoint", http.MethodGet, "/health", true, true},
+		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false, false},
 	}
 
 	for _, tt := range tests {
@@ -55,6 +48,13 @@ func TestNewRouter_Full(t *testing.T) {
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
 			if hasMetrics != tt.wantMetrics {
 				t.Errorf("Metrics middleware application mismatch for %s: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
+			}
+			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
+			if hasCors != tt.wantCors {
+				t.Errorf("CORS middleware not applied to %s ", tt.path)
+			}
+			if hasCors != tt.wantCors {
+				t.Errorf("CORS middleware application mismatch for %s: got %v, want %v", tt.path, hasCors, tt.wantCors)
 			}
 		})
 	}
