@@ -229,6 +229,8 @@
         group: "{{ target_deploy_user }}"
 
     - name: Start Application via Docker Compose
+      become: yes
+      become_user: "{{ target_deploy_user }}"
       community.docker.docker_compose_v2:
         project_src: "/home/{{ target_deploy_user }}/apps/goroutine"
         files:
