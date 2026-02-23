@@ -206,18 +206,24 @@
         group: "{{ target_deploy_user }}"
         mode: '0755'
 
-    - name: Copy app files and directories
-      copy:
-        src: "{{ playbook_dir }}/../{{ item }}"
-        dest: "/home/{{ target_deploy_user }}/apps/goroutine/{{ item }}"
+    - name: Compress files locally
+      delegate_to: localhost
+      community.general.archive:
+        path:
+          - "{{ playbook_dir }}/../docker-compose.prod.yml"
+          - "{{ playbook_dir }}/../prometheus.template.yml"
+          - "{{ playbook_dir }}/../infra"
+          - "{{ playbook_dir }}/../.env.prod"
+        dest: "/tmp/goroutine_deploy.tar.gz"
+        format: gz
+
+    - name: Deploy and unpack archive
+      unarchive:
+        src: "/tmp/goroutine_deploy.tar.gz"
+        dest: "/home/{{ target_deploy_user }}/apps/goroutine/"
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
         mode: '0644'
-      loop:
-        - docker-compose.prod.yml
-        - prometheus.template.yml
-        - infra/
-        - .env.prod
 
     - name: Fix permissions for Grafana
       file:
