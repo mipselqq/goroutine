@@ -73,4 +73,3 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_PIPELINING: True
-          ANSIBLE_SSH_ARGS: "-o ControlMaster=auto -o ControlPersist=5m -o Compression=yes"
