@@ -73,3 +73,4 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_PIPELINING: True
+          ANSIBLE_CALLBACKS_ENABLED: profile_tasks
