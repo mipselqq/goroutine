@@ -45,14 +45,13 @@ func TestNewRouter_Full(t *testing.T) {
 			}
 
 			router.ServeHTTP(rr, req)
+
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
 			if hasMetrics != tt.wantMetrics {
 				t.Errorf("Metrics middleware application mismatch for %s: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
 			}
+
 			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
-			if hasCors != tt.wantCors {
-				t.Errorf("CORS middleware not applied to %s ", tt.path)
-			}
 			if hasCors != tt.wantCors {
 				t.Errorf("CORS middleware application mismatch for %s: got %v, want %v", tt.path, hasCors, tt.wantCors)
 			}
