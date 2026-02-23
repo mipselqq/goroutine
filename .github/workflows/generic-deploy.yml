@@ -37,21 +37,7 @@ jobs:
         if: steps.cache-ansible.outputs.cache-hit != 'true'
         run: | # WARN: Dependabot won't update these versions, manual bump required. Last bump: 22.02.2026
           pip install --user ansible-core==2.20.2
-          ansible-galaxy collection install community.general:12.3.0 ansible.posix:2.1.0
-
-      - name: Run Ansible Playbook
-        shell: bash
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          ansible-playbook -i "${{ vars.DEPLOY_HOST }}," \
-            -u "root" \
-            --private-key ~/.ssh/id_rsa \
-            -e "deploy_username=${{ vars.DEPLOY_USERNAME }}" \
-            ansible/server-setup-ubuntu.yml
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: False
-          ANSIBLE_PIPELINING: True
-          ANSIBLE_SSH_ARGSS: "-o ControlMaster=auto -o ControlPersist=5m -o Compression=yes"
+          ansible-galaxy collection install community.general:12.3.0 ansible.posix:2.1.0 community.docker
 
       - name: Create .env file from GitHub Vars/Secrets
         run: |
@@ -75,38 +61,16 @@ jobs:
           GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
           EOF
 
-      - name: Set Grafana permissions
+      - name: Run Ansible Playbook
+        shell: bash
         run: |
-          find infra/grafana -type d -exec chmod 755 {} +
-          find infra/grafana -type f -exec chmod 644 {} +
-
-      - name: Copy config files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: root
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: "docker-compose.prod.yml,prometheus.template.yml,infra/,.env.prod"
-          target: "/home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine"
-
-      - name: Fix ownership and permissions on server
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: root
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            chown -R "${{ vars.DEPLOY_USERNAME }}:${{ vars.DEPLOY_USERNAME }}" /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine
-            find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type d -exec chmod 755 {} +
-            find /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine/infra/grafana -type f -exec chmod 644 {} +
-
-      - name: Start Application
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: ${{ vars.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            cd /home/${{ vars.DEPLOY_USERNAME }}/apps/goroutine
-            docker compose -f docker-compose.prod.yml --env-file .env.prod pull app
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+          export PATH="$HOME/.local/bin:$PATH"
+          ansible-playbook -i "${{ vars.DEPLOY_HOST }}," \
+            -u "root" \
+            --private-key ~/.ssh/id_rsa \
+            -e "deploy_username=${{ vars.DEPLOY_USERNAME }}" \
+            ansible/server-setup-ubuntu.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_PIPELINING: True
+          ANSIBLE_SSH_ARGSS: "-o ControlMaster=auto -o ControlPersist=5m -o Compression=yes"
