@@ -113,6 +113,16 @@ func TestCors_Wrap(t *testing.T) {
 			expectedStatus:  http.StatusTeapot,
 			expectedHeaders: filledEvilCORSHeaders,
 		},
+		{
+			name:           "No allowed origins",
+			method:         "GET",
+			allowedOrigins: map[string]struct{}{},
+			reqHeaders: map[string]string{
+				"Origin": goodSite,
+			},
+			expectedStatus:  http.StatusForbidden,
+			expectedHeaders: emptyCORSHeaders,
+		},
 	}
 
 	for _, tt := range tests {
