@@ -58,10 +58,12 @@ jobs:
           ENV=${{ vars.ENV }}
           LOG_LEVEL=${{ vars.LOG_LEVEL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXP=${{ vars.JWT_EXP }}
           HOST=${{ vars.HOST }}
           SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
           PORT=${{ vars.PORT }}
           ADMIN_PORT=${{ vars.ADMIN_PORT }}
+          ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
 
           POSTGRES_USER=${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
