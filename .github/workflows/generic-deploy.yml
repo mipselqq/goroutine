@@ -58,6 +58,7 @@ jobs:
           ENV=${{ vars.ENV }}
           LOG_LEVEL=${{ vars.LOG_LEVEL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXP=${{ vars.JWT_EXP }}
           HOST=${{ vars.HOST }}
           SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
           PORT=${{ vars.PORT }}
