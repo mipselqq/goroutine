@@ -51,7 +51,7 @@ jobs:
           cache-to: type=gha,mode=max # Cache Docker layers in GitHub Actions cache
 
       - name: Cache Trivy DB
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/trivy-db
           key: trivy-db-${{ github.run_number }} # Save installation with always unique keys
