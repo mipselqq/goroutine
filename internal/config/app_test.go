@@ -113,7 +113,7 @@ func TestAppConfig_LogValue(t *testing.T) {
 		"swagger_host":    "localhost:8080",
 		"jwt_secret":      "(11 chars)",
 		"jwt_exp":         "24h0m0s",
-		"allowed_origins": "map[http://127.0.0.1:8080:{} http://localhost:8080:{}]",
+		"allowed_origins": "[http://127.0.0.1:8080 http://localhost:8080]",
 	}
 
 	testutil.FailOnInvalidLogValue(t, attrs, expectedAttrs)

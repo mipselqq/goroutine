@@ -2,6 +2,7 @@ package config
 
 import (
 	"log/slog"
+	"sort"
 	"strings"
 	"time"
 
@@ -54,6 +55,12 @@ func ParseAllowedOrigins(origins string) map[string]struct{} {
 
 //nolint:gocritic // Pointer receiver disables formatting
 func (c AppConfig) LogValue() slog.Value {
+	allowedOrigins := make([]string, 0, len(c.AllowedOrigins))
+	for origin := range c.AllowedOrigins {
+		allowedOrigins = append(allowedOrigins, origin)
+	}
+	sort.Strings(allowedOrigins)
+
 	return slog.GroupValue(
 		slog.String("port", c.Port),
 		slog.String("admin_port", c.AdminPort),
@@ -63,6 +70,6 @@ func (c AppConfig) LogValue() slog.Value {
 		slog.String("swagger_host", c.SwaggerHost),
 		slog.String("jwt_secret", c.JWTSecret.String()),
 		slog.Duration("jwt_exp", c.JWTExp),
-		slog.Any("allowed_origins", c.AllowedOrigins),
+		slog.Any("allowed_origins", allowedOrigins),
 	)
 }
