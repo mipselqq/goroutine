@@ -169,15 +169,11 @@
     - name: Allow public ports (forwarded to Docker)
       ufw:
         rule: allow
-        port: "{{ item | string }}"
+        port: "80,443,8080,3000"
         proto: tcp
         route: yes
-      loop:
-        - 80
-        - 443
-        - 8080
-        - 3000
       notify: Reload UFW
+
 
     - name: Create a new user for deployment
       user:
@@ -209,6 +205,46 @@
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
         mode: '0755'
+
+    - name: Compress files locally
+      delegate_to: localhost
+      community.general.archive:
+        path:
+          - "{{ playbook_dir }}/../docker-compose.prod.yml"
+          - "{{ playbook_dir }}/../prometheus.template.yml"
+          - "{{ playbook_dir }}/../infra"
+          - "{{ playbook_dir }}/../.env.prod"
+        dest: "/tmp/goroutine_deploy.tar.gz"
+        format: gz
+
+    - name: Deploy and unpack archive
+      unarchive:
+        src: "/tmp/goroutine_deploy.tar.gz"
+        dest: "/home/{{ target_deploy_user }}/apps/goroutine/"
+        owner: "{{ target_deploy_user }}"
+        group: "{{ target_deploy_user }}"
+        mode: '0644'
+
+    - name: Fix permissions for Grafana
+      file:
+        path: "/home/{{ target_deploy_user }}/apps/goroutine/infra/grafana"
+        state: directory
+        recurse: yes
+        mode: "u=rwX,g=rX,o=rX"
+        owner: "{{ target_deploy_user }}"
+        group: "{{ target_deploy_user }}"
+
+    - name: Start Application via Docker Compose
+      become: yes
+      become_user: "{{ target_deploy_user }}"
+      community.docker.docker_compose_v2:
+        project_src: "/home/{{ target_deploy_user }}/apps/goroutine"
+        files:
+          - docker-compose.prod.yml
+        env_files:
+          - .env.prod
+        state: present
+        pull: always
 
   handlers:
     - name: Restart SSH
