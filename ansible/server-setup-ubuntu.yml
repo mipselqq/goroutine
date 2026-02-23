@@ -212,6 +212,7 @@
         dest: "/home/{{ target_deploy_user }}/apps/goroutine/{{ item }}"
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
+        mode: '0644'
       loop:
         - docker-compose.prod.yml
         - prometheus.template.yml
