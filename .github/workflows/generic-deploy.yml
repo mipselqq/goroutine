@@ -62,6 +62,7 @@ jobs:
           SWAGGER_HOST=${{ vars.SWAGGER_HOST }}
           PORT=${{ vars.PORT }}
           ADMIN_PORT=${{ vars.ADMIN_PORT }}
+          ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
 
           POSTGRES_USER=${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
