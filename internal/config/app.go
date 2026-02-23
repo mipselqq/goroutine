@@ -47,7 +47,14 @@ func ParseAllowedOrigins(origins string) map[string]struct{} {
 	allowedOriginsMap := make(map[string]struct{})
 
 	for _, origin := range allowedOrigins {
-		allowedOriginsMap[origin] = struct{}{}
+		trimmed := strings.TrimSpace(origin)
+
+		endsOrStartsWithComma := trimmed == ""
+		if endsOrStartsWithComma {
+			continue
+		}
+
+		allowedOriginsMap[trimmed] = struct{}{}
 	}
 
 	return allowedOriginsMap
