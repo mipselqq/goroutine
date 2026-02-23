@@ -31,7 +31,7 @@ func TestNewRouter_Full(t *testing.T) {
 		{"Register endpoint", http.MethodPost, "/register", true, true},
 		{"Login endpoint", http.MethodPost, "/login", true, true},
 		{"Health endpoint", http.MethodGet, "/health", true, true},
-		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false, false},
+		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false, true},
 	}
 
 	for _, tt := range tests {
@@ -39,12 +39,11 @@ func TestNewRouter_Full(t *testing.T) {
 			req := httptest.NewRequest(tt.method, tt.path, http.NoBody)
 			rr := httptest.NewRecorder()
 
-			_, pattern := router.Handler(req)
-			if pattern == "" {
-				t.Errorf("Path %s %s not registered in router", tt.method, tt.path)
-			}
-
 			router.ServeHTTP(rr, req)
+
+			if rr.Code == http.StatusNotFound {
+				t.Errorf("Path %s %s not registered in router (got 404)", tt.method, tt.path)
+			}
 
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
 			if hasMetrics != tt.wantMetrics {
@@ -60,10 +59,11 @@ func TestNewRouter_Full(t *testing.T) {
 
 	t.Run("Non-existing endpoint", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/non-existing", http.NoBody)
-		_, pattern := router.Handler(req)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
 
-		if pattern != "" {
-			t.Errorf("Non-existing path registered in router")
+		if rr.Code != http.StatusNotFound {
+			t.Errorf("Expected 404 for non-existing endpoint, got %d", rr.Code)
 		}
 	})
 }
