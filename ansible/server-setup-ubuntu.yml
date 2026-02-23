@@ -231,8 +231,10 @@
     - name: Start Application via Docker Compose
       community.docker.docker_compose_v2:
         project_src: "/home/{{ target_deploy_user }}/apps/goroutine"
-        files: docker-compose.prod.yml
-        env_files: .env.prod
+        files:
+          - docker-compose.prod.yml
+        env_files:
+          - .env.prod
         state: present
         pull: always
 
