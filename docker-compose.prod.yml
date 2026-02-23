@@ -29,12 +29,16 @@ services:
       - POSTGRES_DB
       - POSTGRES_HOST
       - POSTGRES_PORT
+
       - ENV
       - LOG_LEVEL
       - SWAGGER_HOST
       - HOST
       - PORT
       - ADMIN_PORT
+      - JWT_SECRET
+      - ALLOWED_ORIGINS
+      - JWT_EXP
     depends_on:
       db:
         condition: service_healthy

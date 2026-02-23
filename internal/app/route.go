@@ -13,19 +13,20 @@ type Middleware interface {
 	Wrap(next http.Handler) http.HandlerFunc
 }
 
-func NewRouter(metricsMiddleware Middleware, authHandler *handler.Auth, healthHandler *handler.Health) *http.ServeMux {
+func NewRouter(metricsMiddleware, corsMiddleware Middleware, authHandler *handler.Auth, healthHandler *handler.Health) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("POST /register", metricsMiddleware.Wrap(http.HandlerFunc(authHandler.Register)))
-	mux.HandleFunc("POST /login", metricsMiddleware.Wrap(http.HandlerFunc(authHandler.Login)))
-	mux.HandleFunc("GET /health", metricsMiddleware.Wrap(http.HandlerFunc(healthHandler.Health)))
+	mux.Handle("POST /login", metricsMiddleware.Wrap(http.HandlerFunc(authHandler.Login)))
+	mux.Handle("GET /health", metricsMiddleware.Wrap(http.HandlerFunc(healthHandler.Health)))
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
-	return mux
+	return corsMiddleware.Wrap(mux)
 }
 
 func NewAdminRouter() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("GET /metrics", promhttp.Handler())
+
 	return mux
 }
