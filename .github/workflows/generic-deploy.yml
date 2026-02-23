@@ -51,6 +51,7 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_PIPELINING: True
+          ANSIBLE_SSH_ARGSS: "-o ControlMaster=auto -o ControlPersist=5m -o Compression=yes"
 
       - name: Create .env file from GitHub Vars/Secrets
         run: |
