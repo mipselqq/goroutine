@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"goroutine/internal/handler"
+	"goroutine/internal/http/handler"
 	"goroutine/internal/testutil"
 )
 

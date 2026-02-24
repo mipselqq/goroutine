@@ -6,7 +6,7 @@ pre-commit:
       run: make fmt && git diff --exit-code {staged_files} || (echo "Code formatting autofixed. Please stage the changes and try again." && exit 1)
 
     swag:
-      glob: "internal/handler/*.go"
+      glob: "internal/http/handler/*.go"
       run: make swag && git diff --exit-code docs/ || (echo "Swagger documentation regenerated. Please stage the changes in docs/ and try again." && exit 1)
 
     lint:

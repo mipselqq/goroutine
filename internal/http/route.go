@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
-	"goroutine/internal/handler"
+	"goroutine/internal/http/handler"
 )
 
 type Middleware interface {

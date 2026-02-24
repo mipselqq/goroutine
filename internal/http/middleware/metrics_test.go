@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"goroutine/internal/middleware"
+	"goroutine/internal/http/middleware"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"

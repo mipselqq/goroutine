@@ -206,20 +206,22 @@
         group: "{{ target_deploy_user }}"
         mode: '0755'
 
-    - name: Compress files locally
-      delegate_to: localhost
-      community.general.archive:
-        path:
-          - "{{ playbook_dir }}/../docker-compose.prod.yml"
-          - "{{ playbook_dir }}/../prometheus.template.yml"
-          - "{{ playbook_dir }}/../infra"
-          - "{{ playbook_dir }}/../.env.prod"
-        dest: "/tmp/goroutine_deploy.tar.gz"
-        format: gz
+    - name: Copy docker compose and env files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: "{{ target_deploy_user }}"
+        group: "{{ target_deploy_user }}"
+        mode: '0644'
+      loop:
+        - src: "{{ playbook_dir }}/../../docker-compose.prod.yml"
+          dest: "/home/{{ target_deploy_user }}/apps/goroutine/docker-compose.prod.yml"
+        - src: "{{ playbook_dir }}/../../.env.prod"
+          dest: "/home/{{ target_deploy_user }}/apps/goroutine/.env.prod"
 
-    - name: Deploy and unpack archive
-      unarchive:
-        src: "/tmp/goroutine_deploy.tar.gz"
+    - name: Copy infra directory
+      copy:
+        src: "{{ playbook_dir }}/.."
         dest: "/home/{{ target_deploy_user }}/apps/goroutine/"
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
