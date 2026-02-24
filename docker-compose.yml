@@ -29,7 +29,7 @@ services:
     extra_hosts:
       - "app:host-gateway"
     volumes:
-      - ./prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - ./infra/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
       - prometheus_data_dev:/prometheus
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]

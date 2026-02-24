@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"goroutine/internal/app"
+	app "goroutine/internal"
 	"goroutine/internal/config"
 	"goroutine/internal/testutil"
 )

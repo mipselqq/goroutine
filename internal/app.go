@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"goroutine/internal/config"
-	"goroutine/internal/handler"
-	"goroutine/internal/middleware"
+	httpapp "goroutine/internal/http"
+	"goroutine/internal/http/handler"
+	"goroutine/internal/http/middleware"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
 
@@ -33,7 +34,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
 
 	return &App{
-		Router:      NewRouter(metricsMiddleware, corsMiddleware, authHandler, healthHandler),
-		AdminRouter: NewAdminRouter(),
+		Router:      httpapp.NewRouter(metricsMiddleware, corsMiddleware, authHandler, healthHandler),
+		AdminRouter: httpapp.NewAdminRouter(),
 	}
 }

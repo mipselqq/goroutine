@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"goroutine/internal/config"
-	"goroutine/internal/middleware"
+	"goroutine/internal/http/middleware"
 	"goroutine/internal/testutil"
 )
 

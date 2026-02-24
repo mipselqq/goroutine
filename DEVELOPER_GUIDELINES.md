@@ -37,7 +37,7 @@ For most features, touch layers in this order:
 2. Service: use case logic and service-level errors.
 3. Repository: data access and repository-level error mapping.
 4. Handler: endpoint contract and HTTP status mapping.
-5. Router (`internal/app/route.go`): route registration.
+5. Router (`internal/http/route.go`): route registration.
 6. Swagger comments in handlers (spec generation is handled by hooks).
 
 ### Step 3. Implement per layer
@@ -78,7 +78,7 @@ For most features, touch layers in this order:
 ### 5.4 Handler
 
 - Handle only transport concerns: decode, validate, call service, encode response.
-- Use `internal/handler/responders.go` for unified response format.
+- Use `internal/http/handler/responders.go` for unified response format.
 - Keep service-error to HTTP-status mapping centralized and explicit.
 - Always return JSON with proper `Content-Type`.
 

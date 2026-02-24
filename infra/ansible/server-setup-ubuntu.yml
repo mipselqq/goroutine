@@ -210,10 +210,10 @@
       delegate_to: localhost
       community.general.archive:
         path:
-          - "{{ playbook_dir }}/../docker-compose.prod.yml"
+          - "{{ playbook_dir }}/../../docker-compose.prod.yml"
           - "{{ playbook_dir }}/../prometheus.template.yml"
-          - "{{ playbook_dir }}/../infra"
-          - "{{ playbook_dir }}/../.env.prod"
+          - "{{ playbook_dir }}/.."
+          - "{{ playbook_dir }}/../../.env.prod"
         dest: "/tmp/goroutine_deploy.tar.gz"
         format: gz
 

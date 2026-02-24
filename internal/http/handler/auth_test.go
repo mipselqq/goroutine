@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"goroutine/internal/domain"
-	"goroutine/internal/handler"
+	"goroutine/internal/http/handler"
 	"goroutine/internal/service"
 	"goroutine/internal/testutil"
 )

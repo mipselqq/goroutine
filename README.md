@@ -121,15 +121,18 @@ graph TD
 
 ## Project Structure
 Annotated overview of the repository layout:
-- `ansible/` - Server provisioning and configuration management.
 - `cmd/` - Entry points (main.go).
 - `docs/` - Generated Swagger UI documentation and OpenAPI specs.
-- `infra/` - Observability configurations (Grafana, Loki, Prometheus).
+- `infra/` - Infrastructure configs (Ansible, Grafana, Loki, Prometheus).
+   - `ansible/` - Server provisioning and configuration management.
+   - `prometheus.template.yml` - Prometheus template used by Docker Compose.
 - `internal/` - Private application code.
-  - `app/` - Application-level components (routing, startup).
+   - `app.go`, `startup.go` - Application wiring and startup utilities.
+   - `http/` - HTTP layer.
+      - `handler/` - Http handlers (API endpoints).
+      - `middleware/` - Http middlewares (metrics, auth).
+      - `route.go` - Route registration.
   - `domain/` - Core business entities with invariants (email, password).
-  - `handler/` - Http handlers (API endpoints).
-  - `middleware/` - Http middlewares (metrics, auth).
   - `repository/` - Persistence layer (database interactions).
   - `service/` - Use case layer (business rules).
 - `migrations/` - SQL migration files managed by Goose.
