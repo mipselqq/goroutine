@@ -212,7 +212,8 @@
         path:
           - "{{ playbook_dir }}/../../docker-compose.prod.yml"
           - "{{ playbook_dir }}/../prometheus.template.yml"
-          - "{{ playbook_dir }}/.."
+          - "{{ playbook_dir }}/../grafana"
+          - "{{ playbook_dir }}/../alloy"
           - "{{ playbook_dir }}/../../.env.prod"
         dest: "/tmp/goroutine_deploy.tar.gz"
         format: gz
