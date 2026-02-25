@@ -122,7 +122,7 @@ graph TD
 ## Project Structure
 Annotated overview of the repository layout:
 - `cmd/` - Entry points (main.go).
-  - `ping/` - Ping progam for distroless healtcheck.
+  - `ping/` - Ping progam for distroless healthcheck.
   - `server/` - Main server entry point.
 - `docs/` - Generated Swagger UI documentation and OpenAPI specs.
 - `infra/` - Infrastructure configs (Ansible, Grafana, Loki, Prometheus).
