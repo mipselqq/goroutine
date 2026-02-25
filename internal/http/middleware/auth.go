@@ -25,15 +25,16 @@ func NewAuth(l *slog.Logger, v TokenVerifier) *Auth {
 
 func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
+		header := r.Header.Get("Authorization")
+		if header == "" {
 			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("missing authorization header"))
 
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" || parts[1] == "" {
+		authHeader := strings.TrimSpace(header)
+		parts := strings.Fields(authHeader)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") || parts[1] == "" {
 			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid authorization header"))
 			return
 		}

@@ -16,17 +16,19 @@ func TestAuth(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name                string
-		authorizationHeader string
-		expectedStatus      int
-		expectedUserID      int64
-		setupMock           func(r *MockAuth)
+		name           string
+		headerName     string
+		headerValue    string
+		expectedStatus int
+		expectedUserID int64
+		setupMock      func(r *MockAuth)
 	}{
 		{
-			name:                "Valid token",
-			authorizationHeader: "Bearer valid.token.here",
-			expectedStatus:      http.StatusTeapot,
-			expectedUserID:      1,
+			name:           "Valid token",
+			headerName:     "Authorization",
+			headerValue:    "Bearer valid.token.here",
+			expectedStatus: http.StatusTeapot,
+			expectedUserID: 1,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 1, nil
@@ -34,9 +36,10 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Invalid token",
-			authorizationHeader: "Bearer invalid.token.here",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Invalid token",
+			headerName:     "Authorization",
+			headerValue:    "Bearer invalid.token.here",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, service.ErrInvalidToken
@@ -44,9 +47,10 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Token expired",
-			authorizationHeader: "Bearer expired.token.here",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Token expired",
+			headerName:     "Authorization",
+			headerValue:    "Bearer expired.token.here",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, service.ErrTokenExpired
@@ -54,9 +58,10 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Invalid signing method",
-			authorizationHeader: "Bearer invalid.signing.method.token.here",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Invalid signing method",
+			headerName:     "Authorization",
+			headerValue:    "Bearer invalid.signing.method.token.here",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, service.ErrInvalidSigningMethod
@@ -64,9 +69,10 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Missing header",
-			authorizationHeader: "",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Missing header",
+			headerName:     "Authorization",
+			headerValue:    "",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, nil
@@ -74,9 +80,10 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Missing token",
-			authorizationHeader: "Bearer",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Missing token",
+			headerName:     "Authorization",
+			headerValue:    "Bearer",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, nil
@@ -84,9 +91,10 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Empty token",
-			authorizationHeader: "Bearer ",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Empty token",
+			headerName:     "Authorization",
+			headerValue:    "Bearer ",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, nil
@@ -94,12 +102,37 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:                "Extra parts in header",
-			authorizationHeader: "Bearer token extra-part",
-			expectedStatus:      http.StatusUnauthorized,
+			name:           "Extra parts in header",
+			headerName:     "Authorization",
+			headerValue:    "Bearer token extra-part",
+			expectedStatus: http.StatusUnauthorized,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 0, nil
+				}
+			},
+		},
+		{
+			name:           "Extra spaces in header",
+			headerName:     "Authorization",
+			headerValue:    "   Bearer     valid.token.here   ",
+			expectedStatus: http.StatusTeapot,
+			expectedUserID: 1,
+			setupMock: func(r *MockAuth) {
+				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
+					return 1, nil
+				}
+			},
+		},
+		{
+			name:           "Random casing in header",
+			headerName:     "AuThorIzAtIoN",
+			headerValue:    "bEaReR vAlId.tOkEn.hErE",
+			expectedStatus: http.StatusTeapot,
+			expectedUserID: 1,
+			setupMock: func(r *MockAuth) {
+				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
+					return 1, nil
 				}
 			},
 		},
@@ -129,7 +162,7 @@ func TestAuth(t *testing.T) {
 			wrapped := m.Wrap(h)
 
 			request := httptest.NewRequest("GET", "/", http.NoBody)
-			request.Header.Set("Authorization", tt.authorizationHeader)
+			request.Header.Set(tt.headerName, tt.headerValue)
 			response := httptest.NewRecorder()
 
 			wrapped.ServeHTTP(response, request)
