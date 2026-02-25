@@ -1,11 +1,5 @@
 basePath: /
 definitions:
-  handler.errorResponse:
-    properties:
-      error:
-        example: invalid email format
-        type: string
-    type: object
   handler.loginBody:
     properties:
       email:
@@ -30,7 +24,19 @@ definitions:
         example: secret-password
         type: string
     type: object
-  handler.statusResponse:
+  handler.whoAmIResponse:
+    properties:
+      uid:
+        example: 1
+        type: integer
+    type: object
+  httpschema.ErrorResponse:
+    properties:
+      error:
+        example: invalid email format
+        type: string
+    type: object
+  httpschema.StatusResponse:
     properties:
       status:
         example: ok
@@ -50,7 +56,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.statusResponse'
+            $ref: '#/definitions/httpschema.StatusResponse'
       summary: Health check
       tags:
       - health
@@ -76,11 +82,11 @@ paths:
         "401":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/httpschema.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/httpschema.ErrorResponse'
       summary: Login a user
       tags:
       - auth
@@ -102,16 +108,35 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.statusResponse'
+            $ref: '#/definitions/httpschema.StatusResponse'
         "400":
           description: Invalid input (email format or password)
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/httpschema.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/httpschema.ErrorResponse'
       summary: Register a new user
+      tags:
+      - auth
+  /whoami:
+    get:
+      consumes:
+      - application/json
+      description: Get current user ID from token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.whoAmIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpschema.ErrorResponse'
+      summary: Get current user info
       tags:
       - auth
 swagger: "2.0"

@@ -34,9 +34,10 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 
 	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
+	authMiddleware := middleware.NewAuth(logger, authService)
 
 	return &App{
-		Router:      httpapp.NewRouter(metricsMiddleware, corsMiddleware, authHandler, healthHandler),
+		Router:      httpapp.NewRouter(metricsMiddleware, corsMiddleware, authMiddleware, authHandler, healthHandler),
 		AdminRouter: httpapp.NewAdminRouter(),
 	}
 }

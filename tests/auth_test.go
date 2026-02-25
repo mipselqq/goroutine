@@ -75,10 +75,36 @@ func TestAuth_HappyPath(t *testing.T) {
 			t.Fatalf("Failed to decode login response: %v", err)
 		}
 
-		// TODO: validate token by sending a request to some protected endpoint
 		parts := strings.Split(respBody.Token, ".")
 		if len(parts) != 3 {
 			t.Fatal("Got invalid JWT token")
+		}
+
+		req, err := http.NewRequest("GET", ts.URL+"/whoami", nil)
+		if err != nil {
+			t.Fatalf("Failed to create whoami request: %v", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+respBody.Token)
+
+		whoamiResp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("WhoAmI request failed: %v", err)
+		}
+		defer whoamiResp.Body.Close()
+
+		if whoamiResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected status 200, got %d", whoamiResp.StatusCode)
+		}
+
+		var whoamiData struct {
+			UID int64 `json:"uid"`
+		}
+		if err := json.NewDecoder(whoamiResp.Body).Decode(&whoamiData); err != nil {
+			t.Fatalf("Failed to decode whoami response: %v", err)
+		}
+
+		if whoamiData.UID != 1 {
+			t.Errorf("Expected user ID 1, got %d", whoamiData.UID)
 		}
 	})
 }

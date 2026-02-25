@@ -18,8 +18,9 @@ func TestNewRouter_Full(t *testing.T) {
 	healthHandler := handler.NewHealth(logger)
 	metricsMiddleware := &spyMetricsMiddleware{}
 	corsMiddleware := &spyCorsMiddleware{}
+	authMiddleware := &spyAuthMiddleware{}
 
-	router := app.NewRouter(metricsMiddleware, corsMiddleware, authHandler, healthHandler)
+	router := app.NewRouter(metricsMiddleware, corsMiddleware, authMiddleware, authHandler, healthHandler)
 
 	tests := []struct {
 		name        string
