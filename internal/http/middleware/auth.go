@@ -1,0 +1,57 @@
+package middleware
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"strings"
+
+	"goroutine/internal/http/handler"
+)
+
+type key int
+
+const (
+	UserIDKey key = iota
+)
+
+type TokenVerifier interface {
+	VerifyToken(ctx context.Context, token string) (int64, error)
+}
+
+type Auth struct {
+	logger   *slog.Logger
+	verifier TokenVerifier
+}
+
+func NewAuth(l *slog.Logger, v TokenVerifier) *Auth {
+	return &Auth{logger: l, verifier: v}
+}
+
+func (m *Auth) Wrap(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			handler.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("missing authorization header"))
+
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" || parts[1] == "" {
+			handler.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid authorization header"))
+			return
+		}
+
+		token := parts[1]
+		userID, err := m.verifier.VerifyToken(r.Context(), token)
+		if err != nil {
+			handler.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid token"))
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
