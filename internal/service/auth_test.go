@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -23,6 +24,7 @@ type TestCase struct {
 
 var (
 	emailStr            = "test@example.com"
+	userID              = int64(123)
 	passwordStr         = "qwerty"
 	passwordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
 	email, _            = domain.NewEmail(emailStr)
@@ -105,8 +107,8 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name: "Success",
 			setupMock: func(r *MockUserRepository) {
-				r.GetPasswordHashByEmailFunc = func(ctx context.Context, email domain.Email) (string, error) {
-					return passwordHash, nil
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+					return userID, passwordHash, nil
 				}
 			},
 			expectedErr: nil,
@@ -115,8 +117,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "User not found",
 			expectedErr: service.ErrUserNotFound,
 			setupMock: func(r *MockUserRepository) {
-				r.GetPasswordHashByEmailFunc = func(ctx context.Context, email domain.Email) (string, error) {
-					return "", repository.ErrRowNotFound
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+					return 0, "", repository.ErrRowNotFound
 				}
 			},
 		},
@@ -124,8 +126,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "Invalid password",
 			expectedErr: service.ErrInvalidCredentials,
 			setupMock: func(r *MockUserRepository) {
-				r.GetPasswordHashByEmailFunc = func(ctx context.Context, email domain.Email) (string, error) {
-					return anotherPasswordHash, nil
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+					return userID, anotherPasswordHash, nil
 				}
 			},
 		},
@@ -133,8 +135,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "Internal repository error",
 			expectedErr: service.ErrInternal,
 			setupMock: func(r *MockUserRepository) {
-				r.GetPasswordHashByEmailFunc = func(ctx context.Context, email domain.Email) (string, error) {
-					return "", repository.ErrInternal
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+					return 0, "", repository.ErrInternal
 				}
 			},
 		},
@@ -142,8 +144,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "Unexpected repository error",
 			expectedErr: service.ErrInternal,
 			setupMock: func(r *MockUserRepository) {
-				r.GetPasswordHashByEmailFunc = func(ctx context.Context, email domain.Email) (string, error) {
-					return "", errors.New("Super unknown error happened")
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+					return 0, "", errors.New("Super unknown error happened")
 				}
 			},
 		},
@@ -183,18 +185,18 @@ func TestAuth_VerifyToken(t *testing.T) {
 	})
 
 	tests := []struct {
-		name          string
-		tokenFunc     func() (string, error)
-		expectedEmail domain.Email
-		expectedErr   error
+		name           string
+		tokenFunc      func() (string, error)
+		expectedUserID int64
+		expectedErr    error
 	}{
 		{
 			name: "Valid token",
 			tokenFunc: func() (string, error) {
-				return s.CreateToken(email, jwtOpts.Exp)
+				return s.CreateToken(userID, jwtOpts.Exp)
 			},
-			expectedEmail: email,
-			expectedErr:   nil,
+			expectedUserID: userID,
+			expectedErr:    nil,
 		},
 		{
 			name: "Invalid token",
@@ -207,7 +209,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Different secret",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": email.String(),
+					"sub": fmt.Sprintf("%d", userID),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
@@ -219,7 +221,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 		{
 			name: "Expired token",
 			tokenFunc: func() (string, error) {
-				return s.CreateToken(email, -time.Hour)
+				return s.CreateToken(userID, -time.Hour)
 			},
 			expectedErr: service.ErrTokenExpired,
 		},
@@ -227,7 +229,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Different signing method",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": email.String(),
+					"sub": fmt.Sprintf("%d", userID),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
@@ -262,10 +264,10 @@ func TestAuth_VerifyToken(t *testing.T) {
 			expectedErr: service.ErrInvalidToken,
 		},
 		{
-			name: "Invalid email in sub",
+			name: "Invalid ID in sub",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": "not-an-email",
+					"sub": "not-an-id",
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
@@ -285,14 +287,14 @@ func TestAuth_VerifyToken(t *testing.T) {
 				t.Fatalf("token generation failed: %v", err)
 			}
 
-			returnedEmail, err := s.VerifyToken(context.Background(), token)
+			returnedUserID, err := s.VerifyToken(context.Background(), token)
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("Expected error %v, got %v", tt.expectedErr, err)
 			}
 
-			if tt.expectedErr == nil && returnedEmail != tt.expectedEmail {
-				t.Errorf("Expected email %v, got %v", tt.expectedEmail, returnedEmail)
+			if tt.expectedErr == nil && returnedUserID != tt.expectedUserID {
+				t.Errorf("Expected userID %v, got %v", tt.expectedUserID, returnedUserID)
 			}
 		})
 	}
@@ -307,7 +309,7 @@ func TestAuth_CreateToken(t *testing.T) {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	now := time.Now()
-	token, err := s.CreateToken(email, jwtOpts.Exp)
+	token, err := s.CreateToken(userID, jwtOpts.Exp)
 	if err != nil {
 		t.Fatalf("token creation failed: %v", err)
 	}
@@ -324,8 +326,8 @@ func TestAuth_CreateToken(t *testing.T) {
 		t.Fatalf("claims are not map %v", claims)
 	}
 
-	if claims["sub"] != email.String() {
-		t.Errorf("Expected sub %v, got %v", email.String(), claims["sub"])
+	if claims["sub"] != fmt.Sprintf("%d", userID) {
+		t.Errorf("Expected sub %v, got %v", userID, claims["sub"])
 	}
 
 	exp, ok := claims["exp"].(float64)
