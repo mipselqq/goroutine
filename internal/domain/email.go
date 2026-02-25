@@ -13,17 +13,20 @@ type Email struct {
 }
 
 func NewEmail(email string) (Email, error) {
-	email = strings.TrimSpace(email)
+	trimmedEmail := strings.TrimSpace(email)
+
 	if email == "" {
 		return Email{}, ErrInvalidEmail
 	}
 
-	_, err := mail.ParseAddress(email)
+	normalizedEmail := strings.ToLower(trimmedEmail)
+
+	_, err := mail.ParseAddress(normalizedEmail)
 	if err != nil {
 		return Email{}, ErrInvalidEmail
 	}
 
-	return Email{value: email}, nil
+	return Email{value: normalizedEmail}, nil
 }
 
 func (e Email) String() string {
