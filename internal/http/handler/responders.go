@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func respondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
@@ -16,8 +16,8 @@ func respondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, paylo
 	}
 }
 
-func respondWithError(w http.ResponseWriter, logger *slog.Logger, code int, message error) {
-	respondWithJSON(w, logger, code, errorResponse{Error: message.Error()})
+func RespondWithError(w http.ResponseWriter, logger *slog.Logger, code int, message error) {
+	RespondWithJSON(w, logger, code, errorResponse{Error: message.Error()})
 }
 
 type statusResponse struct {

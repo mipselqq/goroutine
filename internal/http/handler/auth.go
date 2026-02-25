@@ -51,19 +51,19 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		respondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+		RespondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
 		return
 	}
 
 	email, err := domain.NewEmail(body.Email)
 	if err != nil {
-		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		RespondWithError(w, h.logger, http.StatusBadRequest, err)
 		return
 	}
 
 	password, err := domain.NewPassword(body.Password)
 	if err != nil {
-		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		RespondWithError(w, h.logger, http.StatusBadRequest, err)
 		return
 	}
 
@@ -72,16 +72,16 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			respondWithError(w, h.logger, http.StatusBadRequest, err)
+			RespondWithError(w, h.logger, http.StatusBadRequest, err)
 		default:
 			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
-			respondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+			RespondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
 		}
 		return
 	}
 
 	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
-	respondWithJSON(w, h.logger, http.StatusOK, statusResponse{Status: "ok"})
+	RespondWithJSON(w, h.logger, http.StatusOK, statusResponse{Status: "ok"})
 }
 
 type loginBody struct {
@@ -110,19 +110,19 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		respondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+		RespondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
 		return
 	}
 
 	email, err := domain.NewEmail(body.Email)
 	if err != nil {
-		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		RespondWithError(w, h.logger, http.StatusBadRequest, err)
 		return
 	}
 
 	password, err := domain.NewPassword(body.Password)
 	if err != nil {
-		respondWithError(w, h.logger, http.StatusBadRequest, err)
+		RespondWithError(w, h.logger, http.StatusBadRequest, err)
 		return
 	}
 
@@ -130,16 +130,16 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			respondWithError(w, h.logger, http.StatusUnauthorized, err)
+			RespondWithError(w, h.logger, http.StatusUnauthorized, err)
 		case errors.Is(err, service.ErrUserNotFound):
-			respondWithError(w, h.logger, http.StatusUnauthorized, err)
+			RespondWithError(w, h.logger, http.StatusUnauthorized, err)
 		default:
 			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
-			respondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+			RespondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
 		}
 		return
 	}
 
 	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
-	respondWithJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
+	RespondWithJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
