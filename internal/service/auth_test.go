@@ -259,3 +259,32 @@ func TestAuth_VerifyToken(t *testing.T) {
 		})
 	}
 }
+
+func TestAuth_CreateToken(t *testing.T) {
+	t.Parallel()
+
+	s := service.NewAuth(nil, service.JWTOptions{
+		JWTSecret:     JWTSecret,
+		Exp:           jwtOpts.Exp,
+		SigningMethod: jwt.SigningMethodHS256,
+	})
+	token, err := s.CreateToken(email, jwtOpts.Exp)
+	if err != nil {
+		t.Fatalf("token creation failed: %v", err)
+	}
+
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		return []byte(JWTSecret.RevealSecret()), nil
+	})
+	if err != nil {
+		t.Fatalf("token parsing failed: %v", err)
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatalf("claims are not map %v", claims)
+	}
+	if claims["sub"] != email.String() {
+		t.Errorf("Expected email %v, got %v", email.String(), claims["sub"])
+	}
+}
