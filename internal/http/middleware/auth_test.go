@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"goroutine/internal/http/handler"
+	"goroutine/internal/http/httpschema"
 	"goroutine/internal/http/middleware"
 	"goroutine/internal/service"
 	"goroutine/internal/testutil"
@@ -113,7 +113,7 @@ func TestAuth(t *testing.T) {
 			tt.setupMock(s)
 
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				id, ok := r.Context().Value(handler.UserIDKey).(int64)
+				id, ok := r.Context().Value(httpschema.ContextKeyUserID).(int64)
 				if !ok {
 					t.Errorf("Expected user ID, got %v", id)
 				}

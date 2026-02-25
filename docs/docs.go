@@ -29,7 +29,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.statusResponse"
+                            "$ref": "#/definitions/httpschema.StatusResponse"
                         }
                     }
                 }
@@ -69,13 +69,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
+                            "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
+                            "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
                     }
                 }
@@ -109,19 +109,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.statusResponse"
+                            "$ref": "#/definitions/httpschema.StatusResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid input (email format or password)",
                         "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
+                            "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
+                            "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
                     }
                 }
@@ -150,7 +150,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
+                            "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
                     }
                 }
@@ -158,15 +158,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handler.errorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "invalid email format"
-                }
-            }
-        },
         "handler.loginBody": {
             "type": "object",
             "properties": {
@@ -202,21 +193,30 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.statusResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "example": "ok"
-                }
-            }
-        },
         "handler.whoAmIResponse": {
             "type": "object",
             "properties": {
                 "uid": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "httpschema.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "invalid email format"
+                }
+            }
+        },
+        "httpschema.StatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "ok"
                 }
             }
         }

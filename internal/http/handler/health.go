@@ -3,6 +3,8 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+
+	"goroutine/internal/http/httpschema"
 )
 
 type Health struct {
@@ -20,8 +22,8 @@ func NewHealth(logger *slog.Logger) *Health {
 // @Description Check if the server is alive
 // @Tags health
 // @Produce json
-// @Success 200 {object} statusResponse
+// @Success 200 {object} httpschema.StatusResponse
 // @Router /health [get]
 func (h *Health) Health(w http.ResponseWriter, r *http.Request) {
-	RespondWithJSON(w, h.logger, http.StatusOK, statusResponse{Status: "ok"})
+	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, httpschema.StatusResponse{Status: "ok"})
 }

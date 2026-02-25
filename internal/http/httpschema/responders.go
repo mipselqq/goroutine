@@ -1,4 +1,4 @@
-package handler
+package httpschema
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func RespondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
@@ -17,13 +17,13 @@ func RespondWithJSON(w http.ResponseWriter, logger *slog.Logger, code int, paylo
 }
 
 func RespondWithError(w http.ResponseWriter, logger *slog.Logger, code int, message error) {
-	RespondWithJSON(w, logger, code, errorResponse{Error: message.Error()})
+	RespondWithJSON(w, logger, code, ErrorResponse{Error: message.Error()})
 }
 
-type statusResponse struct {
+type StatusResponse struct {
 	Status string `json:"status" example:"ok"`
 }
 
-type errorResponse struct {
+type ErrorResponse struct {
 	Error string `json:"error" example:"invalid email format"`
 }

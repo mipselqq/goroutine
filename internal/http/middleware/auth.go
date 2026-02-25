@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"goroutine/internal/http/handler"
+	"goroutine/internal/http/httpschema"
 )
 
 type TokenVerifier interface {
@@ -27,25 +27,25 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			handler.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("missing authorization header"))
+			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("missing authorization header"))
 
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" || parts[1] == "" {
-			handler.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid authorization header"))
+			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid authorization header"))
 			return
 		}
 
 		token := parts[1]
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
-			handler.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid token"))
+			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid token"))
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), handler.UserIDKey, userID)
+		ctx := context.WithValue(r.Context(), httpschema.ContextKeyUserID, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

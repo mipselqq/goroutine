@@ -12,6 +12,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/handler"
+	"goroutine/internal/http/httpschema"
 	"goroutine/internal/service"
 	"goroutine/internal/testutil"
 )
@@ -268,7 +269,7 @@ func TestAuth_Login(t *testing.T) {
 func TestAuth_WhoAmI(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), handler.UserIDKey, int64(1))
+	ctx := context.WithValue(context.Background(), httpschema.ContextKeyUserID, int64(1))
 
 	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/whoami", nil)
 

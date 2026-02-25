@@ -3,10 +3,10 @@ package app
 import (
 	"net/http"
 
+	"goroutine/internal/http/handler"
+
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-
-	"goroutine/internal/http/handler"
 )
 
 type Middleware interface {
