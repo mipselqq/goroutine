@@ -80,7 +80,10 @@ func TestAuth_HappyPath(t *testing.T) {
 			t.Fatal("Got invalid JWT token")
 		}
 
-		req, _ := http.NewRequest("GET", ts.URL+"/whoami", nil)
+		req, err := http.NewRequest("GET", ts.URL+"/whoami", nil)
+		if err != nil {
+			t.Fatalf("Failed to create whoami request: %v", err)
+		}
 		req.Header.Set("Authorization", "Bearer "+respBody.Token)
 
 		whoamiResp, err := client.Do(req)
