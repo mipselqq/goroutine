@@ -19,14 +19,14 @@ func TestAuth(t *testing.T) {
 		name                string
 		authorizationHeader string
 		expectedStatus      int
-		expectedUserId      int64
+		expectedUserID      int64
 		setupMock           func(r *MockAuth)
 	}{
 		{
 			name:                "Valid token",
 			authorizationHeader: "Bearer valid.token.here",
 			expectedStatus:      http.StatusTeapot,
-			expectedUserId:      1,
+			expectedUserID:      1,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (int64, error) {
 					return 1, nil
