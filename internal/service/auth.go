@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"goroutine/internal/domain"
@@ -110,8 +111,7 @@ func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (int64, erro
 			return 0, fmt.Errorf("auth service: verify token: sub claim not found: %w", ErrInvalidToken)
 		}
 
-		var id int64
-		_, err := fmt.Sscanf(idStr, "%d", &id)
+		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
 			return 0, fmt.Errorf("auth service: verify token: invalid id in sub: %v: %w", err, ErrInvalidToken)
 		}
