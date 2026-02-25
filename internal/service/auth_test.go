@@ -173,68 +173,77 @@ func TestAuth_Login(t *testing.T) {
 func TestAuthService_VerifyToken(t *testing.T) {
 	t.Parallel()
 
-	r := &MockUserRepository{
-		GetPasswordHashByEmailFunc: func(ctx context.Context, email domain.Email) (string, error) {
-			return passwordHash, nil
+	tests := []struct {
+		name          string
+		tokenFunc     func() (string, error)
+		secret        secrecy.SecretString
+		sleep         time.Duration
+		expectedEmail domain.Email
+		expectedErr   error
+	}{
+		{
+			name: "Valid token",
+			tokenFunc: func() (string, error) {
+				return service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+			},
+			secret:        JWTSecret,
+			expectedEmail: email,
+			expectedErr:   nil,
+		},
+		{
+			name: "Invalid token",
+			tokenFunc: func() (string, error) {
+				return "invalid.token.here", nil
+			},
+			secret:      JWTSecret,
+			expectedErr: service.ErrInvalidToken,
+		},
+		{
+			name: "Invalid secret",
+			tokenFunc: func() (string, error) {
+				return service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+			},
+			secret:      "wrong_secret",
+			expectedErr: service.ErrInvalidToken,
+		},
+		{
+			name: "Expired token",
+			tokenFunc: func() (string, error) {
+				return service.CreateToken(email, JWTSecret.RevealSecret(), time.Second)
+			},
+			secret:      JWTSecret,
+			sleep:       2 * time.Second,
+			expectedErr: service.ErrTokenExpired,
 		},
 	}
-	s := service.NewAuth(r, jwtOpts)
 
-	t.Run("Valid token", func(t *testing.T) {
-		t.Parallel()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		token, err := service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
-		if err != nil {
-			t.Fatalf("CreateToken failed: %v", err)
-		}
+			token, err := tt.tokenFunc()
+			if err != nil {
+				t.Fatalf("token generation failed: %v", err)
+			}
 
-		returnedEmail, err := s.VerifyToken(context.Background(), token)
-		if err != nil {
-			t.Fatalf("VerifyToken failed: %v", err)
-		}
+			if tt.sleep > 0 {
+				time.Sleep(tt.sleep)
+			}
 
-		if returnedEmail != email {
-			t.Errorf("Expected email %v, got %v", email, returnedEmail)
-		}
-	})
+			s := service.NewAuth(nil, service.JWTOptions{
+				JWTSecret: tt.secret,
+				Exp:       jwtOpts.Exp,
+			})
 
-	t.Run("Invalid token", func(t *testing.T) {
-		t.Parallel()
+			returnedEmail, err := s.VerifyToken(context.Background(), token)
 
-		_, err := s.VerifyToken(context.Background(), "invalid.token.here")
-		if !errors.Is(err, service.ErrInvalidToken) {
-			t.Errorf("Expected ErrInvalidToken, got %v", err)
-		}
-	})
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("Expected error %v, got %v", tt.expectedErr, err)
+			}
 
-	t.Run("Invalid secret", func(t *testing.T) {
-		t.Parallel()
-
-		token, err := service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
-		if err != nil {
-			t.Fatalf("CreateToken failed: %v", err)
-		}
-
-		invalidSecretService := service.NewAuth(nil, service.JWTOptions{JWTSecret: "wrong_secret", Exp: time.Hour})
-		_, err = invalidSecretService.VerifyToken(context.Background(), token)
-		if !errors.Is(err, service.ErrInvalidToken) {
-			t.Errorf("Expected ErrInvalidToken, got %v", err)
-		}
-	})
-
-	t.Run("Expired token", func(t *testing.T) {
-		t.Parallel()
-
-		token, err := service.CreateToken(email, JWTSecret.RevealSecret(), time.Second)
-		if err != nil {
-			t.Fatalf("CreateToken failed: %v", err)
-		}
-
-		time.Sleep(2 * time.Second)
-
-		_, err = s.VerifyToken(context.Background(), token)
-		if !errors.Is(err, service.ErrTokenExpired) {
-			t.Errorf("Expected ErrTokenExpired, got %v", err)
-		}
-	})
+			if tt.expectedErr == nil && returnedEmail != tt.expectedEmail {
+				t.Errorf("Expected email %v, got %v", tt.expectedEmail, returnedEmail)
+			}
+		})
+	}
 }
