@@ -177,7 +177,6 @@ func TestAuthService_VerifyToken(t *testing.T) {
 		name          string
 		tokenFunc     func() (string, error)
 		secret        secrecy.SecretString
-		sleep         time.Duration
 		expectedEmail domain.Email
 		expectedErr   error
 	}{
@@ -209,10 +208,9 @@ func TestAuthService_VerifyToken(t *testing.T) {
 		{
 			name: "Expired token",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), time.Second)
+				return service.CreateToken(email, JWTSecret.RevealSecret(), -time.Hour)
 			},
 			secret:      JWTSecret,
-			sleep:       2 * time.Second,
 			expectedErr: service.ErrTokenExpired,
 		},
 	}
@@ -224,10 +222,6 @@ func TestAuthService_VerifyToken(t *testing.T) {
 			token, err := tt.tokenFunc()
 			if err != nil {
 				t.Fatalf("token generation failed: %v", err)
-			}
-
-			if tt.sleep > 0 {
-				time.Sleep(tt.sleep)
 			}
 
 			s := service.NewAuth(nil, service.JWTOptions{
