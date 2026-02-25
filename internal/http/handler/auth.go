@@ -153,7 +153,6 @@ type whoAmIResponse struct {
 // @Summary Get current user info
 // @Description Get current user ID from token
 // @Tags auth
-// @Accept json
 // @Produce json
 // @Success 200 {object} whoAmIResponse
 // @Failure 401 {object} httpschema.ErrorResponse "Unauthorized"
