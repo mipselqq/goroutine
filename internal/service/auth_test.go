@@ -11,6 +11,8 @@ import (
 	"goroutine/internal/repository"
 	"goroutine/internal/secrecy"
 	"goroutine/internal/service"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type TestCase struct {
@@ -28,8 +30,9 @@ var (
 	anotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
 	JWTSecret           = secrecy.SecretString("secret")
 	jwtOpts             = service.JWTOptions{
-		JWTSecret: JWTSecret,
-		Exp:       time.Hour,
+		JWTSecret:     JWTSecret,
+		Exp:           time.Hour,
+		SigningMethod: jwt.SigningMethodHS256,
 	}
 )
 
@@ -173,19 +176,23 @@ func TestAuth_Login(t *testing.T) {
 func TestAuth_VerifyToken(t *testing.T) {
 	t.Parallel()
 
+	s := service.NewAuth(nil, service.JWTOptions{
+		JWTSecret:     JWTSecret,
+		Exp:           jwtOpts.Exp,
+		SigningMethod: jwt.SigningMethodHS256,
+	})
+
 	tests := []struct {
 		name          string
 		tokenFunc     func() (string, error)
-		secret        secrecy.SecretString
 		expectedEmail domain.Email
 		expectedErr   error
 	}{
 		{
 			name: "Valid token",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+				return s.CreateToken(email, jwtOpts.Exp)
 			},
-			secret:        JWTSecret,
 			expectedEmail: email,
 			expectedErr:   nil,
 		},
@@ -194,24 +201,40 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				return "invalid.token.here", nil
 			},
-			secret:      JWTSecret,
 			expectedErr: service.ErrInvalidToken,
 		},
 		{
-			name: "Invalid secret",
+			name: "Different secret",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+				claims := jwt.MapClaims{
+					"sub": email.String(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte("wrong_secret"))
 			},
-			secret:      "wrong_secret",
 			expectedErr: service.ErrInvalidToken,
 		},
 		{
 			name: "Expired token",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), -time.Hour)
+				return s.CreateToken(email, -time.Hour)
 			},
-			secret:      JWTSecret,
 			expectedErr: service.ErrTokenExpired,
+		},
+		{
+			name: "Different sign method",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"sub": email.String(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidSigningMethod,
 		},
 	}
 
@@ -223,11 +246,6 @@ func TestAuth_VerifyToken(t *testing.T) {
 			if err != nil {
 				t.Fatalf("token generation failed: %v", err)
 			}
-
-			s := service.NewAuth(nil, service.JWTOptions{
-				JWTSecret: tt.secret,
-				Exp:       jwtOpts.Exp,
-			})
 
 			returnedEmail, err := s.VerifyToken(context.Background(), token)
 
