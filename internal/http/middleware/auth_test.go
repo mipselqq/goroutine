@@ -118,8 +118,8 @@ func TestAuth(t *testing.T) {
 					t.Errorf("Expected user ID, got %v", id)
 				}
 
-				if id != tt.expectedUserId {
-					t.Errorf("Expected user ID %d, got %d", tt.expectedUserId, id)
+				if id != tt.expectedUserID {
+					t.Errorf("Expected user ID %d, got %d", tt.expectedUserID, id)
 				}
 
 				w.WriteHeader(http.StatusTeapot)
