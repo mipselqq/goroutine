@@ -14,19 +14,14 @@ type Email struct {
 
 func NewEmail(email string) (Email, error) {
 	trimmedEmail := strings.TrimSpace(email)
+	lowercasedEmail := strings.ToLower(trimmedEmail)
 
-	if email == "" {
-		return Email{}, ErrInvalidEmail
-	}
-
-	normalizedEmail := strings.ToLower(trimmedEmail)
-
-	_, err := mail.ParseAddress(normalizedEmail)
+	_, err := mail.ParseAddress(lowercasedEmail)
 	if err != nil {
 		return Email{}, ErrInvalidEmail
 	}
 
-	return Email{value: normalizedEmail}, nil
+	return Email{value: lowercasedEmail}, nil
 }
 
 func (e Email) String() string {
