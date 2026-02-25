@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"goroutine/internal/http/handler"
 	"goroutine/internal/http/middleware"
 	"goroutine/internal/service"
 	"goroutine/internal/testutil"
@@ -111,8 +112,8 @@ func TestAuth(t *testing.T) {
 			s := &MockAuth{}
 			tt.setupMock(s)
 
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				id, ok := r.Context().Value(middleware.UserIDKey).(int64)
+			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				id, ok := r.Context().Value(handler.UserIDKey).(int64)
 				if !ok {
 					t.Errorf("Expected user ID, got %v", id)
 				}
@@ -125,13 +126,13 @@ func TestAuth(t *testing.T) {
 			})
 
 			m := middleware.NewAuth(testutil.NewTestLogger(t), s)
-			warpped := m.Wrap(handler)
+			wrapped := m.Wrap(h)
 
 			request := httptest.NewRequest("GET", "/", http.NoBody)
 			request.Header.Set("Authorization", tt.authorizationHeader)
 			response := httptest.NewRecorder()
 
-			warpped.ServeHTTP(response, request)
+			wrapped.ServeHTTP(response, request)
 
 			if response.Code != tt.expectedStatus {
 				t.Errorf("Expected status %d, got %d", tt.expectedStatus, response.Code)

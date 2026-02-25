@@ -10,12 +10,6 @@ import (
 	"goroutine/internal/http/handler"
 )
 
-type key int
-
-const (
-	UserIDKey key = iota
-)
-
 type TokenVerifier interface {
 	VerifyToken(ctx context.Context, token string) (int64, error)
 }
@@ -51,7 +45,7 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		ctx := context.WithValue(r.Context(), handler.UserIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
