@@ -33,7 +33,7 @@ var (
 	}
 )
 
-func TestAuthService_Register(t *testing.T) {
+func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
 	tests := []TestCase{
@@ -170,7 +170,7 @@ func TestAuth_Login(t *testing.T) {
 	}
 }
 
-func TestAuthService_VerifyToken(t *testing.T) {
+func TestAuth_VerifyToken(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
