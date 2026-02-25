@@ -29,7 +29,7 @@ func NewAuth(l *slog.Logger, v TokenVerifier) *Auth {
 	return &Auth{logger: l, verifier: v}
 }
 
-func (m *Auth) Wrap(next http.Handler) http.Handler {
+func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
