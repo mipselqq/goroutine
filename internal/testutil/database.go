@@ -29,7 +29,7 @@ func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf("TRUNCATE TABLE %s CASCADE", name)
+	query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", name)
 
 	_, err := pool.Exec(ctx, query)
 	if err != nil {
