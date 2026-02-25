@@ -20,8 +20,9 @@ type UserRepository interface {
 }
 
 type JWTOptions struct {
-	JWTSecret secrecy.SecretString
-	Exp       time.Duration
+	JWTSecret     secrecy.SecretString
+	Exp           time.Duration
+	SigningMethod jwt.SigningMethod
 }
 
 type Auth struct {
@@ -67,35 +68,38 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Pa
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := CreateToken(email, s.jwtOptions.JWTSecret.RevealSecret(), s.jwtOptions.Exp)
+	token, err := s.CreateToken(email, s.jwtOptions.Exp)
 	if err != nil {
 		return "", fmt.Errorf("auth service: login: create token: %v: %w", err, ErrInternal)
 	}
 	return token, nil
 }
 
-func CreateToken(email domain.Email, secret string, exp time.Duration) (string, error) {
+func (s *Auth) CreateToken(email domain.Email, exp time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": email.String(),
 		"exp": time.Now().Add(exp).Unix(),
 		"iat": time.Now().Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(s.jwtOptions.SigningMethod, claims)
 
-	return token.SignedString([]byte(secret))
+	return token.SignedString([]byte(s.jwtOptions.JWTSecret.RevealSecret()))
 }
 
 func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (domain.Email, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		if token.Method.Alg() != s.jwtOptions.SigningMethod.Alg() {
+			return nil, ErrInvalidSigningMethod
 		}
 		return []byte(s.jwtOptions.JWTSecret.RevealSecret()), nil
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return domain.Email{}, fmt.Errorf("auth service: verify token: %w", ErrTokenExpired)
+		}
+		if errors.Is(err, ErrInvalidSigningMethod) {
+			return domain.Email{}, fmt.Errorf("auth service: verify token: %w", ErrInvalidSigningMethod)
 		}
 		return domain.Email{}, fmt.Errorf("auth service: verify token: %v: %w", err, ErrInvalidToken)
 	}

@@ -11,6 +11,7 @@ import (
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -23,8 +24,9 @@ type App struct {
 func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 	userRepo := repository.NewPgUser(pool)
 	authService := service.NewAuth(userRepo, service.JWTOptions{
-		JWTSecret: cfg.JWTSecret,
-		Exp:       cfg.JWTExp,
+		JWTSecret:     cfg.JWTSecret,
+		Exp:           cfg.JWTExp,
+		SigningMethod: jwt.SigningMethodHS256,
 	})
 
 	authHandler := handler.NewAuth(logger, authService)

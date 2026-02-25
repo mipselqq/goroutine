@@ -11,6 +11,8 @@ import (
 	"goroutine/internal/repository"
 	"goroutine/internal/secrecy"
 	"goroutine/internal/service"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type TestCase struct {
@@ -28,8 +30,9 @@ var (
 	anotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
 	JWTSecret           = secrecy.SecretString("secret")
 	jwtOpts             = service.JWTOptions{
-		JWTSecret: JWTSecret,
-		Exp:       time.Hour,
+		JWTSecret:     JWTSecret,
+		Exp:           time.Hour,
+		SigningMethod: jwt.SigningMethodHS256,
 	}
 )
 
@@ -173,19 +176,23 @@ func TestAuth_Login(t *testing.T) {
 func TestAuth_VerifyToken(t *testing.T) {
 	t.Parallel()
 
+	s := service.NewAuth(nil, service.JWTOptions{
+		JWTSecret:     JWTSecret,
+		Exp:           jwtOpts.Exp,
+		SigningMethod: jwt.SigningMethodHS256,
+	})
+
 	tests := []struct {
 		name          string
 		tokenFunc     func() (string, error)
-		secret        secrecy.SecretString
 		expectedEmail domain.Email
 		expectedErr   error
 	}{
 		{
 			name: "Valid token",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+				return s.CreateToken(email, jwtOpts.Exp)
 			},
-			secret:        JWTSecret,
 			expectedEmail: email,
 			expectedErr:   nil,
 		},
@@ -194,24 +201,78 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				return "invalid.token.here", nil
 			},
-			secret:      JWTSecret,
 			expectedErr: service.ErrInvalidToken,
 		},
 		{
-			name: "Invalid secret",
+			name: "Different secret",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), jwtOpts.Exp)
+				claims := jwt.MapClaims{
+					"sub": email.String(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte("wrong_secret"))
 			},
-			secret:      "wrong_secret",
 			expectedErr: service.ErrInvalidToken,
 		},
 		{
 			name: "Expired token",
 			tokenFunc: func() (string, error) {
-				return service.CreateToken(email, JWTSecret.RevealSecret(), -time.Hour)
+				return s.CreateToken(email, -time.Hour)
 			},
-			secret:      JWTSecret,
 			expectedErr: service.ErrTokenExpired,
+		},
+		{
+			name: "Different signing method",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"sub": email.String(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidSigningMethod,
+		},
+		{
+			name: "Missing sub claim",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidToken,
+		},
+		{
+			name: "Sub claim not a string",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"sub": 12345,
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidToken,
+		},
+		{
+			name: "Invalid email in sub",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"sub": "not-an-email",
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidToken,
 		},
 	}
 
@@ -224,11 +285,6 @@ func TestAuth_VerifyToken(t *testing.T) {
 				t.Fatalf("token generation failed: %v", err)
 			}
 
-			s := service.NewAuth(nil, service.JWTOptions{
-				JWTSecret: tt.secret,
-				Exp:       jwtOpts.Exp,
-			})
-
 			returnedEmail, err := s.VerifyToken(context.Background(), token)
 
 			if !errors.Is(err, tt.expectedErr) {
@@ -239,5 +295,58 @@ func TestAuth_VerifyToken(t *testing.T) {
 				t.Errorf("Expected email %v, got %v", tt.expectedEmail, returnedEmail)
 			}
 		})
+	}
+}
+
+func TestAuth_CreateToken(t *testing.T) {
+	t.Parallel()
+
+	s := service.NewAuth(nil, service.JWTOptions{
+		JWTSecret:     JWTSecret,
+		Exp:           jwtOpts.Exp,
+		SigningMethod: jwt.SigningMethodHS256,
+	})
+	now := time.Now()
+	token, err := s.CreateToken(email, jwtOpts.Exp)
+	if err != nil {
+		t.Fatalf("token creation failed: %v", err)
+	}
+
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		return []byte(JWTSecret.RevealSecret()), nil
+	})
+	if err != nil {
+		t.Fatalf("token parsing failed: %v", err)
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatalf("claims are not map %v", claims)
+	}
+
+	if claims["sub"] != email.String() {
+		t.Errorf("Expected sub %v, got %v", email.String(), claims["sub"])
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		t.Fatalf("exp claim is missing or not a number")
+	}
+	expectedExp := now.Add(jwtOpts.Exp).Unix()
+	if int64(exp) < expectedExp-1 || int64(exp) > expectedExp+1 {
+		t.Errorf("Expected exp around %v, got %v", expectedExp, int64(exp))
+	}
+
+	iat, ok := claims["iat"].(float64)
+	if !ok {
+		t.Fatalf("iat claim is missing or not a number")
+	}
+	expectedIat := now.Unix()
+	if int64(iat) < expectedIat-1 || int64(iat) > expectedIat+1 {
+		t.Errorf("Expected iat around %v, got %v", expectedIat, int64(iat))
+	}
+
+	if parsedToken.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+		t.Errorf("Expected alg %v, got %v", jwt.SigningMethodHS256.Alg(), parsedToken.Method.Alg())
 	}
 }
