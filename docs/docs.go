@@ -126,6 +126,35 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/whoami": {
+            "get": {
+                "description": "Get current user ID from token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.whoAmIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -179,6 +208,15 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "ok"
+                }
+            }
+        },
+        "handler.whoAmIResponse": {
+            "type": "object",
+            "properties": {
+                "uid": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         }

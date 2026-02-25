@@ -12,6 +12,12 @@ import (
 	"goroutine/internal/service"
 )
 
+type contextKey int
+
+const (
+	UserIDKey contextKey = iota
+)
+
 type AuthService interface {
 	Register(ctx context.Context, email domain.Email, password domain.Password) error
 	Login(ctx context.Context, email domain.Email, password domain.Password) (string, error)
@@ -142,4 +148,28 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
 	RespondWithJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
+}
+
+type whoAmIResponse struct {
+	UID int64 `json:"uid" example:"1"`
+}
+
+// WhoAmI godoc
+// @Summary Get current user info
+// @Description Get current user ID from token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} whoAmIResponse
+// @Failure 401 {object} errorResponse "Unauthorized"
+// @Router /whoami [get]
+func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
+	uid, ok := r.Context().Value(UserIDKey).(int64)
+	if !ok {
+		h.logger.Error("Failed to get user id from context")
+		RespondWithError(w, h.logger, http.StatusUnauthorized, errors.New("unauthorized"))
+		return
+	}
+
+	RespondWithJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid})
 }

@@ -36,6 +36,12 @@ definitions:
         example: ok
         type: string
     type: object
+  handler.whoAmIResponse:
+    properties:
+      uid:
+        example: 1
+        type: integer
+    type: object
 info:
   contact: {}
   description: A nice kanban board with a beautiful heart ✨
@@ -112,6 +118,25 @@ paths:
           schema:
             $ref: '#/definitions/handler.errorResponse'
       summary: Register a new user
+      tags:
+      - auth
+  /whoami:
+    get:
+      consumes:
+      - application/json
+      description: Get current user ID from token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.whoAmIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Get current user info
       tags:
       - auth
 swagger: "2.0"

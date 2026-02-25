@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -261,5 +262,25 @@ func TestAuth_Login(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestAuth_WhoAmI(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.WithValue(context.Background(), handler.UserIDKey, int64(1))
+
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/whoami", nil)
+
+	rr := httptest.NewRecorder()
+	h := handler.NewAuth(testutil.NewTestLogger(t), &MockAuth{})
+	h.WhoAmI(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
+	}
+
+	if strings.TrimSpace(rr.Body.String()) != `{"uid":1}` {
+		t.Errorf("expected body %q, got %q", `{"uid":1}`, rr.Body.String())
 	}
 }
