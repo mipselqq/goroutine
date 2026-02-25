@@ -236,6 +236,44 @@ func TestAuth_VerifyToken(t *testing.T) {
 			},
 			expectedErr: service.ErrInvalidSigningMethod,
 		},
+		{
+			name: "Missing sub claim",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidToken,
+		},
+		{
+			name: "Sub claim not a string",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"sub": 12345,
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidToken,
+		},
+		{
+			name: "Invalid email in sub",
+			tokenFunc: func() (string, error) {
+				claims := jwt.MapClaims{
+					"sub": "not-an-email",
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"iat": time.Now().Unix(),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+			},
+			expectedErr: service.ErrInvalidToken,
+		},
 	}
 
 	for _, tt := range tests {
@@ -268,6 +306,7 @@ func TestAuth_CreateToken(t *testing.T) {
 		Exp:           jwtOpts.Exp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
+	now := time.Now()
 	token, err := s.CreateToken(email, jwtOpts.Exp)
 	if err != nil {
 		t.Fatalf("token creation failed: %v", err)
@@ -284,7 +323,30 @@ func TestAuth_CreateToken(t *testing.T) {
 	if !ok {
 		t.Fatalf("claims are not map %v", claims)
 	}
+
 	if claims["sub"] != email.String() {
-		t.Errorf("Expected email %v, got %v", email.String(), claims["sub"])
+		t.Errorf("Expected sub %v, got %v", email.String(), claims["sub"])
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		t.Fatalf("exp claim is missing or not a number")
+	}
+	expectedExp := now.Add(jwtOpts.Exp).Unix()
+	if int64(exp) < expectedExp-1 || int64(exp) > expectedExp+1 {
+		t.Errorf("Expected exp around %v, got %v", expectedExp, int64(exp))
+	}
+
+	iat, ok := claims["iat"].(float64)
+	if !ok {
+		t.Fatalf("iat claim is missing or not a number")
+	}
+	expectedIat := now.Unix()
+	if int64(iat) < expectedIat-1 || int64(iat) > expectedIat+1 {
+		t.Errorf("Expected iat around %v, got %v", expectedIat, int64(iat))
+	}
+
+	if parsedToken.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+		t.Errorf("Expected alg %v, got %v", jwt.SigningMethodHS256.Alg(), parsedToken.Method.Alg())
 	}
 }
