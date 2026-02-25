@@ -19,3 +19,12 @@ func (s *spyCorsMiddleware) Wrap(next http.Handler) http.HandlerFunc {
 		next.ServeHTTP(w, r)
 	}
 }
+
+type spyAuthMiddleware struct{}
+
+func (s *spyAuthMiddleware) Wrap(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Auth-Tracked", "true")
+		next.ServeHTTP(w, r)
+	}
+}
