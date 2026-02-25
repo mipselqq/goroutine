@@ -122,19 +122,27 @@ graph TD
 ## Project Structure
 Annotated overview of the repository layout:
 - `cmd/` - Entry points (main.go).
+  - `ping/` - Ping progam for distroless healtcheck.
+  - `server/` - Main server entry point.
 - `docs/` - Generated Swagger UI documentation and OpenAPI specs.
 - `infra/` - Infrastructure configs (Ansible, Grafana, Loki, Prometheus).
    - `ansible/` - Server provisioning and configuration management.
-   - `prometheus.template.yml` - Prometheus template used by Docker Compose.
+   - `grafana/` - Grafana dashboards and provisioning configs.
+   - `prometheus.template.yml` - Prometheus config template used by Docker Compose.
 - `internal/` - Private application code.
    - `app.go`, `startup.go` - Application wiring and startup utilities.
+   - `config/` - Configuration utilities (e.g., env parsing, database setup).
+   - `domain/` - Core business entities with invariants (email, password, title).
    - `http/` - HTTP layer.
-      - `handler/` - Http handlers (API endpoints).
-      - `middleware/` - Http middlewares (metrics, auth).
+      - `handler/` - HTTP handlers (API endpoints).
+      - `middleware/` - HTTP middlewares (metrics, auth, CORS).
+      - `httpschema/` - Uniform structured responses and keys
       - `route.go` - Route registration.
-  - `domain/` - Core business entities with invariants (email, password).
-  - `repository/` - Persistence layer (database interactions).
-  - `service/` - Use case layer (business rules).
+   - `logging/` - Logging adapters and factory.
+   - `repository/` - Persistence layer (database interactions).
+   - `service/` - Use case layer (business rules).
+   - `secrecy/` - Custom package for handling sensitive data.
+   - `testutil/` - Utilities for testing (e.g., database setup, logging).
 - `migrations/` - SQL migration files managed by Goose.
 - `tests/` - End-to-end test suites.
 
