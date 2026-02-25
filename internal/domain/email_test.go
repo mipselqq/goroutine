@@ -10,7 +10,7 @@ func TestEmail(t *testing.T) {
 	emailTests := []struct {
 		name          string
 		input         string
-		expectedInner string
+		expectedValue string
 		expectErr     bool
 	}{
 		{
@@ -36,19 +36,19 @@ func TestEmail(t *testing.T) {
 		{
 			name:          "Valid email with whitespace",
 			input:         "   test@example.com   ",
-			expectedInner: "test@example.com",
+			expectedValue: "test@example.com",
 			expectErr:     false,
 		},
 		{
 			name:          "Uppercase email",
 			input:         "TEST@EXAMPLE.COM",
-			expectedInner: "test@example.com",
+			expectedValue: "test@example.com",
 			expectErr:     false,
 		},
 		{
 			name:          "Mixed case email",
 			input:         "TeSt@ExAmpLe.CoM",
-			expectedInner: "test@example.com",
+			expectedValue: "test@example.com",
 			expectErr:     false,
 		},
 	}
@@ -58,8 +58,8 @@ func TestEmail(t *testing.T) {
 			email, err := domain.NewEmail(tt.input)
 
 			if !tt.expectErr {
-				if tt.expectedInner != "" && email.String() != tt.expectedInner {
-					t.Errorf("expected email %s, got %s", tt.expectedInner, email.String())
+				if tt.expectedValue != "" && email.String() != tt.expectedValue {
+					t.Errorf("expected email %s, got %s", tt.expectedValue, email.String())
 				}
 				if err != nil {
 					t.Errorf("did not expect error but got: %v", err)
