@@ -224,7 +224,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			expectedErr: service.ErrTokenExpired,
 		},
 		{
-			name: "Different sign method",
+			name: "Different signing method",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": email.String(),
