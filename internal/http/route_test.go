@@ -7,6 +7,7 @@ import (
 
 	app "goroutine/internal/http"
 	"goroutine/internal/http/handler"
+	"goroutine/internal/http/middleware"
 	"goroutine/internal/testutil"
 )
 
@@ -14,13 +15,18 @@ func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
 	logger := testutil.NewTestLogger(t)
-	authHandler := handler.NewAuth(logger, nil)
-	healthHandler := handler.NewHealth(logger)
-	metricsMiddleware := &spyMetricsMiddleware{}
-	corsMiddleware := &spyCorsMiddleware{}
-	authMiddleware := &spyAuthMiddleware{}
 
-	router := app.NewRouter(metricsMiddleware, corsMiddleware, authMiddleware, authHandler, healthHandler)
+	handlers := &handler.Handlers{
+		Auth:   handler.NewAuth(logger, nil),
+		Health: handler.NewHealth(logger),
+	}
+	middlewares := &middleware.Middlewares{
+		Metrics: &spyMetricsMiddleware{},
+		CORS:    &spyCorsMiddleware{},
+		Auth:    &spyAuthMiddleware{},
+	}
+
+	router := app.NewRouter(handlers, middlewares)
 
 	tests := []struct {
 		name        string

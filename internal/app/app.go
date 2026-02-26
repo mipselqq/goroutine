@@ -36,8 +36,11 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
 	authMiddleware := middleware.NewAuth(logger, authService)
 
+	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler}
+	middlewares := &middleware.Middlewares{Metrics: metricsMiddleware, CORS: corsMiddleware, Auth: authMiddleware}
+
 	return &App{
-		Router:      httpapp.NewRouter(metricsMiddleware, corsMiddleware, authMiddleware, authHandler, healthHandler),
+		Router:      httpapp.NewRouter(handlers, middlewares),
 		AdminRouter: httpapp.NewAdminRouter(),
 	}
 }
