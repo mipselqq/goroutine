@@ -3,7 +3,6 @@ package service_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -24,7 +23,7 @@ type TestCase struct {
 
 var (
 	emailStr            = "test@example.com"
-	userID              = int64(123)
+	userID              = domain.MustParseUserID("018e1000-0000-7000-8000-000000000000")
 	passwordStr         = "qwerty"
 	passwordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
 	email, _            = domain.NewEmail(emailStr)
@@ -107,7 +106,7 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name: "Success",
 			setupMock: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return userID, passwordHash, nil
 				}
 			},
@@ -117,8 +116,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "User not found",
 			expectedErr: service.ErrUserNotFound,
 			setupMock: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
-					return 0, "", repository.ErrRowNotFound
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+					return domain.UserID{}, "", repository.ErrRowNotFound
 				}
 			},
 		},
@@ -126,7 +125,7 @@ func TestAuth_Login(t *testing.T) {
 			name:        "Invalid password",
 			expectedErr: service.ErrInvalidCredentials,
 			setupMock: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return userID, anotherPasswordHash, nil
 				}
 			},
@@ -135,8 +134,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "Internal repository error",
 			expectedErr: service.ErrInternal,
 			setupMock: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
-					return 0, "", repository.ErrInternal
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+					return domain.UserID{}, "", repository.ErrInternal
 				}
 			},
 		},
@@ -144,8 +143,8 @@ func TestAuth_Login(t *testing.T) {
 			name:        "Unexpected repository error",
 			expectedErr: service.ErrInternal,
 			setupMock: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (int64, string, error) {
-					return 0, "", errors.New("Super unknown error happened")
+				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+					return domain.UserID{}, "", errors.New("Super unknown error happened")
 				}
 			},
 		},
@@ -187,7 +186,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 	tests := []struct {
 		name           string
 		tokenFunc      func() (string, error)
-		expectedUserID int64
+		expectedUserID domain.UserID
 		expectedErr    error
 	}{
 		{
@@ -209,7 +208,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Different secret",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": fmt.Sprintf("%d", userID),
+					"sub": userID.String(),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
@@ -229,7 +228,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Different signing method",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": fmt.Sprintf("%d", userID),
+					"sub": userID.String(),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
@@ -326,8 +325,8 @@ func TestAuth_CreateToken(t *testing.T) {
 		t.Fatalf("claims are not map %v", claims)
 	}
 
-	if claims["sub"] != fmt.Sprintf("%d", userID) {
-		t.Errorf("Expected sub %v, got %v", userID, claims["sub"])
+	if claims["sub"] != userID.String() {
+		t.Errorf("Expected sub %v, got %v", userID.String(), claims["sub"])
 	}
 
 	exp, ok := claims["exp"].(float64)

@@ -40,15 +40,15 @@ func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) er
 	return fmt.Errorf("user repo: insert: %v: %w", err, ErrInternal)
 }
 
-func (r *PgUser) GetByEmail(ctx context.Context, email domain.Email) (id int64, hash string, err error) {
+func (r *PgUser) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
 	const query = `SELECT id, password_hash FROM users WHERE email = $1`
 
 	err = r.pool.QueryRow(ctx, query, email.String()).Scan(&id, &hash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, "", ErrRowNotFound
+			return domain.UserID{}, "", ErrRowNotFound
 		}
-		return 0, "", fmt.Errorf("user repo: get by email: %v: %w", err, ErrInternal)
+		return domain.UserID{}, "", fmt.Errorf("user repo: get by email: %v: %w", err, ErrInternal)
 	}
 
 	return id, hash, nil

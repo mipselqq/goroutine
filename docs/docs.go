@@ -130,9 +130,6 @@ const docTemplate = `{
         "/whoami": {
             "get": {
                 "description": "Get current user ID from token",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -197,8 +194,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "uid": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "018e1000-0000-7000-8000-000000000000"
                 }
             }
         },

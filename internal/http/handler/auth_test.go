@@ -269,7 +269,8 @@ func TestAuth_Login(t *testing.T) {
 func TestAuth_WhoAmI(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), httpschema.ContextKeyUserID, int64(1))
+	uid := domain.MustParseUserID("018e1000-0000-7000-8000-000000000000")
+	ctx := context.WithValue(context.Background(), httpschema.ContextKeyUserID, uid)
 
 	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/whoami", nil)
 
@@ -281,7 +282,8 @@ func TestAuth_WhoAmI(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
 	}
 
-	if strings.TrimSpace(rr.Body.String()) != `{"uid":1}` {
-		t.Errorf("expected body %q, got %q", `{"uid":1}`, rr.Body.String())
+	expectedBody := fmt.Sprintf(`{"uid":%q}`, uid.String())
+	if strings.TrimSpace(rr.Body.String()) != expectedBody {
+		t.Errorf("expected body %q, got %q", expectedBody, rr.Body.String())
 	}
 }
