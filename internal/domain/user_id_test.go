@@ -34,7 +34,7 @@ func TestParseUserID(t *testing.T) {
 	}
 
 	if id.String() != s {
-		t.Errorf("Expected %s, got %s", s, id.String())
+		t.Errorf("Expected %q, got %q", s, id.String())
 	}
 
 	_, err = domain.ParseUserID("invalid")
@@ -55,7 +55,7 @@ func TestUserID_Scan(t *testing.T) {
 			t.Errorf("Scan string error = %v", err)
 		}
 		if id.String() != u.String() {
-			t.Errorf("Expected %s, got %s", u.String(), id.String())
+			t.Errorf("Expected %q, got %q", u.String(), id.String())
 		}
 	})
 
@@ -65,7 +65,7 @@ func TestUserID_Scan(t *testing.T) {
 			t.Errorf("Scan bytes error = %v", err)
 		}
 		if id.String() != u.String() {
-			t.Errorf("Expected %s, got %s", u.String(), id.String())
+			t.Errorf("Expected %q, got %q", u.String(), id.String())
 		}
 	})
 
@@ -99,7 +99,7 @@ func TestUserID_Value(t *testing.T) {
 		t.Errorf("Value() error = %v", err)
 	}
 	if val != u.String() {
-		t.Errorf("Expected %v, got %v", u.String(), val)
+		t.Errorf("Expected %q, got %q", u.String(), val)
 	}
 
 	var empty domain.UserID

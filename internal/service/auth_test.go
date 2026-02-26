@@ -168,7 +168,7 @@ func TestAuth_Login(t *testing.T) {
 			if tt.expectedErr == nil {
 				parts := strings.Split(token, ".")
 				if len(parts) != 3 {
-					t.Errorf("Expected JWT token, got %s", token)
+					t.Errorf("Expected JWT token, got %q", token)
 				}
 			}
 		})
@@ -294,7 +294,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			}
 
 			if tt.expectedErr == nil && returnedUserID != tt.expectedUserID {
-				t.Errorf("Expected userID %v, got %v", tt.expectedUserID, returnedUserID)
+				t.Errorf("Expected userID %q, got %q", tt.expectedUserID, returnedUserID)
 			}
 		})
 	}

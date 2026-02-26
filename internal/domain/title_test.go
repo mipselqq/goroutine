@@ -7,6 +7,8 @@ import (
 )
 
 func TestTitle(t *testing.T) {
+	t.Parallel()
+
 	titleTests := []struct {
 		name      string
 		input     string
@@ -31,6 +33,8 @@ func TestTitle(t *testing.T) {
 
 	for _, tt := range titleTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := domain.NewTitle(tt.input)
 			if tt.expectErr && err == nil {
 				t.Errorf("expected error but got none")

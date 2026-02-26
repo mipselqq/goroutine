@@ -80,7 +80,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 
 		for _, envVar := range appEnvVars {
 			if !strings.Contains(buf.String(), envVar) {
-				t.Errorf("expected warn on unset %s", envVar)
+				t.Errorf("expected warn on unset %q", envVar)
 			}
 		}
 	})
@@ -92,7 +92,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		_ = config.NewAppConfigFromEnv(logger)
 
 		if buf.String() != "" {
-			t.Errorf("expected no warnings on all variables are set, got %s", buf.String())
+			t.Errorf("expected no warnings on all variables are set, got %q", buf.String())
 		}
 	})
 }

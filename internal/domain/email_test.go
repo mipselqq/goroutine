@@ -7,6 +7,8 @@ import (
 )
 
 func TestEmail(t *testing.T) {
+	t.Parallel()
+
 	emailTests := []struct {
 		name          string
 		input         string
@@ -55,11 +57,13 @@ func TestEmail(t *testing.T) {
 
 	for _, tt := range emailTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			email, err := domain.NewEmail(tt.input)
 
 			if !tt.expectErr {
 				if tt.expectedValue != "" && email.String() != tt.expectedValue {
-					t.Errorf("expected email %s, got %s", tt.expectedValue, email.String())
+					t.Errorf("expected email %q, got %q", tt.expectedValue, email.String())
 				}
 				if err != nil {
 					t.Errorf("did not expect error but got: %v", err)

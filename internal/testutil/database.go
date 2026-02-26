@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	app "goroutine/internal"
+	"goroutine/internal/app"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,6 +34,6 @@ func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
 
 	_, err := pool.Exec(ctx, query)
 	if err != nil {
-		t.Fatalf("Failed to TRUNCATE TABLE %s: %v", name, err)
+		t.Fatalf("Failed to TRUNCATE TABLE %q: %v", name, err)
 	}
 }

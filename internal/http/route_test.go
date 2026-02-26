@@ -1,4 +1,4 @@
-package app_test
+package http_test
 
 import (
 	"net/http"
@@ -7,6 +7,7 @@ import (
 
 	app "goroutine/internal/http"
 	"goroutine/internal/http/handler"
+	"goroutine/internal/http/middleware"
 	"goroutine/internal/testutil"
 )
 
@@ -14,13 +15,18 @@ func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
 	logger := testutil.NewTestLogger(t)
-	authHandler := handler.NewAuth(logger, nil)
-	healthHandler := handler.NewHealth(logger)
-	metricsMiddleware := &spyMetricsMiddleware{}
-	corsMiddleware := &spyCorsMiddleware{}
-	authMiddleware := &spyAuthMiddleware{}
 
-	router := app.NewRouter(metricsMiddleware, corsMiddleware, authMiddleware, authHandler, healthHandler)
+	handlers := &handler.Handlers{
+		Auth:   handler.NewAuth(logger, nil),
+		Health: handler.NewHealth(logger),
+	}
+	middlewares := &middleware.Middlewares{
+		Metrics: &spyMetricsMiddleware{},
+		CORS:    &spyCorsMiddleware{},
+		Auth:    &spyAuthMiddleware{},
+	}
+
+	router := app.NewRouter(handlers, middlewares)
 
 	tests := []struct {
 		name        string
@@ -43,17 +49,17 @@ func TestNewRouter_Full(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			if rr.Code == http.StatusNotFound {
-				t.Errorf("Path %s %s not registered in router (got 404)", tt.method, tt.path)
+				t.Errorf("Path %q %q not registered in router (got 404)", tt.method, tt.path)
 			}
 
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
 			if hasMetrics != tt.wantMetrics {
-				t.Errorf("Metrics middleware application mismatch for %s: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
+				t.Errorf("Metrics middleware application mismatch for %q: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
 			}
 
 			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
 			if hasCors != tt.wantCors {
-				t.Errorf("CORS middleware application mismatch for %s: got %v, want %v", tt.path, hasCors, tt.wantCors)
+				t.Errorf("CORS middleware application mismatch for %q: got %v, want %v", tt.path, hasCors, tt.wantCors)
 			}
 		})
 	}

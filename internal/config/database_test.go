@@ -67,7 +67,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 		for _, envVar := range pgEnvVars {
 			if !strings.Contains(buf.String(), envVar) {
-				t.Errorf("expected warn on unset %s", envVar)
+				t.Errorf("expected warn on unset %q", envVar)
 			}
 		}
 	})
@@ -79,7 +79,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		_ = config.NewPGConfigFromEnv(logger)
 
 		if buf.String() != "" {
-			t.Errorf("expected no warnings, got %s", buf.String())
+			t.Errorf("expected no warnings, got %q", buf.String())
 		}
 	})
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"goroutine/docs"
-	app "goroutine/internal"
+	"goroutine/internal/app"
 	"goroutine/internal/config"
 	"goroutine/internal/logging"
 )

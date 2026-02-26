@@ -55,7 +55,7 @@ func TestMetrics_Collection(t *testing.T) {
 
 			code := strconv.Itoa(rr.Code)
 			if code != tt.expectedCode {
-				t.Errorf("Middleware modified status code: expected %s, got %s", tt.expectedCode, code)
+				t.Errorf("Middleware modified status code: expected %q, got %q", tt.expectedCode, code)
 			}
 
 			count := testutil.ToFloat64(mw.HttpRequests.With(prometheus.Labels{
