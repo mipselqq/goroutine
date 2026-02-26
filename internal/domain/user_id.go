@@ -24,14 +24,6 @@ func ParseUserID(s string) (UserID, error) {
 	return UserID{value: u}, nil
 }
 
-func MustParseUserID(s string) UserID {
-	u, err := ParseUserID(s)
-	if err != nil {
-		panic(err)
-	}
-	return u
-}
-
 func (u UserID) String() string {
 	return u.value.String()
 }

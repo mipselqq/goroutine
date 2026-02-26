@@ -16,7 +16,7 @@ import (
 func TestAuth(t *testing.T) {
 	t.Parallel()
 
-	userID := domain.MustParseUserID("018e1000-0000-7000-8000-000000000000")
+	userID := testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
 
 	tests := []struct {
 		name           string

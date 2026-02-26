@@ -269,7 +269,7 @@ func TestAuth_Login(t *testing.T) {
 func TestAuth_WhoAmI(t *testing.T) {
 	t.Parallel()
 
-	uid := domain.MustParseUserID("018e1000-0000-7000-8000-000000000000")
+	uid := testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
 	ctx := context.WithValue(context.Background(), httpschema.ContextKeyUserID, uid)
 
 	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/whoami", nil)

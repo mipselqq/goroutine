@@ -11,6 +11,7 @@ import (
 	"goroutine/internal/repository"
 	"goroutine/internal/secrecy"
 	"goroutine/internal/service"
+	"goroutine/internal/testutil"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -23,7 +24,7 @@ type TestCase struct {
 
 var (
 	emailStr            = "test@example.com"
-	userID              = domain.MustParseUserID("018e1000-0000-7000-8000-000000000000")
+	userID              = testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
 	passwordStr         = "qwerty"
 	passwordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
 	email, _            = domain.NewEmail(emailStr)
