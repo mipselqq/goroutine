@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	app "goroutine/internal"
+	"goroutine/internal/app"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

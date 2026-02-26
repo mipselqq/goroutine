@@ -7,6 +7,8 @@ import (
 )
 
 func TestEmail(t *testing.T) {
+	t.Parallel()
+
 	emailTests := []struct {
 		name          string
 		input         string
@@ -55,6 +57,8 @@ func TestEmail(t *testing.T) {
 
 	for _, tt := range emailTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			email, err := domain.NewEmail(tt.input)
 
 			if !tt.expectErr {

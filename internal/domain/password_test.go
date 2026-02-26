@@ -7,6 +7,8 @@ import (
 )
 
 func TestPassword(t *testing.T) {
+	t.Parallel()
+
 	passwordTests := []struct {
 		name      string
 		input     string
@@ -36,6 +38,8 @@ func TestPassword(t *testing.T) {
 
 	for _, tt := range passwordTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := domain.NewPassword(tt.input)
 			if tt.expectErr && err == nil {
 				t.Errorf("expected error but got none")
