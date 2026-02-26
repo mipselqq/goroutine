@@ -151,7 +151,7 @@ func TestCors_Wrap(t *testing.T) {
 
 			for k, v := range tt.expectedHeaders {
 				if rr.Header().Get(k) != v {
-					t.Errorf("expected header %s, got %s", v, rr.Header().Get(k))
+					t.Errorf("expected header %q, got %q", v, rr.Header().Get(k))
 				}
 			}
 		})
@@ -166,6 +166,6 @@ func TestCors_WarnsAnyOriginAllowed(t *testing.T) {
 	_ = middleware.NewCORS(logger, config.ParseAllowedOrigins(goodSite+",*,"+awesomeSite))
 
 	if !strings.Contains(buf.String(), "too permissive") {
-		t.Errorf("expected warn about too permissive CORS middleware, got %s", buf.String())
+		t.Errorf("expected warn about too permissive CORS middleware, got %q", buf.String())
 	}
 }

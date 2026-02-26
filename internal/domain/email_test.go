@@ -63,7 +63,7 @@ func TestEmail(t *testing.T) {
 
 			if !tt.expectErr {
 				if tt.expectedValue != "" && email.String() != tt.expectedValue {
-					t.Errorf("expected email %s, got %s", tt.expectedValue, email.String())
+					t.Errorf("expected email %q, got %q", tt.expectedValue, email.String())
 				}
 				if err != nil {
 					t.Errorf("did not expect error but got: %v", err)

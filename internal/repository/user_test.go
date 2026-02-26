@@ -40,7 +40,7 @@ func TestUserRepository_Insert(t *testing.T) {
 			t.Errorf("Failed to find user in DB: %v", err)
 		}
 		if dbEmail != emailStr {
-			t.Errorf("Expected email %s, got %s", emailStr, dbEmail)
+			t.Errorf("Expected email %q, got %q", emailStr, dbEmail)
 		}
 	})
 
@@ -82,7 +82,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 			t.Errorf("GetByEmail() error = %v", err)
 		}
 		if gotHash != hash {
-			t.Errorf("Expected hash %s, got %s", hash, gotHash)
+			t.Errorf("Expected hash %q, got %q", hash, gotHash)
 		}
 		if gotID.IsEmpty() {
 			t.Errorf("Expected non-empty id, got %v", gotID)

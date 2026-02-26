@@ -41,10 +41,10 @@ func TestAuth_Register(t *testing.T) {
 			setupMock: func(s *MockAuth) {
 				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.Password) error {
 					if e.String() != email {
-						t.Errorf("expected email %s, got %s", email, e.String())
+						t.Errorf("expected email %q, got %q", email, e.String())
 					}
 					if p.String() != password {
-						t.Errorf("expected password %s, got %s", password, p.String())
+						t.Errorf("expected password %q, got %q", password, p.String())
 					}
 					return nil
 				}
@@ -130,16 +130,16 @@ func TestAuth_Register(t *testing.T) {
 			contentType := rr.Header().Get("Content-Type")
 			mediaType, _, err := mime.ParseMediaType(contentType)
 			if err != nil {
-				t.Fatalf("Failed to parse MIME %s", contentType)
+				t.Fatalf("Failed to parse MIME %q", contentType)
 			}
 			if mediaType != expectedMime {
-				t.Errorf("Expected %s, got %s", expectedMime, mediaType)
+				t.Errorf("Expected %q, got %q", expectedMime, mediaType)
 			}
 
 			if tt.expectedBody != "" {
 				actualBody := bytes.TrimSpace(rr.Body.Bytes())
 				if string(actualBody) != tt.expectedBody {
-					t.Errorf("expected body %s, got %s", tt.expectedBody, string(actualBody))
+					t.Errorf("expected body %q, got %q", tt.expectedBody, string(actualBody))
 				}
 			}
 		})
@@ -156,10 +156,10 @@ func TestAuth_Login(t *testing.T) {
 			setupMock: func(s *MockAuth) {
 				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.Password) (string, error) {
 					if e.String() != email {
-						t.Errorf("expected email %s, got %s", email, e.String())
+						t.Errorf("expected email %q, got %q", email, e.String())
 					}
 					if p.String() != password {
-						t.Errorf("expected password %s, got %s", password, p.String())
+						t.Errorf("expected password %q, got %q", password, p.String())
 					}
 					return "jwt_token", nil
 				}
@@ -250,16 +250,16 @@ func TestAuth_Login(t *testing.T) {
 			contentType := rr.Header().Get("Content-Type")
 			mediaType, _, err := mime.ParseMediaType(contentType)
 			if err != nil {
-				t.Fatalf("Failed to parse MIME %s", contentType)
+				t.Fatalf("Failed to parse MIME %q", contentType)
 			}
 			if mediaType != expectedMime {
-				t.Errorf("Expected %s, got %s", expectedMime, mediaType)
+				t.Errorf("Expected %q, got %q", expectedMime, mediaType)
 			}
 
 			if tt.expectedBody != "" {
 				actualBody := bytes.TrimSpace(rr.Body.Bytes())
 				if string(actualBody) != tt.expectedBody {
-					t.Errorf("expected body %s, got %s", tt.expectedBody, string(actualBody))
+					t.Errorf("expected body %q, got %q", tt.expectedBody, string(actualBody))
 				}
 			}
 		})

@@ -43,17 +43,17 @@ func TestNewRouter_Full(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			if rr.Code == http.StatusNotFound {
-				t.Errorf("Path %s %s not registered in router (got 404)", tt.method, tt.path)
+				t.Errorf("Path %q %q not registered in router (got 404)", tt.method, tt.path)
 			}
 
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
 			if hasMetrics != tt.wantMetrics {
-				t.Errorf("Metrics middleware application mismatch for %s: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
+				t.Errorf("Metrics middleware application mismatch for %q: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
 			}
 
 			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
 			if hasCors != tt.wantCors {
-				t.Errorf("CORS middleware application mismatch for %s: got %v, want %v", tt.path, hasCors, tt.wantCors)
+				t.Errorf("CORS middleware application mismatch for %q: got %v, want %v", tt.path, hasCors, tt.wantCors)
 			}
 		})
 	}

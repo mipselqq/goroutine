@@ -106,7 +106,7 @@ func TestAuth_HappyPath(t *testing.T) {
 		}
 
 		if _, err := uuid.Parse(whoamiData.UID); err != nil {
-			t.Errorf("Expected valid UUID user ID, got %s: %v", whoamiData.UID, err)
+			t.Errorf("Expected valid UUID user ID, got %q: %v", whoamiData.UID, err)
 		}
 	})
 }

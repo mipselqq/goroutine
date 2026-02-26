@@ -12,7 +12,7 @@ func TestRun(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "/health" {
-				t.Errorf("expected path /health, got %s", r.URL.Path)
+				t.Errorf("expected path /health, got %q", r.URL.Path)
 			}
 			w.WriteHeader(http.StatusOK)
 		}))
