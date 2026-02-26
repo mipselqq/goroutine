@@ -108,6 +108,6 @@ func TestUserID_Value(t *testing.T) {
 		t.Errorf("Empty Value() error = %v", err)
 	}
 	if val != nil {
-		t.Errorf("Expected nil value for empty UserID, got %q", val)
+		t.Errorf("Expected nil value for empty UserID, got %v", val)
 	}
 }
