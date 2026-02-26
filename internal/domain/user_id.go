@@ -51,13 +51,16 @@ func (u *UserID) Scan(src any) error {
 		}
 		u.value = parsed
 	case []byte:
-		if len(v) == 16 {
+		const uuidByteLen = 16
+		isUUIDBytes := len(v) == uuidByteLen
+
+		if isUUIDBytes {
 			parsed, err := uuid.FromBytes(v)
 			if err != nil {
 				return err
 			}
 			u.value = parsed
-		} else {
+		} else { // Byte representation of string
 			parsed, err := uuid.ParseBytes(v)
 			if err != nil {
 				return err
