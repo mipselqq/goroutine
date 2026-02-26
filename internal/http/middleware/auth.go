@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"strings"
 
+	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
 )
 
 type TokenVerifier interface {
-	VerifyToken(ctx context.Context, token string) (int64, error)
+	VerifyToken(ctx context.Context, token string) (domain.UserID, error)
 }
 
 type Auth struct {

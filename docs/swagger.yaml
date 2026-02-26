@@ -27,8 +27,8 @@ definitions:
   handler.whoAmIResponse:
     properties:
       uid:
-        example: 1
-        type: integer
+        example: 018e1000-0000-7000-8000-000000000000
+        type: string
     type: object
   httpschema.ErrorResponse:
     properties:
@@ -122,8 +122,6 @@ paths:
       - auth
   /whoami:
     get:
-      consumes:
-      - application/json
       description: Get current user ID from token
       produces:
       - application/json

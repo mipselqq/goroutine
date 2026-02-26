@@ -14,6 +14,8 @@ import (
 	app "goroutine/internal"
 	"goroutine/internal/config"
 	"goroutine/internal/testutil"
+
+	"github.com/google/uuid"
 )
 
 func TestAuth_HappyPath(t *testing.T) {
@@ -97,14 +99,14 @@ func TestAuth_HappyPath(t *testing.T) {
 		}
 
 		var whoamiData struct {
-			UID int64 `json:"uid"`
+			UID string `json:"uid"`
 		}
 		if err := json.NewDecoder(whoamiResp.Body).Decode(&whoamiData); err != nil {
 			t.Fatalf("Failed to decode whoami response: %v", err)
 		}
 
-		if whoamiData.UID != 1 {
-			t.Errorf("Expected user ID 1, got %d", whoamiData.UID)
+		if _, err := uuid.Parse(whoamiData.UID); err != nil {
+			t.Errorf("Expected valid UUID user ID, got %s: %v", whoamiData.UID, err)
 		}
 	})
 }

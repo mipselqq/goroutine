@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"goroutine/internal/domain"
@@ -17,7 +16,7 @@ import (
 
 type UserRepository interface {
 	Insert(ctx context.Context, email domain.Email, hash string) error
-	GetByEmail(ctx context.Context, email domain.Email) (id int64, hash string, err error)
+	GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
 }
 
 type JWTOptions struct {
@@ -76,9 +75,9 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Pa
 	return token, nil
 }
 
-func (s *Auth) CreateToken(userID int64, exp time.Duration) (string, error) {
+func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (string, error) {
 	claims := jwt.MapClaims{
-		"sub": fmt.Sprintf("%d", userID),
+		"sub": userID.String(),
 		"exp": time.Now().Add(exp).Unix(),
 		"iat": time.Now().Unix(),
 	}
@@ -88,7 +87,7 @@ func (s *Auth) CreateToken(userID int64, exp time.Duration) (string, error) {
 	return token.SignedString([]byte(s.jwtOptions.JWTSecret.RevealSecret()))
 }
 
-func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (int64, error) {
+func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (domain.UserID, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if token.Method.Alg() != s.jwtOptions.SigningMethod.Alg() {
 			return nil, ErrInvalidSigningMethod
@@ -97,26 +96,26 @@ func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (int64, erro
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return 0, fmt.Errorf("auth service: verify token: %w", ErrTokenExpired)
+			return domain.UserID{}, fmt.Errorf("auth service: verify token: %w", ErrTokenExpired)
 		}
 		if errors.Is(err, ErrInvalidSigningMethod) {
-			return 0, fmt.Errorf("auth service: verify token: %w", ErrInvalidSigningMethod)
+			return domain.UserID{}, fmt.Errorf("auth service: verify token: %w", ErrInvalidSigningMethod)
 		}
-		return 0, fmt.Errorf("auth service: verify token: %v: %w", err, ErrInvalidToken)
+		return domain.UserID{}, fmt.Errorf("auth service: verify token: %v: %w", err, ErrInvalidToken)
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		idStr, ok := claims["sub"].(string)
 		if !ok {
-			return 0, fmt.Errorf("auth service: verify token: sub claim not found: %w", ErrInvalidToken)
+			return domain.UserID{}, fmt.Errorf("auth service: verify token: sub claim not found: %w", ErrInvalidToken)
 		}
 
-		id, err := strconv.ParseInt(idStr, 10, 64)
+		id, err := domain.ParseUserID(idStr)
 		if err != nil {
-			return 0, fmt.Errorf("auth service: verify token: invalid id in sub: %v: %w", err, ErrInvalidToken)
+			return domain.UserID{}, fmt.Errorf("auth service: verify token: invalid id in sub: %v: %w", err, ErrInvalidToken)
 		}
 		return id, nil
 	}
 
-	return 0, fmt.Errorf("auth service: verify token: %w", ErrInvalidToken)
+	return domain.UserID{}, fmt.Errorf("auth service: verify token: %w", ErrInvalidToken)
 }

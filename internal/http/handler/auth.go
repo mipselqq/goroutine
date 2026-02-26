@@ -146,7 +146,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 type whoAmIResponse struct {
-	UID int64 `json:"uid" example:"1"`
+	UID string `json:"uid" example:"018e1000-0000-7000-8000-000000000000"`
 }
 
 // WhoAmI godoc
@@ -158,12 +158,12 @@ type whoAmIResponse struct {
 // @Failure 401 {object} httpschema.ErrorResponse "Unauthorized"
 // @Router /whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
-	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(int64)
+	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
 		h.logger.Error("Failed to get user id from context")
 		httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, errors.New("unauthorized"))
 		return
 	}
 
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid})
+	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid.String()})
 }

@@ -84,8 +84,8 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		if gotHash != hash {
 			t.Errorf("Expected hash %s, got %s", hash, gotHash)
 		}
-		if gotID <= 0 {
-			t.Errorf("Expected positive id, got %d", gotID)
+		if gotID.IsEmpty() {
+			t.Errorf("Expected non-empty id, got %v", gotID)
 		}
 	})
 
