@@ -21,9 +21,10 @@ func TestNewRouter_Full(t *testing.T) {
 		Health: handler.NewHealth(logger),
 	}
 	middlewares := &middleware.Middlewares{
-		Metrics: &spyMetricsMiddleware{},
-		CORS:    &spyCorsMiddleware{},
-		Auth:    &spyAuthMiddleware{},
+		Metrics:   &spyMetricsMiddleware{},
+		CORS:      &spyCorsMiddleware{},
+		Auth:      &spyAuthMiddleware{},
+		RequestID: &spyRequestIDMiddleware{},
 	}
 
 	router := app.NewRouter(handlers, middlewares)
@@ -34,11 +35,12 @@ func TestNewRouter_Full(t *testing.T) {
 		path        string
 		wantMetrics bool
 		wantCors    bool
+		wantReqID   bool
 	}{
-		{"Register endpoint", http.MethodPost, "/register", true, true},
-		{"Login endpoint", http.MethodPost, "/login", true, true},
-		{"Health endpoint", http.MethodGet, "/health", true, true},
-		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false, true},
+		{"Register endpoint", http.MethodPost, "/register", true, true, true},
+		{"Login endpoint", http.MethodPost, "/login", true, true, true},
+		{"Health endpoint", http.MethodGet, "/health", true, true, true},
+		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false, true, true},
 	}
 
 	for _, tt := range tests {
@@ -60,6 +62,11 @@ func TestNewRouter_Full(t *testing.T) {
 			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
 			if hasCors != tt.wantCors {
 				t.Errorf("CORS middleware application mismatch for %q: got %v, want %v", tt.path, hasCors, tt.wantCors)
+			}
+
+			hasReqID := rr.Header().Get("X-RequestId-Tracked") == "true"
+			if hasReqID != tt.wantReqID {
+				t.Errorf("RequestID middleware application mismatch for %q: got %v, want %v", tt.path, hasReqID, tt.wantReqID)
 			}
 		})
 	}

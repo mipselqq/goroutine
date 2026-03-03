@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"goroutine/internal/config"
+	"goroutine/internal/domain"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/middleware"
@@ -35,9 +36,17 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
 	authMiddleware := middleware.NewAuth(logger, authService)
+	reqIDMiddleware := middleware.NewRequestID(logger, func() string {
+		return domain.NewUserID().String()
+	})
 
 	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler}
-	middlewares := &middleware.Middlewares{Metrics: metricsMiddleware, CORS: corsMiddleware, Auth: authMiddleware}
+	middlewares := &middleware.Middlewares{
+		Metrics:   metricsMiddleware,
+		CORS:      corsMiddleware,
+		Auth:      authMiddleware,
+		RequestID: reqIDMiddleware,
+	}
 
 	return &App{
 		Router:      httpapp.NewRouter(handlers, middlewares),

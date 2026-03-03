@@ -28,3 +28,12 @@ func (s *spyAuthMiddleware) Wrap(next http.Handler) http.HandlerFunc {
 		next.ServeHTTP(w, r)
 	}
 }
+
+type spyRequestIDMiddleware struct{}
+
+func (s *spyRequestIDMiddleware) Wrap(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RequestId-Tracked", "true")
+		next.ServeHTTP(w, r)
+	}
+}
