@@ -8,6 +8,7 @@ import (
 	"goroutine/internal/domain"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
+	"goroutine/internal/http/httpschema"
 	"goroutine/internal/http/middleware"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
@@ -30,12 +31,14 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	authHandler := handler.NewAuth(logger, authService)
+	responder := httpschema.NewResponder(service.TimeRFC3339)
+
+	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
 
 	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
-	authMiddleware := middleware.NewAuth(logger, authService)
+	authMiddleware := middleware.NewAuth(logger, authService, responder)
 	reqIDMiddleware := middleware.NewRequestID(logger, func() string {
 		return domain.NewUserID().String()
 	})

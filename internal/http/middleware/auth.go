@@ -15,12 +15,13 @@ type TokenVerifier interface {
 }
 
 type Auth struct {
-	logger   *slog.Logger
-	verifier TokenVerifier
+	logger    *slog.Logger
+	verifier  TokenVerifier
+	responder *httpschema.Responder
 }
 
-func NewAuth(l *slog.Logger, v TokenVerifier) *Auth {
-	return &Auth{logger: l, verifier: v}
+func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.Responder) *Auth {
+	return &Auth{logger: l, verifier: v, responder: r}
 }
 
 func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
@@ -28,7 +29,7 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		header := r.Header.Get("Authorization")
 
 		if header == "" {
-			httpschema.RespondUnauthorized(
+			m.responder.RespondUnauthorized(
 				w, m.logger, "INVALID_AUTH_HEADER",
 				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Missing authorization header"}}},
 			)
@@ -41,16 +42,17 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 
 		if len(parts) != 2 {
 			issues = append(issues, "Invalid authorization header")
-		}
-		if !strings.EqualFold(parts[0], "bearer") {
-			issues = append(issues, "No Bearer prefix")
-		}
-		if parts[1] == "" {
-			issues = append(issues, "Token is empty")
+		} else {
+			if !strings.EqualFold(parts[0], "bearer") {
+				issues = append(issues, "No Bearer prefix")
+			}
+			if parts[1] == "" {
+				issues = append(issues, "Token is empty")
+			}
 		}
 
 		if len(issues) > 0 {
-			httpschema.RespondUnauthorized(
+			m.responder.RespondUnauthorized(
 				w, m.logger, "INVALID_AUTH_HEADER",
 				[]httpschema.Detail{{Field: "Authorization", Issues: issues}},
 			)
@@ -60,7 +62,7 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		token := parts[1]
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
-			httpschema.RespondUnauthorized(
+			m.responder.RespondUnauthorized(
 				w, m.logger, "INVALID_TOKEN",
 				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
 			)

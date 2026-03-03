@@ -7,6 +7,7 @@ import (
 
 	app "goroutine/internal/http"
 	"goroutine/internal/http/handler"
+	"goroutine/internal/http/httpschema"
 	"goroutine/internal/http/middleware"
 	"goroutine/internal/testutil"
 )
@@ -17,7 +18,7 @@ func TestNewRouter_Full(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 
 	handlers := &handler.Handlers{
-		Auth:   handler.NewAuth(logger, nil),
+		Auth:   handler.NewAuth(logger, nil, httpschema.NewResponder(nil)),
 		Health: handler.NewHealth(logger),
 	}
 	middlewares := &middleware.Middlewares{

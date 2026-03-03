@@ -66,14 +66,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/handler.loginResponse"
                         }
                     },
+                    "400": {
+                        "description": "VALIDATION_ERROR or INVALID_JSON_BODY",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedErrorResponse"
+                        }
+                    },
                     "401": {
-                        "description": "Invalid credentials",
+                        "description": "INVALID_CREDENTIALS or USER_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
@@ -113,13 +119,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid input (email format or password)",
+                        "description": "VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.ErrorResponse"
+                            "$ref": "#/definitions/httpschema.DetailedErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/httpschema.ErrorResponse"
                         }
@@ -129,7 +135,12 @@ const docTemplate = `{
         },
         "/whoami": {
             "get": {
-                "description": "Get current user ID from token",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user ID from token. This is a protected endpoint — in addition to the responses listed below, the auth middleware may return 401 with codes INVALID_AUTH_HEADER or INVALID_TOKEN.",
                 "produces": [
                     "application/json"
                 ],
@@ -145,9 +156,9 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.ErrorResponse"
+                            "$ref": "#/definitions/httpschema.DetailedErrorResponse"
                         }
                     }
                 }
@@ -199,12 +210,62 @@ const docTemplate = `{
                 }
             }
         },
+        "httpschema.Detail": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string",
+                    "example": "email"
+                },
+                "issues": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "must be a valid email",
+                        "too short"
+                    ]
+                }
+            }
+        },
+        "httpschema.DetailedErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "INVALID_CREDENTIALS"
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/httpschema.Detail"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invalid login or password"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-03-02T15:04:05.123Z"
+                }
+            }
+        },
         "httpschema.ErrorResponse": {
             "type": "object",
             "properties": {
-                "error": {
+                "code": {
                     "type": "string",
-                    "example": "invalid email format"
+                    "example": "INVALID_CREDENTIALS"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invalid login or password"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-03-02T15:04:05.123Z"
                 }
             }
         },

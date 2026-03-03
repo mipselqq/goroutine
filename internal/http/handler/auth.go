@@ -19,14 +19,16 @@ type AuthService interface {
 }
 
 type Auth struct {
-	logger  *slog.Logger
-	service AuthService
+	logger    *slog.Logger
+	service   AuthService
+	responder *httpschema.Responder
 }
 
-func NewAuth(l *slog.Logger, s AuthService) *Auth {
+func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.Responder) *Auth {
 	return &Auth{
-		service: s,
-		logger:  logging.NewLoggerContext(l, "handler.auth"),
+		service:   s,
+		logger:    logging.NewLoggerContext(l, "handler.auth"),
+		responder: responder,
 	}
 }
 
@@ -43,8 +45,8 @@ type registerBody struct {
 // @Produce json
 // @Param body body registerBody true "Registration details"
 // @Success 200 {object} httpschema.StatusResponse
-// @Failure 400 {object} httpschema.ErrorResponse "Invalid input (email format or password)"
-// @Failure 500 {object} httpschema.ErrorResponse "Internal Server Error"
+// @Failure 400 {object} httpschema.DetailedErrorResponse "VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)"
+// @Failure 500 {object} httpschema.ErrorResponse "Internal server error"
 // @Router /register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
@@ -53,7 +55,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
 
-		httpschema.RespondBadRequest(
+		h.responder.RespondBadRequest(
 			w, h.logger, "INVALID_JSON_BODY",
 			[]httpschema.Detail{{Field: "body", Issues: []string{err.Error()}}},
 		)
@@ -63,7 +65,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	email, errs := domain.NewEmail(body.Email)
 	if len(errs) > 0 {
-		httpschema.RespondBadRequest(
+		h.responder.RespondBadRequest(
 			w, h.logger, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "email", Issues: errs}},
 		)
@@ -72,7 +74,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	password, errs := domain.NewPassword(body.Password)
 	if len(errs) > 0 {
-		httpschema.RespondBadRequest(
+		h.responder.RespondBadRequest(
 			w, h.logger, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "password", Issues: errs}},
 		)
@@ -84,10 +86,10 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			httpschema.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_CREDENTIALS")
+			h.responder.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_CREDENTIALS")
 		default:
 			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
-			httpschema.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+			h.responder.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
@@ -114,8 +116,9 @@ type loginResponse struct {
 // @Produce json
 // @Param body body loginBody true "Login credentials"
 // @Success 200 {object} loginResponse
-// @Failure 401 {object} httpschema.ErrorResponse "Invalid credentials"
-// @Failure 500 {object} httpschema.ErrorResponse "Internal Server Error"
+// @Failure 400 {object} httpschema.DetailedErrorResponse "VALIDATION_ERROR or INVALID_JSON_BODY"
+// @Failure 401 {object} httpschema.ErrorResponse "INVALID_CREDENTIALS or USER_NOT_FOUND"
+// @Failure 500 {object} httpschema.ErrorResponse "Internal server error"
 // @Router /login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
@@ -123,14 +126,14 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		httpschema.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_JSON_BODY")
+		h.responder.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_JSON_BODY")
 		return
 	}
 
 	// TODO: merge email and password into user to remove this mess
 	email, errs := domain.NewEmail(body.Email)
 	if len(errs) > 0 {
-		httpschema.RespondBadRequest(
+		h.responder.RespondBadRequest(
 			w, h.logger, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "email", Issues: errs}},
 		)
@@ -139,7 +142,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	password, errs := domain.NewPassword(body.Password)
 	if len(errs) > 0 {
-		httpschema.RespondBadRequest(
+		h.responder.RespondBadRequest(
 			w, h.logger, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "password", Issues: errs}},
 		)
@@ -150,12 +153,12 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			httpschema.RespondError(w, h.logger, http.StatusUnauthorized, "INVALID_CREDENTIALS")
+			h.responder.RespondError(w, h.logger, http.StatusUnauthorized, "INVALID_CREDENTIALS")
 		case errors.Is(err, service.ErrUserNotFound):
-			httpschema.RespondError(w, h.logger, http.StatusUnauthorized, "USER_NOT_FOUND")
+			h.responder.RespondError(w, h.logger, http.StatusUnauthorized, "USER_NOT_FOUND")
 		default:
 			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
-			httpschema.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+			h.responder.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
@@ -170,17 +173,18 @@ type whoAmIResponse struct {
 
 // WhoAmI godoc
 // @Summary Get current user info
-// @Description Get current user ID from token
+// @Description Get current user ID from token. This is a protected endpoint — in addition to the responses listed below, the auth middleware may return 401 with codes INVALID_AUTH_HEADER or INVALID_TOKEN.
 // @Tags auth
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} whoAmIResponse
-// @Failure 401 {object} httpschema.ErrorResponse "Unauthorized"
+// @Failure 401 {object} httpschema.DetailedErrorResponse "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)"
 // @Router /whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
 		h.logger.Error("Failed to get user id from context")
-		httpschema.RespondUnauthorized(
+		h.responder.RespondUnauthorized(
 			w, h.logger, "INVALID_TOKEN",
 			[]httpschema.Detail{{Field: "Authorization", Issues: []string{"BUG: No user id found. Please notify technical support."}}},
 		)

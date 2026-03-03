@@ -30,10 +30,45 @@ definitions:
         example: 018e1000-0000-7000-8000-000000000000
         type: string
     type: object
+  httpschema.Detail:
+    properties:
+      field:
+        example: email
+        type: string
+      issues:
+        example:
+        - must be a valid email
+        - too short
+        items:
+          type: string
+        type: array
+    type: object
+  httpschema.DetailedErrorResponse:
+    properties:
+      code:
+        example: INVALID_CREDENTIALS
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/httpschema.Detail'
+        type: array
+      message:
+        example: Invalid login or password
+        type: string
+      timestamp:
+        example: "2026-03-02T15:04:05.123Z"
+        type: string
+    type: object
   httpschema.ErrorResponse:
     properties:
-      error:
-        example: invalid email format
+      code:
+        example: INVALID_CREDENTIALS
+        type: string
+      message:
+        example: Invalid login or password
+        type: string
+      timestamp:
+        example: "2026-03-02T15:04:05.123Z"
         type: string
     type: object
   httpschema.StatusResponse:
@@ -79,12 +114,16 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.loginResponse'
+        "400":
+          description: VALIDATION_ERROR or INVALID_JSON_BODY
+          schema:
+            $ref: '#/definitions/httpschema.DetailedErrorResponse'
         "401":
-          description: Invalid credentials
+          description: INVALID_CREDENTIALS or USER_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/httpschema.ErrorResponse'
       summary: Login a user
@@ -110,11 +149,11 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.StatusResponse'
         "400":
-          description: Invalid input (email format or password)
+          description: VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/httpschema.ErrorResponse'
       summary: Register a new user
@@ -122,7 +161,9 @@ paths:
       - auth
   /whoami:
     get:
-      description: Get current user ID from token
+      description: Get current user ID from token. This is a protected endpoint —
+        in addition to the responses listed below, the auth middleware may return
+        401 with codes INVALID_AUTH_HEADER or INVALID_TOKEN.
       produces:
       - application/json
       responses:
@@ -131,9 +172,12 @@ paths:
           schema:
             $ref: '#/definitions/handler.whoAmIResponse'
         "401":
-          description: Unauthorized
+          description: 'Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER
+            / INVALID_TOKEN (auth middleware)'
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Get current user info
       tags:
       - auth

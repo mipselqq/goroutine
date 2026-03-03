@@ -161,7 +161,7 @@ func TestAuth(t *testing.T) {
 				w.WriteHeader(http.StatusTeapot)
 			})
 
-			m := middleware.NewAuth(testutil.NewTestLogger(t), s)
+			m := middleware.NewAuth(testutil.NewTestLogger(t), s, httpschema.NewResponder(nil))
 			wrapped := m.Wrap(h)
 
 			request := httptest.NewRequest("GET", "/", http.NoBody)

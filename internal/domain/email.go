@@ -18,6 +18,10 @@ func NewEmail(email string) (e Email, errs []string) {
 		errs = append(errs, strings.TrimPrefix(err.Error(), "mail: "))
 	}
 
+	if len(errs) > 0 {
+		return Email{}, errs
+	}
+
 	return Email{value: lowercasedEmail}, []string{}
 }
 

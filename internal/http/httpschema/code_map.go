@@ -7,6 +7,9 @@ func MapCodeToDescription(code string) string {
 		"INTERNAL_SERVER_ERROR": "Internal server error",
 		"NOT_FOUND":             "Resource not found",
 		"INVALID_JSON_BODY":     "Invalid json body",
+		"INVALID_AUTH_HEADER":   "Invalid authorization header",
+		"USER_NOT_FOUND":        "User not found",
+		"INVALID_TOKEN":         "Invalid token",
 	}
 
 	description, ok := codeMap[code]
