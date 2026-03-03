@@ -53,8 +53,6 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-
 		h.responder.RespondBadRequest(
 			w, h.logger, "INVALID_JSON_BODY",
 			[]httpschema.Detail{{Field: "body", Issues: []string{err.Error()}}},
@@ -125,7 +123,6 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
 		h.responder.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_JSON_BODY")
 		return
 	}
