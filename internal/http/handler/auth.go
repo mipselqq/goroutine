@@ -52,19 +52,30 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+
+		httpschema.RespondBadRequest(
+			w, h.logger, "INVALID_JSON_BODY",
+			[]httpschema.Detail{{Field: "body", Issues: []string{err.Error()}}},
+		)
+
 		return
 	}
 
-	email, err := domain.NewEmail(body.Email)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	email, errs := domain.NewEmail(body.Email)
+	if len(errs) > 0 {
+		httpschema.RespondBadRequest(
+			w, h.logger, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "email", Issues: errs}},
+		)
 		return
 	}
 
-	password, err := domain.NewPassword(body.Password)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	password, errs := domain.NewPassword(body.Password)
+	if len(errs) > 0 {
+		httpschema.RespondBadRequest(
+			w, h.logger, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "password", Issues: errs}},
+		)
 		return
 	}
 
@@ -73,16 +84,17 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+			httpschema.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_CREDENTIALS")
 		default:
 			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
-			httpschema.RespondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+			httpschema.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
 
 	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, httpschema.StatusResponse{Status: "ok"})
+
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, httpschema.StatusResponse{Status: "ok"})
 }
 
 type loginBody struct {
@@ -111,19 +123,26 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+		httpschema.RespondError(w, h.logger, http.StatusBadRequest, "INVALID_JSON_BODY")
 		return
 	}
 
-	email, err := domain.NewEmail(body.Email)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	// TODO: merge email and password into user to remove this mess
+	email, errs := domain.NewEmail(body.Email)
+	if len(errs) > 0 {
+		httpschema.RespondBadRequest(
+			w, h.logger, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "email", Issues: errs}},
+		)
 		return
 	}
 
-	password, err := domain.NewPassword(body.Password)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	password, errs := domain.NewPassword(body.Password)
+	if len(errs) > 0 {
+		httpschema.RespondBadRequest(
+			w, h.logger, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "password", Issues: errs}},
+		)
 		return
 	}
 
@@ -131,18 +150,18 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, err)
+			httpschema.RespondError(w, h.logger, http.StatusUnauthorized, "INVALID_CREDENTIALS")
 		case errors.Is(err, service.ErrUserNotFound):
-			httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, err)
+			httpschema.RespondError(w, h.logger, http.StatusUnauthorized, "USER_NOT_FOUND")
 		default:
 			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
-			httpschema.RespondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+			httpschema.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
 
 	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
 
 type whoAmIResponse struct {
@@ -161,9 +180,13 @@ func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
 		h.logger.Error("Failed to get user id from context")
-		httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, errors.New("unauthorized"))
+		httpschema.RespondUnauthorized(
+			w, h.logger, "INVALID_TOKEN",
+			[]httpschema.Detail{{Field: "Authorization", Issues: []string{"BUG: No user id found. Please notify technical support."}}},
+		)
+
 		return
 	}
 
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid.String()})
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid.String()})
 }

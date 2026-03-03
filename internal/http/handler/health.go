@@ -25,5 +25,5 @@ func NewHealth(logger *slog.Logger) *Health {
 // @Success 200 {object} httpschema.StatusResponse
 // @Router /health [get]
 func (h *Health) Health(w http.ResponseWriter, r *http.Request) {
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, httpschema.StatusResponse{Status: "ok"})
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, httpschema.StatusResponse{Status: "ok"})
 }

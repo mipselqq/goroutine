@@ -1,26 +1,27 @@
 package domain
 
 import (
-	"errors"
 	"strings"
 )
 
-var ErrInvalidPassword = errors.New("invalid password")
+const (
+	ErrPasswordTooShort string = "Password is too short"
+)
 
 type Password struct {
 	value string
 }
 
-func NewPassword(password string) (Password, error) {
-	if strings.TrimSpace(password) == "" {
-		return Password{}, ErrInvalidPassword
+func NewPassword(password string) (p Password, errs []string) {
+	if len(password) < 6 || strings.TrimSpace(password) == "" {
+		errs = append(errs, ErrPasswordTooShort)
 	}
 
-	if len(password) < 6 {
-		return Password{}, errors.New("password must be at least 6 characters")
+	if len(errs) > 0 {
+		return Password{}, errs
 	}
 
-	return Password{value: password}, nil
+	return Password{value: password}, []string{}
 }
 
 func (p Password) String() string {

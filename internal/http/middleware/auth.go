@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -27,23 +26,44 @@ func NewAuth(l *slog.Logger, v TokenVerifier) *Auth {
 func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
-		if header == "" {
-			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("missing authorization header"))
 
+		if header == "" {
+			httpschema.RespondUnauthorized(
+				w, m.logger, "INVALID_AUTH_HEADER",
+				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Missing authorization header"}}},
+			)
 			return
 		}
 
+		issues := []string{}
 		authHeader := strings.TrimSpace(header)
 		parts := strings.Fields(authHeader)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") || parts[1] == "" {
-			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid authorization header"))
+
+		if len(parts) != 2 {
+			issues = append(issues, "Invalid authorization header")
+		}
+		if !strings.EqualFold(parts[0], "bearer") {
+			issues = append(issues, "No Bearer prefix")
+		}
+		if parts[1] == "" {
+			issues = append(issues, "Token is empty")
+		}
+
+		if len(issues) > 0 {
+			httpschema.RespondUnauthorized(
+				w, m.logger, "INVALID_AUTH_HEADER",
+				[]httpschema.Detail{{Field: "Authorization", Issues: issues}},
+			)
 			return
 		}
 
 		token := parts[1]
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
-			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid token"))
+			httpschema.RespondUnauthorized(
+				w, m.logger, "INVALID_TOKEN",
+				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
+			)
 			return
 		}
 

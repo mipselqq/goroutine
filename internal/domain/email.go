@@ -1,27 +1,24 @@
 package domain
 
 import (
-	"errors"
 	"net/mail"
 	"strings"
 )
-
-var ErrInvalidEmail = errors.New("invalid email")
 
 type Email struct {
 	value string
 }
 
-func NewEmail(email string) (Email, error) {
+func NewEmail(email string) (e Email, errs []string) {
 	trimmedEmail := strings.TrimSpace(email)
 	lowercasedEmail := strings.ToLower(trimmedEmail)
 
 	_, err := mail.ParseAddress(lowercasedEmail)
 	if err != nil {
-		return Email{}, ErrInvalidEmail
+		errs = append(errs, strings.TrimPrefix(err.Error(), "mail: "))
 	}
 
-	return Email{value: lowercasedEmail}, nil
+	return Email{value: lowercasedEmail}, []string{}
 }
 
 func (e Email) String() string {
