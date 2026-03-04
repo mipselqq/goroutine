@@ -160,6 +160,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
                     }
                 }
             }

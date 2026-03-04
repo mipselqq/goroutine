@@ -186,6 +186,7 @@ type whoAmIResponse struct {
 // @Security BearerAuth
 // @Success 200 {object} whoAmIResponse
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)"
+// @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	// TODO: cover error path with tests
