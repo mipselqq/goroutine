@@ -31,7 +31,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Nano)
+	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)
 
 	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)

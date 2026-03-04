@@ -2,7 +2,6 @@ package service
 
 import "time"
 
-// TODO: make actually nano
-func TimeRFC3339Nano() string {
-	return time.Now().UTC().Format(time.RFC3339)
+func TimeRFC3339Milli() string {
+	return time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 }

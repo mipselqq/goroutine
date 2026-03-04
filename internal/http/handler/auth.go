@@ -188,14 +188,13 @@ type whoAmIResponse struct {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)"
 // @Router /whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
+	// TODO: cover error path with tests
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
-		h.logger.Error("Failed to get user id from context", SlogRequestIDFromRequest(r))
-		h.responder.Unauthorized(
-			w, "INVALID_TOKEN",
-			[]httpschema.Detail{{Field: "Authorization", Issues: []string{"BUG: No user id found. Please notify technical support."}}},
+		h.logger.Error("BUG: failed to get user id from context", SlogRequestIDFromRequest(r))
+		h.responder.Error(
+			w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR",
 		)
-
 		return
 	}
 
