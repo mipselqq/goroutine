@@ -9,13 +9,15 @@ type Email struct {
 	value string
 }
 
+const ErrInvalidEmail = "Invalid email"
+
 func NewEmail(email string) (e Email, errs []string) {
 	trimmedEmail := strings.TrimSpace(email)
 	lowercasedEmail := strings.ToLower(trimmedEmail)
 
 	_, err := mail.ParseAddress(lowercasedEmail)
 	if err != nil {
-		errs = append(errs, strings.TrimPrefix(err.Error(), "mail: "))
+		errs = append(errs, ErrInvalidEmail)
 	}
 
 	if len(errs) > 0 {

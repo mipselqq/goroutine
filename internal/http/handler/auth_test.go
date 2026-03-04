@@ -70,13 +70,13 @@ func TestAuth_Register(t *testing.T) {
 			name:         "Empty email",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", password),
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["no address"]}]}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, fixedTime),
 		},
 		{
 			name:         "Invalid email format",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", password),
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["missing '@' or angle-addr"]}]}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, fixedTime),
 		},
 		{
 			name:         "Empty password",
@@ -204,13 +204,13 @@ func TestAuth_Login(t *testing.T) {
 			name:         "Empty email",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", password),
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["no address"]}]}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, fixedTime),
 		},
 		{
 			name:         "Invalid email format",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", password),
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["missing '@' or angle-addr"]}]}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, fixedTime),
 		},
 		{
 			name:         "Empty password",
