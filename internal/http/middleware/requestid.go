@@ -9,22 +9,22 @@ import (
 	"goroutine/internal/http/httpschema"
 )
 
-type GenerateUserID func() string
+type GenerateRequestIDFn func() string
 
 type RequestID struct {
-	logger         *slog.Logger
-	generateUserID GenerateUserID
+	logger              *slog.Logger
+	generateRequestIDFn GenerateRequestIDFn
 }
 
-func NewRequestID(l *slog.Logger, g GenerateUserID) *RequestID {
-	return &RequestID{logger: l, generateUserID: g}
+func NewRequestID(l *slog.Logger, g GenerateRequestIDFn) *RequestID {
+	return &RequestID{logger: l, generateRequestIDFn: g}
 }
 
 func (m *RequestID) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID := strings.TrimSpace(r.Header.Get("X-Request-Id"))
 		if reqID == "" {
-			reqID = m.generateUserID()
+			reqID = m.generateRequestIDFn()
 		}
 
 		ctx := context.WithValue(r.Context(), httpschema.ContextKeyRequestID, reqID)
