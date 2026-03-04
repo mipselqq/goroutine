@@ -37,38 +37,28 @@ type Status struct {
 	Status string `json:"status" example:"ok"`
 }
 
-type baseError struct {
+type Error struct {
 	Code      string `json:"code" example:"INVALID_CREDENTIALS"`
 	Message   string `json:"message" example:"Invalid login or password"`
 	Timestamp string `json:"timestamp" example:"2026-03-02T15:04:05.123Z"`
 }
 
-type Error struct {
-	baseError
-}
-
 func (re *ErrorResponder) NewError(code, message string) *Error {
 	return &Error{
-		baseError: baseError{
-			Code:      code,
-			Message:   message,
-			Timestamp: re.timeFn(),
-		},
+		Code:      code,
+		Message:   message,
+		Timestamp: re.timeFn(),
 	}
 }
 
 type DetailedError struct {
-	baseError
+	Error
 	Details []Detail `json:"details"`
 }
 
 func (re *ErrorResponder) NewDetailedError(code string, details []Detail) *DetailedError {
 	return &DetailedError{
-		baseError: baseError{
-			Code:      code,
-			Message:   MapCodeToDescription(code),
-			Timestamp: re.timeFn(),
-		},
+		Error:   *re.NewError(code, MapCodeToDescription(code)),
 		Details: details,
 	}
 }
