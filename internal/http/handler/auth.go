@@ -45,7 +45,7 @@ type registerBody struct {
 // @Produce json
 // @Param body body registerBody true "Registration details"
 // @Success 200 {object} httpschema.Status
-// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR or INVALID_CREDENTIALS"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
@@ -54,10 +54,9 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.responder.BadRequest(
-			w, h.logger, "INVALID_JSON_BODY",
-			[]httpschema.Detail{{Field: "body", Issues: []string{err.Error()}}},
+			w, h.logger, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
 		)
-
 		return
 	}
 
@@ -84,7 +83,10 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			h.responder.Error(w, h.logger, http.StatusBadRequest, "INVALID_CREDENTIALS")
+			h.responder.BadRequest(
+				w, h.logger, "INVALID_CREDENTIALS",
+				[]httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}},
+			)
 		default:
 			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
 			h.responder.Error(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
@@ -119,7 +121,7 @@ func SlogRequestIDFromRequest(r *http.Request) any {
 // @Produce json
 // @Param body body loginBody true "Login credentials"
 // @Success 200 {object} loginResponse
-// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR or INVALID_JSON_BODY"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.Error "INVALID_CREDENTIALS or USER_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /login [post]
@@ -128,7 +130,10 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.responder.Error(w, h.logger, http.StatusBadRequest, "INVALID_JSON_BODY")
+		h.responder.BadRequest(
+			w, h.logger, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
+		)
 		return
 	}
 

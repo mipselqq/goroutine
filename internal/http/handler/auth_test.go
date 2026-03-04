@@ -7,7 +7,6 @@ import (
 	"mime"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -95,7 +94,7 @@ func TestAuth_Register(t *testing.T) {
 			name:         "Invalid JSON",
 			inputBody:    `{"email": "test@example.com", "password": "password"`, // missing closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_JSON_BODY","message":"Invalid json body","timestamp":%q,"details":[{"field":"body","issues":["unexpected EOF"]}]}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"body","issues":["Invalid JSON body"]}]}`, fixedTime),
 		},
 		{
 			name:      "User already exists",
@@ -106,7 +105,7 @@ func TestAuth_Register(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q,"details":[{"field":"email or password","issues":["Invalid credentials"]}]}`, fixedTime),
 		},
 	}
 
@@ -140,16 +139,7 @@ func TestAuth_Register(t *testing.T) {
 				t.Errorf("Expected %q, got %q", expectedMime, mediaType)
 			}
 
-			if tt.expectedBody != "" {
-				actualBody := bytes.TrimSpace(rr.Body.Bytes())
-				if string(actualBody) != tt.expectedBody {
-					t.Logf("Expected body:")
-					t.Logf("%q", tt.expectedBody)
-					t.Logf("Got:")
-					t.Logf("%q", string(actualBody))
-					t.Fail()
-				}
-			}
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }
@@ -230,7 +220,7 @@ func TestAuth_Login(t *testing.T) {
 			name:         "Invalid JSON",
 			inputBody:    `{"email": "test@example.com"`, // missing password and closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_JSON_BODY","message":"Invalid json body","timestamp":%q}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"body","issues":["Invalid JSON body"]}]}`, fixedTime),
 		},
 	}
 
@@ -264,12 +254,7 @@ func TestAuth_Login(t *testing.T) {
 				t.Errorf("Expected %q, got %q", expectedMime, mediaType)
 			}
 
-			if tt.expectedBody != "" {
-				actualBody := bytes.TrimSpace(rr.Body.Bytes())
-				if string(actualBody) != tt.expectedBody {
-					t.Errorf("expected body %q, got %q", tt.expectedBody, string(actualBody))
-				}
-			}
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }
@@ -291,7 +276,6 @@ func TestAuth_WhoAmI(t *testing.T) {
 	}
 
 	expectedBody := fmt.Sprintf(`{"uid":%q}`, uid.String())
-	if strings.TrimSpace(rr.Body.String()) != expectedBody {
-		t.Errorf("expected body %q, got %q", expectedBody, rr.Body.String())
-	}
+
+	testutil.AssertResponseBody(t, rr, expectedBody)
 }

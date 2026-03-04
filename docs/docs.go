@@ -67,7 +67,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "VALIDATION_ERROR or INVALID_JSON_BODY",
+                        "description": "VALIDATION_ERROR",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -119,7 +119,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)",
+                        "description": "VALIDATION_ERROR or INVALID_CREDENTIALS",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
