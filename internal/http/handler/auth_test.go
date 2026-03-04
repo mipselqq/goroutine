@@ -125,7 +125,7 @@ func TestAuth_Register(t *testing.T) {
 				tt.setupMock(&s)
 			}
 
-			h := handler.NewAuth(logger, &s, httpschema.NewErrorResponder(logger, mockTime))
+			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, mockTime))
 			h.Register(rr, req)
 
 			if rr.Code != tt.expectedCode {
@@ -241,7 +241,7 @@ func TestAuth_Login(t *testing.T) {
 			}
 
 			logger := testutil.NewTestLogger(t)
-			h := handler.NewAuth(logger, s, httpschema.NewErrorResponder(logger, mockTime))
+			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, mockTime))
 			h.Login(rr, req)
 
 			if rr.Code != tt.expectedCode {
@@ -272,7 +272,7 @@ func TestAuth_WhoAmI(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 	logger := testutil.NewTestLogger(t)
-	h := handler.NewAuth(logger, &MockAuth{}, httpschema.NewErrorResponder(logger, mockTime))
+	h := handler.NewAuth(logger, &MockAuth{}, httpschema.MustNewErrorResponder(logger, mockTime))
 	h.WhoAmI(rr, req)
 
 	if rr.Code != http.StatusOK {
