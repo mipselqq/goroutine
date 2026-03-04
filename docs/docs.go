@@ -75,7 +75,7 @@ const docTemplate = `{
                     "401": {
                         "description": "INVALID_CREDENTIALS or USER_NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.Error"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
                     "500": {

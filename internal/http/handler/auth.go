@@ -122,7 +122,7 @@ func SlogRequestIDFromRequest(r *http.Request) any {
 // @Param body body loginBody true "Login credentials"
 // @Success 200 {object} loginResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
-// @Failure 401 {object} httpschema.Error "INVALID_CREDENTIALS or USER_NOT_FOUND"
+// @Failure 401 {object} httpschema.DetailedError "INVALID_CREDENTIALS or USER_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
