@@ -15,3 +15,7 @@ func RespondJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload a
 		logger.Warn("Failed to send response:", slog.String("err", err.Error()))
 	}
 }
+
+type Status struct {
+	Status string `json:"status" example:"ok"`
+}

@@ -33,10 +33,6 @@ func (r *ErrorResponder) Error(w http.ResponseWriter, statusCode int, code strin
 	RespondJSON(w, r.logger, statusCode, r.NewError(code, MapCodeToDescription(code)))
 }
 
-type Status struct {
-	Status string `json:"status" example:"ok"`
-}
-
 type Error struct {
 	Code      string `json:"code" example:"INVALID_CREDENTIALS"`
 	Message   string `json:"message" example:"Invalid login or password"`
