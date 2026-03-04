@@ -43,7 +43,7 @@ definitions:
           type: string
         type: array
     type: object
-  httpschema.DetailedErrorResponse:
+  httpschema.DetailedError:
     properties:
       code:
         example: INVALID_CREDENTIALS
@@ -59,7 +59,7 @@ definitions:
         example: "2026-03-02T15:04:05.123Z"
         type: string
     type: object
-  httpschema.ErrorResponse:
+  httpschema.Error:
     properties:
       code:
         example: INVALID_CREDENTIALS
@@ -71,7 +71,7 @@ definitions:
         example: "2026-03-02T15:04:05.123Z"
         type: string
     type: object
-  httpschema.StatusResponse:
+  httpschema.Status:
     properties:
       status:
         example: ok
@@ -91,7 +91,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpschema.StatusResponse'
+            $ref: '#/definitions/httpschema.Status'
       summary: Health check
       tags:
       - health
@@ -117,15 +117,15 @@ paths:
         "400":
           description: VALIDATION_ERROR or INVALID_JSON_BODY
           schema:
-            $ref: '#/definitions/httpschema.DetailedErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedError'
         "401":
           description: INVALID_CREDENTIALS or USER_NOT_FOUND
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.Error'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.Error'
       summary: Login a user
       tags:
       - auth
@@ -147,15 +147,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpschema.StatusResponse'
+            $ref: '#/definitions/httpschema.Status'
         "400":
           description: VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)
           schema:
-            $ref: '#/definitions/httpschema.DetailedErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.Error'
       summary: Register a new user
       tags:
       - auth
@@ -175,7 +175,7 @@ paths:
           description: 'Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER
             / INVALID_TOKEN (auth middleware)'
           schema:
-            $ref: '#/definitions/httpschema.DetailedErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedError'
       security:
       - BearerAuth: []
       summary: Get current user info

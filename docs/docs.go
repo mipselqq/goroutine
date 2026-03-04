@@ -29,7 +29,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.StatusResponse"
+                            "$ref": "#/definitions/httpschema.Status"
                         }
                     }
                 }
@@ -69,19 +69,19 @@ const docTemplate = `{
                     "400": {
                         "description": "VALIDATION_ERROR or INVALID_JSON_BODY",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.DetailedErrorResponse"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
                     "401": {
                         "description": "INVALID_CREDENTIALS or USER_NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.ErrorResponse"
+                            "$ref": "#/definitions/httpschema.Error"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.ErrorResponse"
+                            "$ref": "#/definitions/httpschema.Error"
                         }
                     }
                 }
@@ -115,19 +115,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.StatusResponse"
+                            "$ref": "#/definitions/httpschema.Status"
                         }
                     },
                     "400": {
                         "description": "VALIDATION_ERROR, INVALID_JSON_BODY, or INVALID_CREDENTIALS)",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.DetailedErrorResponse"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.ErrorResponse"
+                            "$ref": "#/definitions/httpschema.Error"
                         }
                     }
                 }
@@ -158,7 +158,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.DetailedErrorResponse"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     }
                 }
@@ -229,7 +229,7 @@ const docTemplate = `{
                 }
             }
         },
-        "httpschema.DetailedErrorResponse": {
+        "httpschema.DetailedError": {
             "type": "object",
             "properties": {
                 "code": {
@@ -252,7 +252,7 @@ const docTemplate = `{
                 }
             }
         },
-        "httpschema.ErrorResponse": {
+        "httpschema.Error": {
             "type": "object",
             "properties": {
                 "code": {
@@ -269,7 +269,7 @@ const docTemplate = `{
                 }
             }
         },
-        "httpschema.StatusResponse": {
+        "httpschema.Status": {
             "type": "object",
             "properties": {
                 "status": {
