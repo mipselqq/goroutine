@@ -9,15 +9,16 @@ import (
 
 type TimeFunc func() string
 
-type Response struct {
+type Responder struct {
+	logger *slog.Logger
 	timeFn TimeFunc
 }
 
-func NewResponse(timeFn TimeFunc) *Response {
+func NewResponder(logger *slog.Logger, timeFn TimeFunc) *Responder {
 	if timeFn == nil {
 		timeFn = func() string { return time.Now().Format(time.RFC3339) }
 	}
-	return &Response{timeFn: timeFn}
+	return &Responder{logger: logger, timeFn: timeFn}
 }
 
 func RespondJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload any) {
@@ -30,16 +31,16 @@ func RespondJSON(w http.ResponseWriter, logger *slog.Logger, code int, payload a
 	}
 }
 
-func (re *Response) BadRequest(w http.ResponseWriter, logger *slog.Logger, errCode string, details []Detail) {
-	RespondJSON(w, logger, http.StatusBadRequest, re.NewDetailedError(errCode, details))
+func (re *Responder) BadRequest(w http.ResponseWriter, errCode string, details []Detail) {
+	RespondJSON(w, re.logger, http.StatusBadRequest, re.NewDetailedError(errCode, details))
 }
 
-func (re *Response) Unauthorized(w http.ResponseWriter, logger *slog.Logger, errCode string, details []Detail) {
-	RespondJSON(w, logger, http.StatusUnauthorized, re.NewDetailedError(errCode, details))
+func (re *Responder) Unauthorized(w http.ResponseWriter, errCode string, details []Detail) {
+	RespondJSON(w, re.logger, http.StatusUnauthorized, re.NewDetailedError(errCode, details))
 }
 
-func (re *Response) Error(w http.ResponseWriter, logger *slog.Logger, statusCode int, code string) {
-	RespondJSON(w, logger, statusCode, re.NewError(code, MapCodeToDescription(code)))
+func (re *Responder) Error(w http.ResponseWriter, statusCode int, code string) {
+	RespondJSON(w, re.logger, statusCode, re.NewError(code, MapCodeToDescription(code)))
 }
 
 type Status struct {
@@ -56,7 +57,7 @@ type Error struct {
 	baseError
 }
 
-func (re *Response) NewError(code, message string) *Error {
+func (re *Responder) NewError(code, message string) *Error {
 	return &Error{
 		baseError: baseError{
 			Code:      code,
@@ -71,7 +72,7 @@ type DetailedError struct {
 	Details []Detail `json:"details"`
 }
 
-func (re *Response) NewDetailedError(code string, details []Detail) *DetailedError {
+func (re *Responder) NewDetailedError(code string, details []Detail) *DetailedError {
 	return &DetailedError{
 		baseError: baseError{
 			Code:      code,

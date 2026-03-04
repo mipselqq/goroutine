@@ -18,7 +18,7 @@ func TestNewRouter_Full(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 
 	handlers := &handler.Handlers{
-		Auth:   handler.NewAuth(logger, nil, httpschema.NewResponse(nil)),
+		Auth:   handler.NewAuth(logger, nil, httpschema.NewResponder(logger, nil)),
 		Health: handler.NewHealth(logger),
 	}
 	middlewares := &middleware.Middlewares{

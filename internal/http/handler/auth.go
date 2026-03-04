@@ -21,10 +21,10 @@ type AuthService interface {
 type Auth struct {
 	logger    *slog.Logger
 	service   AuthService
-	responder *httpschema.Response
+	responder *httpschema.Responder
 }
 
-func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.Response) *Auth {
+func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.Responder) *Auth {
 	return &Auth{
 		service:   s,
 		logger:    logging.NewLoggerContext(l, "handler.auth"),
@@ -54,7 +54,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.responder.BadRequest(
-			w, h.logger, "VALIDATION_ERROR",
+			w, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
 		)
 		return
@@ -63,7 +63,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	email, errs := domain.NewEmail(body.Email)
 	if len(errs) > 0 {
 		h.responder.BadRequest(
-			w, h.logger, "VALIDATION_ERROR",
+			w, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "email", Issues: errs}},
 		)
 		return
@@ -72,7 +72,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	password, errs := domain.NewPassword(body.Password)
 	if len(errs) > 0 {
 		h.responder.BadRequest(
-			w, h.logger, "VALIDATION_ERROR",
+			w, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "password", Issues: errs}},
 		)
 		return
@@ -84,12 +84,12 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
 			h.responder.BadRequest(
-				w, h.logger, "INVALID_CREDENTIALS",
+				w, "INVALID_CREDENTIALS",
 				[]httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}},
 			)
 		default:
 			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
-			h.responder.Error(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
@@ -131,7 +131,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.responder.BadRequest(
-			w, h.logger, "VALIDATION_ERROR",
+			w, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
 		)
 		return
@@ -141,7 +141,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	email, errs := domain.NewEmail(body.Email)
 	if len(errs) > 0 {
 		h.responder.BadRequest(
-			w, h.logger, "VALIDATION_ERROR",
+			w, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "email", Issues: errs}},
 		)
 		return
@@ -150,7 +150,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	password, errs := domain.NewPassword(body.Password)
 	if len(errs) > 0 {
 		h.responder.BadRequest(
-			w, h.logger, "VALIDATION_ERROR",
+			w, "VALIDATION_ERROR",
 			[]httpschema.Detail{{Field: "password", Issues: errs}},
 		)
 		return
@@ -160,12 +160,12 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			h.responder.Error(w, h.logger, http.StatusUnauthorized, "INVALID_CREDENTIALS")
+			h.responder.Error(w, http.StatusUnauthorized, "INVALID_CREDENTIALS")
 		case errors.Is(err, service.ErrUserNotFound):
-			h.responder.Error(w, h.logger, http.StatusUnauthorized, "USER_NOT_FOUND")
+			h.responder.Error(w, http.StatusUnauthorized, "USER_NOT_FOUND")
 		default:
 			h.logger.Error("Failed to login user", slog.String("err", err.Error()), SlogRequestIDFromRequest(r))
-			h.responder.Error(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
@@ -192,7 +192,7 @@ func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		h.logger.Error("Failed to get user id from context", SlogRequestIDFromRequest(r))
 		h.responder.Unauthorized(
-			w, h.logger, "INVALID_TOKEN",
+			w, "INVALID_TOKEN",
 			[]httpschema.Detail{{Field: "Authorization", Issues: []string{"BUG: No user id found. Please notify technical support."}}},
 		)
 

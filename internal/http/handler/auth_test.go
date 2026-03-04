@@ -113,6 +113,8 @@ func TestAuth_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
+			logger := testutil.NewTestLogger(t)
+
 			req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBuffer([]byte(tt.inputBody)))
 			req.Header.Set("Content-Type", "application/json")
 
@@ -123,7 +125,7 @@ func TestAuth_Register(t *testing.T) {
 				tt.setupMock(&s)
 			}
 
-			h := handler.NewAuth(testutil.NewTestLogger(t), &s, httpschema.NewResponse(mockTime))
+			h := handler.NewAuth(logger, &s, httpschema.NewResponder(logger, mockTime))
 			h.Register(rr, req)
 
 			if rr.Code != tt.expectedCode {
@@ -238,7 +240,8 @@ func TestAuth_Login(t *testing.T) {
 				tt.setupMock(s)
 			}
 
-			h := handler.NewAuth(testutil.NewTestLogger(t), s, httpschema.NewResponse(mockTime))
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewAuth(logger, s, httpschema.NewResponder(logger, mockTime))
 			h.Login(rr, req)
 
 			if rr.Code != tt.expectedCode {
@@ -268,7 +271,8 @@ func TestAuth_WhoAmI(t *testing.T) {
 	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/whoami", nil)
 
 	rr := httptest.NewRecorder()
-	h := handler.NewAuth(testutil.NewTestLogger(t), &MockAuth{}, httpschema.NewResponse(mockTime))
+	logger := testutil.NewTestLogger(t)
+	h := handler.NewAuth(logger, &MockAuth{}, httpschema.NewResponder(logger, mockTime))
 	h.WhoAmI(rr, req)
 
 	if rr.Code != http.StatusOK {

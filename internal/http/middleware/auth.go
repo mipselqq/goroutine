@@ -17,10 +17,10 @@ type TokenVerifier interface {
 type Auth struct {
 	logger    *slog.Logger
 	verifier  TokenVerifier
-	responder *httpschema.Response
+	responder *httpschema.Responder
 }
 
-func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.Response) *Auth {
+func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.Responder) *Auth {
 	return &Auth{logger: l, verifier: v, responder: r}
 }
 
@@ -30,7 +30,7 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 
 		if header == "" {
 			m.responder.Unauthorized(
-				w, m.logger, "INVALID_AUTH_HEADER",
+				w, "INVALID_AUTH_HEADER",
 				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Missing authorization header"}}},
 			)
 			return
@@ -53,7 +53,7 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 
 		if len(issues) > 0 {
 			m.responder.Unauthorized(
-				w, m.logger, "INVALID_AUTH_HEADER",
+				w, "INVALID_AUTH_HEADER",
 				[]httpschema.Detail{{Field: "Authorization", Issues: issues}},
 			)
 			return
@@ -63,7 +63,7 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
 			m.responder.Unauthorized(
-				w, m.logger, "INVALID_TOKEN",
+				w, "INVALID_TOKEN",
 				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
 			)
 			return
