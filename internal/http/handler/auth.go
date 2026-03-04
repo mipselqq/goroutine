@@ -106,6 +106,11 @@ type loginResponse struct {
 	Token string `json:"token" example:"jwt-token"`
 }
 
+// TODO: add extractor with truncation in debug
+func SlogRequestIDFromRequest(r *http.Request) any {
+	return slog.Any("request_id", r.Context().Value(httpschema.ContextKeyRequestID))
+}
+
 // Login godoc
 // @Summary Login a user
 // @Description Login with email and password to get a JWT token
@@ -154,7 +159,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrUserNotFound):
 			h.responder.RespondError(w, h.logger, http.StatusUnauthorized, "USER_NOT_FOUND")
 		default:
-			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
+			h.logger.Error("Failed to login user", slog.String("err", err.Error()), SlogRequestIDFromRequest(r))
 			h.responder.RespondError(w, h.logger, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
@@ -180,7 +185,7 @@ type whoAmIResponse struct {
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
-		h.logger.Error("Failed to get user id from context")
+		h.logger.Error("Failed to get user id from context", SlogRequestIDFromRequest(r))
 		h.responder.RespondUnauthorized(
 			w, h.logger, "INVALID_TOKEN",
 			[]httpschema.Detail{{Field: "Authorization", Issues: []string{"BUG: No user id found. Please notify technical support."}}},
