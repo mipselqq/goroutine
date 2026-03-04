@@ -3,5 +3,6 @@ package httpschema
 type contextKey int
 
 const (
-	ContextKeyUserID contextKey = iota
+	ContextKeyUserID    contextKey = iota
+	ContextKeyRequestID contextKey = iota
 )

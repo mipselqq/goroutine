@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -16,34 +15,53 @@ type TokenVerifier interface {
 }
 
 type Auth struct {
-	logger   *slog.Logger
-	verifier TokenVerifier
+	logger    *slog.Logger
+	verifier  TokenVerifier
+	responder *httpschema.ErrorResponder
 }
 
-func NewAuth(l *slog.Logger, v TokenVerifier) *Auth {
-	return &Auth{logger: l, verifier: v}
+func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.ErrorResponder) *Auth {
+	return &Auth{logger: l, verifier: v, responder: r}
 }
 
 func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
-		if header == "" {
-			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("missing authorization header"))
 
+		if header == "" {
+			m.responder.Unauthorized(
+				w, "INVALID_AUTH_HEADER",
+				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Missing authorization header"}}},
+			)
 			return
 		}
 
+		issues := []string{}
 		authHeader := strings.TrimSpace(header)
 		parts := strings.Fields(authHeader)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") || parts[1] == "" {
-			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid authorization header"))
+
+		// TODO: test middleware http responses as well
+		if len(parts) != 2 {
+			issues = append(issues, "Invalid authorization header")
+		} else if !strings.EqualFold(parts[0], "bearer") {
+			issues = append(issues, "No Bearer prefix")
+		}
+
+		if len(issues) > 0 {
+			m.responder.Unauthorized(
+				w, "INVALID_AUTH_HEADER",
+				[]httpschema.Detail{{Field: "Authorization", Issues: issues}},
+			)
 			return
 		}
 
 		token := parts[1]
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
-			httpschema.RespondWithError(w, m.logger, http.StatusUnauthorized, errors.New("invalid token"))
+			m.responder.Unauthorized(
+				w, "INVALID_TOKEN",
+				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
+			)
 			return
 		}
 

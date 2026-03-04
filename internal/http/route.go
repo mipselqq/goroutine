@@ -19,8 +19,7 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("GET /whoami", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Auth.WhoAmI))))
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
-	// Apply CORS to all routes
-	return m.CORS.Wrap(mux)
+	return m.RequestID.Wrap(m.CORS.Wrap(mux))
 }
 
 func NewAdminRouter() *http.ServeMux {
