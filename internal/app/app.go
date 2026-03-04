@@ -1,11 +1,13 @@
 package app
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"goroutine/internal/config"
-	"goroutine/internal/domain"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/httpschema"
@@ -40,7 +42,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
 	authMiddleware := middleware.NewAuth(logger, authService, responder)
 	reqIDMiddleware := middleware.NewRequestID(logger, func() string {
-		return domain.NewUserID().String()
+		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 
 	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler}
