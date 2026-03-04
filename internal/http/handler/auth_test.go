@@ -176,7 +176,7 @@ func TestAuth_Login(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusUnauthorized,
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q,"details":[{"field":"email or password","issues":["Invalid"]}]}`, fixedTime),
 		},
 		{
 			name:      "User not found",
@@ -187,7 +187,7 @@ func TestAuth_Login(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusUnauthorized,
-			expectedBody: fmt.Sprintf(`{"code":"USER_NOT_FOUND","message":"User not found","timestamp":%q}`, fixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"USER_NOT_FOUND","message":"User not found","timestamp":%q,"details":[]}`, fixedTime),
 		},
 		{
 			name:      "Internal error",

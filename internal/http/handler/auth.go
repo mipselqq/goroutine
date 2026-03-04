@@ -160,9 +160,9 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			h.responder.Error(w, http.StatusUnauthorized, "INVALID_CREDENTIALS")
+			h.responder.Unauthorized(w, "INVALID_CREDENTIALS", []httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid"}}})
 		case errors.Is(err, service.ErrUserNotFound):
-			h.responder.Error(w, http.StatusUnauthorized, "USER_NOT_FOUND")
+			h.responder.Unauthorized(w, "USER_NOT_FOUND", []httpschema.Detail{})
 		default:
 			h.logger.Error("Failed to login user", slog.String("err", err.Error()), SlogRequestIDFromRequest(r))
 			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
