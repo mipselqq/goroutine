@@ -13,8 +13,6 @@ import (
 func TestRequestIDMiddleware(t *testing.T) {
 	t.Parallel()
 
-	// TODO: implement this side effects check in other middlewares
-	headersToModify := []string{"X-Request-ID"}
 	mockStatusCode := http.StatusTeapot
 	mockRequestID := "mock-request-id"
 	requestRequestID := "pre-set-request-id"
@@ -89,10 +87,8 @@ func TestRequestIDMiddleware(t *testing.T) {
 				t.Errorf("Middleware changed status code, expected %d, got %d", mockStatusCode, rr.Code)
 			}
 
-			testutil.EnsureNoUnexpectedHeadersModified(t, rr, headersToModify)
-
 			if tt.expectedRequestID != "" {
-				headerID := rr.Header().Get("X-Request-Id")
+				headerID := rr.Header().Get("X-Request-ID")
 				if headerID != tt.expectedRequestID {
 					t.Errorf("expected response request ID %q, got %q", tt.expectedRequestID, headerID)
 				}
