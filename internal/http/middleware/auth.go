@@ -17,10 +17,10 @@ type TokenVerifier interface {
 type Auth struct {
 	logger    *slog.Logger
 	verifier  TokenVerifier
-	responder *httpschema.Responder
+	responder *httpschema.ErrorResponder
 }
 
-func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.Responder) *Auth {
+func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.ErrorResponder) *Auth {
 	return &Auth{logger: l, verifier: v, responder: r}
 }
 

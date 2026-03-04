@@ -21,10 +21,10 @@ type AuthService interface {
 type Auth struct {
 	logger    *slog.Logger
 	service   AuthService
-	responder *httpschema.Responder
+	responder *httpschema.ErrorResponder
 }
 
-func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.Responder) *Auth {
+func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.ErrorResponder) *Auth {
 	return &Auth{
 		service:   s,
 		logger:    logging.NewLoggerContext(l, "handler.auth"),
