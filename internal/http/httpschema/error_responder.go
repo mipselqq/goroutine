@@ -21,16 +21,16 @@ func NewErrorResponder(logger *slog.Logger, timeFn TimeFunc) *ErrorResponder {
 	return &ErrorResponder{logger: logger, timeFn: timeFn}
 }
 
-func (re *ErrorResponder) BadRequest(w http.ResponseWriter, errCode string, details []Detail) {
-	RespondJSON(w, re.logger, http.StatusBadRequest, re.NewDetailedError(errCode, details))
+func (r *ErrorResponder) BadRequest(w http.ResponseWriter, errCode string, details []Detail) {
+	RespondJSON(w, r.logger, http.StatusBadRequest, r.NewDetailedError(errCode, details))
 }
 
-func (re *ErrorResponder) Unauthorized(w http.ResponseWriter, errCode string, details []Detail) {
-	RespondJSON(w, re.logger, http.StatusUnauthorized, re.NewDetailedError(errCode, details))
+func (r *ErrorResponder) Unauthorized(w http.ResponseWriter, errCode string, details []Detail) {
+	RespondJSON(w, r.logger, http.StatusUnauthorized, r.NewDetailedError(errCode, details))
 }
 
-func (re *ErrorResponder) Error(w http.ResponseWriter, statusCode int, code string) {
-	RespondJSON(w, re.logger, statusCode, re.NewError(code, MapCodeToDescription(code)))
+func (r *ErrorResponder) Error(w http.ResponseWriter, statusCode int, code string) {
+	RespondJSON(w, r.logger, statusCode, r.NewError(code, MapCodeToDescription(code)))
 }
 
 type Status struct {
@@ -43,11 +43,11 @@ type Error struct {
 	Timestamp string `json:"timestamp" example:"2026-03-02T15:04:05.123Z"`
 }
 
-func (re *ErrorResponder) NewError(code, message string) *Error {
+func (r *ErrorResponder) NewError(code, message string) *Error {
 	return &Error{
 		Code:      code,
 		Message:   message,
-		Timestamp: re.timeFn(),
+		Timestamp: r.timeFn(),
 	}
 }
 
@@ -56,9 +56,9 @@ type DetailedError struct {
 	Details []Detail `json:"details"`
 }
 
-func (re *ErrorResponder) NewDetailedError(code string, details []Detail) *DetailedError {
+func (r *ErrorResponder) NewDetailedError(code string, details []Detail) *DetailedError {
 	return &DetailedError{
-		Error:   *re.NewError(code, MapCodeToDescription(code)),
+		Error:   *r.NewError(code, MapCodeToDescription(code)),
 		Details: details,
 	}
 }
