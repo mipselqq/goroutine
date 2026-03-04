@@ -128,7 +128,7 @@ func TestAuth_Register(t *testing.T) {
 			h.Register(rr, req)
 
 			if rr.Code != tt.expectedCode {
-				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
+				t.Errorf("Expected status %d, got %d", tt.expectedCode, rr.Code)
 			}
 
 			contentType := rr.Header().Get("Content-Type")
@@ -143,7 +143,11 @@ func TestAuth_Register(t *testing.T) {
 			if tt.expectedBody != "" {
 				actualBody := bytes.TrimSpace(rr.Body.Bytes())
 				if string(actualBody) != tt.expectedBody {
-					t.Errorf("expected body %q, got %q", tt.expectedBody, string(actualBody))
+					t.Logf("Expected body:")
+					t.Logf("%q", tt.expectedBody)
+					t.Logf("Got:")
+					t.Logf("%q", string(actualBody))
+					t.Fail()
 				}
 			}
 		})
