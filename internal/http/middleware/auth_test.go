@@ -162,7 +162,7 @@ func TestAuth(t *testing.T) {
 			})
 
 			logger := testutil.NewTestLogger(t)
-			m := middleware.NewAuth(logger, s, httpschema.NewErrorResponder(logger, nil))
+			m := middleware.NewAuth(logger, s, httpschema.NewErrorResponder(logger, service.TimeRFC3339Nano))
 			wrapped := m.Wrap(h)
 
 			request := httptest.NewRequest("GET", "/", http.NoBody)

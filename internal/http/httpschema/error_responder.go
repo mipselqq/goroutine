@@ -3,7 +3,6 @@ package httpschema
 import (
 	"log/slog"
 	"net/http"
-	"time"
 )
 
 type TimeFunc func() string
@@ -14,9 +13,11 @@ type ErrorResponder struct {
 }
 
 func NewErrorResponder(logger *slog.Logger, timeFn TimeFunc) *ErrorResponder {
+	// TODO: ensure functions as arguments are not nil everywhere like here
 	if timeFn == nil {
-		timeFn = func() string { return time.Now().Format(time.RFC3339) }
+		panic("BUG: timeFn is nil")
 	}
+
 	return &ErrorResponder{logger: logger, timeFn: timeFn}
 }
 
