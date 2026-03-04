@@ -19,14 +19,16 @@ type AuthService interface {
 }
 
 type Auth struct {
-	logger  *slog.Logger
-	service AuthService
+	logger    *slog.Logger
+	service   AuthService
+	responder *httpschema.ErrorResponder
 }
 
-func NewAuth(l *slog.Logger, s AuthService) *Auth {
+func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.ErrorResponder) *Auth {
 	return &Auth{
-		service: s,
-		logger:  logging.NewLoggerContext(l, "handler.auth"),
+		service:   s,
+		logger:    logging.NewLoggerContext(l, "handler.auth"),
+		responder: responder,
 	}
 }
 
@@ -42,29 +44,37 @@ type registerBody struct {
 // @Accept json
 // @Produce json
 // @Param body body registerBody true "Registration details"
-// @Success 200 {object} httpschema.StatusResponse
-// @Failure 400 {object} httpschema.ErrorResponse "Invalid input (email format or password)"
-// @Failure 500 {object} httpschema.ErrorResponse "Internal Server Error"
+// @Success 200 {object} httpschema.Status
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR or INVALID_CREDENTIALS"
+// @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+		h.responder.BadRequest(
+			w, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
+		)
 		return
 	}
 
-	email, err := domain.NewEmail(body.Email)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	email, errs := domain.NewEmail(body.Email)
+	if len(errs) > 0 {
+		h.responder.BadRequest(
+			w, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "email", Issues: errs}},
+		)
 		return
 	}
 
-	password, err := domain.NewPassword(body.Password)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	password, errs := domain.NewPassword(body.Password)
+	if len(errs) > 0 {
+		h.responder.BadRequest(
+			w, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "password", Issues: errs}},
+		)
 		return
 	}
 
@@ -73,16 +83,20 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+			h.responder.BadRequest(
+				w, "INVALID_CREDENTIALS",
+				[]httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}},
+			)
 		default:
 			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
-			httpschema.RespondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
 
 	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, httpschema.StatusResponse{Status: "ok"})
+
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, httpschema.Status{Status: "ok"})
 }
 
 type loginBody struct {
@@ -94,6 +108,11 @@ type loginResponse struct {
 	Token string `json:"token" example:"jwt-token"`
 }
 
+// TODO: add extractor with truncation in debug
+func SlogRequestIDFromRequest(r *http.Request) any {
+	return slog.Any("request_id", r.Context().Value(httpschema.ContextKeyRequestID))
+}
+
 // Login godoc
 // @Summary Login a user
 // @Description Login with email and password to get a JWT token
@@ -102,28 +121,38 @@ type loginResponse struct {
 // @Produce json
 // @Param body body loginBody true "Login credentials"
 // @Success 200 {object} loginResponse
-// @Failure 401 {object} httpschema.ErrorResponse "Invalid credentials"
-// @Failure 500 {object} httpschema.ErrorResponse "Internal Server Error"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "INVALID_CREDENTIALS or USER_NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.logger.Error("Failed to decode json body", slog.String("err", err.Error()))
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, errors.New("invalid json body"))
+		h.responder.BadRequest(
+			w, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
+		)
 		return
 	}
 
-	email, err := domain.NewEmail(body.Email)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	// TODO: merge email and password into user to remove this mess
+	email, errs := domain.NewEmail(body.Email)
+	if len(errs) > 0 {
+		h.responder.BadRequest(
+			w, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "email", Issues: errs}},
+		)
 		return
 	}
 
-	password, err := domain.NewPassword(body.Password)
-	if err != nil {
-		httpschema.RespondWithError(w, h.logger, http.StatusBadRequest, err)
+	password, errs := domain.NewPassword(body.Password)
+	if len(errs) > 0 {
+		h.responder.BadRequest(
+			w, "VALIDATION_ERROR",
+			[]httpschema.Detail{{Field: "password", Issues: errs}},
+		)
 		return
 	}
 
@@ -131,18 +160,18 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, err)
+			h.responder.Unauthorized(w, "INVALID_CREDENTIALS", []httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid"}}})
 		case errors.Is(err, service.ErrUserNotFound):
-			httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, err)
+			h.responder.Unauthorized(w, "USER_NOT_FOUND", []httpschema.Detail{})
 		default:
-			h.logger.Error("Failed to login user", slog.String("err", err.Error()))
-			httpschema.RespondWithError(w, h.logger, http.StatusInternalServerError, service.ErrInternal)
+			h.logger.Error("Failed to login user", slog.String("err", err.Error()), SlogRequestIDFromRequest(r))
+			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
 
 	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
 
 type whoAmIResponse struct {
@@ -151,19 +180,24 @@ type whoAmIResponse struct {
 
 // WhoAmI godoc
 // @Summary Get current user info
-// @Description Get current user ID from token
+// @Description Get current user ID from token. This is a protected endpoint — in addition to the responses listed below, the auth middleware may return 401 with codes INVALID_AUTH_HEADER or INVALID_TOKEN.
 // @Tags auth
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} whoAmIResponse
-// @Failure 401 {object} httpschema.ErrorResponse "Unauthorized"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)"
+// @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
+	// TODO: cover error path with tests
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
-		h.logger.Error("Failed to get user id from context")
-		httpschema.RespondWithError(w, h.logger, http.StatusUnauthorized, errors.New("unauthorized"))
+		h.logger.Error("BUG: failed to get user id from context", SlogRequestIDFromRequest(r))
+		h.responder.Error(
+			w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR",
+		)
 		return
 	}
 
-	httpschema.RespondWithJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid.String()})
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, whoAmIResponse{UID: uid.String()})
 }

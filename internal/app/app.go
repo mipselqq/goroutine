@@ -1,12 +1,16 @@
 package app
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/google/uuid"
 
 	"goroutine/internal/config"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
+	"goroutine/internal/http/httpschema"
 	"goroutine/internal/http/middleware"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
@@ -29,15 +33,25 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	authHandler := handler.NewAuth(logger, authService)
+	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)
+
+	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
 
 	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
-	authMiddleware := middleware.NewAuth(logger, authService)
+	authMiddleware := middleware.NewAuth(logger, authService, responder)
+	reqIDMiddleware := middleware.NewRequestID(logger, func() string {
+		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
+	})
 
 	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler}
-	middlewares := &middleware.Middlewares{Metrics: metricsMiddleware, CORS: corsMiddleware, Auth: authMiddleware}
+	middlewares := &middleware.Middlewares{
+		Metrics:   metricsMiddleware,
+		CORS:      corsMiddleware,
+		Auth:      authMiddleware,
+		RequestID: reqIDMiddleware,
+	}
 
 	return &App{
 		Router:      httpapp.NewRouter(handlers, middlewares),

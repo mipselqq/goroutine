@@ -30,13 +30,48 @@ definitions:
         example: 018e1000-0000-7000-8000-000000000000
         type: string
     type: object
-  httpschema.ErrorResponse:
+  httpschema.Detail:
     properties:
-      error:
-        example: invalid email format
+      field:
+        example: email
+        type: string
+      issues:
+        example:
+        - must be a valid email
+        - too short
+        items:
+          type: string
+        type: array
+    type: object
+  httpschema.DetailedError:
+    properties:
+      code:
+        example: INVALID_CREDENTIALS
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/httpschema.Detail'
+        type: array
+      message:
+        example: Invalid login or password
+        type: string
+      timestamp:
+        example: "2026-03-02T15:04:05.123Z"
         type: string
     type: object
-  httpschema.StatusResponse:
+  httpschema.Error:
+    properties:
+      code:
+        example: INVALID_CREDENTIALS
+        type: string
+      message:
+        example: Invalid login or password
+        type: string
+      timestamp:
+        example: "2026-03-02T15:04:05.123Z"
+        type: string
+    type: object
+  httpschema.Status:
     properties:
       status:
         example: ok
@@ -56,7 +91,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpschema.StatusResponse'
+            $ref: '#/definitions/httpschema.Status'
       summary: Health check
       tags:
       - health
@@ -79,14 +114,18 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.loginResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "401":
-          description: Invalid credentials
+          description: INVALID_CREDENTIALS or USER_NOT_FOUND
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.Error'
       summary: Login a user
       tags:
       - auth
@@ -108,21 +147,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpschema.StatusResponse'
+            $ref: '#/definitions/httpschema.Status'
         "400":
-          description: Invalid input (email format or password)
+          description: VALIDATION_ERROR or INVALID_CREDENTIALS
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.Error'
       summary: Register a new user
       tags:
       - auth
   /whoami:
     get:
-      description: Get current user ID from token
+      description: Get current user ID from token. This is a protected endpoint —
+        in addition to the responses listed below, the auth middleware may return
+        401 with codes INVALID_AUTH_HEADER or INVALID_TOKEN.
       produces:
       - application/json
       responses:
@@ -131,9 +172,16 @@ paths:
           schema:
             $ref: '#/definitions/handler.whoAmIResponse'
         "401":
-          description: Unauthorized
+          description: 'Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER
+            / INVALID_TOKEN (auth middleware)'
           schema:
-            $ref: '#/definitions/httpschema.ErrorResponse'
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
       summary: Get current user info
       tags:
       - auth
