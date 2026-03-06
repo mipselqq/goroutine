@@ -39,10 +39,10 @@ func TestNewRouter_Full(t *testing.T) {
 		wantCors    bool
 		wantReqID   bool
 	}{
-		{"Register endpoint", http.MethodPost, "/register", true, true, true},
-		{"Login endpoint", http.MethodPost, "/login", true, true, true},
-		{"Health endpoint", http.MethodGet, "/health", true, true, true},
-		{"Swagger endpoint", http.MethodGet, "/swagger/index.html", false, true, true},
+		{"Register endpoint", http.MethodPost, "/v1/register", true, true, true},
+		{"Login endpoint", http.MethodPost, "/v1/login", true, true, true},
+		{"Health endpoint", http.MethodGet, "/v1/health", true, true, true},
+		{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html", false, true, true},
 	}
 
 	for _, tt := range tests {
@@ -74,7 +74,7 @@ func TestNewRouter_Full(t *testing.T) {
 	}
 
 	t.Run("Non-existing endpoint", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/non-existing", http.NoBody)
+		req := httptest.NewRequest(http.MethodGet, "/v1/non-existing", http.NoBody)
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
 
