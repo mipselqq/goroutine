@@ -79,6 +79,12 @@ func TestAuth_Register(t *testing.T) {
 			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, fixedTime),
 		},
 		{
+			name:         "Empty email and password",
+			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", ""),
+			expectedCode: http.StatusBadRequest,
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]},{"field":"password","issues":["Password is too short"]}]}`, fixedTime),
+		},
+		{
 			name:         "Empty password",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, email, ""),
 			expectedCode: http.StatusBadRequest,
@@ -211,6 +217,12 @@ func TestAuth_Login(t *testing.T) {
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", password),
 			expectedCode: http.StatusBadRequest,
 			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, fixedTime),
+		},
+		{
+			name:         "Empty email and password",
+			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", ""),
+			expectedCode: http.StatusBadRequest,
+			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]},{"field":"password","issues":["Password is too short"]}]}`, fixedTime),
 		},
 		{
 			name:         "Empty password",
