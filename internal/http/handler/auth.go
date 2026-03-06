@@ -47,7 +47,7 @@ type registerBody struct {
 // @Success 200 {object} httpschema.Status
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR or INVALID_CREDENTIALS"
 // @Failure 500 {object} httpschema.Error "Internal server error"
-// @Router /register [post]
+// @Router /v1/register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
@@ -124,7 +124,7 @@ func SlogRequestIDFromRequest(r *http.Request) any {
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "INVALID_CREDENTIALS or USER_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
-// @Router /login [post]
+// @Router /v1/login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
@@ -187,7 +187,7 @@ type whoAmIResponse struct {
 // @Success 200 {object} whoAmIResponse
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)"
 // @Failure 500 {object} httpschema.Error "Internal server error"
-// @Router /whoami [get]
+// @Router /v1/whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	// TODO: cover error path with tests
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)

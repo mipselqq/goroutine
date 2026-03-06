@@ -82,7 +82,7 @@ info:
   description: A nice kanban board with a beautiful heart ✨
   title: Goroutine kanban API
 paths:
-  /health:
+  /v1/health:
     get:
       description: Check if the server is alive
       produces:
@@ -95,7 +95,7 @@ paths:
       summary: Health check
       tags:
       - health
-  /login:
+  /v1/login:
     post:
       consumes:
       - application/json
@@ -129,7 +129,7 @@ paths:
       summary: Login a user
       tags:
       - auth
-  /register:
+  /v1/register:
     post:
       consumes:
       - application/json
@@ -159,7 +159,7 @@ paths:
       summary: Register a new user
       tags:
       - auth
-  /whoami:
+  /v1/whoami:
     get:
       description: Get current user ID from token. This is a protected endpoint —
         in addition to the responses listed below, the auth middleware may return
