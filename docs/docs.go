@@ -291,7 +291,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "",
 	Host:             "",
-	BasePath:         "/",
+	BasePath:         "/v1/",
 	Schemes:          []string{},
 	Title:            "Goroutine kanban API",
 	Description:      "A nice kanban board with a beautiful heart ✨",

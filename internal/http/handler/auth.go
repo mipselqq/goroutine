@@ -60,21 +60,11 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email, errs := domain.NewEmail(body.Email)
-	if len(errs) > 0 {
-		h.responder.BadRequest(
-			w, "VALIDATION_ERROR",
-			[]httpschema.Detail{{Field: "email", Issues: errs}},
-		)
-		return
-	}
-
-	password, errs := domain.NewPassword(body.Password)
-	if len(errs) > 0 {
-		h.responder.BadRequest(
-			w, "VALIDATION_ERROR",
-			[]httpschema.Detail{{Field: "password", Issues: errs}},
-		)
+	details := []httpschema.Detail{}
+	email := validateCredential("email", body.Email, domain.NewEmail, &details)
+	password := validateCredential("password", body.Password, domain.NewPassword, &details)
+	if len(details) > 0 {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
 	}
 
@@ -137,22 +127,11 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: merge email and password into user to remove this mess
-	email, errs := domain.NewEmail(body.Email)
-	if len(errs) > 0 {
-		h.responder.BadRequest(
-			w, "VALIDATION_ERROR",
-			[]httpschema.Detail{{Field: "email", Issues: errs}},
-		)
-		return
-	}
-
-	password, errs := domain.NewPassword(body.Password)
-	if len(errs) > 0 {
-		h.responder.BadRequest(
-			w, "VALIDATION_ERROR",
-			[]httpschema.Detail{{Field: "password", Issues: errs}},
-		)
+	details := []httpschema.Detail{}
+	email := validateCredential("email", body.Email, domain.NewEmail, &details)
+	password := validateCredential("password", body.Password, domain.NewPassword, &details)
+	if len(details) > 0 {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
 	}
 
@@ -172,6 +151,14 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
+}
+
+func validateCredential[T any](field, val string, constructor func(string) (T, []string), details *[]httpschema.Detail) T {
+	res, errs := constructor(val)
+	if len(errs) > 0 {
+		*details = append(*details, httpschema.Detail{Field: field, Issues: errs})
+	}
+	return res
 }
 
 type whoAmIResponse struct {
