@@ -43,7 +43,7 @@ func TestAuth_HappyPath(t *testing.T) {
 			"password": password,
 		})
 
-		regResp, err := client.Post(ts.URL+"/register", "application/json", bytes.NewBuffer(regBody))
+		regResp, err := client.Post(ts.URL+"/v1/register", "application/json", bytes.NewBuffer(regBody))
 		if err != nil {
 			t.Fatalf("Register request failed: %v", err)
 		}
@@ -57,7 +57,7 @@ func TestAuth_HappyPath(t *testing.T) {
 			"password": password,
 		})
 
-		loginResp, err := client.Post(ts.URL+"/login", "application/json", bytes.NewBuffer(loginBody))
+		loginResp, err := client.Post(ts.URL+"/v1/login", "application/json", bytes.NewBuffer(loginBody))
 		if err != nil {
 			t.Fatalf("Login request failed: %v", err)
 		}
@@ -82,7 +82,7 @@ func TestAuth_HappyPath(t *testing.T) {
 			t.Fatal("Got invalid JWT token")
 		}
 
-		req, err := http.NewRequest("GET", ts.URL+"/whoami", nil)
+		req, err := http.NewRequest("GET", ts.URL+"/v1/whoami", nil)
 		if err != nil {
 			t.Fatalf("Failed to create whoami request: %v", err)
 		}

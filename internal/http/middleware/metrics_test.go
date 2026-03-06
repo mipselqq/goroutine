@@ -23,13 +23,13 @@ func TestMetrics_Collection(t *testing.T) {
 	}{
 		{
 			name:         "Count successful register",
-			path:         "/register",
+			path:         "/v1/register",
 			method:       http.MethodPost,
 			expectedCode: "200",
 		},
 		{
 			name:         "Count failed health",
-			path:         "/health",
+			path:         "/v1/health",
 			method:       http.MethodGet,
 			expectedCode: "403",
 		},
