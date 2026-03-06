@@ -20,7 +20,7 @@ var version = "no version bundled by linker"
 
 // @title Goroutine kanban API
 // @description A nice kanban board with a beautiful heart ✨
-// @BasePath /
+// @BasePath /v1/
 func main() {
 	if os.Getenv("ENV") != "prod" {
 		_ = godotenv.Load(".env.dev")
