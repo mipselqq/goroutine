@@ -11,8 +11,8 @@ import (
 func TestRun(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/health" {
-				t.Errorf("expected path /health, got %q", r.URL.Path)
+			if r.URL.Path != "/v1/health" {
+				t.Errorf("expected path /v1/health, got %q", r.URL.Path)
 			}
 			w.WriteHeader(http.StatusOK)
 		}))

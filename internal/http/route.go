@@ -13,11 +13,13 @@ import (
 func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("POST /register", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Register)))
-	mux.Handle("POST /login", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Login)))
-	mux.Handle("GET /health", m.Metrics.Wrap(http.HandlerFunc(h.Health.Health)))
-	mux.Handle("GET /whoami", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Auth.WhoAmI))))
-	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
+	mux.Handle("POST /v1/register", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Register)))
+	mux.Handle("POST /v1/login", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Login)))
+	mux.Handle("GET /v1/health", m.Metrics.Wrap(http.HandlerFunc(h.Health.Health)))
+	mux.Handle("GET /v1/whoami", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Auth.WhoAmI))))
+	mux.Handle("GET /v1/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/v1/swagger/doc.json"),
+	))
 
 	return m.RequestID.Wrap(m.CORS.Wrap(mux))
 }

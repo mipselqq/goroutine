@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/health": {
+        "/v1/health": {
             "get": {
                 "description": "Check if the server is alive",
                 "produces": [
@@ -35,7 +35,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/login": {
+        "/v1/login": {
             "post": {
                 "description": "Login with email and password to get a JWT token",
                 "consumes": [
@@ -87,7 +87,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/register": {
+        "/v1/register": {
             "post": {
                 "description": "Register a new user with email and password",
                 "consumes": [
@@ -133,7 +133,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/whoami": {
+        "/v1/whoami": {
             "get": {
                 "security": [
                     {

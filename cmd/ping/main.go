@@ -26,7 +26,7 @@ func main() {
 }
 
 func run(host, port string, timeout time.Duration) error {
-	url := fmt.Sprintf("http://%s:%s/health", host, port)
+	url := fmt.Sprintf("http://%s:%s/v1/health", host, port)
 	client := &http.Client{
 		Timeout: timeout,
 	}
