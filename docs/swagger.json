@@ -5,7 +5,7 @@
         "title": "Goroutine kanban API",
         "contact": {}
     },
-    "basePath": "/v1/",
+    "basePath": "/",
     "paths": {
         "/v1/health": {
             "get": {
