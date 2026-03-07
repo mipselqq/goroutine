@@ -1,4 +1,4 @@
-basePath: /v1/
+basePath: /
 definitions:
   handler.loginBody:
     properties:
