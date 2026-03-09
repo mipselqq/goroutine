@@ -104,6 +104,7 @@ func TestAuth_Register(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q,"details":[{"field":"email or password","issues":["Invalid credentials"]}]}`, FixedTime),
 		},
+		// TODO: handle unknown error
 	}
 
 	for _, tt := range tests {

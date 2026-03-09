@@ -3,6 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"mime"
 	"net/http"
@@ -127,6 +128,17 @@ func TestBoards_Create(t *testing.T) {
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
+		},
+		{
+			name:      "Unknown error",
+			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			setupMock: func(s *MockBoards) {
+				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, errors.New("unknown error")
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
