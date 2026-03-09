@@ -62,7 +62,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Pa
 
 	isMatch, err := argon2id.ComparePasswordAndHash(password.String(), hash)
 	if err != nil {
-		return "", fmt.Errorf("auth service: login: compare: %v: %w", err, ErrInternal)
+		return "", fmt.Errorf("auth service: login: compare password and hash: %v: %w", err, ErrInternal)
 	}
 	if !isMatch {
 		return "", ErrInvalidCredentials

@@ -9,9 +9,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
-	"goroutine/internal/secrecy"
 	"goroutine/internal/service"
-	"goroutine/internal/testutil"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -22,22 +20,6 @@ type TestCase struct {
 	expectedErr error
 }
 
-var (
-	emailStr            = "test@example.com"
-	userID              = testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
-	passwordStr         = "qwerty"
-	passwordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
-	email, _            = domain.NewEmail(emailStr)
-	password, _         = domain.NewPassword(passwordStr)
-	anotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
-	JWTSecret           = secrecy.SecretString("secret")
-	jwtOpts             = service.JWTOptions{
-		JWTSecret:     JWTSecret,
-		Exp:           time.Hour,
-		SigningMethod: jwt.SigningMethodHS256,
-	}
-)
-
 func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
@@ -47,7 +29,7 @@ func TestAuth_Register(t *testing.T) {
 			expectedErr: nil,
 			setupMock: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
-					if hash == passwordStr {
+					if hash == validPasswordStr {
 						return errors.New("service saved plaintext password!")
 					}
 					return nil
@@ -89,7 +71,7 @@ func TestAuth_Register(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, jwtOpts)
+			s := service.NewAuth(r, JWTOpts)
 
 			err := s.Register(context.Background(), email, password)
 
@@ -108,7 +90,7 @@ func TestAuth_Login(t *testing.T) {
 			name: "Success",
 			setupMock: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return userID, passwordHash, nil
+					return userID, validPasswordHash, nil
 				}
 			},
 			expectedErr: nil,
@@ -127,7 +109,7 @@ func TestAuth_Login(t *testing.T) {
 			expectedErr: service.ErrInvalidCredentials,
 			setupMock: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return userID, anotherPasswordHash, nil
+					return userID, validAnotherPasswordHash, nil
 				}
 			},
 		},
@@ -157,7 +139,7 @@ func TestAuth_Login(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, jwtOpts)
+			s := service.NewAuth(r, JWTOpts)
 
 			token, err := s.Login(context.Background(), email, password)
 
@@ -180,7 +162,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 
 	s := service.NewAuth(nil, service.JWTOptions{
 		JWTSecret:     JWTSecret,
-		Exp:           jwtOpts.Exp,
+		Exp:           JWTOpts.Exp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
@@ -193,7 +175,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 		{
 			name: "Valid token",
 			tokenFunc: func() (string, error) {
-				return s.CreateToken(userID, jwtOpts.Exp)
+				return s.CreateToken(userID, JWTOpts.Exp)
 			},
 			expectedUserID: userID,
 			expectedErr:    nil,
@@ -210,7 +192,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": userID.String(),
-					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -230,7 +212,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": userID.String(),
-					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
@@ -242,7 +224,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Missing sub claim",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -255,7 +237,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": 12345,
-					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -268,7 +250,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": "not-an-id",
-					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
+					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -305,11 +287,11 @@ func TestAuth_CreateToken(t *testing.T) {
 
 	s := service.NewAuth(nil, service.JWTOptions{
 		JWTSecret:     JWTSecret,
-		Exp:           jwtOpts.Exp,
+		Exp:           JWTOpts.Exp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	now := time.Now()
-	token, err := s.CreateToken(userID, jwtOpts.Exp)
+	token, err := s.CreateToken(userID, JWTOpts.Exp)
 	if err != nil {
 		t.Fatalf("token creation failed: %v", err)
 	}
@@ -334,7 +316,7 @@ func TestAuth_CreateToken(t *testing.T) {
 	if !ok {
 		t.Fatalf("exp claim is missing or not a number")
 	}
-	expectedExp := now.Add(jwtOpts.Exp).Unix()
+	expectedExp := now.Add(JWTOpts.Exp).Unix()
 	if int64(exp) < expectedExp-1 || int64(exp) > expectedExp+1 {
 		t.Errorf("Expected exp around %v, got %v", expectedExp, int64(exp))
 	}
