@@ -16,7 +16,7 @@ import (
 	"goroutine/internal/testutil"
 )
 
-type TestCase struct {
+type authTestCase struct {
 	name         string
 	inputBody    string
 	setupMock    func(s *MockAuth)
@@ -36,7 +36,7 @@ func mockTime() string { return fixedTime }
 func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
-	tests := []TestCase{
+	tests := []authTestCase{
 		{
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
@@ -155,7 +155,7 @@ func TestAuth_Register(t *testing.T) {
 func TestAuth_Login(t *testing.T) {
 	t.Parallel()
 
-	tests := []TestCase{
+	tests := []authTestCase{
 		{
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),

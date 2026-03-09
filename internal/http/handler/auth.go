@@ -61,8 +61,8 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	details := []httpschema.Detail{}
-	email := validateCredential("email", body.Email, domain.NewEmail, &details)
-	password := validateCredential("password", body.Password, domain.NewPassword, &details)
+	email := validateField("email", body.Email, domain.NewEmail, &details)
+	password := validateField("password", body.Password, domain.NewPassword, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
@@ -128,8 +128,8 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	details := []httpschema.Detail{}
-	email := validateCredential("email", body.Email, domain.NewEmail, &details)
-	password := validateCredential("password", body.Password, domain.NewPassword, &details)
+	email := validateField("email", body.Email, domain.NewEmail, &details)
+	password := validateField("password", body.Password, domain.NewPassword, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
@@ -153,7 +153,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
 
-func validateCredential[T any](field, val string, constructor func(string) (T, []string), details *[]httpschema.Detail) T {
+func validateField[T any](field, val string, constructor func(string) (T, []string), details *[]httpschema.Detail) T {
 	res, errs := constructor(val)
 	if len(errs) > 0 {
 		*details = append(*details, httpschema.Detail{Field: field, Issues: errs})
