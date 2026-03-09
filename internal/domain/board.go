@@ -17,6 +17,7 @@ const (
 
 type Board struct {
 	ID          BoardID
+	OwnerID     UserID
 	Name        BoardName
 	Description BoardDescription
 	CreatedAt   time.Time

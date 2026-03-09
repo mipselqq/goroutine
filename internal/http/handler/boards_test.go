@@ -37,9 +37,11 @@ func TestBoards_Create(t *testing.T) {
 	name, _ := domain.NewBoardName(name)
 	description, _ := domain.NewBoardDescription(description)
 	id := domain.NewBoardID()
+	userID := domain.NewUserID()
 
 	validBoard := domain.Board{
 		ID:          id,
+		OwnerID:     userID,
 		Name:        name,
 		Description: description,
 		CreatedAt:   time.Now().UTC(),
@@ -51,14 +53,18 @@ func TestBoards_Create(t *testing.T) {
 			name:      "Success",
 			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
 			setupMock: func(s *MockBoards) {
-				s.CreateFunc = func(ctx context.Context, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					if ownerID != userID {
+						t.Errorf("expected ownerID %v, got %v", userID, ownerID)
+					}
 					return validBoard, nil
 				}
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: fmt.Sprintf(
-				`{"id":%q,"name":%q,"description":%q,"createdAt":%q,"updatedAt":%q}`,
+				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q,"updatedAt":%q}`,
 				id.String(),
+				userID.String(),
 				name.String(),
 				description.String(),
 				validBoard.CreatedAt.Format(time.RFC3339),
@@ -81,9 +87,10 @@ func TestBoards_Create(t *testing.T) {
 			name:      "Empty description",
 			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, ""),
 			setupMock: func(s *MockBoards) {
-				s.CreateFunc = func(ctx context.Context, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{
 						ID:          id,
+						OwnerID:     ownerID,
 						Name:        name,
 						Description: description,
 						CreatedAt:   validBoard.CreatedAt,
@@ -93,8 +100,9 @@ func TestBoards_Create(t *testing.T) {
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: fmt.Sprintf(
-				`{"id":%q,"name":%q,"description":%q,"createdAt":%q,"updatedAt":%q}`,
+				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q,"updatedAt":%q}`,
 				id.String(),
+				userID.String(),
 				name.String(),
 				"",
 				validBoard.CreatedAt.Format(time.RFC3339),
@@ -117,7 +125,7 @@ func TestBoards_Create(t *testing.T) {
 			name:      "Internal error",
 			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
 			setupMock: func(s *MockBoards) {
-				s.CreateFunc = func(ctx context.Context, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
@@ -130,8 +138,10 @@ func TestBoards_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodPost, "/boards", bytes.NewBuffer([]byte(tt.inputBody)))
+			req := httptest.NewRequest(http.MethodPost, "/v1/boards", bytes.NewBuffer([]byte(tt.inputBody)))
 			req.Header.Set("Content-Type", "application/json")
+			ctx := context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			s := &MockBoards{}
@@ -159,5 +169,31 @@ func TestBoards_Create(t *testing.T) {
 
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
+	}
+}
+
+func TestBoards_Create_NoContextUserID(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequest(http.MethodPost, "/boards", bytes.NewBuffer([]byte(`{"name": "My Todo Name", "description": "My Todo Description"}`)))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	s := &MockBoards{}
+	logger := testutil.NewTestLogger(t)
+	h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, MockTime))
+	h.Create(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, rr.Code)
+	}
+
+	// TODO: factor out to helpers_test/AssertContentType
+	contentType := rr.Header().Get("Content-Type")
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		t.Fatalf("Failed to parse MIME %q", contentType)
+	}
+	if mediaType != ExpectedMime {
+		t.Errorf("Expected %q, got %q", ExpectedMime, mediaType)
 	}
 }

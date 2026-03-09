@@ -29,9 +29,9 @@ func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domai
 }
 
 type MockBoards struct {
-	CreateFunc func(ctx context.Context, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	CreateFunc func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 }
 
-func (m *MockBoards) Create(ctx context.Context, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	return m.CreateFunc(ctx, name, description)
+func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	return m.CreateFunc(ctx, ownerID, name, description)
 }

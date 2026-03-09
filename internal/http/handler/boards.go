@@ -12,7 +12,7 @@ import (
 )
 
 type BoardsService interface {
-	Create(ctx context.Context, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 }
 
 type Boards struct {
@@ -32,6 +32,7 @@ type createBoardBody struct {
 
 type boardResponse struct {
 	ID          string `json:"id" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
+	OwnerID     string `json:"ownerId" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
 	Name        string `json:"name" example:"My Todo Name"`
 	Description string `json:"description" example:"My Todo Description"`
 	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50+03:00"`
@@ -55,7 +56,14 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.Create(r.Context(), name, description)
+	userID, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
+	if !ok {
+		h.logger.Error("UserID not found in context")
+		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		return
+	}
+
+	board, err := h.service.Create(r.Context(), userID, name, description)
 	if err != nil {
 		h.logger.Error("Failed to create board", slog.String("err", err.Error()))
 		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
@@ -64,6 +72,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, boardResponse{
 		ID:          board.ID.String(),
+		OwnerID:     board.OwnerID.String(),
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
 		CreatedAt:   board.CreatedAt.Format(time.RFC3339),
