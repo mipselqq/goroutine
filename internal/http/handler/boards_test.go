@@ -42,8 +42,8 @@ func TestBoards_Create(t *testing.T) {
 		ID:          id,
 		Name:        name,
 		Description: description,
-		CreatedAt:   time.Now().Format(time.RFC3339),
-		UpdatedAt:   time.Now().Format(time.RFC3339),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 
 	tests := []boardsTestCase{
@@ -61,8 +61,8 @@ func TestBoards_Create(t *testing.T) {
 				id.String(),
 				name.String(),
 				description.String(),
-				validBoard.CreatedAt,
-				validBoard.UpdatedAt,
+				validBoard.CreatedAt.Format(time.RFC3339),
+				validBoard.UpdatedAt.Format(time.RFC3339),
 			),
 		},
 		{
@@ -97,8 +97,8 @@ func TestBoards_Create(t *testing.T) {
 				id.String(),
 				name.String(),
 				"",
-				validBoard.CreatedAt,
-				validBoard.UpdatedAt,
+				validBoard.CreatedAt.Format(time.RFC3339),
+				validBoard.UpdatedAt.Format(time.RFC3339),
 			),
 		},
 		{

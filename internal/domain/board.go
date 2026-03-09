@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,8 +19,8 @@ type Board struct {
 	ID          BoardID
 	Name        BoardName
 	Description BoardDescription
-	CreatedAt   string
-	UpdatedAt   string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type BoardName struct {

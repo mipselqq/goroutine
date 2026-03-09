@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
@@ -65,7 +66,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		ID:          board.ID.String(),
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
-		CreatedAt:   board.CreatedAt,
-		UpdatedAt:   board.UpdatedAt,
+		CreatedAt:   board.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   board.UpdatedAt.Format(time.RFC3339),
 	})
 }
