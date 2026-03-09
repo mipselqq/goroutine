@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+// TODO: move to handler/helpers_test.go
 func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expectedBody string) {
 	t.Helper()
 

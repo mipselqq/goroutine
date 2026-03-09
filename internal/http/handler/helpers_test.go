@@ -6,6 +6,15 @@ import (
 	"goroutine/internal/domain"
 )
 
+const (
+	Email        string = "test@example.com"
+	Password     string = "qwertyiop123"
+	ExpectedMime string = "application/json"
+	FixedTime    string = "2026-01-01T00:00:00Z"
+)
+
+func MockTime() string { return FixedTime }
+
 type MockAuth struct {
 	RegisterFunc func(ctx context.Context, email domain.Email, password domain.Password) error
 	LoginFunc    func(ctx context.Context, email domain.Email, password domain.Password) (string, error)
