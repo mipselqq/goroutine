@@ -138,7 +138,7 @@ func (b *BoardID) Scan(src any) error {
 			b.value = parsed
 		}
 	default:
-		return fmt.Errorf("unexpected type for UserID: %T", src)
+		return fmt.Errorf("unexpected type for BoardID: %T", src)
 	}
 	return nil
 }

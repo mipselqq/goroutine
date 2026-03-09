@@ -130,7 +130,7 @@ func TestBoards_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer([]byte(tt.inputBody)))
+			req := httptest.NewRequest(http.MethodPost, "/boards", bytes.NewBuffer([]byte(tt.inputBody)))
 			req.Header.Set("Content-Type", "application/json")
 
 			rr := httptest.NewRecorder()
