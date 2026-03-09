@@ -16,19 +16,19 @@ const (
 
 type Board struct {
 	ID          BoardID
-	Name        Name
-	Description Description
+	Name        BoardName
+	Description BoardDescription
 	CreatedAt   string
 	UpdatedAt   string
 }
 
-type Name struct {
+type BoardName struct {
 	value string
 }
 
-func NewName(name string) (n Name, errs []string) {
+func NewBoardName(name string) (n BoardName, errs []string) {
 	trimmedName := strings.TrimSpace(name)
-	if trimmedName == "" {
+	if len(trimmedName) < 2 {
 		errs = append(errs, ErrNameTooShort)
 	}
 
@@ -37,42 +37,42 @@ func NewName(name string) (n Name, errs []string) {
 	}
 
 	if len(errs) > 0 {
-		return Name{}, errs
+		return BoardName{}, errs
 	}
 
-	return Name{value: trimmedName}, []string{}
+	return BoardName{value: trimmedName}, []string{}
 }
 
-func (n Name) IsEmpty() bool {
+func (n BoardName) IsEmpty() bool {
 	return n.value == ""
 }
 
-func (n Name) String() string {
+func (n BoardName) String() string {
 	return n.value
 }
 
-type Description struct {
+type BoardDescription struct {
 	value string
 }
 
-func NewDescription(description string) (d Description, errs []string) {
+func NewBoardDescription(description string) (d BoardDescription, errs []string) {
 	trimmedDescription := strings.TrimSpace(description)
 	if len(trimmedDescription) > 1024 {
 		errs = append(errs, ErrDescriptionTooLong)
 	}
 
 	if len(errs) > 0 {
-		return Description{}, errs
+		return BoardDescription{}, errs
 	}
 
-	return Description{value: trimmedDescription}, []string{}
+	return BoardDescription{value: trimmedDescription}, []string{}
 }
 
-func (d Description) String() string {
+func (d BoardDescription) String() string {
 	return d.value
 }
 
-func (d Description) IsEmpty() bool {
+func (d BoardDescription) IsEmpty() bool {
 	return d.value == ""
 }
 

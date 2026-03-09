@@ -61,7 +61,7 @@ func TestName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			name, errs := domain.NewName(tt.input)
+			name, errs := domain.NewBoardName(tt.input)
 
 			if !reflect.DeepEqual(errs, tt.expectedErrors) {
 				t.Errorf("expected errors %v, got %v", tt.expectedErrors, errs)
@@ -129,7 +129,7 @@ func TestDescription(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			description, errs := domain.NewDescription(tt.input)
+			description, errs := domain.NewBoardDescription(tt.input)
 			if !reflect.DeepEqual(errs, tt.expectedErrors) {
 				t.Errorf("expected errors %v, got %v", tt.expectedErrors, errs)
 			}
