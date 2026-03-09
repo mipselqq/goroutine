@@ -49,8 +49,8 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	details := []httpschema.Detail{}
-	name := validateField("name", body.Name, domain.NewBoardName, &details)
-	description := validateField("description", body.Description, domain.NewBoardDescription, &details)
+	name := httpschema.ValidateField("name", body.Name, domain.NewBoardName, &details)
+	description := httpschema.ValidateField("description", body.Description, domain.NewBoardDescription, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
