@@ -27,7 +27,6 @@ func TestBoard_Create(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
-
 		{
 			name: "Internal error",
 			setupMock: func(r *MockBoardRepository) {
