@@ -29,6 +29,8 @@ func SetupTestDB(t *testing.T, migrationsDir string) *pgxpool.Pool {
 }
 
 func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
+	t.Helper()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
