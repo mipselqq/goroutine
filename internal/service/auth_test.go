@@ -71,7 +71,7 @@ func TestAuth_Register(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, JWTOpts)
+			s := service.NewAuth(r, jwtOpts)
 
 			err := s.Register(context.Background(), email, password)
 
@@ -139,7 +139,7 @@ func TestAuth_Login(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, JWTOpts)
+			s := service.NewAuth(r, jwtOpts)
 
 			token, err := s.Login(context.Background(), email, password)
 
@@ -162,7 +162,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 
 	s := service.NewAuth(nil, service.JWTOptions{
 		JWTSecret:     JWTSecret,
-		Exp:           JWTOpts.Exp,
+		Exp:           jwtOpts.Exp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
@@ -175,7 +175,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 		{
 			name: "Valid token",
 			tokenFunc: func() (string, error) {
-				return s.CreateToken(userID, JWTOpts.Exp)
+				return s.CreateToken(userID, jwtOpts.Exp)
 			},
 			expectedUserID: userID,
 			expectedErr:    nil,
@@ -192,7 +192,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": userID.String(),
-					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -212,7 +212,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": userID.String(),
-					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
@@ -224,7 +224,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Missing sub claim",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -237,7 +237,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": 12345,
-					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -250,7 +250,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
 					"sub": "not-an-id",
-					"exp": time.Now().Add(JWTOpts.Exp).Unix(),
+					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -287,11 +287,11 @@ func TestAuth_CreateToken(t *testing.T) {
 
 	s := service.NewAuth(nil, service.JWTOptions{
 		JWTSecret:     JWTSecret,
-		Exp:           JWTOpts.Exp,
+		Exp:           jwtOpts.Exp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	now := time.Now()
-	token, err := s.CreateToken(userID, JWTOpts.Exp)
+	token, err := s.CreateToken(userID, jwtOpts.Exp)
 	if err != nil {
 		t.Fatalf("token creation failed: %v", err)
 	}
@@ -316,7 +316,7 @@ func TestAuth_CreateToken(t *testing.T) {
 	if !ok {
 		t.Fatalf("exp claim is missing or not a number")
 	}
-	expectedExp := now.Add(JWTOpts.Exp).Unix()
+	expectedExp := now.Add(jwtOpts.Exp).Unix()
 	if int64(exp) < expectedExp-1 || int64(exp) > expectedExp+1 {
 		t.Errorf("Expected exp around %v, got %v", expectedExp, int64(exp))
 	}

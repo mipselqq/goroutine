@@ -23,7 +23,7 @@ var (
 	validPasswordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
 	validAnotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
 	JWTSecret                = secrecy.SecretString("secret")
-	JWTOpts                  = service.JWTOptions{
+	jwtOpts                  = service.JWTOptions{
 		JWTSecret:     JWTSecret,
 		Exp:           time.Hour,
 		SigningMethod: jwt.SigningMethodHS256,
