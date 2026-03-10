@@ -42,7 +42,7 @@ try-fetch-tags:
 	git fetch --tags || true
 
 lint:
-	golangci-lint run --build-tags=integration
+	golangci-lint run
 vuln:
 	govulncheck ./...
 fmt:
