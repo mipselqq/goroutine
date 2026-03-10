@@ -9,11 +9,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"goroutine/internal/app"
 	"goroutine/internal/config"
 	"goroutine/internal/testutil"
 
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -86,6 +88,33 @@ func TestBoard_HappyPath(t *testing.T) {
 
 		if resp.StatusCode != http.StatusCreated {
 			t.Errorf("Expected status %d, got %d", http.StatusCreated, resp.StatusCode)
+		}
+
+		var bResp struct {
+			ID          string `json:"id"`
+			OwnerID     string `json:"ownerId"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			CreatedAt   string `json:"createdAt"`
+		}
+		if err = json.NewDecoder(resp.Body).Decode(&bResp); err != nil {
+			t.Fatalf("Failed to decode board response: %v", err)
+		}
+
+		if _, err := uuid.Parse(bResp.ID); err != nil {
+			t.Errorf("Invalid board ID: %v", err)
+		}
+		if _, err := uuid.Parse(bResp.OwnerID); err != nil {
+			t.Errorf("Invalid owner ID: %v", err)
+		}
+		if bResp.Name != "My test board" {
+			t.Errorf("Expected name %q, got %q", "My test board", bResp.Name)
+		}
+		if bResp.Description != "This is a board description." {
+			t.Errorf("Expected description %q, got %q", "This is a board description.", bResp.Description)
+		}
+		if _, err := time.Parse(time.RFC3339, bResp.CreatedAt); err != nil {
+			t.Errorf("Invalid createdAt: %v", err)
 		}
 	})
 }
