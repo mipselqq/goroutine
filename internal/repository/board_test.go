@@ -5,6 +5,7 @@ package repository_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"goroutine/internal/repository"
 )
@@ -47,31 +48,37 @@ func TestBoardRepository_Create(t *testing.T) {
 			t.Errorf("Expected created at and updated at to be the same, got %v and %v", board.CreatedAt, board.UpdatedAt)
 		}
 
-		const query = `SELECT owner_id, name, description FROM boards WHERE owner_id=$1 AND name=$2 AND description=$3`
-		var dbOwnerID string
-		var dbName string
-		var dbDescription string
-		err = pool.QueryRow(
-			context.Background(),
-			query,
-			userID.String(),
-			boardName.String(),
-			boardDescription.String(),
-		).Scan(&dbOwnerID, &dbName, &dbDescription)
+		const query = `
+		SELECT owner_id, name, description, created_at, updated_at 
+		FROM boards 
+		WHERE id = $1`
+
+		var (
+			dbOwnerID     string
+			dbName        string
+			dbDescription string
+			dbCreatedAt   time.Time
+			dbUpdatedAt   time.Time
+		)
+		err = pool.QueryRow(context.Background(), query, board.ID.String()).
+			Scan(&dbOwnerID, &dbName, &dbDescription, &dbCreatedAt, &dbUpdatedAt)
 		if err != nil {
-			t.Errorf("Failed to find board in DB: %v", err)
+			t.Fatalf("Failed to find board in DB by ID %q: %v", board.ID, err)
 		}
 		if dbOwnerID != userID.String() {
-			t.Errorf("Expected owner ID %q, got %q", userID.String(), dbOwnerID)
+			t.Errorf("DB: expected owner ID %q, got %q", userID, dbOwnerID)
 		}
 		if dbName != boardName.String() {
-			t.Errorf("Expected name %q, got %q", boardName.String(), dbName)
+			t.Errorf("DB: expected name %q, got %q", boardName, dbName)
 		}
 		if dbDescription != boardDescription.String() {
-			t.Errorf("Expected description %q, got %q", boardDescription.String(), dbDescription)
+			t.Errorf("DB: expected description %q, got %q", boardDescription, dbDescription)
 		}
-		if board.CreatedAt != board.UpdatedAt {
-			t.Errorf("Expected created at and updated at to be the same, got %v and %v", board.CreatedAt, board.UpdatedAt)
+		if !dbCreatedAt.Equal(board.CreatedAt) {
+			t.Errorf("DB: expected created_at %v, got %v", board.CreatedAt, dbCreatedAt)
+		}
+		if !dbUpdatedAt.Equal(board.UpdatedAt) {
+			t.Errorf("DB: expected updated_at %v, got %v", board.UpdatedAt, dbUpdatedAt)
 		}
 	})
 }
