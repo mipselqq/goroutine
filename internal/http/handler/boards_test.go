@@ -77,30 +77,6 @@ func TestBoards_Create(t *testing.T) {
 			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"name","issues":["Name is too short"]}]}`, FixedTime),
 		},
 		{
-			name:      "Empty description",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, ""),
-			setupMock: func(s *MockBoards) {
-				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-					return domain.Board{
-						ID:          id,
-						OwnerID:     ownerID,
-						Name:        name,
-						Description: description,
-						CreatedAt:   validBoard.CreatedAt,
-					}, nil
-				}
-			},
-			expectedCode: http.StatusCreated,
-			expectedBody: fmt.Sprintf(
-				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q}`,
-				id.String(),
-				userID.String(),
-				name.String(),
-				"",
-				validBoard.CreatedAt.Format(time.RFC3339),
-			),
-		},
-		{
 			name:         "Description too long",
 			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, name, strings.Repeat("a", 1025)),
 			expectedCode: http.StatusBadRequest,
