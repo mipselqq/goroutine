@@ -55,6 +55,12 @@ func TestName(t *testing.T) {
 			expectedErrors: []string{"Name is too short"},
 			expectedValue:  "",
 		},
+		{
+			name:           "Single character name",
+			input:          "a",
+			expectedErrors: []string{},
+			expectedValue:  "a",
+		},
 	}
 
 	for _, tt := range nameTests {

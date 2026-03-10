@@ -77,12 +77,6 @@ func TestBoards_Create(t *testing.T) {
 			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"name","issues":["Name is too short"]}]}`, FixedTime),
 		},
 		{
-			name:         "Name too short",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, "a", description),
-			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"name","issues":["Name is too short"]}]}`, FixedTime),
-		},
-		{
 			name:      "Empty description",
 			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, ""),
 			setupMock: func(s *MockBoards) {

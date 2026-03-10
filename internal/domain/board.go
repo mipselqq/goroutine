@@ -30,7 +30,7 @@ type BoardName struct {
 
 func NewBoardName(name string) (n BoardName, errs []string) {
 	trimmedName := strings.TrimSpace(name)
-	if len(trimmedName) < 2 {
+	if trimmedName == "" {
 		errs = append(errs, ErrNameTooShort)
 	}
 
