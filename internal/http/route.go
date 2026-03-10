@@ -17,6 +17,7 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("POST /v1/login", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Login)))
 	mux.Handle("GET /v1/health", m.Metrics.Wrap(http.HandlerFunc(h.Health.Health)))
 	mux.Handle("GET /v1/whoami", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Auth.WhoAmI))))
+	mux.Handle("POST /v1/boards", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.Create))))
 	mux.Handle("GET /v1/swagger/", httpSwagger.Handler(
 		httpSwagger.URL("/v1/swagger/doc.json"),
 	))

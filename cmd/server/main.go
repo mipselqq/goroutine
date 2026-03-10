@@ -14,6 +14,8 @@ import (
 	"goroutine/internal/app"
 	"goroutine/internal/config"
 	"goroutine/internal/logging"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var version = "no version bundled by linker"
@@ -40,7 +42,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	application := app.New(logger, pool, &appCfg)
+	application := app.New(logger, pool, &appCfg, prometheus.DefaultRegisterer)
 
 	srv := app.RunBackgroundServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
 	adminSrv := app.RunBackgroundServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)

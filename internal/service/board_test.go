@@ -21,8 +21,8 @@ func TestBoard_Create(t *testing.T) {
 		{
 			name: "Success",
 			setupMock: func(r *MockBoardRepository) {
-				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) error {
-					return nil
+				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, nil
 				}
 			},
 			expectedErr: nil,
@@ -31,8 +31,8 @@ func TestBoard_Create(t *testing.T) {
 		{
 			name: "Internal error",
 			setupMock: func(r *MockBoardRepository) {
-				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) error {
-					return repository.ErrInternal
+				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, repository.ErrInternal
 				}
 			},
 			expectedErr: service.ErrInternal,
@@ -40,8 +40,8 @@ func TestBoard_Create(t *testing.T) {
 		{
 			name: "Unexpected error",
 			setupMock: func(r *MockBoardRepository) {
-				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) error {
-					return errors.New("unexpected error")
+				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, errors.New("unexpected error")
 				}
 			},
 			expectedErr: service.ErrInternal,
@@ -56,7 +56,7 @@ func TestBoard_Create(t *testing.T) {
 			tt.setupMock(r)
 			s := service.NewBoard(r)
 
-			err := s.Create(context.Background(), userID, boardName, boardDescription)
+			_, err := s.Create(context.Background(), userID, boardName, boardDescription)
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)

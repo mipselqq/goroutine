@@ -25,7 +25,7 @@ type App struct {
 	AdminRouter http.Handler
 }
 
-func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
+func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg prometheus.Registerer) *App {
 	userRepo := repository.NewPgUser(pool)
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
@@ -38,14 +38,18 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig) *App {
 	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
 
-	metricsMiddleware := middleware.NewMetrics(prometheus.DefaultRegisterer)
+	boardRepo := repository.NewPgBoard(pool)
+	boardsService := service.NewBoard(boardRepo)
+	boardsHandler := handler.NewBoards(logger, boardsService, responder)
+
+	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
 	authMiddleware := middleware.NewAuth(logger, authService, responder)
 	reqIDMiddleware := middleware.NewRequestID(logger, func() string {
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 
-	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler}
+	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler}
 	middlewares := &middleware.Middlewares{
 		Metrics:   metricsMiddleware,
 		CORS:      corsMiddleware,

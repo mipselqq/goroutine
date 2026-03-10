@@ -36,7 +36,6 @@ type boardResponse struct {
 	Name        string `json:"name" example:"My Todo Name"`
 	Description string `json:"description" example:"My Todo Description"`
 	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50+03:00"`
-	UpdatedAt   string `json:"updatedAt" example:"2026-03-07T20:56:50+03:00"`
 }
 
 func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
@@ -70,12 +69,11 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusOK, boardResponse{
+	httpschema.RespondJSON(w, h.logger, http.StatusCreated, boardResponse{
 		ID:          board.ID.String(),
 		OwnerID:     board.OwnerID.String(),
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
 		CreatedAt:   board.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   board.UpdatedAt.Format(time.RFC3339),
 	})
 }

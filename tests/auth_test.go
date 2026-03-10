@@ -16,6 +16,7 @@ import (
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestAuth_HappyPath(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAuth_HappyPath(t *testing.T) {
 	cfg := config.NewAppConfigFromEnv(logger)
 	logger.Info("App config", slog.Any("config", cfg))
 
-	application := app.New(logger, pool, &cfg)
+	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
 
 	ts := httptest.NewServer(application.Router)
 	defer ts.Close()

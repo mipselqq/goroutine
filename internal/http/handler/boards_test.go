@@ -46,7 +46,6 @@ func TestBoards_Create(t *testing.T) {
 		Name:        name,
 		Description: description,
 		CreatedAt:   time.Now().UTC(),
-		UpdatedAt:   time.Now().UTC(),
 	}
 
 	tests := []boardsTestCase{
@@ -61,15 +60,14 @@ func TestBoards_Create(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedCode: http.StatusOK,
+			expectedCode: http.StatusCreated,
 			expectedBody: fmt.Sprintf(
-				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q,"updatedAt":%q}`,
+				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q}`,
 				id.String(),
 				userID.String(),
 				name.String(),
 				description.String(),
 				validBoard.CreatedAt.Format(time.RFC3339),
-				validBoard.UpdatedAt.Format(time.RFC3339),
 			),
 		},
 		{
@@ -95,19 +93,17 @@ func TestBoards_Create(t *testing.T) {
 						Name:        name,
 						Description: description,
 						CreatedAt:   validBoard.CreatedAt,
-						UpdatedAt:   validBoard.UpdatedAt,
 					}, nil
 				}
 			},
-			expectedCode: http.StatusOK,
+			expectedCode: http.StatusCreated,
 			expectedBody: fmt.Sprintf(
-				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q,"updatedAt":%q}`,
+				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q}`,
 				id.String(),
 				userID.String(),
 				name.String(),
 				"",
 				validBoard.CreatedAt.Format(time.RFC3339),
-				validBoard.UpdatedAt.Format(time.RFC3339),
 			),
 		},
 		{

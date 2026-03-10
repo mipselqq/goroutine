@@ -49,9 +49,9 @@ func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email)
 }
 
 type MockBoardRepository struct {
-	CreateFunc func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) error
+	CreateFunc func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 }
 
-func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) error {
+func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
