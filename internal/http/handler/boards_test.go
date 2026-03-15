@@ -22,6 +22,7 @@ import (
 type boardsTestCase struct {
 	name         string
 	inputBody    string
+	context      context.Context
 	setupMock    func(s *MockBoards)
 	expectedCode int
 	expectedBody string
@@ -110,6 +111,13 @@ func TestBoards_Create(t *testing.T) {
 			expectedCode: http.StatusInternalServerError,
 			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
 		},
+		{
+			name:         "No context user ID",
+			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			context:      context.Background(),
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
+		},
 	}
 
 	for _, tt := range tests {
@@ -118,7 +126,14 @@ func TestBoards_Create(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodPost, "/v1/boards", bytes.NewBuffer([]byte(tt.inputBody)))
 			req.Header.Set("Content-Type", "application/json")
-			ctx := context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID)
+
+			var ctx context.Context
+			if tt.context != nil {
+				ctx = tt.context
+			} else {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID)
+			}
+
 			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
@@ -147,31 +162,5 @@ func TestBoards_Create(t *testing.T) {
 
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
-	}
-}
-
-func TestBoards_Create_NoContextUserID(t *testing.T) {
-	t.Parallel()
-
-	req := httptest.NewRequest(http.MethodPost, "/boards", bytes.NewBuffer([]byte(`{"name": "My Todo Name", "description": "My Todo Description"}`)))
-	req.Header.Set("Content-Type", "application/json")
-	rr := httptest.NewRecorder()
-	s := &MockBoards{}
-	logger := testutil.NewTestLogger(t)
-	h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, MockTime))
-	h.Create(rr, req)
-
-	if rr.Code != http.StatusInternalServerError {
-		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, rr.Code)
-	}
-
-	// TODO: factor out to helpers_test/AssertContentType
-	contentType := rr.Header().Get("Content-Type")
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		t.Fatalf("Failed to parse MIME %q", contentType)
-	}
-	if mediaType != ExpectedMime {
-		t.Errorf("Expected %q, got %q", ExpectedMime, mediaType)
 	}
 }
