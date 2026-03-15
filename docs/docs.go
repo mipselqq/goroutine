@@ -15,6 +15,63 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/boards": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new board for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "boards"
+                ],
+                "summary": "Create a new board",
+                "parameters": [
+                    {
+                        "description": "Board details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createBoardBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handler.boardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/health": {
             "get": {
                 "description": "Check if the server is alive",
@@ -172,6 +229,44 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handler.boardResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50+03:00"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "My Todo Description"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Todo Name"
+                },
+                "ownerId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                }
+            }
+        },
+        "handler.createBoardBody": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "My Board Description"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Board Name"
+                }
+            }
+        },
         "handler.loginBody": {
             "type": "object",
             "properties": {

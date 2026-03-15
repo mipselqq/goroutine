@@ -38,6 +38,19 @@ type boardResponse struct {
 	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50+03:00"`
 }
 
+// Create godoc
+// @Summary Create a new board
+// @Description Create a new board for the current user
+// @Tags boards
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body createBoardBody true "Board details"
+// @Success 201 {object} boardResponse
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards [post]
 func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 	var body createBoardBody
 
