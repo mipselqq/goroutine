@@ -5,33 +5,17 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"log/slog"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
-	"goroutine/internal/app"
-	"goroutine/internal/config"
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestBoard_HappyPath(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../migrations")
-	defer pool.Close()
-
-	logger := testutil.NewTestLogger(t)
-	cfg := config.NewAppConfigFromEnv(logger)
-	logger.Info("App config", slog.Any("config", cfg))
-
-	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
-
-	ts := httptest.NewServer(application.Router)
-	defer ts.Close()
-	client := ts.Client()
+	client, ts, pool := E2EPrelude(t)
 
 	t.Run("Create board successfully", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
