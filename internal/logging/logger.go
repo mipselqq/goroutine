@@ -25,6 +25,20 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	return h.Handler.Handle(ctx, r)
 }
 
+func (h *ContextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &ContextHandler{
+		Handler:    h.Handler.WithAttrs(attrs),
+		extractors: h.extractors,
+	}
+}
+
+func (h *ContextHandler) WithGroup(name string) slog.Handler {
+	return &ContextHandler{
+		Handler:    h.Handler.WithGroup(name),
+		extractors: h.extractors,
+	}
+}
+
 func NewLogger(env, logLevel string, extractors ...ContextExtractor) *slog.Logger {
 	var handler slog.Handler
 	level := parseLevel(logLevel)
