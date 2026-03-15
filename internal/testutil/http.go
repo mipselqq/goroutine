@@ -61,6 +61,7 @@ func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expected an
 	t.Helper()
 
 	if expected == nil {
+		// Middlewares may not return
 		return
 	}
 
