@@ -98,7 +98,6 @@ type loginResponse struct {
 	Token string `json:"token" example:"jwt-token"`
 }
 
-// TODO: add extractor with truncation in debug
 func SlogRequestIDFromRequest(r *http.Request) any {
 	return slog.Any("request_id", r.Context().Value(httpschema.ContextKeyRequestID))
 }
