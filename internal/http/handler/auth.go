@@ -84,7 +84,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.InfoContext(r.Context(), "Successfuly registered user", slog.String("email", body.Email))
+	h.logger.InfoContext(r.Context(), "Successfully registered user", slog.String("email", body.Email))
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, httpschema.Status{Status: "ok"})
 }
@@ -144,7 +144,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.InfoContext(r.Context(), "Successfuly logged in user", slog.String("email", body.Email))
+	h.logger.InfoContext(r.Context(), "Successfully logged in user", slog.String("email", body.Email))
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
 
