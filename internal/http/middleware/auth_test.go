@@ -97,7 +97,7 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Missing header",
+			name:           "Empty header value",
 			headerName:     "Authorization",
 			headerValue:    "",
 			expectedStatus: http.StatusUnauthorized,
@@ -242,6 +242,7 @@ func TestAuth(t *testing.T) {
 			wrapped := m.Wrap(h)
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", "")
+
 			req.Header.Set(tt.headerName, tt.headerValue)
 			wrapped.ServeHTTP(rr, req)
 
