@@ -72,7 +72,7 @@ func TestRequestIDMiddleware(t *testing.T) {
 
 			mw := middleware.MustNewRequestID(testutil.NewTestLogger(t), generateStaticID)
 
-			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", "")
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", http.NoBody)
 			for k, v := range tt.requestHeaders {
 				req.Header.Set(k, v)
 			}
