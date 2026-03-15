@@ -1,13 +1,10 @@
 package handler_test
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"mime"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -119,19 +116,14 @@ func TestBoards_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodPost, "/v1/boards", bytes.NewBuffer([]byte(tt.inputBody)))
-			req.Header.Set("Content-Type", "application/json")
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/v1/boards", tt.inputBody)
 
-			var ctx context.Context
 			if tt.context != nil {
-				ctx = tt.context
+				req = req.WithContext(tt.context)
 			} else {
-				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID)
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID))
 			}
 
-			req = req.WithContext(ctx)
-
-			rr := httptest.NewRecorder()
 			s := &MockBoards{}
 
 			if tt.setupMock != nil {
@@ -146,16 +138,8 @@ func TestBoards_Create(t *testing.T) {
 				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
 			}
 
-			contentType := rr.Header().Get("Content-Type")
-			mediaType, _, err := mime.ParseMediaType(contentType)
-			if err != nil {
-				t.Fatalf("Failed to parse MIME %q", contentType)
-			}
-			if mediaType != "application/json" {
-				t.Errorf("Expected %q, got %q", "application/json", mediaType)
-			}
-
-			AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }

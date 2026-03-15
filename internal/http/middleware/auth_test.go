@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -18,6 +17,7 @@ func TestAuth(t *testing.T) {
 	t.Parallel()
 
 	userID := testutil.ValidUserID()
+	mockStatusCode := http.StatusTeapot
 
 	tests := []struct {
 		name           string
@@ -32,7 +32,7 @@ func TestAuth(t *testing.T) {
 			name:           "Valid token",
 			headerName:     "Authorization",
 			headerValue:    "Bearer valid.token.here",
-			expectedStatus: http.StatusTeapot,
+			expectedStatus: mockStatusCode,
 			expectedUserID: userID,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
@@ -128,7 +128,7 @@ func TestAuth(t *testing.T) {
 			name:           "Extra spaces in header",
 			headerName:     "Authorization",
 			headerValue:    "   Bearer     valid.token.here   ",
-			expectedStatus: http.StatusTeapot,
+			expectedStatus: mockStatusCode,
 			expectedUserID: userID,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
@@ -140,7 +140,7 @@ func TestAuth(t *testing.T) {
 			name:           "Random casing in header",
 			headerName:     "AuThorIzAtIoN",
 			headerValue:    "bEaReR vAlId.tOkEn.hErE",
-			expectedStatus: http.StatusTeapot,
+			expectedStatus: mockStatusCode,
 			expectedUserID: userID,
 			setupMock: func(r *MockAuth) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
@@ -179,24 +179,25 @@ func TestAuth(t *testing.T) {
 					t.Errorf("Expected user ID %v, got %v", tt.expectedUserID, id)
 				}
 
-				w.WriteHeader(http.StatusTeapot)
+				w.WriteHeader(mockStatusCode)
 			})
 
 			logger := testutil.NewTestLogger(t)
 			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			wrapped := m.Wrap(h)
 
-			request := httptest.NewRequest("GET", "/", http.NoBody)
-			request.Header.Set(tt.headerName, tt.headerValue)
-			response := httptest.NewRecorder()
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", "")
+			req.Header.Set(tt.headerName, tt.headerValue)
+			wrapped.ServeHTTP(rr, req)
 
-			wrapped.ServeHTTP(response, request)
-
-			if response.Code != tt.expectedStatus {
-				t.Errorf("Expected status %d, got %d", tt.expectedStatus, response.Code)
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("Expected status %d, got %d", tt.expectedStatus, rr.Code)
 			}
 
-			AssertResponseBody(t, response, tt.expectedBody)
+			if rr.Code != mockStatusCode {
+				testutil.AssertContentType(t, rr, "application/json")
+			}
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }

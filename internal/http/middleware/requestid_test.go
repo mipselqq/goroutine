@@ -2,7 +2,6 @@ package middleware_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"goroutine/internal/http/httpschema"
@@ -73,14 +72,12 @@ func TestRequestIDMiddleware(t *testing.T) {
 
 			mw := middleware.MustNewRequestID(testutil.NewTestLogger(t), generateStaticID)
 
-			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", "")
 			for k, v := range tt.requestHeaders {
 				req.Header.Set(k, v)
 			}
 
 			wrapped := mw.Wrap(handler)
-			rr := httptest.NewRecorder()
-
 			wrapped.ServeHTTP(rr, req)
 
 			if rr.Code != mockStatusCode {

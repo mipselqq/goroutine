@@ -2,14 +2,14 @@ package middleware_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"testing"
 
 	"goroutine/internal/http/middleware"
+	"goroutine/internal/testutil"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/testutil"
+	promTestutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func TestMetrics_Collection(t *testing.T) {
@@ -48,8 +48,7 @@ func TestMetrics_Collection(t *testing.T) {
 			mw := middleware.NewMetrics(reg)
 			wrapped := mw.Wrap(handler)
 
-			req := httptest.NewRequest(tt.method, tt.path, http.NoBody)
-			rr := httptest.NewRecorder()
+			req, rr := testutil.NewJSONRequestAndRecorder(t, tt.method, tt.path, "")
 
 			wrapped.ServeHTTP(rr, req)
 
@@ -58,7 +57,7 @@ func TestMetrics_Collection(t *testing.T) {
 				t.Errorf("Middleware modified status code: expected %q, got %q", tt.expectedCode, code)
 			}
 
-			count := testutil.ToFloat64(mw.HttpRequests.With(prometheus.Labels{
+			count := promTestutil.ToFloat64(mw.HttpRequests.With(prometheus.Labels{
 				"path":   tt.path,
 				"method": tt.method,
 				"status": tt.expectedCode,
@@ -68,7 +67,7 @@ func TestMetrics_Collection(t *testing.T) {
 				t.Errorf("Expected count = 1, got %f", count)
 			}
 
-			histCount := testutil.CollectAndCount(mw.HttpDuration)
+			histCount := promTestutil.CollectAndCount(mw.HttpDuration)
 			if histCount == 0 {
 				t.Errorf("Expected histogram to capture observation")
 			}

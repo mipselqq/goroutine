@@ -1,13 +1,10 @@
 package handler_test
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"mime"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -106,18 +103,15 @@ func TestAuth_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			logger := testutil.NewTestLogger(t)
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/register", tt.inputBody)
 
-			req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBuffer([]byte(tt.inputBody)))
-			req.Header.Set("Content-Type", "application/json")
-
-			rr := httptest.NewRecorder()
 			s := MockAuth{}
 
 			if tt.setupMock != nil {
 				tt.setupMock(&s)
 			}
 
+			logger := testutil.NewTestLogger(t)
 			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.Register(rr, req)
 
@@ -125,16 +119,8 @@ func TestAuth_Register(t *testing.T) {
 				t.Errorf("Expected status %d, got %d", tt.expectedCode, rr.Code)
 			}
 
-			contentType := rr.Header().Get("Content-Type")
-			mediaType, _, err := mime.ParseMediaType(contentType)
-			if err != nil {
-				t.Fatalf("Failed to parse MIME %q", contentType)
-			}
-			if mediaType != "application/json" {
-				t.Errorf("Expected %q, got %q", "application/json", mediaType)
-			}
-
-			AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }
@@ -231,11 +217,8 @@ func TestAuth_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/login", tt.inputBody)
 
-			req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer([]byte(tt.inputBody)))
-			req.Header.Set("Content-Type", "application/json")
-
-			rr := httptest.NewRecorder()
 			s := &MockAuth{}
 
 			if tt.setupMock != nil {
@@ -250,16 +233,8 @@ func TestAuth_Login(t *testing.T) {
 				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
 			}
 
-			contentType := rr.Header().Get("Content-Type")
-			mediaType, _, err := mime.ParseMediaType(contentType)
-			if err != nil {
-				t.Fatalf("Failed to parse MIME %q", contentType)
-			}
-			if mediaType != "application/json" {
-				t.Errorf("Expected %q, got %q", "application/json", mediaType)
-			}
-
-			AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }
@@ -292,8 +267,9 @@ func TestAuth_WhoAmI(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequestWithContext(tt.context, http.MethodGet, "/whoami", nil)
-			rr := httptest.NewRecorder()
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/whoami", "")
+			req = req.WithContext(tt.context)
+
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewAuth(logger, &MockAuth{}, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.WhoAmI(rr, req)
@@ -301,7 +277,9 @@ func TestAuth_WhoAmI(t *testing.T) {
 			if rr.Code != tt.expectedCode {
 				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
 			}
-			AssertResponseBody(t, rr, tt.expectedBody)
+
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
 }
