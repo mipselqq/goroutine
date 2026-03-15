@@ -2,6 +2,7 @@ package middleware_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,6 +25,7 @@ func TestAuth(t *testing.T) {
 		headerValue    string
 		expectedStatus int
 		expectedUserID domain.UserID
+		expectedBody   string
 		setupMock      func(r *MockAuth)
 	}{
 		{
@@ -48,6 +50,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, service.ErrInvalidToken
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, FixedTime),
 		},
 		{
 			name:           "Token expired",
@@ -59,6 +62,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, service.ErrTokenExpired
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, FixedTime),
 		},
 		{
 			name:           "Invalid signing method",
@@ -70,6 +74,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, service.ErrInvalidSigningMethod
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, FixedTime),
 		},
 		{
 			name:           "Missing header",
@@ -81,6 +86,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Missing authorization header"]}]}`, FixedTime),
 		},
 		{
 			name:           "Missing token",
@@ -92,6 +98,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, FixedTime),
 		},
 		{
 			name:           "Empty token",
@@ -103,6 +110,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, FixedTime),
 		},
 		{
 			name:           "Extra parts in header",
@@ -114,6 +122,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, FixedTime),
 		},
 		{
 			name:           "Extra spaces in header",
@@ -139,6 +148,18 @@ func TestAuth(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:           "Wrong prefix",
+			headerName:     "Authorization",
+			headerValue:    "Basic some-token",
+			expectedStatus: http.StatusUnauthorized,
+			setupMock: func(r *MockAuth) {
+				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+					return domain.UserID{}, nil
+				}
+			},
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["No Bearer prefix"]}]}`, FixedTime),
+		},
 	}
 
 	for _, tt := range tests {
@@ -162,7 +183,7 @@ func TestAuth(t *testing.T) {
 			})
 
 			logger := testutil.NewTestLogger(t)
-			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli))
+			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, MockTime))
 			wrapped := m.Wrap(h)
 
 			request := httptest.NewRequest("GET", "/", http.NoBody)
@@ -174,6 +195,8 @@ func TestAuth(t *testing.T) {
 			if response.Code != tt.expectedStatus {
 				t.Errorf("Expected status %d, got %d", tt.expectedStatus, response.Code)
 			}
+
+			testutil.AssertResponseBody(t, response, tt.expectedBody)
 		})
 	}
 }
