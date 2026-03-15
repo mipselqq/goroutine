@@ -2,37 +2,8 @@ package service_test
 
 import (
 	"context"
-	"time"
 
 	"goroutine/internal/domain"
-	"goroutine/internal/secrecy"
-	"goroutine/internal/service"
-	"goroutine/internal/testutil"
-
-	"github.com/golang-jwt/jwt/v5"
-)
-
-// TODO: user functions to create valid values for tests
-// to avoid potential global variables pollution
-var (
-	validEmailStr            = "test@example.com"
-	email, _                 = domain.NewEmail(validEmailStr)
-	userID                   = testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
-	validPasswordStr         = "qwerty"
-	password, _              = domain.NewPassword(validPasswordStr)
-	validPasswordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
-	validAnotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
-	JWTSecret                = secrecy.SecretString("secret")
-	jwtOpts                  = service.JWTOptions{
-		JWTSecret:     JWTSecret,
-		Exp:           time.Hour,
-		SigningMethod: jwt.SigningMethodHS256,
-	}
-
-	validBoardNameStr        = "Test Board"
-	boardName, _             = domain.NewBoardName(validBoardNameStr)
-	validBoardDescriptionStr = "Test Board Description"
-	boardDescription, _      = domain.NewBoardDescription(validBoardDescriptionStr)
 )
 
 type MockUserRepository struct {

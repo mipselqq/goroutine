@@ -36,8 +36,8 @@ func TestAuth_HappyPath(t *testing.T) {
 	t.Run("Full auth flow: register then login", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
-		email := "e2e-user@example.com"
-		password := "very-strong-password"
+		email := testutil.ValidEmail().String()
+		password := testutil.ValidPassword().String()
 
 		regBody, _ := json.Marshal(map[string]string{
 			"email":    email,

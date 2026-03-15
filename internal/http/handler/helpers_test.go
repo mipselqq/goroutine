@@ -1,19 +1,28 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
+	"net/http/httptest"
+	"testing"
 
 	"goroutine/internal/domain"
 )
 
-const (
-	Email        string = "test@example.com"
-	Password     string = "qwertyiop123"
-	ExpectedMime string = "application/json"
-	FixedTime    string = "2026-01-01T00:00:00Z"
-)
+func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expectedBody string) {
+	t.Helper()
 
-func MockTime() string { return FixedTime }
+	if expectedBody != "" {
+		actualBody := bytes.TrimSpace(rr.Body.Bytes())
+		if string(actualBody) != expectedBody {
+			t.Logf("Expected body:")
+			t.Logf("%q", expectedBody)
+			t.Logf("Got:")
+			t.Logf("%q", string(actualBody))
+			t.Fail()
+		}
+	}
+}
 
 type MockAuth struct {
 	RegisterFunc func(ctx context.Context, email domain.Email, password domain.Password) error

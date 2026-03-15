@@ -17,7 +17,7 @@ import (
 func TestAuth(t *testing.T) {
 	t.Parallel()
 
-	userID := testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
+	userID := testutil.ValidUserID()
 
 	tests := []struct {
 		name           string
@@ -50,7 +50,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, service.ErrInvalidToken
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Token expired",
@@ -62,7 +62,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, service.ErrTokenExpired
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Invalid signing method",
@@ -74,7 +74,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, service.ErrInvalidSigningMethod
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_TOKEN","message":"Invalid token","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid token"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Missing header",
@@ -86,7 +86,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Missing authorization header"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Missing authorization header"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Missing token",
@@ -98,7 +98,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Empty token",
@@ -110,7 +110,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Extra parts in header",
@@ -122,7 +122,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["Invalid authorization header"]}]}`, testutil.FixedTime()),
 		},
 		{
 			name:           "Extra spaces in header",
@@ -158,7 +158,7 @@ func TestAuth(t *testing.T) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["No Bearer prefix"]}]}`, FixedTime),
+			expectedBody: fmt.Sprintf(`{"code":"INVALID_AUTH_HEADER","message":"Invalid authorization header","timestamp":%q,"details":[{"field":"Authorization","issues":["No Bearer prefix"]}]}`, testutil.FixedTime()),
 		},
 	}
 
@@ -183,7 +183,7 @@ func TestAuth(t *testing.T) {
 			})
 
 			logger := testutil.NewTestLogger(t)
-			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, MockTime))
+			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			wrapped := m.Wrap(h)
 
 			request := httptest.NewRequest("GET", "/", http.NoBody)
@@ -196,7 +196,7 @@ func TestAuth(t *testing.T) {
 				t.Errorf("Expected status %d, got %d", tt.expectedStatus, response.Code)
 			}
 
-			testutil.AssertResponseBody(t, response, tt.expectedBody)
+			AssertResponseBody(t, response, tt.expectedBody)
 		})
 	}
 }

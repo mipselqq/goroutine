@@ -13,7 +13,6 @@ import (
 	"goroutine/internal/testutil"
 )
 
-// TODO: factor out common initialization
 func TestUserRepository_Insert(t *testing.T) {
 	pool := testutil.SetupTestDB(t, "../../migrations")
 
@@ -22,9 +21,8 @@ func TestUserRepository_Insert(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	emailStr := "test@example.com"
-	email, _ := domain.NewEmail(emailStr)
-	hash := "some-secret-hash"
+	email := testutil.ValidEmail()
+	hash := testutil.ValidPasswordHash()
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
@@ -35,12 +33,12 @@ func TestUserRepository_Insert(t *testing.T) {
 		}
 
 		var dbEmail string
-		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", emailStr).Scan(&dbEmail)
+		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email.String()).Scan(&dbEmail)
 		if err != nil {
 			t.Errorf("Failed to find user in DB: %v", err)
 		}
-		if dbEmail != emailStr {
-			t.Errorf("Expected email %q, got %q", emailStr, dbEmail)
+		if dbEmail != email.String() {
+			t.Errorf("Expected email %q, got %q", email.String(), dbEmail)
 		}
 	})
 
@@ -65,9 +63,8 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	emailStr := "test-get@example.com"
-	email, _ := domain.NewEmail(emailStr)
-	hash := "secret-hash-for-get"
+	email := testutil.ValidEmail()
+	hash := testutil.ValidPasswordHash()
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")

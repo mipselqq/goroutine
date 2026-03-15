@@ -8,17 +8,21 @@ import (
 	"time"
 
 	"goroutine/internal/repository"
+	"goroutine/internal/testutil"
 )
 
 func TestBoardRepository_Create(t *testing.T) {
-	pool := SetupTestDB(t, "../../migrations")
+	pool := testutil.SetupTestDB(t, "../../migrations")
 	defer pool.Close()
 
 	r := repository.NewPgBoard(pool)
+	userID := testutil.ValidUserID()
+	boardName := testutil.ValidBoardName()
+	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success", func(t *testing.T) {
-		TruncateTable(t, pool, "boards")
-		TruncateTable(t, pool, "users")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
 
 		CreateUser(t, pool, userID, "test@example.com")
 

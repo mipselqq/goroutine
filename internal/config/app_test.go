@@ -42,7 +42,7 @@ func setCustomAppEnvVars(t *testing.T) {
 
 func TestNewAppConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
-		testutil.UnsetEnv(t, appEnvVars...)
+		UnsetEnv(t, appEnvVars...)
 
 		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
 
@@ -74,7 +74,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 	})
 
 	t.Run("warnings on unset variables", func(t *testing.T) {
-		testutil.UnsetEnv(t, appEnvVars...)
+		UnsetEnv(t, appEnvVars...)
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewAppConfigFromEnv(logger)
 

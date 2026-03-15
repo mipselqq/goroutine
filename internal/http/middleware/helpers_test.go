@@ -1,12 +1,14 @@
-package testutil
+package middleware_test
 
 import (
 	"bytes"
+	"context"
 	"net/http/httptest"
 	"testing"
+
+	"goroutine/internal/domain"
 )
 
-// TODO: move to handler/helpers_test.go
 func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expectedBody string) {
 	t.Helper()
 
@@ -20,4 +22,12 @@ func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expectedBod
 			t.Fail()
 		}
 	}
+}
+
+type MockAuth struct {
+	VerifyTokenFunc func(ctx context.Context, token string) (domain.UserID, error)
+}
+
+func (m *MockAuth) VerifyToken(ctx context.Context, token string) (domain.UserID, error) {
+	return m.VerifyTokenFunc(ctx, token)
 }
