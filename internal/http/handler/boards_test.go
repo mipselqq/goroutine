@@ -134,10 +134,7 @@ func TestBoards_Create(t *testing.T) {
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.Create(rr, req)
 
-			if rr.Code != tt.expectedCode {
-				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
-			}
-
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})

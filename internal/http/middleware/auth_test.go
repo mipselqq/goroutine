@@ -190,13 +190,10 @@ func TestAuth(t *testing.T) {
 			req.Header.Set(tt.headerName, tt.headerValue)
 			wrapped.ServeHTTP(rr, req)
 
-			if rr.Code != tt.expectedStatus {
-				t.Errorf("Expected status %d, got %d", tt.expectedStatus, rr.Code)
-			}
-
 			if rr.Code != mockStatusCode {
 				testutil.AssertContentType(t, rr, "application/json")
 			}
+			testutil.AssertStatusCode(t, rr, tt.expectedStatus)
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}

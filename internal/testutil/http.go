@@ -36,6 +36,14 @@ func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expectedBod
 	}
 }
 
+func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, expectedStatusCode int) {
+	t.Helper()
+
+	if rr.Code != expectedStatusCode {
+		t.Errorf("Expected status code %d, got %d", expectedStatusCode, rr.Code)
+	}
+}
+
 func NewJSONRequestAndRecorder(t *testing.T, method, url, body string) (*http.Request, *httptest.ResponseRecorder) {
 	t.Helper()
 

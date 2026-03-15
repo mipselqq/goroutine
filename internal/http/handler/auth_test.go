@@ -115,10 +115,7 @@ func TestAuth_Register(t *testing.T) {
 			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.Register(rr, req)
 
-			if rr.Code != tt.expectedCode {
-				t.Errorf("Expected status %d, got %d", tt.expectedCode, rr.Code)
-			}
-
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
@@ -229,10 +226,7 @@ func TestAuth_Login(t *testing.T) {
 			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.Login(rr, req)
 
-			if rr.Code != tt.expectedCode {
-				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
-			}
-
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
@@ -274,10 +268,7 @@ func TestAuth_WhoAmI(t *testing.T) {
 			h := handler.NewAuth(logger, &MockAuth{}, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.WhoAmI(rr, req)
 
-			if rr.Code != tt.expectedCode {
-				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
-			}
-
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})

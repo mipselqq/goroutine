@@ -80,9 +80,7 @@ func TestRequestIDMiddleware(t *testing.T) {
 			wrapped := mw.Wrap(handler)
 			wrapped.ServeHTTP(rr, req)
 
-			if rr.Code != mockStatusCode {
-				t.Errorf("Middleware changed status code, expected %d, got %d", mockStatusCode, rr.Code)
-			}
+			testutil.AssertStatusCode(t, rr, mockStatusCode)
 
 			if tt.expectedRequestID != "" {
 				headerID := rr.Header().Get("X-Request-ID")

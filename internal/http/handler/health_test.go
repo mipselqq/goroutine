@@ -17,9 +17,7 @@ func TestHealthHandler(t *testing.T) {
 
 	h.Health(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("handler returned %v, expected %v", rr.Code, http.StatusOK)
-	}
-
+	testutil.AssertStatusCode(t, rr, http.StatusOK)
 	testutil.AssertContentType(t, rr, "application/json")
+	testutil.AssertResponseBody(t, rr, `{"status":"ok"}`)
 }
