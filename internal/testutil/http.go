@@ -16,7 +16,7 @@ func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, expectedMedi
 	contentType := rr.Header().Get("Content-Type")
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
-		t.Fatalf("Failed to parse MIME %q", contentType)
+		t.Fatalf("Failed to parse MIME %q: %v", contentType, err)
 	}
 	if mediaType != expectedMediaType {
 		t.Errorf("Expected %q, got %q", expectedMediaType, mediaType)
