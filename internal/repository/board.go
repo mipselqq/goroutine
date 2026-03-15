@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"goroutine/internal/domain"
@@ -15,7 +16,9 @@ type PgBoard struct {
 }
 
 func NewPgBoard(pool *pgxpool.Pool) *PgBoard {
-	return &PgBoard{pool: pool}
+	return &PgBoard{
+		pool: pool,
+	}
 }
 
 func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -29,10 +32,25 @@ func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 		return domain.Board{}, fmt.Errorf("board repo: create: %v: %w", err, ErrInternal)
 	}
 
-	boardID, _ := domain.ParseBoardID(idStr)
-	parsedOwnerID, _ := domain.ParseUserID(ownerIDStr)
-	boardName, _ := domain.NewBoardName(nameStr)
-	boardDesc, _ := domain.NewBoardDescription(descStr)
+	boardID, err := domain.ParseBoardID(idStr)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("board repo: create: parse board id: %v: %w", err, ErrInternal)
+	}
+
+	parsedOwnerID, err := domain.ParseUserID(ownerIDStr)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("board repo: create: parse owner id: %v: %w", err, ErrInternal)
+	}
+
+	boardName, errs := domain.NewBoardName(nameStr)
+	if len(errs) > 0 {
+		return domain.Board{}, fmt.Errorf("board repo: create: invalid name: %s: %w", strings.Join(errs, ", "), ErrInternal)
+	}
+
+	boardDesc, errs := domain.NewBoardDescription(descStr)
+	if len(errs) > 0 {
+		return domain.Board{}, fmt.Errorf("board repo: create: invalid description: %s: %w", strings.Join(errs, ", "), ErrInternal)
+	}
 
 	return domain.Board{
 		ID:          boardID,
