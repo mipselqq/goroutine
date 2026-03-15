@@ -3,6 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"mime"
 	"net/http"
@@ -63,6 +64,7 @@ func TestAuth_Register(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, FixedTime),
 		},
+		// TODO: leave only a few test cases for validation errors
 		{
 			name:         "Invalid email format",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", Password),
@@ -104,7 +106,17 @@ func TestAuth_Register(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q,"details":[{"field":"email or password","issues":["Invalid credentials"]}]}`, FixedTime),
 		},
-		// TODO: handle unknown error
+		{
+			name:      "Unknown error",
+			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, Email, Password),
+			setupMock: func(s *MockAuth) {
+				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
+					return errors.New("unknown error")
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
+		},
 	}
 
 	for _, tt := range tests {
