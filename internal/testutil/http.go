@@ -37,12 +37,19 @@ func MarshalJSONBody(t *testing.T, body any) string {
 func NewJSONRequestAndRecorder(t *testing.T, method, url string, body any) (*http.Request, *httptest.ResponseRecorder) {
 	t.Helper()
 
-	b, err := json.Marshal(body)
-	if err != nil {
-		t.Fatalf("Failed to marshal request body: %v", err)
+	var resultingBytes []byte
+	switch value := body.(type) {
+	case json.RawMessage:
+		resultingBytes = value
+	default:
+		var err error
+		resultingBytes, err = json.Marshal(body)
+		if err != nil {
+			t.Fatalf("Failed to marshal request body: %v", err)
+		}
 	}
 
-	req := httptest.NewRequest(method, url, bytes.NewBuffer(b))
+	req := httptest.NewRequest(method, url, bytes.NewBuffer(resultingBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	rr := httptest.NewRecorder()

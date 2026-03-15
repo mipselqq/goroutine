@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -90,7 +91,7 @@ func TestBoards_Create(t *testing.T) {
 		},
 		{
 			name:         "Invalid JSON",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q`, name.String(), description.String()), // missing closing brace
+			inputBody:    json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, name.String(), description.String()))), // missing closing brace
 			expectedCode: http.StatusBadRequest,
 			expectedBody: map[string]any{
 				"code":      "VALIDATION_ERROR",

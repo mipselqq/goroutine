@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"testing"
@@ -88,7 +89,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:         "Invalid JSON",
-			inputBody:    `{"email": "test@example.com", "password": "password"`, // missing closing brace
+			inputBody:    json.RawMessage([]byte(`{"email": "test@example.com", "password": "password"`)), // missing closing brace
 			expectedCode: http.StatusBadRequest,
 			expectedBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
@@ -285,7 +286,7 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:         "Invalid JSON",
-			inputBody:    `{"email": "test@example.com"`, // missing password and closing brace
+			inputBody:    json.RawMessage([]byte(`{"email": "test@example.com"`)), // missing password and closing brace
 			expectedCode: http.StatusBadRequest,
 			expectedBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
