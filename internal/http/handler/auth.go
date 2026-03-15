@@ -167,7 +167,6 @@ type whoAmIResponse struct {
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
-	// TODO: cover error path with tests
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
 		h.logger.Error("BUG: failed to get user id from context", SlogRequestIDFromRequest(r))

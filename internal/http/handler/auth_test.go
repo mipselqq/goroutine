@@ -259,23 +259,43 @@ func TestAuth_Login(t *testing.T) {
 }
 
 func TestAuth_WhoAmI(t *testing.T) {
-	t.Parallel()
+	testUserID := testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
 
-	uid := testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
-	ctx := context.WithValue(context.Background(), httpschema.ContextKeyUserID, uid)
-
-	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/whoami", nil)
-
-	rr := httptest.NewRecorder()
-	logger := testutil.NewTestLogger(t)
-	h := handler.NewAuth(logger, &MockAuth{}, httpschema.MustNewErrorResponder(logger, MockTime))
-	h.WhoAmI(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
+	tests := []struct {
+		name         string
+		context      context.Context
+		expectedCode int
+		expectedBody string
+		setupMock    func(s *MockAuth)
+	}{
+		{
+			name:         "Success",
+			context:      context.WithValue(context.Background(), httpschema.ContextKeyUserID, testUserID),
+			expectedCode: http.StatusOK,
+			expectedBody: fmt.Sprintf(`{"uid":%q}`, testUserID.String()),
+		},
+		{
+			name:         "No user ID",
+			context:      context.Background(),
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
+		},
 	}
 
-	expectedBody := fmt.Sprintf(`{"uid":%q}`, uid.String())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	testutil.AssertResponseBody(t, rr, expectedBody)
+			req := httptest.NewRequestWithContext(tt.context, http.MethodGet, "/whoami", nil)
+			rr := httptest.NewRecorder()
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewAuth(logger, &MockAuth{}, httpschema.MustNewErrorResponder(logger, MockTime))
+			h.WhoAmI(rr, req)
+
+			if rr.Code != tt.expectedCode {
+				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
+			}
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
 }
