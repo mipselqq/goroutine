@@ -61,7 +61,9 @@ func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expected an
 	t.Helper()
 
 	if expected == nil {
-		// Middlewares may not return
+		if rr.Body.Len() != 0 {
+			t.Fatalf("Expected body to be empty, got %q", rr.Body.String())
+		}
 		return
 	}
 
