@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/testutil"
 )
@@ -48,7 +49,7 @@ func TestBoardRepository_Create(t *testing.T) {
 		if board.UpdatedAt.IsZero() {
 			t.Errorf("Expected updated at to be set, got zero value")
 		}
-		if board.CreatedAt != board.UpdatedAt {
+		if !board.CreatedAt.Equal(board.UpdatedAt) {
 			t.Errorf("Expected created at and updated at to be the same, got %v and %v", board.CreatedAt, board.UpdatedAt)
 		}
 
@@ -58,24 +59,24 @@ func TestBoardRepository_Create(t *testing.T) {
 		WHERE id = $1`
 
 		var (
-			dbOwnerID     string
-			dbName        string
-			dbDescription string
+			dbOwnerID     domain.UserID
+			dbName        domain.BoardName
+			dbDescription domain.BoardDescription
 			dbCreatedAt   time.Time
 			dbUpdatedAt   time.Time
 		)
-		err = pool.QueryRow(context.Background(), query, board.ID.String()).
+		err = pool.QueryRow(context.Background(), query, board.ID).
 			Scan(&dbOwnerID, &dbName, &dbDescription, &dbCreatedAt, &dbUpdatedAt)
 		if err != nil {
 			t.Fatalf("Failed to find board in DB by ID %q: %v", board.ID, err)
 		}
-		if dbOwnerID != userID.String() {
+		if dbOwnerID != userID {
 			t.Errorf("DB: expected owner ID %q, got %q", userID, dbOwnerID)
 		}
-		if dbName != boardName.String() {
+		if dbName != boardName {
 			t.Errorf("DB: expected name %q, got %q", boardName, dbName)
 		}
-		if dbDescription != boardDescription.String() {
+		if dbDescription != boardDescription {
 			t.Errorf("DB: expected description %q, got %q", boardDescription, dbDescription)
 		}
 		if !dbCreatedAt.Equal(board.CreatedAt) {

@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"net/mail"
 	"strings"
 )
@@ -11,22 +13,35 @@ type Email struct {
 
 const ErrInvalidEmail = "Invalid email"
 
-func NewEmail(email string) (e Email, errs []string) {
+func NewEmail(email string) (Email, error) {
 	trimmedEmail := strings.TrimSpace(email)
 	lowercasedEmail := strings.ToLower(trimmedEmail)
 
 	_, err := mail.ParseAddress(lowercasedEmail)
 	if err != nil {
-		errs = append(errs, ErrInvalidEmail)
+		return Email{}, &ValidationError{Issues: []string{ErrInvalidEmail}}
 	}
 
-	if len(errs) > 0 {
-		return Email{}, errs
-	}
-
-	return Email{value: lowercasedEmail}, []string{}
+	return Email{value: lowercasedEmail}, nil
 }
 
 func (e Email) String() string {
 	return e.value
+}
+
+func (e Email) Value() (driver.Value, error) {
+	return e.value, nil
+}
+
+func (e *Email) Scan(value any) error {
+	if value == nil {
+		e.value = ""
+		return nil
+	}
+	s, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("unexpected type for Email: %T", value)
+	}
+	e.value = s
+	return nil
 }

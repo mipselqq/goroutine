@@ -13,6 +13,7 @@ import (
 	"goroutine/docs"
 	"goroutine/internal/app"
 	"goroutine/internal/config"
+	"goroutine/internal/http/httpschema"
 	"goroutine/internal/logging"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,10 +29,10 @@ func main() {
 		_ = godotenv.Load(".env.dev")
 	}
 
-	bootLogger := logging.NewTintStdoutLogger("info")
+	bootLogger := logging.NewLogger("dev", "info")
 	appCfg := config.NewAppConfigFromEnv(bootLogger)
 	docs.SwaggerInfo.Host = appCfg.SwaggerHost
-	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel)
+	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel, httpschema.AllExtractors()...)
 
 	logger.Info("Running", slog.String("version", version))
 	logger.Info("App config", slog.Any("config", appCfg))

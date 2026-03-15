@@ -27,7 +27,7 @@ const pgUniqueViolation = "23505"
 func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) error {
 	const query = `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
 
-	_, err := r.pool.Exec(ctx, query, email.String(), hash)
+	_, err := r.pool.Exec(ctx, query, email, hash)
 	if err == nil {
 		return nil
 	}
@@ -43,7 +43,7 @@ func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) er
 func (r *PgUser) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
 	const query = `SELECT id, password_hash FROM users WHERE email = $1`
 
-	err = r.pool.QueryRow(ctx, query, email.String()).Scan(&id, &hash)
+	err = r.pool.QueryRow(ctx, query, email).Scan(&id, &hash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.UserID{}, "", ErrRowNotFound

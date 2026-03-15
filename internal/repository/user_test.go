@@ -32,13 +32,13 @@ func TestUserRepository_Insert(t *testing.T) {
 			t.Errorf("Insert() error = %v", err)
 		}
 
-		var dbEmail string
-		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email.String()).Scan(&dbEmail)
+		var dbEmail domain.Email
+		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email).Scan(&dbEmail)
 		if err != nil {
 			t.Errorf("Failed to find user in DB: %v", err)
 		}
-		if dbEmail != email.String() {
-			t.Errorf("Expected email %q, got %q", email.String(), dbEmail)
+		if dbEmail.String() != email.String() {
+			t.Errorf("Expected email %q, got %q", email.String(), dbEmail.String())
 		}
 	})
 

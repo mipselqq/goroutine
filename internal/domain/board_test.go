@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -16,49 +17,49 @@ func TestName(t *testing.T) {
 	nameTests := []struct {
 		name           string
 		input          string
-		expectedErrors []string
+		expectedIssues []string
 		expectedValue  string
 	}{
 		{
 			name:           "Valid name",
 			input:          "My Todo Name",
-			expectedErrors: []string{},
+			expectedIssues: nil,
 			expectedValue:  "My Todo Name",
 		},
 		{
 			name:           "Long valid name",
 			input:          borderlineLongName,
-			expectedErrors: []string{},
+			expectedIssues: nil,
 			expectedValue:  borderlineLongName,
 		},
 		{
 			name:           "Too long but valid when trimmed",
 			input:          "      " + borderlineLongName + "     ",
-			expectedErrors: []string{},
+			expectedIssues: nil,
 			expectedValue:  borderlineLongName,
 		},
 		{
 			name:           "Too long name",
 			input:          borderlineLongName + "a",
-			expectedErrors: []string{"Name is too long"},
+			expectedIssues: []string{"Name is too long"},
 			expectedValue:  "",
 		},
 		{
 			name:           "Empty name",
 			input:          "",
-			expectedErrors: []string{"Name is too short"},
+			expectedIssues: []string{"Name is too short"},
 			expectedValue:  "",
 		},
 		{
 			name:           "Whitespace name",
 			input:          "    ",
-			expectedErrors: []string{"Name is too short"},
+			expectedIssues: []string{"Name is too short"},
 			expectedValue:  "",
 		},
 		{
 			name:           "Single character name",
 			input:          "a",
-			expectedErrors: []string{},
+			expectedIssues: nil,
 			expectedValue:  "a",
 		},
 	}
@@ -67,10 +68,20 @@ func TestName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			name, errs := domain.NewBoardName(tt.input)
+			name, err := domain.NewBoardName(tt.input)
 
-			if !reflect.DeepEqual(errs, tt.expectedErrors) {
-				t.Errorf("expected errors %v, got %v", tt.expectedErrors, errs)
+			var actualIssues []string
+			if err != nil {
+				var ve *domain.ValidationError
+				if errors.As(err, &ve) {
+					actualIssues = ve.Issues
+				} else {
+					actualIssues = []string{err.Error()}
+				}
+			}
+
+			if !reflect.DeepEqual(actualIssues, tt.expectedIssues) {
+				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
 			}
 			if name.String() != tt.expectedValue {
 				t.Errorf("expected value %q, got %q", tt.expectedValue, name.String())
@@ -90,43 +101,43 @@ func TestDescription(t *testing.T) {
 	descriptionTests := []struct {
 		name           string
 		input          string
-		expectedErrors []string
+		expectedIssues []string
 		expectedValue  string
 	}{
 		{
 			name:           "Valid description",
 			input:          "My Todo Description",
 			expectedValue:  "My Todo Description",
-			expectedErrors: []string{},
+			expectedIssues: nil,
 		},
 		{
 			name:           "Long valid description",
 			input:          borderlineLongDescription,
 			expectedValue:  borderlineLongDescription,
-			expectedErrors: []string{},
+			expectedIssues: nil,
 		},
 		{
 			name:           "Too long but valid when trimmed",
 			input:          "      " + borderlineLongDescription + "     ",
 			expectedValue:  borderlineLongDescription,
-			expectedErrors: []string{},
+			expectedIssues: nil,
 		},
 		{
 			name:           "Too long description",
 			input:          borderlineLongDescription + "a",
-			expectedErrors: []string{"Description is too long"},
+			expectedIssues: []string{"Description is too long"},
 			expectedValue:  "",
 		},
 		{
 			name:           "Empty description",
 			input:          "",
-			expectedErrors: []string{},
+			expectedIssues: nil,
 			expectedValue:  "",
 		},
 		{
 			name:           "Whitespace description",
 			input:          "    ",
-			expectedErrors: []string{},
+			expectedIssues: nil,
 			expectedValue:  "",
 		},
 	}
@@ -135,9 +146,20 @@ func TestDescription(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			description, errs := domain.NewBoardDescription(tt.input)
-			if !reflect.DeepEqual(errs, tt.expectedErrors) {
-				t.Errorf("expected errors %v, got %v", tt.expectedErrors, errs)
+			description, err := domain.NewBoardDescription(tt.input)
+
+			var actualIssues []string
+			if err != nil {
+				var validationError *domain.ValidationError
+				if errors.As(err, &validationError) {
+					actualIssues = validationError.Issues
+				} else {
+					actualIssues = []string{err.Error()}
+				}
+			}
+
+			if !reflect.DeepEqual(actualIssues, tt.expectedIssues) {
+				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
 			}
 			if description.String() != tt.expectedValue {
 				t.Errorf("expected value %q, got %q", tt.expectedValue, description.String())
