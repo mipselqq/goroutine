@@ -46,8 +46,7 @@ func ValidBoardName() domain.BoardName {
 }
 
 func ValidBoardDescription() domain.BoardDescription {
-	d, _ := domain.NewBoardDescription("Test Board Description")
-	return d
+	return must(domain.NewBoardDescription, "Test Board Description")
 }
 
 func ValidJWTSecret() secrecy.SecretString {
