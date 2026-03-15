@@ -7,36 +7,36 @@ import (
 	"github.com/google/uuid"
 )
 
-type ID[T any] struct {
+type UUID[T any] struct {
 	value uuid.UUID
 }
 
-func NewID[T any]() ID[T] {
+func NewID[T any]() UUID[T] {
 	id, _ := uuid.NewV7()
-	return ID[T]{value: id}
+	return UUID[T]{value: id}
 }
 
-func ParseID[T any](s string) (ID[T], error) {
+func ParseID[T any](s string) (UUID[T], error) {
 	u, err := uuid.Parse(s)
 	if err != nil {
-		return ID[T]{}, fmt.Errorf("parse id: %w", err)
+		return UUID[T]{}, fmt.Errorf("parse id: %w", err)
 	}
-	return ID[T]{value: u}, nil
+	return UUID[T]{value: u}, nil
 }
 
-func (id ID[T]) String() string {
+func (id UUID[T]) String() string {
 	return id.value.String()
 }
 
-func (id ID[T]) IsEmpty() bool {
+func (id UUID[T]) IsEmpty() bool {
 	return id.value == uuid.Nil
 }
 
-func (id ID[T]) UUID() uuid.UUID {
+func (id UUID[T]) UUID() uuid.UUID {
 	return id.value
 }
 
-func (id *ID[T]) Scan(src any) error {
+func (id *UUID[T]) Scan(src any) error {
 	if src == nil {
 		id.value = uuid.Nil
 		return nil
@@ -72,7 +72,7 @@ func (id *ID[T]) Scan(src any) error {
 	return nil
 }
 
-func (id ID[T]) Value() (driver.Value, error) {
+func (id UUID[T]) Value() (driver.Value, error) {
 	if id.IsEmpty() {
 		return nil, nil
 	}

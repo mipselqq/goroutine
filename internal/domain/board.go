@@ -114,7 +114,7 @@ func (d *BoardDescription) Scan(value any) error {
 
 type (
 	boardTag struct{}
-	BoardID  = ID[boardTag]
+	BoardID  = UUID[boardTag]
 )
 
 func NewBoardID() BoardID {

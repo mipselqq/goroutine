@@ -2,7 +2,7 @@ package domain
 
 type (
 	userID struct{}
-	UserID = ID[userID]
+	UserID = UUID[userID]
 )
 
 func NewUserID() UserID {
