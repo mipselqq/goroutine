@@ -18,11 +18,11 @@ import (
 
 type boardsTestCase struct {
 	name         string
-	inputBody    string
+	inputBody    any
 	context      context.Context
 	setupMock    func(s *MockBoards)
 	expectedCode int
-	expectedBody string
+	expectedBody any
 }
 
 func TestBoards_Create(t *testing.T) {
@@ -44,7 +44,7 @@ func TestBoards_Create(t *testing.T) {
 	tests := []boardsTestCase{
 		{
 			name:      "Success",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody: map[string]string{"name": name.String(), "description": description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					if ownerID != userID {
@@ -54,61 +54,93 @@ func TestBoards_Create(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusCreated,
-			expectedBody: fmt.Sprintf(
-				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q}`,
-				id.String(),
-				userID.String(),
-				name.String(),
-				description.String(),
-				validBoard.CreatedAt.Format(time.RFC3339),
-			),
+			expectedBody: map[string]string{
+				"id":          id.String(),
+				"ownerId":     userID.String(),
+				"name":        name.String(),
+				"description": description.String(),
+				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
+			},
 		},
 		{
 			name:         "Empty name",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, "", description),
+			inputBody:    map[string]string{"name": "", "description": description.String()},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"name","issues":["Name is too short"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "name", "issues": []string{"Name is too short"}},
+				},
+			},
 		},
 		{
 			name:         "Description too long",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, name, strings.Repeat("a", 1025)),
+			inputBody:    map[string]string{"name": name.String(), "description": strings.Repeat("a", 1025)},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"description","issues":["Description is too long"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "description", "issues": []string{"Description is too long"}},
+				},
+			},
 		},
 		{
 			name:         "Invalid JSON",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q`, name, description), // missing closing brace
+			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q`, name.String(), description.String()), // missing closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"body","issues":["Invalid JSON body"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
+				},
+			},
 		},
 		{
 			name:      "Internal error",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody: map[string]string{"name": name.String(), "description": description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 		{
 			name:      "Unknown error",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody: map[string]string{"name": name.String(), "description": description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown error")
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 		{
 			name:         "No context user ID",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody:    map[string]string{"name": name.String(), "description": description.String()},
 			context:      context.Background(),
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 	}
 

@@ -3,7 +3,6 @@ package handler_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -16,10 +15,10 @@ import (
 
 type authTestCase struct {
 	name         string
-	inputBody    string
+	inputBody    any
 	setupMock    func(s *MockAuth)
 	expectedCode int
-	expectedBody string
+	expectedBody any
 }
 
 func TestAuth_Register(t *testing.T) {
@@ -31,7 +30,7 @@ func TestAuth_Register(t *testing.T) {
 	tests := []authTestCase{
 		{
 			name:      "Success",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.Password) error {
 					if e.String() != email.String() {
@@ -44,58 +43,94 @@ func TestAuth_Register(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: `{"status":"ok"}`,
+			expectedBody: map[string]string{"status": "ok"},
 		},
 		{
 			name:      "Internal error",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
 					return service.ErrInternal
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 		{
 			name:         "Invalid email format",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", password),
+			inputBody:    map[string]string{"email": "invalid-email", "password": password.String()},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
+				},
+			},
 		},
 		{
 			name:         "Password too short",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, email, "123"),
+			inputBody:    map[string]string{"email": email.String(), "password": "123"},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"password","issues":["Password is too short"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "password", "issues": []string{"Password is too short"}},
+				},
+			},
 		},
 		{
 			name:         "Invalid JSON",
 			inputBody:    `{"email": "test@example.com", "password": "password"`, // missing closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"body","issues":["Invalid JSON body"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
+				},
+			},
 		},
 		{
 			name:      "User already exists",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
 					return service.ErrUserAlreadyExists
 				}
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q,"details":[{"field":"email or password","issues":["Invalid credentials"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INVALID_CREDENTIALS",
+				"message":   "Invalid login or password",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "email or password", "issues": []string{"Invalid credentials"}},
+				},
+			},
 		},
 		{
 			name:      "Unknown error",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
 					return errors.New("unknown error")
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 	}
 
@@ -131,7 +166,7 @@ func TestAuth_Login(t *testing.T) {
 	tests := []authTestCase{
 		{
 			name:      "Success",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.Password) (string, error) {
 					if e.String() != email.String() {
@@ -144,70 +179,122 @@ func TestAuth_Login(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: `{"token":"jwt_token"}`,
+			expectedBody: map[string]string{"token": "jwt_token"},
 		},
 		{
 			name:      "Invalid credentials",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
 					return "", service.ErrInvalidCredentials
 				}
 			},
 			expectedCode: http.StatusUnauthorized,
-			expectedBody: fmt.Sprintf(`{"code":"INVALID_CREDENTIALS","message":"Invalid login or password","timestamp":%q,"details":[{"field":"email or password","issues":["Invalid"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INVALID_CREDENTIALS",
+				"message":   "Invalid login or password",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "email or password", "issues": []string{"Invalid"}},
+				},
+			},
 		},
 		{
 			name:      "User not found",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
 					return "", service.ErrUserNotFound // Enumeration and timing attacks are known, this is fine
 				}
 			},
 			expectedCode: http.StatusUnauthorized,
-			expectedBody: fmt.Sprintf(`{"code":"USER_NOT_FOUND","message":"User not found","timestamp":%q,"details":[]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "USER_NOT_FOUND",
+				"message":   "User not found",
+				"timestamp": testutil.FixedTime(),
+				"details":   []any{},
+			},
 		},
 		{
 			name:      "Internal error",
-			inputBody: fmt.Sprintf(`{"email": %q, "password": %q}`, email, password),
+			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
 					return "", service.ErrInternal
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 		{
 			name:         "Empty email",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", password),
+			inputBody:    map[string]string{"email": "", "password": password.String()},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
+				},
+			},
 		},
 		{
 			name:         "Invalid email format",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", password),
+			inputBody:    map[string]string{"email": "invalid-email", "password": password.String()},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
+				},
+			},
 		},
 		{
 			name:         "Empty email and password",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", ""),
+			inputBody:    map[string]any{"email": "", "password": ""},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]},{"field":"password","issues":["Password is too short"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
+					map[string]any{"field": "password", "issues": []string{"Password is too short"}},
+				},
+			},
 		},
 		{
 			name:         "Empty password",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, email, ""),
+			inputBody:    map[string]string{"email": email.String(), "password": ""},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"password","issues":["Password is too short"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "password", "issues": []string{"Password is too short"}},
+				},
+			},
 		},
 		{
 			name:         "Invalid JSON",
 			inputBody:    `{"email": "test@example.com"`, // missing password and closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"body","issues":["Invalid JSON body"]}]}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
+				},
+			},
 		},
 	}
 
@@ -240,20 +327,24 @@ func TestAuth_WhoAmI(t *testing.T) {
 		name         string
 		context      context.Context
 		expectedCode int
-		expectedBody string
+		expectedBody any
 		setupMock    func(s *MockAuth)
 	}{
 		{
 			name:         "Success",
 			context:      context.WithValue(context.Background(), httpschema.ContextKeyUserID, testUserID),
 			expectedCode: http.StatusOK,
-			expectedBody: fmt.Sprintf(`{"uid":%q}`, testUserID.String()),
+			expectedBody: map[string]string{"uid": testUserID.String()},
 		},
 		{
 			name:         "No user ID",
 			context:      context.Background(),
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, testutil.FixedTime()),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 	}
 

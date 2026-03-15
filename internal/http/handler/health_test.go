@@ -19,5 +19,5 @@ func TestHealthHandler(t *testing.T) {
 
 	testutil.AssertStatusCode(t, rr, http.StatusOK)
 	testutil.AssertContentType(t, rr, "application/json")
-	testutil.AssertResponseBody(t, rr, `{"status":"ok"}`)
+	testutil.AssertResponseBody(t, rr, map[string]string{"status": "ok"})
 }

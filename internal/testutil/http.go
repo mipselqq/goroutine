@@ -2,9 +2,11 @@ package testutil
 
 import (
 	"bytes"
+	"encoding/json"
 	"mime"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -21,19 +23,30 @@ func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, expectedMedi
 	}
 }
 
-func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expectedBody string) {
+func MarshalJSONBody(t *testing.T, body any) string {
 	t.Helper()
 
-	if expectedBody != "" {
-		actualBody := bytes.TrimSpace(rr.Body.Bytes())
-		if string(actualBody) != expectedBody {
-			t.Logf("Expected body:")
-			t.Logf("%q", expectedBody)
-			t.Logf("Got:")
-			t.Logf("%q", string(actualBody))
-			t.Fail()
-		}
+	b, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Failed to marshal body: %v", err)
 	}
+
+	return string(b)
+}
+
+func NewJSONRequestAndRecorder(t *testing.T, method, url string, body any) (*http.Request, *httptest.ResponseRecorder) {
+	t.Helper()
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Failed to marshal request body: %v", err)
+	}
+
+	req := httptest.NewRequest(method, url, bytes.NewBuffer(b))
+	req.Header.Set("Content-Type", "application/json")
+
+	rr := httptest.NewRecorder()
+	return req, rr
 }
 
 func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, expectedStatusCode int) {
@@ -44,12 +57,29 @@ func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, expectedStatu
 	}
 }
 
-func NewJSONRequestAndRecorder(t *testing.T, method, url, body string) (*http.Request, *httptest.ResponseRecorder) {
+func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expected any) {
 	t.Helper()
 
-	req := httptest.NewRequest(method, url, bytes.NewBuffer([]byte(body)))
-	req.Header.Set("Content-Type", "application/json")
+	if expected == nil {
+		return
+	}
 
-	rr := httptest.NewRecorder()
-	return req, rr
+	expectedJSON, err := json.Marshal(expected)
+	if err != nil {
+		t.Fatalf("Failed to marshal expected body: %v", err)
+	}
+
+	actualBody := rr.Body.Bytes()
+
+	var actualDecoded, expectedDecoded any
+	if err := json.Unmarshal(actualBody, &actualDecoded); err != nil {
+		t.Fatalf("Failed to unmarshal actual body: %v\nBody: %q", err, string(actualBody))
+	}
+	if err := json.Unmarshal(expectedJSON, &expectedDecoded); err != nil {
+		t.Fatalf("Failed to unmarshal expected body: %v\nBody: %q", err, string(expectedJSON))
+	}
+
+	if !reflect.DeepEqual(actualDecoded, expectedDecoded) {
+		t.Errorf("Response body mismatch\nExpected: %s\nGot: %s", string(expectedJSON), string(actualBody))
+	}
 }
