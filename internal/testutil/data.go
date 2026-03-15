@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"fmt"
 	"time"
 
 	"goroutine/internal/domain"
@@ -12,26 +13,24 @@ import (
 
 func FixedTime() string { return "2026-01-01T00:00:00Z" }
 
-func ParseUserID(s string) domain.UserID {
-	u, err := domain.ParseUserID(s)
+func must[T any](fn func(string) (T, error), s string) T {
+	v, err := fn(s)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
 	}
-	return u
+	return v
 }
 
 func ValidUserID() domain.UserID {
-	return ParseUserID("018e1000-0000-7000-8000-000000000000")
+	return must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
 }
 
 func ValidEmail() domain.Email {
-	e, _ := domain.NewEmail("test@example.com")
-	return e
+	return must(domain.NewEmail, "test@example.com")
 }
 
 func ValidPassword() domain.Password {
-	p, _ := domain.NewPassword("qwerty")
-	return p
+	return must(domain.NewPassword, "qwerty")
 }
 
 func ValidPasswordHash() string {
@@ -43,8 +42,7 @@ func AnotherValidPasswordHash() string {
 }
 
 func ValidBoardName() domain.BoardName {
-	n, _ := domain.NewBoardName("Test Board")
-	return n
+	return must(domain.NewBoardName, "Test Board")
 }
 
 func ValidBoardDescription() domain.BoardDescription {
