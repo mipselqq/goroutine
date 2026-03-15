@@ -57,31 +57,11 @@ func TestAuth_Register(t *testing.T) {
 			expectedCode: http.StatusInternalServerError,
 			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
 		},
-		// A bit wordy, but obvious 'want' and 'got' structure
-		{
-			name:         "Empty email",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", Password),
-			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, FixedTime),
-		},
-		// TODO: leave only a few test cases for validation errors
 		{
 			name:         "Invalid email format",
 			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "invalid-email", Password),
 			expectedCode: http.StatusBadRequest,
 			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]}]}`, FixedTime),
-		},
-		{
-			name:         "Empty email and password",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, "", ""),
-			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"email","issues":["Invalid email"]},{"field":"password","issues":["Password is too short"]}]}`, FixedTime),
-		},
-		{
-			name:         "Empty password",
-			inputBody:    fmt.Sprintf(`{"email": %q, "password": %q}`, Email, ""),
-			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"password","issues":["Password is too short"]}]}`, FixedTime),
 		},
 		{
 			name:         "Password too short",
