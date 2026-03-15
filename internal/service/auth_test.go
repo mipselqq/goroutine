@@ -9,9 +9,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
-	"goroutine/internal/secrecy"
 	"goroutine/internal/service"
-	"goroutine/internal/testutil"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -22,22 +20,6 @@ type TestCase struct {
 	expectedErr error
 }
 
-var (
-	emailStr            = "test@example.com"
-	userID              = testutil.ParseUserID("018e1000-0000-7000-8000-000000000000")
-	passwordStr         = "qwerty"
-	passwordHash        = "$argon2id$v=19$m=65536,t=1,p=16$kUYJyX3h53cARKnKqFZxvQ$IXz2KOKbyVklgyVmz9ebJ1ffOgmcyMpn/GTUWsep5lk"
-	email, _            = domain.NewEmail(emailStr)
-	password, _         = domain.NewPassword(passwordStr)
-	anotherPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$bm90LXF3ZXJ0eQ$fSowp1Rof0fXhF+rXv2f6w"
-	JWTSecret           = secrecy.SecretString("secret")
-	jwtOpts             = service.JWTOptions{
-		JWTSecret:     JWTSecret,
-		Exp:           time.Hour,
-		SigningMethod: jwt.SigningMethodHS256,
-	}
-)
-
 func TestAuth_Register(t *testing.T) {
 	t.Parallel()
 
@@ -47,7 +29,7 @@ func TestAuth_Register(t *testing.T) {
 			expectedErr: nil,
 			setupMock: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
-					if hash == passwordStr {
+					if hash == validPasswordStr {
 						return errors.New("service saved plaintext password!")
 					}
 					return nil
@@ -108,7 +90,7 @@ func TestAuth_Login(t *testing.T) {
 			name: "Success",
 			setupMock: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return userID, passwordHash, nil
+					return userID, validPasswordHash, nil
 				}
 			},
 			expectedErr: nil,
@@ -127,7 +109,7 @@ func TestAuth_Login(t *testing.T) {
 			expectedErr: service.ErrInvalidCredentials,
 			setupMock: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return userID, anotherPasswordHash, nil
+					return userID, validAnotherPasswordHash, nil
 				}
 			},
 		},

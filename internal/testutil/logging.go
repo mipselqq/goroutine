@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+// TODO: remove this code function or create local logging/helpers_test.go
+// and use it there to avoid uncontrolled global testutil growth
 type testWriter struct{ t testing.TB }
 
 func (w testWriter) Write(p []byte) (int, error) {

@@ -1,4 +1,4 @@
-.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down migrate-status tools try-fetch-tags vuln
+.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down migrate-status migrate-create tools try-fetch-tags vuln
 
 VERSION := $(shell git describe --tags --always --dirty || "")
 
@@ -49,6 +49,10 @@ fmt:
 	gofumpt	-l -w .
 swag:
 	swag init -g cmd/server/main.go
+
+migrate-create:
+	@if [ -z "$(name)" ]; then echo "Error: migration name is required. Use: make migrate-create name=migration_name"; exit 1; fi
+	goose -dir migrations create $(name) sql
 
 migrate-up migrate-down migrate-status: migrate-%:
 	export $$(cat .env.dev | xargs) && goose -dir migrations postgres "user=$$POSTGRES_USER password=$$POSTGRES_PASSWORD dbname=$$POSTGRES_DB host=$$POSTGRES_HOST sslmode=disable" $*

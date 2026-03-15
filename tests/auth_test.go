@@ -16,6 +16,7 @@ import (
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestAuth_HappyPath(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAuth_HappyPath(t *testing.T) {
 	cfg := config.NewAppConfigFromEnv(logger)
 	logger.Info("App config", slog.Any("config", cfg))
 
-	application := app.New(logger, pool, &cfg)
+	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
 
 	ts := httptest.NewServer(application.Router)
 	defer ts.Close()
@@ -82,7 +83,7 @@ func TestAuth_HappyPath(t *testing.T) {
 			t.Fatal("Got invalid JWT token")
 		}
 
-		req, err := http.NewRequest("GET", ts.URL+"/v1/whoami", nil)
+		req, err := http.NewRequest("GET", ts.URL+"/v1/whoami", http.NoBody)
 		if err != nil {
 			t.Fatalf("Failed to create whoami request: %v", err)
 		}
@@ -92,7 +93,9 @@ func TestAuth_HappyPath(t *testing.T) {
 		if err != nil {
 			t.Fatalf("WhoAmI request failed: %v", err)
 		}
-		defer whoamiResp.Body.Close()
+		defer func() {
+			_ = whoamiResp.Body.Close() // Calm down errcheck
+		}()
 
 		if whoamiResp.StatusCode != http.StatusOK {
 			t.Fatalf("Expected status 200, got %d", whoamiResp.StatusCode)

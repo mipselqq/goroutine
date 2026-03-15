@@ -1,5 +1,32 @@
 basePath: /
 definitions:
+  handler.boardResponse:
+    properties:
+      createdAt:
+        example: "2026-03-07T20:56:50+03:00"
+        type: string
+      description:
+        example: My Todo Description
+        type: string
+      id:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      name:
+        example: My Todo Name
+        type: string
+      ownerId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+    type: object
+  handler.createBoardBody:
+    properties:
+      description:
+        example: My Board Description
+        type: string
+      name:
+        example: My Board Name
+        type: string
+    type: object
   handler.loginBody:
     properties:
       email:
@@ -82,6 +109,42 @@ info:
   description: A nice kanban board with a beautiful heart ✨
   title: Goroutine kanban API
 paths:
+  /v1/boards:
+    post:
+      consumes:
+      - application/json
+      description: Create a new board for the current user
+      parameters:
+      - description: Board details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createBoardBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.boardResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Create a new board
+      tags:
+      - boards
   /v1/health:
     get:
       description: Check if the server is alive
