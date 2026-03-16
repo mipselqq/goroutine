@@ -43,41 +43,14 @@ func (id *UUID[T]) Scan(src any) error {
 		return nil
 	}
 
-	typeName := reflect.TypeFor[T]().String()
-
-	switch v := src.(type) {
-	case string:
-		parsed, err := uuid.Parse(v)
-		if err != nil {
-			return fmt.Errorf("id %s: %w: %v", typeName, ErrDataCorrupted, err)
-		}
-		id.value = parsed
-	case []byte:
-		const uuidByteLen = 16
-		isUUIDBytes := len(v) == uuidByteLen
-
-		if isUUIDBytes {
-			parsed, err := uuid.FromBytes(v)
-			if err != nil {
-				return fmt.Errorf("id bytes %s: %w: %v", typeName, ErrDataCorrupted, err)
-			}
-			id.value = parsed
-		} else { // Byte representation of string
-			parsed, err := uuid.ParseBytes(v)
-			if err != nil {
-				return fmt.Errorf("id bytes %s: %w: %v", typeName, ErrDataCorrupted, err)
-			}
-			id.value = parsed
-		}
-	default:
-		return fmt.Errorf("unexpected type for ID %s: %T", typeName, src)
+	if err := id.value.Scan(src); err != nil {
+		typeName := reflect.TypeFor[T]().String()
+		return fmt.Errorf("id %s: %w: %v", typeName, ErrDataCorrupted, err)
 	}
+
 	return nil
 }
 
 func (id UUID[T]) Value() (driver.Value, error) {
-	if id.IsEmpty() {
-		return nil, nil
-	}
-	return id.value.String(), nil
+	return id.value.Value()
 }
