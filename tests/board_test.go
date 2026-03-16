@@ -5,40 +5,24 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"log/slog"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
-	"goroutine/internal/app"
-	"goroutine/internal/config"
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestBoard_HappyPath(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../migrations")
-	defer pool.Close()
-
-	logger := testutil.NewTestLogger(t)
-	cfg := config.NewAppConfigFromEnv(logger)
-	logger.Info("App config", slog.Any("config", cfg))
-
-	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
-
-	ts := httptest.NewServer(application.Router)
-	defer ts.Close()
-	client := ts.Client()
+	client, ts, pool := E2EPrelude(t)
 
 	t.Run("Create board successfully", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 		testutil.TruncateTable(t, pool, "boards")
 
-		email := "board-user@example.com"
-		password := "secure-password"
+		email := testutil.ValidEmail().String()
+		password := testutil.ValidPassword().String()
 
 		regBody, _ := json.Marshal(map[string]string{
 			"email":    email,
@@ -67,9 +51,11 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 		_ = loginResp.Body.Close()
 
+		name := testutil.ValidBoardName().String()
+		description := testutil.ValidBoardDescription().String()
 		boardBody, _ := json.Marshal(map[string]string{
-			"name":        "My test board",
-			"description": "This is a board description.",
+			"name":        name,
+			"description": description,
 		})
 		req, err := http.NewRequest("POST", ts.URL+"/v1/boards", bytes.NewBuffer(boardBody))
 		if err != nil {
@@ -107,11 +93,11 @@ func TestBoard_HappyPath(t *testing.T) {
 		if _, err := uuid.Parse(bResp.OwnerID); err != nil {
 			t.Errorf("Invalid owner ID: %v", err)
 		}
-		if bResp.Name != "My test board" {
-			t.Errorf("Expected name %q, got %q", "My test board", bResp.Name)
+		if bResp.Name != name {
+			t.Errorf("Expected name %q, got %q", name, bResp.Name)
 		}
-		if bResp.Description != "This is a board description." {
-			t.Errorf("Expected description %q, got %q", "This is a board description.", bResp.Description)
+		if bResp.Description != description {
+			t.Errorf("Expected description %q, got %q", description, bResp.Description)
 		}
 		if _, err := time.Parse(time.RFC3339, bResp.CreatedAt); err != nil {
 			t.Errorf("Invalid createdAt: %v", err)

@@ -6,17 +6,20 @@ import (
 	"testing"
 )
 
-// TODO: remove this code function or create local logging/helpers_test.go
-// and use it there to avoid uncontrolled global testutil growth
 type testWriter struct{ t testing.TB }
 
 func (w testWriter) Write(p []byte) (int, error) {
 	s := string(p)
-	if s != "" && s[len(s)-1] == '\n' {
-		s = s[:len(s)-1]
-	}
+	s = trimTrailingNewline(s)
 	w.t.Log(s)
 	return len(p), nil
+}
+
+func trimTrailingNewline(s string) string {
+	if s != "" && s[len(s)-1] == '\n' {
+		return s[:len(s)-1]
+	}
+	return s
 }
 
 func NewTestLogger(t testing.TB) *slog.Logger {

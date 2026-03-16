@@ -71,21 +71,19 @@ func TestRequestIDMiddleware(t *testing.T) {
 				w.WriteHeader(mockStatusCode)
 			})
 
-			mw := middleware.NewRequestID(testutil.NewTestLogger(t), generateStaticID)
+			mw := middleware.MustNewRequestID(testutil.NewTestLogger(t), generateStaticID)
 
 			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+			rr := httptest.NewRecorder()
+
 			for k, v := range tt.requestHeaders {
 				req.Header.Set(k, v)
 			}
 
 			wrapped := mw.Wrap(handler)
-			rr := httptest.NewRecorder()
-
 			wrapped.ServeHTTP(rr, req)
 
-			if rr.Code != mockStatusCode {
-				t.Errorf("Middleware changed status code, expected %d, got %d", mockStatusCode, rr.Code)
-			}
+			testutil.AssertStatusCode(t, rr, mockStatusCode)
 
 			if tt.expectedRequestID != "" {
 				headerID := rr.Header().Get("X-Request-ID")

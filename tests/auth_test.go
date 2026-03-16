@@ -5,39 +5,23 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"log/slog"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"goroutine/internal/app"
-	"goroutine/internal/config"
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestAuth_HappyPath(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../migrations")
-	defer pool.Close()
-
-	logger := testutil.NewTestLogger(t)
-	cfg := config.NewAppConfigFromEnv(logger)
-	logger.Info("App config", slog.Any("config", cfg))
-
-	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
-
-	ts := httptest.NewServer(application.Router)
-	defer ts.Close()
-	client := ts.Client()
+	client, ts, pool := E2EPrelude(t)
 
 	t.Run("Full auth flow: register then login", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
-		email := "e2e-user@example.com"
-		password := "very-strong-password"
+		email := testutil.ValidEmail().String()
+		password := testutil.ValidPassword().String()
 
 		regBody, _ := json.Marshal(map[string]string{
 			"email":    email,

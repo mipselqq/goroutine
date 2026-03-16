@@ -70,14 +70,14 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
-		h.logger.Error("UserID not found in context")
+		h.logger.ErrorContext(r.Context(), "UserID not found in context")
 		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		return
 	}
 
 	board, err := h.service.Create(r.Context(), userID, name, description)
 	if err != nil {
-		h.logger.Error("Failed to create board", slog.String("err", err.Error()))
+		h.logger.ErrorContext(r.Context(), "Failed to create board", slog.String("err", err.Error()))
 		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		return
 	}

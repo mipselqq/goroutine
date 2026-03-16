@@ -16,7 +16,11 @@ type RequestID struct {
 	generateRequestIDFn GenerateRequestIDFn
 }
 
-func NewRequestID(l *slog.Logger, g GenerateRequestIDFn) *RequestID {
+func MustNewRequestID(l *slog.Logger, g GenerateRequestIDFn) *RequestID {
+	if g == nil {
+		panic("BUG: generateRequestIDFn is nil")
+	}
+
 	return &RequestID{logger: l, generateRequestIDFn: g}
 }
 
