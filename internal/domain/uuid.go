@@ -3,6 +3,7 @@ package domain
 import (
 	"database/sql/driver"
 	"fmt"
+	"reflect"
 
 	"github.com/google/uuid"
 )
@@ -19,7 +20,7 @@ func NewID[T any]() UUID[T] {
 func ParseID[T any](s string) (UUID[T], error) {
 	u, err := uuid.Parse(s)
 	if err != nil {
-		return UUID[T]{}, fmt.Errorf("parse id: %w", err)
+		return UUID[T]{}, fmt.Errorf("parse id %s: %w", reflect.TypeFor[T]().String(), err)
 	}
 	return UUID[T]{value: u}, nil
 }
@@ -42,11 +43,13 @@ func (id *UUID[T]) Scan(src any) error {
 		return nil
 	}
 
+	typeName := reflect.TypeFor[T]().String()
+
 	switch v := src.(type) {
 	case string:
 		parsed, err := uuid.Parse(v)
 		if err != nil {
-			return fmt.Errorf("id: %w: %v", ErrDataCorrupted, err)
+			return fmt.Errorf("id %s: %w: %v", typeName, ErrDataCorrupted, err)
 		}
 		id.value = parsed
 	case []byte:
@@ -56,18 +59,18 @@ func (id *UUID[T]) Scan(src any) error {
 		if isUUIDBytes {
 			parsed, err := uuid.FromBytes(v)
 			if err != nil {
-				return fmt.Errorf("id bytes: %w: %v", ErrDataCorrupted, err)
+				return fmt.Errorf("id bytes %s: %w: %v", typeName, ErrDataCorrupted, err)
 			}
 			id.value = parsed
 		} else { // Byte representation of string
 			parsed, err := uuid.ParseBytes(v)
 			if err != nil {
-				return fmt.Errorf("id bytes: %w: %v", ErrDataCorrupted, err)
+				return fmt.Errorf("id bytes %s: %w: %v", typeName, ErrDataCorrupted, err)
 			}
 			id.value = parsed
 		}
 	default:
-		return fmt.Errorf("unexpected type for ID: %T", src)
+		return fmt.Errorf("unexpected type for ID %s: %T", typeName, src)
 	}
 	return nil
 }
