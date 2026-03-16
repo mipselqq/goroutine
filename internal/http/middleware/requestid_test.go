@@ -2,6 +2,7 @@ package middleware_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"goroutine/internal/http/httpschema"
@@ -72,7 +73,9 @@ func TestRequestIDMiddleware(t *testing.T) {
 
 			mw := middleware.MustNewRequestID(testutil.NewTestLogger(t), generateStaticID)
 
-			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", http.NoBody)
+			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+			rr := httptest.NewRecorder()
+
 			for k, v := range tt.requestHeaders {
 				req.Header.Set(k, v)
 			}
