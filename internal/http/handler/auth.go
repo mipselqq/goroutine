@@ -14,8 +14,8 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, email domain.Email, password domain.Password) error
-	Login(ctx context.Context, email domain.Email, password domain.Password) (string, error)
+	Register(ctx context.Context, email domain.Email, password domain.UserPassword) error
+	Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error)
 }
 
 type Auth struct {
@@ -62,7 +62,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	details := []httpschema.Detail{}
 	email := httpschema.ValidateField("email", body.Email, domain.NewEmail, &details)
-	password := httpschema.ValidateField("password", body.Password, domain.NewPassword, &details)
+	password := httpschema.ValidateField("password", body.Password, domain.NewUserPassword, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
@@ -124,7 +124,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	details := []httpschema.Detail{}
 	email := httpschema.ValidateField("email", body.Email, domain.NewEmail, &details)
-	password := httpschema.ValidateField("password", body.Password, domain.NewPassword, &details)
+	password := httpschema.ValidateField("password", body.Password, domain.NewUserPassword, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return

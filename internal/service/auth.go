@@ -34,7 +34,7 @@ func NewAuth(r UserRepository, opts JWTOptions) *Auth {
 	return &Auth{repository: r, jwtOptions: opts}
 }
 
-func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.Password) error {
+func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 	hash, err := argon2id.CreateHash(password.String(), argon2id.DefaultParams)
 	if err != nil {
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
@@ -51,7 +51,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 	return nil
 }
 
-func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
+func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
 	id, hash, err := s.repository.GetByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
 		return "", fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)

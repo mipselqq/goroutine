@@ -29,8 +29,8 @@ func ValidEmail() domain.Email {
 	return must(domain.NewEmail, "test@example.com")
 }
 
-func ValidPassword() domain.Password {
-	return must(domain.NewPassword, "qwerty")
+func ValidPassword() domain.UserPassword {
+	return must(domain.NewUserPassword, "qwerty")
 }
 
 func ValidPasswordHash() string {

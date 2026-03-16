@@ -6,32 +6,45 @@ import (
 	"strings"
 )
 
+type (
+	userID struct{}
+	UserID = UUID[userID]
+)
+
+func NewUserID() UserID {
+	return NewID[userID]()
+}
+
+func ParseUserID(s string) (UserID, error) {
+	return ParseID[userID](s)
+}
+
 const (
 	ErrPasswordTooShort string = "Password is too short"
 )
 
-type Password struct {
+type UserPassword struct {
 	value string
 }
 
-func NewPassword(password string) (Password, error) {
+func NewUserPassword(password string) (UserPassword, error) {
 	if len(password) < 6 || strings.TrimSpace(password) == "" {
-		return Password{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
+		return UserPassword{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
 	}
 
-	return Password{value: password}, nil
+	return UserPassword{value: password}, nil
 }
 
-func (p Password) String() string {
+func (p UserPassword) String() string {
 	return p.value
 }
 
 // Domain knows about a little about storage, but this is pragmatic solution
-func (p Password) Value() (driver.Value, error) {
+func (p UserPassword) Value() (driver.Value, error) {
 	return p.value, nil
 }
 
-func (p *Password) Scan(value any) error {
+func (p *UserPassword) Scan(value any) error {
 	if value == nil {
 		p.value = ""
 		return nil
@@ -40,7 +53,7 @@ func (p *Password) Scan(value any) error {
 	if !ok {
 		return fmt.Errorf("unexpected type for Password: %T", value)
 	}
-	password, err := NewPassword(s)
+	password, err := NewUserPassword(s)
 	if err != nil {
 		return fmt.Errorf("password: %w: %v", ErrDataCorrupted, err)
 	}

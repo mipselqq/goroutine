@@ -33,7 +33,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Success",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.Password) error {
+				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) error {
 					if e.String() != email.String() {
 						t.Errorf("expected email %q, got %q", email, e.String())
 					}
@@ -50,7 +50,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Internal error",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
+				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 					return service.ErrInternal
 				}
 			},
@@ -104,7 +104,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "User already exists",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
+				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 					return service.ErrUserAlreadyExists
 				}
 			},
@@ -122,7 +122,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Unknown error",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.Password) error {
+				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 					return errors.New("unknown error")
 				}
 			},
@@ -169,7 +169,7 @@ func TestAuth_Login(t *testing.T) {
 			name:      "Success",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.Password) (string, error) {
+				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) (string, error) {
 					if e.String() != email.String() {
 						t.Errorf("expected email %q, got %q", email, e.String())
 					}
@@ -186,7 +186,7 @@ func TestAuth_Login(t *testing.T) {
 			name:      "Invalid credentials",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
+				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
 					return "", service.ErrInvalidCredentials
 				}
 			},
@@ -204,7 +204,7 @@ func TestAuth_Login(t *testing.T) {
 			name:      "User not found",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
+				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
 					return "", service.ErrUserNotFound // Enumeration and timing attacks are known, this is fine
 				}
 			},
@@ -220,7 +220,7 @@ func TestAuth_Login(t *testing.T) {
 			name:      "Internal error",
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
-				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.Password) (string, error) {
+				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
 					return "", service.ErrInternal
 				}
 			},
