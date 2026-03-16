@@ -275,7 +275,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			}
 
 			if tt.expectedErr == nil && returnedUserID != tt.expectedUserID {
-				t.Errorf("Expected userID %q, got %q", tt.expectedUserID.String(), returnedUserID.String())
+				t.Errorf("Expected userID %q, got %q", tt.expectedUserID, returnedUserID)
 			}
 		})
 	}

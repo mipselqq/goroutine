@@ -35,13 +35,13 @@ func TestBoardRepository_Create(t *testing.T) {
 			t.Errorf("Expected board ID to be generated, got empty")
 		}
 		if board.OwnerID != userID {
-			t.Errorf("Expected owner ID %q, got %q", userID.String(), board.OwnerID.String())
+			t.Errorf("Expected owner ID %q, got %q", userID, board.OwnerID)
 		}
 		if board.Name != boardName {
-			t.Errorf("Expected name %q, got %q", boardName.String(), board.Name.String())
+			t.Errorf("Expected name %q, got %q", boardName, board.Name)
 		}
 		if board.Description != boardDescription {
-			t.Errorf("Expected description %q, got %q", boardDescription.String(), board.Description.String())
+			t.Errorf("Expected description %q, got %q", boardDescription, board.Description)
 		}
 		if board.CreatedAt.IsZero() {
 			t.Errorf("Expected created at to be set, got zero value")
@@ -68,16 +68,16 @@ func TestBoardRepository_Create(t *testing.T) {
 		err = pool.QueryRow(context.Background(), query, board.ID).
 			Scan(&dbOwnerID, &dbName, &dbDescription, &dbCreatedAt, &dbUpdatedAt)
 		if err != nil {
-			t.Fatalf("Failed to find board in DB by ID %q: %v", board.ID.String(), err)
+			t.Fatalf("Failed to find board in DB by ID %q: %v", board.ID, err)
 		}
 		if dbOwnerID != userID {
-			t.Errorf("DB: expected owner ID %q, got %q", userID.String(), dbOwnerID.String())
+			t.Errorf("DB: expected owner ID %q, got %q", userID, dbOwnerID)
 		}
 		if dbName != boardName {
-			t.Errorf("DB: expected name %q, got %q", boardName.String(), dbName.String())
+			t.Errorf("DB: expected name %q, got %q", boardName, dbName)
 		}
 		if dbDescription != boardDescription {
-			t.Errorf("DB: expected description %q, got %q", boardDescription.String(), dbDescription.String())
+			t.Errorf("DB: expected description %q, got %q", boardDescription, dbDescription)
 		}
 		if !dbCreatedAt.Equal(board.CreatedAt) {
 			t.Errorf("DB: expected created_at %v, got %v", board.CreatedAt, dbCreatedAt)
