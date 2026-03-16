@@ -329,7 +329,6 @@ func TestAuth_WhoAmI(t *testing.T) {
 		context      context.Context
 		expectedCode int
 		expectedBody any
-		setupMock    func(s *MockAuth)
 	}{
 		{
 			name:         "Success",
