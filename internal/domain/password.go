@@ -26,6 +26,7 @@ func (p Password) String() string {
 	return p.value
 }
 
+// Domain knows about a little about storage, but this is pragmatic solution
 func (p Password) Value() (driver.Value, error) {
 	return p.value, nil
 }
@@ -39,6 +40,10 @@ func (p *Password) Scan(value any) error {
 	if !ok {
 		return fmt.Errorf("unexpected type for Password: %T", value)
 	}
-	p.value = s
+	password, err := NewPassword(s)
+	if err != nil {
+		return fmt.Errorf("password: %w: %v", ErrDataCorrupted, err)
+	}
+	*p = password
 	return nil
 }

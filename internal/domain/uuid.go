@@ -46,7 +46,7 @@ func (id *UUID[T]) Scan(src any) error {
 	case string:
 		parsed, err := uuid.Parse(v)
 		if err != nil {
-			return err
+			return fmt.Errorf("id: %w: %v", ErrDataCorrupted, err)
 		}
 		id.value = parsed
 	case []byte:
@@ -56,13 +56,13 @@ func (id *UUID[T]) Scan(src any) error {
 		if isUUIDBytes {
 			parsed, err := uuid.FromBytes(v)
 			if err != nil {
-				return err
+				return fmt.Errorf("id bytes: %w: %v", ErrDataCorrupted, err)
 			}
 			id.value = parsed
 		} else { // Byte representation of string
 			parsed, err := uuid.ParseBytes(v)
 			if err != nil {
-				return err
+				return fmt.Errorf("id bytes: %w: %v", ErrDataCorrupted, err)
 			}
 			id.value = parsed
 		}

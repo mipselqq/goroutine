@@ -42,6 +42,10 @@ func (e *Email) Scan(value any) error {
 	if !ok {
 		return fmt.Errorf("unexpected type for Email: %T", value)
 	}
-	e.value = s
+	email, err := NewEmail(s)
+	if err != nil {
+		return fmt.Errorf("email: %w: %v", ErrDataCorrupted, err)
+	}
+	*e = email
 	return nil
 }

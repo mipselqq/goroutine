@@ -1,9 +1,12 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
+
+var ErrDataCorrupted = errors.New("invalid data appeared in the database")
 
 type ValidationError struct {
 	Issues []string

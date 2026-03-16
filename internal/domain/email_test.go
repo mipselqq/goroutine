@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"errors"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -70,6 +71,58 @@ func TestEmail(t *testing.T) {
 				}
 			} else if err == nil {
 				t.Errorf("expected error but got none")
+			}
+		})
+	}
+}
+
+func TestEmail_Scan(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		input     any
+		expectErr bool
+		errKind   error
+	}{
+		{
+			name:      "Valid email",
+			input:     "test@example.com",
+			expectErr: false,
+		},
+		{
+			name:      "Invalid email",
+			input:     "invalid-email",
+			expectErr: true,
+			errKind:   domain.ErrDataCorrupted,
+		},
+		{
+			name:      "Null value",
+			input:     nil,
+			expectErr: false,
+		},
+		{
+			name:      "Invalid type",
+			input:     123,
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var e domain.Email
+			err := e.Scan(tt.input)
+
+			if tt.expectErr {
+				if err == nil {
+					t.Error("expected error, got nil")
+				} else if tt.errKind != nil && !errors.Is(err, tt.errKind) {
+					t.Errorf("expected error %v, got %v", tt.errKind, err)
+				}
+			} else if err != nil {
+				t.Errorf("did not expect error, got %v", err)
 			}
 		})
 	}

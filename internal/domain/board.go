@@ -65,7 +65,11 @@ func (n *BoardName) Scan(value any) error {
 	if !ok {
 		return fmt.Errorf("unexpected type for BoardName: %T", value)
 	}
-	n.value = s
+	bn, err := NewBoardName(s)
+	if err != nil {
+		return fmt.Errorf("board name: %w: %v", ErrDataCorrupted, err)
+	}
+	*n = bn
 	return nil
 }
 
@@ -108,7 +112,11 @@ func (d *BoardDescription) Scan(value any) error {
 	if !ok {
 		return fmt.Errorf("unexpected type for BoardDescription: %T", value)
 	}
-	d.value = s
+	bd, err := NewBoardDescription(s)
+	if err != nil {
+		return fmt.Errorf("board description: %w: %v", ErrDataCorrupted, err)
+	}
+	*d = bd
 	return nil
 }
 

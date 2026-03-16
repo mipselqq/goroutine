@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"errors"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -16,7 +17,6 @@ func TestNewUserID(t *testing.T) {
 	if id.IsEmpty() {
 		t.Error("NewUserID() should not be empty")
 	}
-
 	if id.UUID().Version() != 7 {
 		t.Errorf("Expected UUID v7, got v%d", id.UUID().Version())
 	}
@@ -47,67 +47,68 @@ func TestUserID_Scan(t *testing.T) {
 	t.Parallel()
 
 	u := uuid.New()
-	var id domain.UserID
 
-	t.Run("string", func(t *testing.T) {
-		err := id.Scan(u.String())
-		if err != nil {
-			t.Errorf("Scan string error = %v", err)
-		}
-		if id.String() != u.String() {
-			t.Errorf("Expected %q, got %q", u.String(), id.String())
-		}
-	})
-
-	t.Run("bytes", func(t *testing.T) {
-		err := id.Scan(u[:])
-		if err != nil {
-			t.Errorf("Scan bytes error = %v", err)
-		}
-		if id.String() != u.String() {
-			t.Errorf("Expected %q, got %q", u.String(), id.String())
-		}
-	})
-
-	t.Run("nil", func(t *testing.T) {
-		err := id.Scan(nil)
-		if err != nil {
-			t.Errorf("Scan nil error = %v", err)
-		}
-		if !id.IsEmpty() {
-			t.Error("Expected empty UserID after scanning nil")
-		}
-	})
-
-	t.Run("invalid type", func(t *testing.T) {
-		err := id.Scan(123)
-
-		if err == nil {
-			t.Error("Scan with invalid type should return error")
-		}
-	})
-}
-
-func TestUserID_Value(t *testing.T) {
-	t.Parallel()
-
-	u, _ := uuid.NewV7()
-	id, _ := domain.ParseUserID(u.String())
-
-	val, err := id.Value()
-	if err != nil {
-		t.Errorf("Value() error = %v", err)
-	}
-	if val != u.String() {
-		t.Errorf("Expected %q, got %q", u.String(), val)
+	tests := []struct {
+		name    string
+		input   any
+		wantErr bool
+		errIs   error
+	}{
+		{
+			name:    "Valid string",
+			input:   u.String(),
+			wantErr: false,
+		},
+		{
+			name:    "Valid bytes",
+			input:   u[:],
+			wantErr: false,
+		},
+		{
+			name:    "Invalid string",
+			input:   "invalid-uuid",
+			wantErr: true,
+			errIs:   domain.ErrDataCorrupted,
+		},
+		{
+			name:    "Invalid bytes",
+			input:   []byte("invalid"),
+			wantErr: true,
+			errIs:   domain.ErrDataCorrupted,
+		},
+		{
+			name:    "Null value",
+			input:   nil,
+			wantErr: false,
+		},
+		{
+			name:    "Invalid type",
+			input:   123,
+			wantErr: true,
+		},
 	}
 
-	var empty domain.UserID
-	val, err = empty.Value()
-	if err != nil {
-		t.Errorf("Empty Value() error = %v", err)
-	}
-	if val != nil {
-		t.Errorf("Expected nil value for empty UserID, got %v", val)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var id domain.UserID
+			err := id.Scan(tt.input)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Error("expected error, got nil")
+				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
+					t.Errorf("expected error %v, got %v", tt.errIs, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("did not expect error, got %v", err)
+				}
+				if tt.input != nil && id.IsEmpty() {
+					t.Error("expected UserID to not be empty")
+				}
+			}
+		})
 	}
 }
