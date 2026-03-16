@@ -72,7 +72,7 @@ func TestName(t *testing.T) {
 
 			var actualIssues []string
 			if err != nil {
-				var ve *domain.ValidationError
+				var ve *domain.ErrValidation
 				if errors.As(err, &ve) {
 					actualIssues = ve.Issues
 				} else {
@@ -150,7 +150,7 @@ func TestDescription(t *testing.T) {
 
 			var actualIssues []string
 			if err != nil {
-				var validationError *domain.ValidationError
+				var validationError *domain.ErrValidation
 				if errors.As(err, &validationError) {
 					actualIssues = validationError.Issues
 				} else {

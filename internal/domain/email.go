@@ -19,7 +19,7 @@ func NewEmail(email string) (Email, error) {
 
 	_, err := mail.ParseAddress(lowercasedEmail)
 	if err != nil {
-		return Email{}, &ValidationError{Issues: []string{ErrInvalidEmail}}
+		return Email{}, &ErrValidation{Issues: []string{ErrInvalidEmail}}
 	}
 
 	return Email{value: lowercasedEmail}, nil

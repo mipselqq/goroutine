@@ -38,7 +38,7 @@ func NewBoardName(name string) (BoardName, error) {
 	}
 
 	if len(issues) > 0 {
-		return BoardName{}, &ValidationError{Issues: issues}
+		return BoardName{}, &ErrValidation{Issues: issues}
 	}
 
 	return BoardName{value: trimmedName}, nil
@@ -85,7 +85,7 @@ func NewBoardDescription(description string) (BoardDescription, error) {
 	}
 
 	if len(issues) > 0 {
-		return BoardDescription{}, &ValidationError{Issues: issues}
+		return BoardDescription{}, &ErrValidation{Issues: issues}
 	}
 
 	return BoardDescription{value: trimmedDescription}, nil

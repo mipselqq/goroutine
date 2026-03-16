@@ -9,7 +9,7 @@ import (
 func ValidateField[T any](field, val string, constructor func(string) (T, error), details *[]Detail) T {
 	res, err := constructor(val)
 	if err != nil {
-		var ve *domain.ValidationError
+		var ve *domain.ErrValidation
 		if errors.As(err, &ve) {
 			*details = append(*details, Detail{Field: field, Issues: ve.Issues})
 		} else {

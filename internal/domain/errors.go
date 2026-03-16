@@ -8,11 +8,11 @@ import (
 
 var ErrDataCorrupted = errors.New("invalid data appeared in the database")
 
-type ValidationError struct {
+type ErrValidation struct {
 	Issues []string
 }
 
-func (e *ValidationError) Error() string {
+func (e *ErrValidation) Error() string {
 	return fmt.Sprintf("validation error: %s", strings.Join(e.Issues, ", "))
 }
 
@@ -20,5 +20,5 @@ func NewValidationError(issues ...string) error {
 	if len(issues) == 0 {
 		return nil
 	}
-	return &ValidationError{Issues: issues}
+	return &ErrValidation{Issues: issues}
 }

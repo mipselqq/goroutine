@@ -16,7 +16,7 @@ type Password struct {
 
 func NewPassword(password string) (Password, error) {
 	if len(password) < 6 || strings.TrimSpace(password) == "" {
-		return Password{}, &ValidationError{Issues: []string{ErrPasswordTooShort}}
+		return Password{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
 	}
 
 	return Password{value: password}, nil
