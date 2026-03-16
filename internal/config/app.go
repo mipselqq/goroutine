@@ -75,7 +75,7 @@ func (c AppConfig) LogValue() slog.Value {
 		slog.String("log_level", c.LogLevel),
 		slog.String("env", c.Env),
 		slog.String("swagger_host", c.SwaggerHost),
-		slog.String("jwt_secret", c.JWTSecret.String()),
+		slog.Any("jwt_secret", c.JWTSecret),
 		slog.Duration("jwt_exp", c.JWTExp),
 		slog.Any("allowed_origins", allowedOrigins),
 	)

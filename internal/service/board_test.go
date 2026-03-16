@@ -8,6 +8,7 @@ import (
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
+	"goroutine/internal/testutil"
 )
 
 func TestBoard_Create(t *testing.T) {
@@ -55,7 +56,7 @@ func TestBoard_Create(t *testing.T) {
 			tt.setupMock(r)
 			s := service.NewBoard(r)
 
-			_, err := s.Create(context.Background(), userID, boardName, boardDescription)
+			_, err := s.Create(context.Background(), testutil.ValidUserID(), testutil.ValidBoardName(), testutil.ValidBoardDescription())
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)

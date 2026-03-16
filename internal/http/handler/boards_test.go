@@ -1,13 +1,11 @@
 package handler_test
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"mime"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -21,24 +19,20 @@ import (
 
 type boardsTestCase struct {
 	name         string
-	inputBody    string
+	inputBody    any
+	context      context.Context
 	setupMock    func(s *MockBoards)
 	expectedCode int
-	expectedBody string
+	expectedBody any
 }
-
-const (
-	name        string = "My Todo Name"
-	description string = "My Todo Description"
-)
 
 func TestBoards_Create(t *testing.T) {
 	t.Parallel()
 
-	name, _ := domain.NewBoardName(name)
-	description, _ := domain.NewBoardDescription(description)
+	name := testutil.ValidBoardName()
+	description := testutil.ValidBoardDescription()
 	id := domain.NewBoardID()
-	userID := domain.NewUserID()
+	userID := testutil.ValidUserID()
 
 	validBoard := domain.Board{
 		ID:          id,
@@ -51,7 +45,7 @@ func TestBoards_Create(t *testing.T) {
 	tests := []boardsTestCase{
 		{
 			name:      "Success",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody: map[string]string{"name": name.String(), "description": description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					if ownerID != userID {
@@ -61,54 +55,93 @@ func TestBoards_Create(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusCreated,
-			expectedBody: fmt.Sprintf(
-				`{"id":%q,"ownerId":%q,"name":%q,"description":%q,"createdAt":%q}`,
-				id.String(),
-				userID.String(),
-				name.String(),
-				description.String(),
-				validBoard.CreatedAt.Format(time.RFC3339),
-			),
+			expectedBody: map[string]string{
+				"id":          id.String(),
+				"ownerId":     userID.String(),
+				"name":        name.String(),
+				"description": description.String(),
+				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
+			},
 		},
 		{
 			name:         "Empty name",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, "", description),
+			inputBody:    map[string]string{"name": "", "description": description.String()},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"name","issues":["Name is too short"]}]}`, FixedTime),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "name", "issues": []string{"Name is too short"}},
+				},
+			},
 		},
 		{
 			name:         "Description too long",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q}`, name, strings.Repeat("a", 1025)),
+			inputBody:    map[string]string{"name": name.String(), "description": strings.Repeat("a", 1025)},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"description","issues":["Description is too long"]}]}`, FixedTime),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "description", "issues": []string{"Description is too long"}},
+				},
+			},
 		},
 		{
 			name:         "Invalid JSON",
-			inputBody:    fmt.Sprintf(`{"name": %q, "description": %q`, name, description), // missing closing brace
+			inputBody:    json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, name, description))), // missing closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: fmt.Sprintf(`{"code":"VALIDATION_ERROR","message":"Some fields are invalid","timestamp":%q,"details":[{"field":"body","issues":["Invalid JSON body"]}]}`, FixedTime),
+			expectedBody: map[string]any{
+				"code":      "VALIDATION_ERROR",
+				"message":   "Some fields are invalid",
+				"timestamp": testutil.FixedTime(),
+				"details": []any{
+					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
+				},
+			},
 		},
 		{
 			name:      "Internal error",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody: map[string]string{"name": name.String(), "description": description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 		{
 			name:      "Unknown error",
-			inputBody: fmt.Sprintf(`{"name": %q, "description": %q}`, name, description),
+			inputBody: map[string]string{"name": name.String(), "description": description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown error")
 				}
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedBody: fmt.Sprintf(`{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","timestamp":%q}`, FixedTime),
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
+		},
+		{
+			name:         "No context user ID",
+			inputBody:    map[string]string{"name": name.String(), "description": description.String()},
+			context:      context.Background(),
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: map[string]any{
+				"code":      "INTERNAL_SERVER_ERROR",
+				"message":   "Internal server error",
+				"timestamp": testutil.FixedTime(),
+			},
 		},
 	}
 
@@ -116,12 +149,14 @@ func TestBoards_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodPost, "/v1/boards", bytes.NewBuffer([]byte(tt.inputBody)))
-			req.Header.Set("Content-Type", "application/json")
-			ctx := context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID)
-			req = req.WithContext(ctx)
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/v1/boards", tt.inputBody)
 
-			rr := httptest.NewRecorder()
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID))
+			}
+
 			s := &MockBoards{}
 
 			if tt.setupMock != nil {
@@ -129,49 +164,12 @@ func TestBoards_Create(t *testing.T) {
 			}
 
 			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, MockTime))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.Create(rr, req)
 
-			if rr.Code != tt.expectedCode {
-				t.Errorf("expected status %d, got %d", tt.expectedCode, rr.Code)
-			}
-
-			contentType := rr.Header().Get("Content-Type")
-			mediaType, _, err := mime.ParseMediaType(contentType)
-			if err != nil {
-				t.Fatalf("Failed to parse MIME %q", contentType)
-			}
-			if mediaType != ExpectedMime {
-				t.Errorf("Expected %q, got %q", ExpectedMime, mediaType)
-			}
-
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertContentType(t, rr, "application/json")
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
-	}
-}
-
-func TestBoards_Create_NoContextUserID(t *testing.T) {
-	t.Parallel()
-
-	req := httptest.NewRequest(http.MethodPost, "/boards", bytes.NewBuffer([]byte(`{"name": "My Todo Name", "description": "My Todo Description"}`)))
-	req.Header.Set("Content-Type", "application/json")
-	rr := httptest.NewRecorder()
-	s := &MockBoards{}
-	logger := testutil.NewTestLogger(t)
-	h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, MockTime))
-	h.Create(rr, req)
-
-	if rr.Code != http.StatusInternalServerError {
-		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, rr.Code)
-	}
-
-	// TODO: factor out to helpers_test/AssertContentType
-	contentType := rr.Header().Get("Content-Type")
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		t.Fatalf("Failed to parse MIME %q", contentType)
-	}
-	if mediaType != ExpectedMime {
-		t.Errorf("Expected %q, got %q", ExpectedMime, mediaType)
 	}
 }

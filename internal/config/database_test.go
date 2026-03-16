@@ -32,7 +32,7 @@ func setCustomPgEnvVars(t *testing.T) {
 
 func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
-		testutil.UnsetEnv(t, pgEnvVars...)
+		UnsetEnv(t, pgEnvVars...)
 
 		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
 
@@ -60,7 +60,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 	})
 
 	t.Run("warnings on unset variables", func(t *testing.T) {
-		testutil.UnsetEnv(t, pgEnvVars...)
+		UnsetEnv(t, pgEnvVars...)
 
 		logger, buf := testutil.NewBufJsonLogger(t)
 		_ = config.NewPGConfigFromEnv(logger)

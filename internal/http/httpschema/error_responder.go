@@ -13,7 +13,6 @@ type ErrorResponder struct {
 }
 
 func MustNewErrorResponder(logger *slog.Logger, timeFn TimeFunc) *ErrorResponder {
-	// TODO: ensure functions as arguments are not nil everywhere like here
 	if timeFn == nil {
 		panic("BUG: timeFn is nil")
 	}

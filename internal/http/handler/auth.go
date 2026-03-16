@@ -14,8 +14,8 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, email domain.Email, password domain.Password) error
-	Login(ctx context.Context, email domain.Email, password domain.Password) (string, error)
+	Register(ctx context.Context, email domain.Email, password domain.UserPassword) error
+	Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error)
 }
 
 type Auth struct {
@@ -27,7 +27,7 @@ type Auth struct {
 func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.ErrorResponder) *Auth {
 	return &Auth{
 		service:   s,
-		logger:    logging.NewLoggerContext(l, "handler.auth"),
+		logger:    logging.WithModule(l, "handler.auth"),
 		responder: responder,
 	}
 }
@@ -62,7 +62,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	details := []httpschema.Detail{}
 	email := httpschema.ValidateField("email", body.Email, domain.NewEmail, &details)
-	password := httpschema.ValidateField("password", body.Password, domain.NewPassword, &details)
+	password := httpschema.ValidateField("password", body.Password, domain.NewUserPassword, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
@@ -78,13 +78,13 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 				[]httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}},
 			)
 		default:
-			h.logger.Error("Failed to register user", slog.String("err", err.Error()))
+			h.logger.ErrorContext(r.Context(), "Failed to register user", slog.String("err", err.Error()))
 			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
 
-	h.logger.Info("Successfuly registered user", slog.String("email", body.Email))
+	h.logger.InfoContext(r.Context(), "Successfully registered user", slog.String("email", body.Email))
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, httpschema.Status{Status: "ok"})
 }
@@ -96,11 +96,6 @@ type loginBody struct {
 
 type loginResponse struct {
 	Token string `json:"token" example:"jwt-token"`
-}
-
-// TODO: add extractor with truncation in debug
-func SlogRequestIDFromRequest(r *http.Request) any {
-	return slog.Any("request_id", r.Context().Value(httpschema.ContextKeyRequestID))
 }
 
 // Login godoc
@@ -129,7 +124,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	details := []httpschema.Detail{}
 	email := httpschema.ValidateField("email", body.Email, domain.NewEmail, &details)
-	password := httpschema.ValidateField("password", body.Password, domain.NewPassword, &details)
+	password := httpschema.ValidateField("password", body.Password, domain.NewUserPassword, &details)
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return
@@ -143,13 +138,13 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrUserNotFound):
 			h.responder.Unauthorized(w, "USER_NOT_FOUND", []httpschema.Detail{})
 		default:
-			h.logger.Error("Failed to login user", slog.String("err", err.Error()), SlogRequestIDFromRequest(r))
+			h.logger.ErrorContext(r.Context(), "Failed to login user", slog.String("err", err.Error()))
 			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 		}
 		return
 	}
 
-	h.logger.Info("Successfuly logged in user", slog.String("email", body.Email))
+	h.logger.InfoContext(r.Context(), "Successfully logged in user", slog.String("email", body.Email))
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
 }
 
@@ -168,10 +163,9 @@ type whoAmIResponse struct {
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/whoami [get]
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
-	// TODO: cover error path with tests
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
-		h.logger.Error("BUG: failed to get user id from context", SlogRequestIDFromRequest(r))
+		h.logger.ErrorContext(r.Context(), "BUG: failed to get user id from context")
 		h.responder.Error(
 			w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR",
 		)

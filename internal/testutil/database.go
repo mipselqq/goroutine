@@ -13,11 +13,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TODO: write local repository/helpers_test.go and use it here
-// to avoid uncontrolled global testutil growth
 func SetupTestDB(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	t.Helper()
-	_ = godotenv.Load("../../.env.dev")
+	_ = godotenv.Load("../../.env.dev", "../.env.dev")
 	logger := NewTestLogger(t)
 
 	pool, err := app.SetupDatabaseFromEnv(logger, migrationsDir)

@@ -10,6 +10,7 @@ import (
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
+	"goroutine/internal/testutil"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -29,7 +30,7 @@ func TestAuth_Register(t *testing.T) {
 			expectedErr: nil,
 			setupMock: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
-					if hash == validPasswordStr {
+					if hash == testutil.ValidPassword().String() {
 						return errors.New("service saved plaintext password!")
 					}
 					return nil
@@ -71,9 +72,9 @@ func TestAuth_Register(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
-			s := service.NewAuth(r, jwtOpts)
+			s := service.NewAuth(r, testutil.ValidJWTOptions())
 
-			err := s.Register(context.Background(), email, password)
+			err := s.Register(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("Expected error %v, got %v", tt.expectedErr, err)
@@ -90,7 +91,7 @@ func TestAuth_Login(t *testing.T) {
 			name: "Success",
 			setupMock: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return userID, validPasswordHash, nil
+					return testutil.ValidUserID(), testutil.ValidPasswordHash(), nil
 				}
 			},
 			expectedErr: nil,
@@ -109,7 +110,7 @@ func TestAuth_Login(t *testing.T) {
 			expectedErr: service.ErrInvalidCredentials,
 			setupMock: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return userID, validAnotherPasswordHash, nil
+					return testutil.ValidUserID(), testutil.AnotherValidPasswordHash(), nil
 				}
 			},
 		},
@@ -139,9 +140,10 @@ func TestAuth_Login(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupMock(r)
+			jwtOpts := testutil.ValidJWTOptions()
 			s := service.NewAuth(r, jwtOpts)
 
-			token, err := s.Login(context.Background(), email, password)
+			token, err := s.Login(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("Expected error %v, got %v", tt.expectedErr, err)
@@ -160,11 +162,8 @@ func TestAuth_Login(t *testing.T) {
 func TestAuth_VerifyToken(t *testing.T) {
 	t.Parallel()
 
-	s := service.NewAuth(nil, service.JWTOptions{
-		JWTSecret:     JWTSecret,
-		Exp:           jwtOpts.Exp,
-		SigningMethod: jwt.SigningMethodHS256,
-	})
+	jwtOpts := testutil.ValidJWTOptions()
+	s := service.NewAuth(nil, jwtOpts)
 
 	tests := []struct {
 		name           string
@@ -175,9 +174,9 @@ func TestAuth_VerifyToken(t *testing.T) {
 		{
 			name: "Valid token",
 			tokenFunc: func() (string, error) {
-				return s.CreateToken(userID, jwtOpts.Exp)
+				return s.CreateToken(testutil.ValidUserID(), jwtOpts.Exp)
 			},
-			expectedUserID: userID,
+			expectedUserID: testutil.ValidUserID(),
 			expectedErr:    nil,
 		},
 		{
@@ -191,7 +190,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Different secret",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": userID.String(),
+					"sub": testutil.ValidUserID().String(),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
@@ -203,7 +202,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 		{
 			name: "Expired token",
 			tokenFunc: func() (string, error) {
-				return s.CreateToken(userID, -time.Hour)
+				return s.CreateToken(testutil.ValidUserID(), -time.Hour)
 			},
 			expectedErr: service.ErrTokenExpired,
 		},
@@ -211,12 +210,12 @@ func TestAuth_VerifyToken(t *testing.T) {
 			name: "Different signing method",
 			tokenFunc: func() (string, error) {
 				claims := jwt.MapClaims{
-					"sub": userID.String(),
+					"sub": testutil.ValidUserID().String(),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
-				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
 			},
 			expectedErr: service.ErrInvalidSigningMethod,
 		},
@@ -228,7 +227,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
 			},
 			expectedErr: service.ErrInvalidToken,
 		},
@@ -241,7 +240,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
 			},
 			expectedErr: service.ErrInvalidToken,
 		},
@@ -254,7 +253,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte(JWTSecret.RevealSecret()))
+				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
 			},
 			expectedErr: service.ErrInvalidToken,
 		},
@@ -285,19 +284,17 @@ func TestAuth_VerifyToken(t *testing.T) {
 func TestAuth_CreateToken(t *testing.T) {
 	t.Parallel()
 
-	s := service.NewAuth(nil, service.JWTOptions{
-		JWTSecret:     JWTSecret,
-		Exp:           jwtOpts.Exp,
-		SigningMethod: jwt.SigningMethodHS256,
-	})
+	jwtOpts := testutil.ValidJWTOptions()
+	s := service.NewAuth(nil, jwtOpts)
 	now := time.Now()
+	userID := testutil.ValidUserID()
 	token, err := s.CreateToken(userID, jwtOpts.Exp)
 	if err != nil {
 		t.Fatalf("token creation failed: %v", err)
 	}
 
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		return []byte(JWTSecret.RevealSecret()), nil
+		return []byte(testutil.ValidJWTSecret().RevealSecret()), nil
 	})
 	if err != nil {
 		t.Fatalf("token parsing failed: %v", err)
@@ -309,7 +306,7 @@ func TestAuth_CreateToken(t *testing.T) {
 	}
 
 	if claims["sub"] != userID.String() {
-		t.Errorf("Expected sub %v, got %v", userID.String(), claims["sub"])
+		t.Errorf("Expected sub %v, got %v", userID, claims["sub"])
 	}
 
 	exp, ok := claims["exp"].(float64)

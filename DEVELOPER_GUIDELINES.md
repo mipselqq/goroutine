@@ -92,7 +92,7 @@ For most features, touch layers in this order:
 
 ### 5.6 Observability (Logging, Metrics, Tracing)
 
-- **Logging:** Use `slog` with module context (`logging.NewLoggerContext`). Never log secrets. Keep dev logs human-readable, prod logs structured (JSON).
+ - **Logging:** Use `slog` with module context (`logging.WithModule`). Never log secrets. Keep dev logs human-readable, prod logs structured (JSON). Prefer `*Context` methods (e.g., `InfoContext(ctx, ...)`) to automatically include request and user IDs.
 - **Metrics:** Instrument critical paths with Prometheus metrics (RED method: Rate, Errors, Duration).
 - **Tracing:** Propagate `context.Context` everywhere to ensure TraceIDs/SpanIDs are preserved across layers.
 

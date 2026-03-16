@@ -3,7 +3,6 @@ package middleware_test
 import (
 	"maps"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -135,20 +134,15 @@ func TestCors_Wrap(t *testing.T) {
 
 			mw := middleware.NewCORS(testutil.NewTestLogger(t), tt.allowedOrigins)
 
-			req := httptest.NewRequest(tt.method, "/", http.NoBody)
+			req, rr := testutil.NewJSONRequestAndRecorder(t, tt.method, "/", "")
 			for k, v := range tt.reqHeaders {
 				req.Header.Set(k, v)
 			}
 
 			wrapped := mw.Wrap(handler)
-			rr := httptest.NewRecorder()
-
 			wrapped.ServeHTTP(rr, req)
 
-			if rr.Code != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, rr.Code)
-			}
-
+			testutil.AssertStatusCode(t, rr, tt.expectedStatus)
 			for k, v := range tt.expectedHeaders {
 				if rr.Header().Get(k) != v {
 					t.Errorf("expected header %q, got %q", v, rr.Header().Get(k))

@@ -45,7 +45,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
 	authMiddleware := middleware.NewAuth(logger, authService, responder)
-	reqIDMiddleware := middleware.NewRequestID(logger, func() string {
+	reqIDMiddleware := middleware.MustNewRequestID(logger, func() string {
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 

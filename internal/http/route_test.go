@@ -78,9 +78,7 @@ func TestNewRouter_Full(t *testing.T) {
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
 
-		if rr.Code != http.StatusNotFound {
-			t.Errorf("Expected 404 for non-existing endpoint, got %d", rr.Code)
-		}
+		testutil.AssertStatusCode(t, rr, http.StatusNotFound)
 	})
 }
 

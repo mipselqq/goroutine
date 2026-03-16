@@ -40,7 +40,6 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		authHeader := strings.TrimSpace(header)
 		parts := strings.Fields(authHeader)
 
-		// TODO: test middleware http responses as well
 		if len(parts) != 2 {
 			issues = append(issues, "Invalid authorization header")
 		} else if !strings.EqualFold(parts[0], "bearer") {

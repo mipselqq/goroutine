@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -28,21 +26,22 @@ type BoardName struct {
 	value string
 }
 
-func NewBoardName(name string) (n BoardName, errs []string) {
+func NewBoardName(name string) (BoardName, error) {
 	trimmedName := strings.TrimSpace(name)
+	var issues []string
 	if trimmedName == "" {
-		errs = append(errs, ErrNameTooShort)
+		issues = append(issues, ErrNameTooShort)
 	}
 
 	if len(trimmedName) > 128 {
-		errs = append(errs, ErrNameTooLong)
+		issues = append(issues, ErrNameTooLong)
 	}
 
-	if len(errs) > 0 {
-		return BoardName{}, errs
+	if len(issues) > 0 {
+		return BoardName{}, &ErrValidation{Issues: issues}
 	}
 
-	return BoardName{value: trimmedName}, []string{}
+	return BoardName{value: trimmedName}, nil
 }
 
 func (n BoardName) IsEmpty() bool {
@@ -53,21 +52,43 @@ func (n BoardName) String() string {
 	return n.value
 }
 
+func (n BoardName) Value() (driver.Value, error) {
+	return n.value, nil
+}
+
+func (n *BoardName) Scan(value any) error {
+	if value == nil {
+		n.value = ""
+		return nil
+	}
+	s, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("unexpected type for BoardName: %T", value)
+	}
+	bn, err := NewBoardName(s)
+	if err != nil {
+		return fmt.Errorf("board name: %w: %v", ErrDataCorrupted, err)
+	}
+	*n = bn
+	return nil
+}
+
 type BoardDescription struct {
 	value string
 }
 
-func NewBoardDescription(description string) (d BoardDescription, errs []string) {
+func NewBoardDescription(description string) (BoardDescription, error) {
 	trimmedDescription := strings.TrimSpace(description)
+	var issues []string
 	if len(trimmedDescription) > 1024 {
-		errs = append(errs, ErrDescriptionTooLong)
+		issues = append(issues, ErrDescriptionTooLong)
 	}
 
-	if len(errs) > 0 {
-		return BoardDescription{}, errs
+	if len(issues) > 0 {
+		return BoardDescription{}, &ErrValidation{Issues: issues}
 	}
 
-	return BoardDescription{value: trimmedDescription}, []string{}
+	return BoardDescription{value: trimmedDescription}, nil
 }
 
 func (d BoardDescription) String() string {
@@ -78,76 +99,36 @@ func (d BoardDescription) IsEmpty() bool {
 	return d.value == ""
 }
 
-type BoardID struct {
-	value uuid.UUID
+func (d BoardDescription) Value() (driver.Value, error) {
+	return d.value, nil
 }
 
-func NewBoardID() BoardID {
-	id, _ := uuid.NewV7()
-	return BoardID{value: id}
-}
-
-func ParseBoardID(s string) (BoardID, error) {
-	b, err := uuid.Parse(s)
-	if err != nil {
-		return BoardID{}, fmt.Errorf("parse board id: %w", err)
-	}
-	return BoardID{value: b}, nil
-}
-
-func (b BoardID) String() string {
-	return b.value.String()
-}
-
-func (b BoardID) IsEmpty() bool {
-	return b.value == uuid.Nil
-}
-
-func (b BoardID) UUID() uuid.UUID {
-	return b.value
-}
-
-// Scan implements the sql.Scanner interface.
-func (b *BoardID) Scan(src any) error {
-	if src == nil {
-		b.value = uuid.Nil
+func (d *BoardDescription) Scan(value any) error {
+	if value == nil {
+		d.value = ""
 		return nil
 	}
-
-	switch v := src.(type) {
-	case string:
-		parsed, err := uuid.Parse(v)
-		if err != nil {
-			return err
-		}
-		b.value = parsed
-	case []byte:
-		const uuidByteLen = 16
-		isUUIDBytes := len(v) == uuidByteLen
-
-		if isUUIDBytes {
-			parsed, err := uuid.FromBytes(v)
-			if err != nil {
-				return err
-			}
-			b.value = parsed
-		} else { // Byte representation of string
-			parsed, err := uuid.ParseBytes(v)
-			if err != nil {
-				return err
-			}
-			b.value = parsed
-		}
-	default:
-		return fmt.Errorf("unexpected type for BoardID: %T", src)
+	s, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("unexpected type for BoardDescription: %T", value)
 	}
+	bd, err := NewBoardDescription(s)
+	if err != nil {
+		return fmt.Errorf("board description: %w: %v", ErrDataCorrupted, err)
+	}
+	*d = bd
 	return nil
 }
 
-// Value implements the driver.Valuer interface.
-func (b BoardID) Value() (driver.Value, error) {
-	if b.IsEmpty() {
-		return nil, nil
-	}
-	return b.value.String(), nil
+type (
+	boardTag struct{}
+	BoardID  = UUID[boardTag]
+)
+
+func NewBoardID() BoardID {
+	return NewID[boardTag]()
+}
+
+func ParseBoardID(s string) (BoardID, error) {
+	return ParseID[boardTag](s)
 }
