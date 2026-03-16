@@ -37,8 +37,8 @@ func TestUserRepository_Insert(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to find user in DB: %v", err)
 		}
-		if dbEmail.String() != email.String() {
-			t.Errorf("Expected email %q, got %q", email.String(), dbEmail.String())
+		if dbEmail != email {
+			t.Errorf("Expected email %q, got %q", email, dbEmail)
 		}
 	})
 

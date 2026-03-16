@@ -84,7 +84,7 @@ func TestName(t *testing.T) {
 				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
 			}
 			if name.String() != tt.expectedValue {
-				t.Errorf("expected value %q, got %q", tt.expectedValue, name.String())
+				t.Errorf("expected value %q, got %q", tt.expectedValue, name)
 			}
 			if name.IsEmpty() != (tt.expectedValue == "") {
 				t.Errorf("expected is empty %t, got %t", tt.expectedValue == "", name.IsEmpty())
@@ -162,7 +162,7 @@ func TestDescription(t *testing.T) {
 				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
 			}
 			if description.String() != tt.expectedValue {
-				t.Errorf("expected value %q, got %q", tt.expectedValue, description.String())
+				t.Errorf("expected value %q, got %q", tt.expectedValue, description)
 			}
 			if description.IsEmpty() != (tt.expectedValue == "") {
 				t.Errorf("expected is empty %t, got %t", tt.expectedValue == "", description.IsEmpty())

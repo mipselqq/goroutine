@@ -34,11 +34,11 @@ func TestAuth_Register(t *testing.T) {
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) error {
-					if e.String() != email.String() {
-						t.Errorf("expected email %q, got %q", email, e.String())
+					if e != email {
+						t.Errorf("expected email %q, got %q", email, e)
 					}
-					if p.String() != password.String() {
-						t.Errorf("expected password %q, got %q", password, p.String())
+					if p != password {
+						t.Errorf("expected password %q, got %q", password, p)
 					}
 					return nil
 				}
@@ -170,11 +170,11 @@ func TestAuth_Login(t *testing.T) {
 			inputBody: map[string]string{"email": email.String(), "password": password.String()},
 			setupMock: func(s *MockAuth) {
 				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) (string, error) {
-					if e.String() != email.String() {
-						t.Errorf("expected email %q, got %q", email, e.String())
+					if e != email {
+						t.Errorf("expected email %q, got %q", email, e)
 					}
-					if p.String() != password.String() {
-						t.Errorf("expected password %q, got %q", password, p.String())
+					if p != password {
+						t.Errorf("expected password %q, got %q", password, p)
 					}
 					return "jwt_token", nil
 				}

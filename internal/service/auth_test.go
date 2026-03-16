@@ -306,7 +306,7 @@ func TestAuth_CreateToken(t *testing.T) {
 	}
 
 	if claims["sub"] != userID.String() {
-		t.Errorf("Expected sub %v, got %v", userID.String(), claims["sub"])
+		t.Errorf("Expected sub %v, got %v", userID, claims["sub"])
 	}
 
 	exp, ok := claims["exp"].(float64)

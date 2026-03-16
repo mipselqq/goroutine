@@ -16,7 +16,7 @@ func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email string
 	defer cancel()
 
 	const query = `INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)`
-	_, err := pool.Exec(ctx, query, id.String(), email, "hash")
+	_, err := pool.Exec(ctx, query, id, email, "hash")
 	if err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}

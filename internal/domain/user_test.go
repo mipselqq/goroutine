@@ -34,7 +34,7 @@ func TestParseUserID(t *testing.T) {
 	}
 
 	if id.String() != s {
-		t.Errorf("Expected %q, got %q", s, id.String())
+		t.Errorf("Expected %q, got %q", s, id)
 	}
 
 	_, err = domain.ParseUserID("invalid")

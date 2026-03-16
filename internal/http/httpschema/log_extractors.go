@@ -10,7 +10,7 @@ import (
 
 func UserIDExtractor(ctx context.Context) []slog.Attr {
 	if userID, ok := ctx.Value(ContextKeyUserID).(domain.UserID); ok {
-		return []slog.Attr{slog.String("user_id", userID.String())}
+		return []slog.Attr{slog.Any("user_id", userID)}
 	}
 	return nil
 }
