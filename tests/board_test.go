@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -15,65 +14,27 @@ import (
 )
 
 func TestBoard_HappyPath(t *testing.T) {
-	client, ts, pool := E2EPrelude(t)
+	httpClient, ts, pool := Prelude(t)
 
-	t.Run("Create board successfully", func(t *testing.T) {
+	t.Run("Full board flow: register, login, create board, list boards", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 		testutil.TruncateTable(t, pool, "boards")
 
-		email := testutil.ValidEmail().String()
-		password := testutil.ValidPassword().String()
-
-		regBody, _ := json.Marshal(map[string]string{
-			"email":    email,
-			"password": password,
-		})
-		regResp, err := client.Post(ts.URL+"/v1/register", "application/json", bytes.NewBuffer(regBody))
-		if err != nil {
-			t.Fatalf("Register failed: %v", err)
-		}
-		_ = regResp.Body.Close()
-
-		loginBody, _ := json.Marshal(map[string]string{
-			"email":    email,
-			"password": password,
-		})
-		loginResp, err := client.Post(ts.URL+"/v1/login", "application/json", bytes.NewBuffer(loginBody))
-		if err != nil {
-			t.Fatalf("Login failed: %v", err)
-		}
-
-		var lResp struct {
-			Token string `json:"token"`
-		}
-		if err = json.NewDecoder(loginResp.Body).Decode(&lResp); err != nil {
-			t.Fatalf("Failed to decode token: %v", err)
-		}
-		_ = loginResp.Body.Close()
+		ac := NewAuthenticatedClient(t, httpClient, ts.URL)
 
 		name := testutil.ValidBoardName().String()
 		description := testutil.ValidBoardDescription().String()
-		boardBody, _ := json.Marshal(map[string]string{
+
+		createResp := ac.Do(t, http.MethodPost, "/v1/boards", map[string]string{
 			"name":        name,
 			"description": description,
 		})
-		req, err := http.NewRequest("POST", ts.URL+"/v1/boards", bytes.NewBuffer(boardBody))
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+lResp.Token)
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Create board request failed: %v", err)
-		}
 		defer func() {
-			_ = resp.Body.Close() // Calm down errcheck
+			_ = createResp.Body.Close()
 		}()
 
-		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("Expected status %d, got %d", http.StatusCreated, resp.StatusCode)
+		if createResp.StatusCode != http.StatusCreated {
+			t.Fatalf("Expected status %d, got %d", http.StatusCreated, createResp.StatusCode)
 		}
 
 		var bResp struct {
@@ -83,7 +44,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			Description string `json:"description"`
 			CreatedAt   string `json:"createdAt"`
 		}
-		if err = json.NewDecoder(resp.Body).Decode(&bResp); err != nil {
+		if err := json.NewDecoder(createResp.Body).Decode(&bResp); err != nil {
 			t.Fatalf("Failed to decode board response: %v", err)
 		}
 
@@ -101,6 +62,43 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 		if _, err := time.Parse(time.RFC3339, bResp.CreatedAt); err != nil {
 			t.Errorf("Invalid createdAt: %v", err)
+		}
+
+		listResp := ac.Do(t, http.MethodGet, "/v1/boards", nil)
+		defer func() {
+			_ = listResp.Body.Close()
+		}()
+
+		if listResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected list status %d, got %d", http.StatusOK, listResp.StatusCode)
+		}
+
+		var listBody []struct {
+			ID          string `json:"id"`
+			OwnerID     string `json:"ownerId"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			CreatedAt   string `json:"createdAt"`
+		}
+		if err := json.NewDecoder(listResp.Body).Decode(&listBody); err != nil {
+			t.Fatalf("Failed to decode list response: %v", err)
+		}
+
+		if len(listBody) != 1 {
+			t.Fatalf("Expected 1 board in list, got %d", len(listBody))
+		}
+		item := listBody[0]
+		if item.ID != bResp.ID {
+			t.Errorf("List id %q, create response id %q", item.ID, bResp.ID)
+		}
+		if item.OwnerID != bResp.OwnerID {
+			t.Errorf("List ownerId %q, create ownerId %q", item.OwnerID, bResp.OwnerID)
+		}
+		if item.Name != name || item.Description != description {
+			t.Errorf("List item name/description mismatch: got %+v", item)
+		}
+		if _, err := time.Parse(time.RFC3339, item.CreatedAt); err != nil {
+			t.Errorf("Invalid list createdAt: %v", err)
 		}
 	})
 }

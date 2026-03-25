@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -15,70 +14,22 @@ import (
 )
 
 func TestAuth_HappyPath(t *testing.T) {
-	client, ts, pool := E2EPrelude(t)
+	httpClient, ts, pool := Prelude(t)
 
 	t.Run("Full auth flow: register then login", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
-		email := testutil.ValidEmail().String()
-		password := testutil.ValidPassword().String()
+		// Register, login, append token to each request
+		ac := NewAuthenticatedClient(t, httpClient, ts.URL)
 
-		regBody, _ := json.Marshal(map[string]string{
-			"email":    email,
-			"password": password,
-		})
-
-		regResp, err := client.Post(ts.URL+"/v1/register", "application/json", bytes.NewBuffer(regBody))
-		if err != nil {
-			t.Fatalf("Register request failed: %v", err)
-		}
-		if regResp.StatusCode != http.StatusOK {
-			t.Errorf("Expeted register status 200, got %d", regResp.StatusCode)
-		}
-		_ = regResp.Body.Close()
-
-		loginBody, _ := json.Marshal(map[string]string{
-			"email":    email,
-			"password": password,
-		})
-
-		loginResp, err := client.Post(ts.URL+"/v1/login", "application/json", bytes.NewBuffer(loginBody))
-		if err != nil {
-			t.Fatalf("Login request failed: %v", err)
-		}
-		defer func() {
-			_ = loginResp.Body.Close() // Calm down errcheck
-		}()
-
-		if loginResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected login status 200, got %d", loginResp.StatusCode)
-		}
-
-		var respBody struct {
-			Token string `json:"token"`
-		}
-		err = json.NewDecoder(loginResp.Body).Decode(&respBody)
-		if err != nil {
-			t.Fatalf("Failed to decode login response: %v", err)
-		}
-
-		parts := strings.Split(respBody.Token, ".")
+		parts := strings.Split(ac.Token, ".")
 		if len(parts) != 3 {
 			t.Fatal("Got invalid JWT token")
 		}
 
-		req, err := http.NewRequest("GET", ts.URL+"/v1/whoami", http.NoBody)
-		if err != nil {
-			t.Fatalf("Failed to create whoami request: %v", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+respBody.Token)
-
-		whoamiResp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("WhoAmI request failed: %v", err)
-		}
+		whoamiResp := ac.Do(t, http.MethodGet, "/v1/whoami", nil)
 		defer func() {
-			_ = whoamiResp.Body.Close() // Calm down errcheck
+			_ = whoamiResp.Body.Close()
 		}()
 
 		if whoamiResp.StatusCode != http.StatusOK {
