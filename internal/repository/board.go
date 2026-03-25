@@ -37,3 +37,41 @@ func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 
 	return board, nil
 }
+
+func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+	const query = `
+		SELECT id, owner_id, name, description, created_at, updated_at
+		FROM boards
+		WHERE owner_id = $1
+		ORDER BY created_at ASC`
+
+	rows, err := r.pool.Query(ctx, query, ownerID)
+	if err != nil {
+		return nil, fmt.Errorf("board repo: get many: %v: %w", err, ErrInternal)
+	}
+	defer rows.Close()
+
+	var boards []domain.Board
+	for rows.Next() {
+		var board domain.Board
+		err := rows.Scan(
+			&board.ID,
+			&board.OwnerID,
+			&board.Name,
+			&board.Description,
+			&board.CreatedAt,
+			&board.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("board repo: get many scan: %v: %w", err, ErrInternal)
+		}
+
+		boards = append(boards, board)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("board repo: get many rows: %v: %w", err, ErrInternal)
+	}
+
+	return boards, nil
+}
