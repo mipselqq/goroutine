@@ -20,9 +20,15 @@ func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email)
 }
 
 type MockBoardRepository struct {
-	CreateFunc func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	CreateFunc  func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	// TODO(refactor-1): create a function assertFuncNotNil
 	return m.CreateFunc(ctx, ownerID, name, description)
+}
+
+func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+	return m.GetManyFunc(ctx, ownerID)
 }
