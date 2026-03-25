@@ -16,6 +16,53 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/v1/boards": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get many boards for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "boards"
+                ],
+                "summary": "Get many boards",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handler.boardResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {

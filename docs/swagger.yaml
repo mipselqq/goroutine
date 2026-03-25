@@ -110,6 +110,36 @@ info:
   title: Goroutine kanban API
 paths:
   /v1/boards:
+    get:
+      consumes:
+      - application/json
+      description: Get many boards for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.boardResponse'
+            type: array
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Get many boards
+      tags:
+      - boards
     post:
       consumes:
       - application/json

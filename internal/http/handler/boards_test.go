@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -29,132 +30,166 @@ type boardsTestCase struct {
 func TestBoards_Create(t *testing.T) {
 	t.Parallel()
 
-	name := testutil.ValidBoardName()
-	description := testutil.ValidBoardDescription()
-	id := domain.NewBoardID()
-	userID := testutil.ValidUserID()
-
-	validBoard := domain.Board{
-		ID:          id,
-		OwnerID:     userID,
-		Name:        name,
-		Description: description,
-		CreatedAt:   time.Now().UTC(),
-	}
+	validBoard := testutil.ValidBoard()
 
 	tests := []boardsTestCase{
 		{
 			name:      "Success",
-			inputBody: map[string]string{"name": name.String(), "description": description.String()},
+			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
 			setupMock: func(s *MockBoards) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-					if ownerID != userID {
-						t.Errorf("expected ownerID %v, got %v", userID, ownerID)
+					if ownerID != validBoard.OwnerID {
+						t.Errorf("expected ownerID %v, got %v", validBoard.OwnerID, ownerID)
 					}
 					return validBoard, nil
 				}
 			},
 			expectedCode: http.StatusCreated,
 			expectedBody: map[string]string{
-				"id":          id.String(),
-				"ownerId":     userID.String(),
-				"name":        name.String(),
-				"description": description.String(),
+				"id":          validBoard.ID.String(),
+				"ownerId":     validBoard.OwnerID.String(),
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
 				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
 			},
 		},
 		{
 			name:         "Empty name",
-			inputBody:    map[string]string{"name": "", "description": description.String()},
+			inputBody:    map[string]string{"name": "", "description": validBoard.Description.String()},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
-				"code":      "VALIDATION_ERROR",
-				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTime(),
-				"details": []any{
-					map[string]any{"field": "name", "issues": []string{"Name is too short"}},
-				},
-			},
+			expectedBody: validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
 			name:         "Description too long",
-			inputBody:    map[string]string{"name": name.String(), "description": strings.Repeat("a", 1025)},
+			inputBody:    map[string]string{"name": validBoard.Name.String(), "description": strings.Repeat("a", 1025)},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
-				"code":      "VALIDATION_ERROR",
-				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTime(),
-				"details": []any{
-					map[string]any{"field": "description", "issues": []string{"Description is too long"}},
-				},
-			},
+			expectedBody: validationErrorBody("description", []string{"Description is too long"}),
 		},
 		{
 			name:         "Invalid JSON",
-			inputBody:    json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, name, description))), // missing closing brace
+			inputBody:    json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, validBoard.Name.String(), validBoard.Description.String()))), // missing closing brace
 			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
-				"code":      "VALIDATION_ERROR",
-				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTime(),
-				"details": []any{
-					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
+			expectedBody: invalidJsonBody(),
+		},
+	}
+
+	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodPost, "/v1/boards")
+}
+
+func TestBoards_Get(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+
+	tests := []boardsTestCase{
+		{
+			name:      "Success",
+			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+			setupMock: func(s *MockBoards) {
+				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+					if ownerID != validBoard.OwnerID {
+						t.Errorf("expected ownerID %v, got %v", validBoard.OwnerID, ownerID)
+					}
+
+					return []domain.Board{validBoard}, nil
+				}
+			},
+			expectedCode: http.StatusOK,
+			expectedBody: []map[string]string{
+				{
+					"id":          validBoard.ID.String(),
+					"ownerId":     validBoard.OwnerID.String(),
+					"name":        validBoard.Name.String(),
+					"description": validBoard.Description.String(),
+					"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
 				},
-			},
-		},
-		{
-			name:      "Internal error",
-			inputBody: map[string]string{"name": name.String(), "description": description.String()},
-			setupMock: func(s *MockBoards) {
-				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-					return domain.Board{}, service.ErrInternal
-				}
-			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
-				"code":      "INTERNAL_SERVER_ERROR",
-				"message":   "Internal server error",
-				"timestamp": testutil.FixedTime(),
-			},
-		},
-		{
-			name:      "Unknown error",
-			inputBody: map[string]string{"name": name.String(), "description": description.String()},
-			setupMock: func(s *MockBoards) {
-				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-					return domain.Board{}, errors.New("unknown error")
-				}
-			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
-				"code":      "INTERNAL_SERVER_ERROR",
-				"message":   "Internal server error",
-				"timestamp": testutil.FixedTime(),
-			},
-		},
-		{
-			name:         "No context user ID",
-			inputBody:    map[string]string{"name": name.String(), "description": description.String()},
-			context:      context.Background(),
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
-				"code":      "INTERNAL_SERVER_ERROR",
-				"message":   "Internal server error",
-				"timestamp": testutil.FixedTime(),
 			},
 		},
 	}
 
-	for _, tt := range tests {
+	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodGet, "/v1/boards")
+}
+
+func genericBoardsEdgeCases(validBoard *domain.Board, method string) []boardsTestCase {
+	edgeCases := []boardsTestCase{
+		{
+			name:         "No context user ID",
+			inputBody:    map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+	}
+
+	switch method {
+	case http.MethodPost:
+		edgeCases = append(edgeCases,
+			boardsTestCase{
+				name:      "Internal error",
+				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+				setupMock: func(s *MockBoards) {
+					s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+						return domain.Board{}, service.ErrInternal
+					}
+				},
+				expectedCode: http.StatusInternalServerError,
+				expectedBody: internalErrorBody(),
+			},
+			boardsTestCase{
+				name:      "Unknown error",
+				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+				setupMock: func(s *MockBoards) {
+					s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+						return domain.Board{}, errors.New("unknown error")
+					}
+				},
+				expectedCode: http.StatusInternalServerError,
+				expectedBody: internalErrorBody(),
+			},
+		)
+	case http.MethodGet:
+		edgeCases = append(edgeCases,
+			boardsTestCase{
+				name:      "Internal error",
+				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+				setupMock: func(s *MockBoards) {
+					s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+						return nil, service.ErrInternal
+					}
+				},
+				expectedCode: http.StatusInternalServerError,
+				expectedBody: internalErrorBody(),
+			},
+			boardsTestCase{
+				name:      "Unknown error",
+				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+				setupMock: func(s *MockBoards) {
+					s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+						return nil, errors.New("unknown error")
+					}
+				},
+				expectedCode: http.StatusInternalServerError,
+				expectedBody: internalErrorBody(),
+			},
+		)
+	}
+
+	return edgeCases
+}
+
+func testBoardsWithCommonEdgeCases(t *testing.T, tests []boardsTestCase, validBoard *domain.Board, method, path string) {
+	edgeCases := genericBoardsEdgeCases(validBoard, method)
+
+	for _, tt := range slices.Concat(tests, edgeCases) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/v1/boards", tt.inputBody)
+			req, rr := testutil.NewJSONRequestAndRecorder(t, method, path, tt.inputBody)
 
 			if tt.context != nil {
 				req = req.WithContext(tt.context)
 			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, userID))
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
 
 			s := &MockBoards{}
@@ -165,7 +200,15 @@ func TestBoards_Create(t *testing.T) {
 
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
-			h.Create(rr, req)
+
+			switch method + path {
+			case http.MethodPost + "/v1/boards":
+				h.Create(rr, req)
+			case http.MethodGet + "/v1/boards":
+				h.GetMany(rr, req)
+			default:
+				t.Fatalf("unexpected method: %s, path: %s", method, path)
+			}
 
 			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
