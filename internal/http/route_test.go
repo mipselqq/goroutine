@@ -22,7 +22,7 @@ func TestNewRouter_Full(t *testing.T) {
 	handlers := &handler.Handlers{
 		Auth:   handler.NewAuth(logger, nil, responder),
 		Health: handler.NewHealth(logger),
-		Boards: handler.NewBoards(logger, stubBoardsService{}, responder),
+		Boards: handler.NewBoards(logger, nil, responder),
 	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   &spyMetricsMiddleware{},
@@ -40,7 +40,7 @@ func TestNewRouter_Full(t *testing.T) {
 		wantMetrics bool
 		wantCors    bool
 		wantReqID   bool
-	}{
+	}{ // TODO(refactor-1): use named fields
 		{"Register endpoint", http.MethodPost, "/v1/register", true, true, true},
 		{"Login endpoint", http.MethodPost, "/v1/login", true, true, true},
 		{"Health endpoint", http.MethodGet, "/v1/health", true, true, true},

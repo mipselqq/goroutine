@@ -105,17 +105,23 @@ func TestBoardRepository_GetByID(t *testing.T) {
 
 		CreateUser(t, pool, userID, "getbyid@example.com")
 
-		created, err := r.Create(context.Background(), userID, boardName, boardDescription)
-		if err != nil {
-			t.Fatalf("Create: %v", err)
+		now := time.Now().UTC().Truncate(time.Microsecond)
+		want := domain.Board{
+			ID:          domain.NewBoardID(),
+			OwnerID:     userID,
+			Name:        boardName,
+			Description: boardDescription,
+			CreatedAt:   now,
+			UpdatedAt:   now,
 		}
+		InsertBoard(t, pool, &want)
 
-		got, err := r.GetByID(context.Background(), created.ID)
+		got, err := r.GetByID(context.Background(), want.ID)
 		if err != nil {
 			t.Errorf("GetByID() error = %v", err)
 		}
-		if !reflect.DeepEqual(created, got) {
-			t.Errorf("GetByID() = %#v, want %#v", got, created)
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("GetByID() = %#v, want %#v", got, want)
 		}
 	})
 
