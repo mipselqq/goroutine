@@ -104,7 +104,34 @@ func TestBoards_Create(t *testing.T) {
 		},
 	}
 
-	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodPost, "/v1/boards")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/v1/boards", tt.inputBody)
+
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+
+			s := &MockBoards{}
+
+			if tt.setupMock != nil {
+				tt.setupMock(s)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
+
+			h.Create(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
 }
 
 func TestBoards_Get(t *testing.T) {
@@ -168,7 +195,34 @@ func TestBoards_Get(t *testing.T) {
 		},
 	}
 
-	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodGet, "/v1/boards")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/v1/boards", tt.inputBody)
+
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+
+			s := &MockBoards{}
+
+			if tt.setupMock != nil {
+				tt.setupMock(s)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
+
+			h.GetMany(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
 }
 
 func TestBoards_GetByID(t *testing.T) {
@@ -269,44 +323,6 @@ func TestBoards_GetByID(t *testing.T) {
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
 			h.Get(rr, req)
-
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
-			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
-		})
-	}
-}
-
-func testBoardsWithCommonEdgeCases(t *testing.T, tests []boardsTestCase, validBoard *domain.Board, method, path string) {
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			req, rr := testutil.NewJSONRequestAndRecorder(t, method, path, tt.inputBody)
-
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
-			}
-
-			s := &MockBoards{}
-
-			if tt.setupMock != nil {
-				tt.setupMock(s)
-			}
-
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
-
-			switch method + path {
-			case http.MethodPost + "/v1/boards":
-				h.Create(rr, req)
-			case http.MethodGet + "/v1/boards":
-				h.GetMany(rr, req)
-			default:
-				t.Fatalf("unexpected method: %s, path: %s", method, path)
-			}
 
 			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
