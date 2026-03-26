@@ -66,13 +66,15 @@ func ValidBoard() domain.Board {
 	description := ValidBoardDescription()
 	id := domain.NewBoardID()
 	userID := ValidUserID()
+	now := time.Now().UTC()
 
 	validBoard := domain.Board{
 		ID:          id,
 		OwnerID:     userID,
 		Name:        name,
 		Description: description,
-		CreatedAt:   time.Now().UTC(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	return validBoard

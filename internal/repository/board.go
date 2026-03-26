@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"goroutine/internal/domain"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -33,6 +35,31 @@ func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 	)
 	if err != nil {
 		return domain.Board{}, fmt.Errorf("board repo: create: %v: %w", err, ErrInternal)
+	}
+
+	return board, nil
+}
+
+func (r *PgBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+	const query = `
+		SELECT id, owner_id, name, description, created_at, updated_at
+		FROM boards
+		WHERE id = $1`
+
+	var board domain.Board
+	err := r.pool.QueryRow(ctx, query, id).Scan(
+		&board.ID,
+		&board.OwnerID,
+		&board.Name,
+		&board.Description,
+		&board.CreatedAt,
+		&board.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Board{}, ErrRowNotFound
+		}
+		return domain.Board{}, fmt.Errorf("board repo: get by id: %v: %w", err, ErrInternal)
 	}
 
 	return board, nil

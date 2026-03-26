@@ -4,6 +4,7 @@ package repository_test
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -85,6 +86,45 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		if !dbUpdatedAt.Equal(board.UpdatedAt) {
 			t.Errorf("DB: expected updated_at %v, got %v", board.UpdatedAt, dbUpdatedAt)
+		}
+	})
+}
+
+func TestBoardRepository_GetByID(t *testing.T) {
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	defer pool.Close()
+
+	r := repository.NewPgBoard(pool)
+	userID := testutil.ValidUserID()
+	boardName := testutil.ValidBoardName()
+	boardDescription := testutil.ValidBoardDescription()
+
+	t.Run("Success", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "getbyid@example.com")
+
+		created, err := r.Create(context.Background(), userID, boardName, boardDescription)
+		if err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+
+		got, err := r.GetByID(context.Background(), created.ID)
+		if err != nil {
+			t.Errorf("GetByID() error = %v", err)
+		}
+		if !reflect.DeepEqual(created, got) {
+			t.Errorf("GetByID() = %#v, want %#v", got, created)
+		}
+	})
+
+	t.Run("Not found", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+
+		_, err := r.GetByID(context.Background(), domain.NewBoardID())
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("GetByID() error = %v, want ErrRowNotFound", err)
 		}
 	})
 }

@@ -2,13 +2,16 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/repository"
 )
 
 type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 }
 
@@ -36,4 +39,19 @@ func (s *Board) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Bo
 	}
 
 	return boards, nil
+}
+
+func (s *Board) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+	board, err := s.repository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Board{}, ErrBoardNotFound
+		}
+		return domain.Board{}, fmt.Errorf("board service: get: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != ownerID {
+		return domain.Board{}, ErrBoardNotFound
+	}
+
+	return board, nil
 }

@@ -1,8 +1,25 @@
 package http_test
 
 import (
+	"context"
 	"net/http"
+
+	"goroutine/internal/domain"
 )
+
+type stubBoardsService struct{}
+
+func (stubBoardsService) Create(context.Context, domain.UserID, domain.BoardName, domain.BoardDescription) (domain.Board, error) {
+	return domain.Board{}, nil
+}
+
+func (stubBoardsService) Get(context.Context, domain.UserID, domain.BoardID) (domain.Board, error) {
+	return domain.Board{}, nil
+}
+
+func (stubBoardsService) GetMany(context.Context, domain.UserID) ([]domain.Board, error) {
+	return nil, nil
+}
 
 type spyMetricsMiddleware struct{}
 

@@ -3,16 +3,19 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/service"
 )
 
 type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 }
 
@@ -22,8 +25,8 @@ type Boards struct {
 	responder *httpschema.ErrorResponder
 }
 
-func NewBoards(logger *slog.Logger, service BoardsService, responder *httpschema.ErrorResponder) *Boards {
-	return &Boards{logger: logger, service: service, responder: responder}
+func NewBoards(logger *slog.Logger, svc BoardsService, responder *httpschema.ErrorResponder) *Boards {
+	return &Boards{logger: logger, service: svc, responder: responder}
 }
 
 type createBoardBody struct {
@@ -37,6 +40,7 @@ type boardResponse struct {
 	Name        string `json:"name" example:"My Todo Name"`
 	Description string `json:"description" example:"My Todo Description"`
 	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50+03:00"`
+	UpdatedAt   string `json:"updatedAt" example:"2026-03-07T20:56:50+03:00"`
 }
 
 func NewBoardResponse(board *domain.Board) boardResponse {
@@ -46,10 +50,13 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
 		CreatedAt:   board.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   board.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
 type getManyBoardsResponse = []boardResponse
+
+// TODO(refactor-1): allow manual auth header pass into swagger panel if possible
 
 // Create godoc
 // @Summary Create a new board
@@ -94,6 +101,47 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusCreated, NewBoardResponse(&board))
+}
+
+// Get godoc
+// @Summary Get a board by id
+// @Description Get board metadata by id for the current user (owner only)
+// @Tags boards
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param boardId path string true "Board ID"
+// @Success 200 {object} boardResponse
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 404 {object} httpschema.Error "NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards/{boardId} [get]
+func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
+	rawID := r.PathValue("boardId")
+	boardID, err := domain.ParseBoardID(rawID)
+	if err != nil {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		return
+	}
+
+	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	if !ok {
+		return
+	}
+
+	board, err := h.service.Get(r.Context(), userID, boardID)
+	if err != nil {
+		if errors.Is(err, service.ErrBoardNotFound) {
+			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")
+			return
+		}
+		h.logger.ErrorContext(r.Context(), "Failed to get board", slog.String("err", err.Error()))
+		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		return
+	}
+
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewBoardResponse(&board))
 }
 
 // GetMany godoc

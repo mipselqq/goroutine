@@ -28,8 +28,16 @@ func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domai
 }
 
 type MockBoards struct {
-	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 	CreateFunc  func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
+	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+}
+
+func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+	if m.GetFunc == nil {
+		return domain.Board{}, errors.New("BUG: GetFunc is called but not set")
+	}
+	return m.GetFunc(ctx, ownerID, boardID)
 }
 
 func (m *MockBoards) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
@@ -61,6 +69,14 @@ func internalErrorBody() map[string]any {
 	return map[string]any{
 		"code":      "INTERNAL_SERVER_ERROR",
 		"message":   "Internal server error",
+		"timestamp": testutil.FixedTime(),
+	}
+}
+
+func notFoundErrorBody() map[string]any {
+	return map[string]any{
+		"code":      "NOT_FOUND",
+		"message":   "Resource not found",
 		"timestamp": testutil.FixedTime(),
 	}
 }

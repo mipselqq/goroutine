@@ -5,6 +5,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"goroutine/internal/config"
 	"goroutine/internal/testutil"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
@@ -128,7 +130,7 @@ type AuthenticatedClient struct {
 func NewAuthenticatedClient(t *testing.T, httpClient *http.Client, baseURL string) *AuthenticatedClient {
 	t.Helper()
 
-	email := testutil.ValidEmail().String()
+	email := fmt.Sprintf("e2e-%s@example.com", uuid.NewString())
 	password := testutil.ValidPassword().String()
 	token := E2ERegisterAndLogin(t, httpClient, baseURL, email, password)
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -50,6 +51,7 @@ func TestBoards_Create(t *testing.T) {
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
 				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
 			},
 		},
 		{
@@ -130,6 +132,7 @@ func TestBoards_Get(t *testing.T) {
 					"name":        validBoard.Name.String(),
 					"description": validBoard.Description.String(),
 					"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
+					"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
 				},
 			},
 		},
@@ -165,6 +168,121 @@ func TestBoards_Get(t *testing.T) {
 	}
 
 	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodGet, "/v1/boards")
+}
+
+type boardsGetByIDTestCase struct {
+	name         string
+	path         string
+	context      context.Context
+	setupMock    func(s *MockBoards)
+	expectedCode int
+	expectedBody any
+}
+
+func TestBoards_GetByID(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	okPath := "/v1/boards/" + validBoard.ID.String()
+
+	tests := []boardsGetByIDTestCase{
+		{
+			name: "Success",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
+						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
+					}
+					return validBoard, nil
+				}
+			},
+			expectedCode: http.StatusOK,
+			expectedBody: map[string]string{
+				"id":          validBoard.ID.String(),
+				"ownerId":     validBoard.OwnerID.String(),
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
+			},
+		},
+		{
+			name:         "Invalid board id",
+			path:         "/v1/boards/not-a-uuid",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+		},
+		{
+			name: "Not found",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, service.ErrBoardNotFound
+				}
+			},
+			expectedCode: http.StatusNotFound,
+			expectedBody: notFoundErrorBody(),
+		},
+		{
+			name: "Internal error",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name: "Unknown error",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, errors.New("unknown")
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name:         "No context user ID",
+			path:         okPath,
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(http.MethodGet, tt.path, http.NoBody)
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
+
+			rr := httptest.NewRecorder()
+
+			s := &MockBoards{}
+			if tt.setupMock != nil {
+				tt.setupMock(s)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
+			h.Get(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
 }
 
 func testBoardsWithCommonEdgeCases(t *testing.T, tests []boardsTestCase, validBoard *domain.Board, method, path string) {

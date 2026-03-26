@@ -119,6 +119,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/boards/{boardId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get board metadata by id for the current user (owner only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "boards"
+                ],
+                "summary": "Get a board by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.boardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/health": {
             "get": {
                 "description": "Check if the server is alive",
@@ -298,6 +359,10 @@ const docTemplate = `{
                 "ownerId": {
                     "type": "string",
                     "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50+03:00"
                 }
             }
         },
