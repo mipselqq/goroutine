@@ -25,6 +25,7 @@ type boardsTestCase struct {
 	setupMock    func(s *MockBoards)
 	expectedCode int
 	expectedBody any
+	path         string
 }
 
 func TestBoards_Create(t *testing.T) {
@@ -170,22 +171,13 @@ func TestBoards_Get(t *testing.T) {
 	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodGet, "/v1/boards")
 }
 
-type boardsGetByIDTestCase struct {
-	name         string
-	path         string
-	context      context.Context
-	setupMock    func(s *MockBoards)
-	expectedCode int
-	expectedBody any
-}
-
 func TestBoards_GetByID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
 	okPath := "/v1/boards/" + validBoard.ID.String()
 
-	tests := []boardsGetByIDTestCase{
+	tests := []boardsTestCase{
 		{
 			name: "Success",
 			path: okPath,
