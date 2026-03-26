@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -71,6 +70,35 @@ func TestBoards_Create(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 			expectedBody: invalidJsonBody(),
 		},
+		{
+			name:         "No context user ID",
+			inputBody:    map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+		{
+			name:      "Internal error",
+			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+			setupMock: func(s *MockBoards) {
+				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name:      "Unknown error",
+			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+			setupMock: func(s *MockBoards) {
+				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, errors.New("unknown error")
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
 	}
 
 	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodPost, "/v1/boards")
@@ -84,7 +112,7 @@ func TestBoards_Get(t *testing.T) {
 	tests := []boardsTestCase{
 		{
 			name:      "Success",
-			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
+			inputBody: "",
 			setupMock: func(s *MockBoards) {
 				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
@@ -105,82 +133,42 @@ func TestBoards_Get(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:         "No context user ID",
+			inputBody:    "",
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+		{
+			name:      "Internal error",
+			inputBody: "",
+			setupMock: func(s *MockBoards) {
+				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+					return nil, service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name:      "Unknown error",
+			inputBody: "",
+			setupMock: func(s *MockBoards) {
+				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+					return nil, errors.New("unknown error")
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
 	}
 
 	testBoardsWithCommonEdgeCases(t, tests, &validBoard, http.MethodGet, "/v1/boards")
 }
 
-func genericBoardsEdgeCases(validBoard *domain.Board, method string) []boardsTestCase {
-	edgeCases := []boardsTestCase{
-		{
-			name:         "No context user ID",
-			inputBody:    map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-			context:      context.Background(),
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: unauthorizedTokenBody(),
-		},
-	}
-
-	switch method {
-	case http.MethodPost:
-		edgeCases = append(edgeCases,
-			boardsTestCase{
-				name:      "Internal error",
-				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-				setupMock: func(s *MockBoards) {
-					s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-						return domain.Board{}, service.ErrInternal
-					}
-				},
-				expectedCode: http.StatusInternalServerError,
-				expectedBody: internalErrorBody(),
-			},
-			boardsTestCase{
-				name:      "Unknown error",
-				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-				setupMock: func(s *MockBoards) {
-					s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-						return domain.Board{}, errors.New("unknown error")
-					}
-				},
-				expectedCode: http.StatusInternalServerError,
-				expectedBody: internalErrorBody(),
-			},
-		)
-	case http.MethodGet:
-		edgeCases = append(edgeCases,
-			boardsTestCase{
-				name:      "Internal error",
-				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-				setupMock: func(s *MockBoards) {
-					s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-						return nil, service.ErrInternal
-					}
-				},
-				expectedCode: http.StatusInternalServerError,
-				expectedBody: internalErrorBody(),
-			},
-			boardsTestCase{
-				name:      "Unknown error",
-				inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-				setupMock: func(s *MockBoards) {
-					s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-						return nil, errors.New("unknown error")
-					}
-				},
-				expectedCode: http.StatusInternalServerError,
-				expectedBody: internalErrorBody(),
-			},
-		)
-	}
-
-	return edgeCases
-}
-
 func testBoardsWithCommonEdgeCases(t *testing.T, tests []boardsTestCase, validBoard *domain.Board, method, path string) {
-	edgeCases := genericBoardsEdgeCases(validBoard, method)
-
-	for _, tt := range slices.Concat(tests, edgeCases) {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
