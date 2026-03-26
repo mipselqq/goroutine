@@ -12,19 +12,17 @@ import (
 	"goroutine/internal/testutil"
 )
 
-type boardServiceCreateTestCase struct {
-	name        string
-	setupMock   func(r *MockBoardRepository)
-	expectedErr error
-	wantBoard   domain.Board
-}
-
 func TestBoard_Create(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
 
-	tests := []boardServiceCreateTestCase{
+	tests := []struct {
+		name        string
+		setupMock   func(r *MockBoardRepository)
+		expectedErr error
+		wantBoard   domain.Board
+	}{
 		{
 			name: "Success",
 			setupMock: func(r *MockBoardRepository) {
@@ -84,19 +82,17 @@ func TestBoard_Create(t *testing.T) {
 	}
 }
 
-type boardServiceGetManyTestCase struct {
-	name        string
-	setupMock   func(r *MockBoardRepository)
-	expectedErr error
-	wantBoards  []domain.Board
-}
-
 func TestBoard_GetMany(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
 
-	tests := []boardServiceGetManyTestCase{
+	tests := []struct {
+		name        string
+		setupMock   func(r *MockBoardRepository)
+		expectedErr error
+		wantBoards  []domain.Board
+	}{
 		{
 			name: "Success",
 			setupMock: func(r *MockBoardRepository) {
