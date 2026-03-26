@@ -102,3 +102,17 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 
 	return boards, nil
 }
+
+func (r *PgBoard) Delete(ctx context.Context, boardID domain.BoardID) error {
+	const query = `DELETE FROM boards WHERE id = $1`
+
+	cmd, err := r.pool.Exec(ctx, query, boardID)
+	if err != nil {
+		return fmt.Errorf("board repo: delete: %v: %w", err, ErrInternal)
+	}
+	if cmd.RowsAffected() == 0 {
+		return ErrRowNotFound
+	}
+
+	return nil
+}

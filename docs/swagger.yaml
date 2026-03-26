@@ -179,6 +179,43 @@ paths:
       tags:
       - boards
   /v1/boards/{boardId}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a board and its columns and tasks for the current
+        user (owner only)
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete a board by id
+      tags:
+      - boards
     get:
       consumes:
       - application/json

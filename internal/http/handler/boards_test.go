@@ -330,3 +330,104 @@ func TestBoards_GetByID(t *testing.T) {
 		})
 	}
 }
+
+func TestBoards_Delete(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	okPath := "/v1/boards/" + validBoard.ID.String()
+
+	tests := []boardsTestCase{
+		{
+			name: "Success",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
+					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
+						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
+					}
+					return nil
+				}
+			},
+			expectedCode: http.StatusNoContent,
+			expectedBody: nil,
+		},
+		{
+			name:         "Invalid board id",
+			path:         "/v1/boards/not-a-uuid",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+		},
+		{
+			name: "Not found",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
+					return service.ErrBoardNotFound
+				}
+			},
+			expectedCode: http.StatusNotFound,
+			expectedBody: notFoundErrorBody(),
+		},
+		{
+			name: "Internal error",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
+					return service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name: "Unknown error",
+			path: okPath,
+			setupMock: func(s *MockBoards) {
+				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
+					return errors.New("unknown")
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name:         "No context user ID",
+			path:         okPath,
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(http.MethodDelete, tt.path, http.NoBody)
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
+
+			rr := httptest.NewRecorder()
+
+			s := &MockBoards{}
+			if tt.setupMock != nil {
+				tt.setupMock(s)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
+			h.Delete(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			if tt.expectedCode != http.StatusNoContent {
+				testutil.AssertContentType(t, rr, "application/json")
+			}
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
+}

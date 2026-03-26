@@ -24,6 +24,7 @@ type MockBoardRepository struct {
 	CreateFunc  func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByIDFunc func(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	DeleteFunc  func(ctx context.Context, boardID domain.BoardID) error
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -40,4 +41,11 @@ func (m *MockBoardRepository) GetByID(ctx context.Context, id domain.BoardID) (d
 
 func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 	return m.GetManyFunc(ctx, ownerID)
+}
+
+func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
+	if m.DeleteFunc == nil {
+		return errors.New("BUG: DeleteFunc is not set")
+	}
+	return m.DeleteFunc(ctx, boardID)
 }

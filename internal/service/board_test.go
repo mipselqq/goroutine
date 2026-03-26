@@ -236,3 +236,119 @@ func TestBoard_Get(t *testing.T) {
 		})
 	}
 }
+
+func TestBoard_Delete(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	otherOwner := domain.NewUserID()
+
+	tests := []struct {
+		name        string
+		callerID    domain.UserID
+		setupMock   func(r *MockBoardRepository)
+		expectedErr error
+	}{
+		{
+			name:     "Success",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					if id != validBoard.ID {
+						t.Errorf("unexpected boardID %v", id)
+					}
+					return validBoard, nil
+				}
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID) error {
+					if boardID != validBoard.ID {
+						t.Errorf("unexpected boardID %v", boardID)
+					}
+					return nil
+				}
+			},
+			expectedErr: nil,
+		},
+		{
+			name:     "Not found when wrong owner",
+			callerID: otherOwner,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			expectedErr: service.ErrBoardNotFound,
+		},
+		{
+			name:     "Not found when row missing",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, repository.ErrRowNotFound
+				}
+			},
+			expectedErr: service.ErrBoardNotFound,
+		},
+		{
+			name:     "Internal error from repository",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, repository.ErrInternal
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+		{
+			name:     "Unexpected error from repository",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, errors.New("db exploded")
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+		{
+			name:     "Delete returns not found",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID) error {
+					return repository.ErrRowNotFound
+				}
+			},
+			expectedErr: service.ErrBoardNotFound,
+		},
+		{
+			name:     "Delete returns internal",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID) error {
+					return repository.ErrInternal
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &MockBoardRepository{}
+			tt.setupMock(r)
+			s := service.NewBoard(r)
+
+			err := s.Delete(context.Background(), tt.callerID, validBoard.ID)
+
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
+	}
+}

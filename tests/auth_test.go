@@ -19,8 +19,7 @@ func TestAuth_HappyPath(t *testing.T) {
 	t.Run("Full auth flow: register then login", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
-		// Register, login, append token to each request
-		ac := NewAuthenticatedClient(t, httpClient, ts.URL)
+		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
 
 		parts := strings.Split(ac.Token, ".")
 		if len(parts) != 3 {
