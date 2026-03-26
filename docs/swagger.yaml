@@ -17,6 +17,9 @@ definitions:
       ownerId:
         example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
         type: string
+      updatedAt:
+        example: "2026-03-07T20:56:50+03:00"
+        type: string
     type: object
   handler.createBoardBody:
     properties:
@@ -110,6 +113,36 @@ info:
   title: Goroutine kanban API
 paths:
   /v1/boards:
+    get:
+      consumes:
+      - application/json
+      description: Get many boards for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.boardResponse'
+            type: array
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Get many boards
+      tags:
+      - boards
     post:
       consumes:
       - application/json
@@ -143,6 +176,45 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new board
+      tags:
+      - boards
+  /v1/boards/{boardId}:
+    get:
+      consumes:
+      - application/json
+      description: Get board metadata by id for the current user (owner only)
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.boardResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Get a board by id
       tags:
       - boards
   /v1/health:
