@@ -22,7 +22,6 @@ func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email string
 	}
 }
 
-// InsertBoard writes a board row directly; do not use the repository under test.
 func InsertBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
