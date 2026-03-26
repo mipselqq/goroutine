@@ -17,6 +17,7 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
 type Boards struct {
@@ -175,6 +176,49 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
+}
+
+// Delete godoc
+// @Summary Delete a board by id
+// @Description Permanently delete a board and its columns and tasks for the current user (owner only)
+// @Tags boards
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param boardId path string true "Board ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 404 {object} httpschema.Error "NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards/{boardId} [delete]
+func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
+	rawID := r.PathValue("boardId")
+	boardID, err := domain.ParseBoardID(rawID)
+	if err != nil {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		return
+	}
+
+	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	if !ok {
+		return
+	}
+
+	err = h.service.Delete(r.Context(), userID, boardID)
+	if err != nil {
+		if errors.Is(err, service.ErrBoardNotFound) {
+			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")
+			return
+		}
+		h.logger.ErrorContext(r.Context(), "Failed to delete board", slog.String("err", err.Error()))
+		// TODO(refactor-1): add more specific responder methods
+		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func ExtractUserIDOrHandleMissing(w http.ResponseWriter, r *http.Request, h *Boards) (domain.UserID, bool) {

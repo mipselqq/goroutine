@@ -29,7 +29,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 		testutil.TruncateTable(t, pool, "boards")
 
-		ac := NewAuthenticatedClient(t, httpClient, ts.URL)
+		ac := CrateUserAndAuthenticateClient(t, httpClient, ts.URL)
 
 		name := testutil.ValidBoardName().String()
 		description := testutil.ValidBoardDescription().String()
@@ -128,7 +128,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected 404 for unknown board, got %d", notFoundResp.StatusCode)
 		}
 
-		acOther := NewAuthenticatedClient(t, httpClient, ts.URL)
+		acOther := CrateUserAndAuthenticateClient(t, httpClient, ts.URL)
 		crossResp := acOther.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
 			_ = crossResp.Body.Close()
@@ -150,6 +150,37 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 		if len(otherList) != 0 {
 			t.Fatalf("Expected other user to have 0 boards, got %d", len(otherList))
+		}
+
+		delResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+bResp.ID, nil)
+		defer func() {
+			_ = delResp.Body.Close()
+		}()
+		if delResp.StatusCode != http.StatusNoContent {
+			t.Fatalf("Expected delete status %d, got %d", http.StatusNoContent, delResp.StatusCode)
+		}
+
+		afterDelResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		defer func() {
+			_ = afterDelResp.Body.Close()
+		}()
+		if afterDelResp.StatusCode != http.StatusNotFound {
+			t.Fatalf("Expected 404 after delete, got %d", afterDelResp.StatusCode)
+		}
+
+		listAfterDel := ac.Do(t, http.MethodGet, "/v1/boards", nil)
+		defer func() {
+			_ = listAfterDel.Body.Close()
+		}()
+		if listAfterDel.StatusCode != http.StatusOK {
+			t.Fatalf("Expected list status %d after delete, got %d", http.StatusOK, listAfterDel.StatusCode)
+		}
+		var listAfterBody []boardJSON
+		if err := json.NewDecoder(listAfterDel.Body).Decode(&listAfterBody); err != nil {
+			t.Fatalf("Decode list after delete: %v", err)
+		}
+		if len(listAfterBody) != 0 {
+			t.Fatalf("Expected 0 boards after delete, got %d", len(listAfterBody))
 		}
 	})
 }

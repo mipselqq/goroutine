@@ -20,7 +20,7 @@ func TestAuth_HappyPath(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
 		// Register, login, append token to each request
-		ac := NewAuthenticatedClient(t, httpClient, ts.URL)
+		ac := CrateUserAndAuthenticateClient(t, httpClient, ts.URL)
 
 		parts := strings.Split(ac.Token, ".")
 		if len(parts) != 3 {

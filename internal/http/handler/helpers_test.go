@@ -31,6 +31,7 @@ type MockBoards struct {
 	CreateFunc  func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	DeleteFunc  func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
@@ -52,6 +53,13 @@ func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name dom
 		return domain.Board{}, errors.New("BUG: CreateFunc is called but not set")
 	}
 	return m.CreateFunc(ctx, ownerID, name, description)
+}
+
+func (m *MockBoards) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
+	if m.DeleteFunc == nil {
+		return errors.New("BUG: DeleteFunc is called but not set")
+	}
+	return m.DeleteFunc(ctx, ownerID, boardID)
 }
 
 func invalidJsonBody() map[string]any {

@@ -194,6 +194,50 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	})
 }
 
+func TestBoardRepository_Delete(t *testing.T) {
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	defer pool.Close()
+
+	r := repository.NewPgBoard(pool)
+	userID := testutil.ValidUserID()
+	boardName := testutil.ValidBoardName()
+	boardDescription := testutil.ValidBoardDescription()
+
+	t.Run("Success", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "delete@example.com")
+
+		board, err := r.Create(context.Background(), userID, boardName, boardDescription)
+		if err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+
+		err = r.Delete(context.Background(), board.ID)
+		if err != nil {
+			t.Errorf("Delete() error = %v", err)
+		}
+
+		_, err = r.GetByID(context.Background(), board.ID)
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("GetByID after delete: %v, want ErrRowNotFound", err)
+		}
+	})
+
+	t.Run("Not found when missing", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "delete-missing@example.com")
+
+		err := r.Delete(context.Background(), domain.NewBoardID())
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
+		}
+	})
+}
+
 func WaitForTimestampTicker(t *testing.T) {
 	t.Helper()
 	time.Sleep(5 * time.Millisecond)

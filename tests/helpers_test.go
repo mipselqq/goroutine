@@ -127,7 +127,7 @@ type AuthenticatedClient struct {
 	Token   string
 }
 
-func NewAuthenticatedClient(t *testing.T, httpClient *http.Client, baseURL string) *AuthenticatedClient {
+func CrateUserAndAuthenticateClient(t *testing.T, httpClient *http.Client, baseURL string) *AuthenticatedClient {
 	t.Helper()
 
 	email := fmt.Sprintf("e2e-%s@example.com", uuid.NewString())
