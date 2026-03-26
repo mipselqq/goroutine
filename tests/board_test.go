@@ -29,7 +29,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 		testutil.TruncateTable(t, pool, "boards")
 
-		ac := CrateUserAndAuthenticateClient(t, httpClient, ts.URL)
+		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
 
 		name := testutil.ValidBoardName().String()
 		description := testutil.ValidBoardDescription().String()
@@ -128,7 +128,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected 404 for unknown board, got %d", notFoundResp.StatusCode)
 		}
 
-		acOther := CrateUserAndAuthenticateClient(t, httpClient, ts.URL)
+		acOther := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
 		crossResp := acOther.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
 			_ = crossResp.Body.Close()
