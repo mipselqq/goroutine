@@ -17,10 +17,12 @@ func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
 	logger := testutil.NewTestLogger(t)
+	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)
 
 	handlers := &handler.Handlers{
-		Auth:   handler.NewAuth(logger, nil, httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)),
+		Auth:   handler.NewAuth(logger, nil, responder),
 		Health: handler.NewHealth(logger),
+		Boards: handler.NewBoards(logger, nil, responder),
 	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   &spyMetricsMiddleware{},
@@ -38,10 +40,13 @@ func TestNewRouter_Full(t *testing.T) {
 		wantMetrics bool
 		wantCors    bool
 		wantReqID   bool
-	}{
+	}{ // TODO(refactor-1): use named fields
 		{"Register endpoint", http.MethodPost, "/v1/register", true, true, true},
 		{"Login endpoint", http.MethodPost, "/v1/login", true, true, true},
 		{"Health endpoint", http.MethodGet, "/v1/health", true, true, true},
+		{"Boards list endpoint", http.MethodGet, "/v1/boards", true, true, true},
+		{"Board by id endpoint", http.MethodGet, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
+		{"Delete board endpoint", http.MethodDelete, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
 		{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html", false, true, true},
 	}
 

@@ -60,3 +60,22 @@ func ValidJWTOptions() service.JWTOptions {
 		SigningMethod: jwt.SigningMethodHS256,
 	}
 }
+
+func ValidBoard() domain.Board {
+	name := ValidBoardName()
+	description := ValidBoardDescription()
+	id := domain.NewBoardID()
+	userID := ValidUserID()
+	now := time.Now().UTC()
+
+	validBoard := domain.Board{
+		ID:          id,
+		OwnerID:     userID,
+		Name:        name,
+		Description: description,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	return validBoard
+}
