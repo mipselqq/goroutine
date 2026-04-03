@@ -331,35 +331,16 @@ func TestBoards_GetByID(t *testing.T) {
 	}
 }
 
-func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string) domain.Board {
-	t.Helper()
-	domainName, err := domain.NewBoardName(name)
-	if err != nil {
-		t.Fatalf("Failed to create board name: %v", err)
-	}
-	domainDescription, err := domain.NewBoardDescription(description)
-	if err != nil {
-		t.Fatalf("Failed to create board description: %v", err)
-	}
-
-	return domain.Board{
-		ID:          base.ID,
-		OwnerID:     base.OwnerID,
-		Name:        domainName,
-		Description: domainDescription,
-		CreatedAt:   base.CreatedAt,
-		UpdatedAt:   base.UpdatedAt,
-	}
-}
-
 func TestBoards_UpdateById(t *testing.T) {
 	t.Parallel()
+
 	validBoard := testutil.ValidBoard()
-	updatedValidBoard := UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
-	emptyDescriptionBoard := UpdateValidBoard(t, &validBoard, "Updated Board Name", "")
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
+	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "")
 
 	okPath := "/v1/boards/" + validBoard.ID.String()
 
+	// TODO: implement partial update
 	tests := []boardsTestCase{
 		{
 			name: "Success (full update)",
@@ -369,7 +350,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": updatedValidBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
 						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
 					}
@@ -404,7 +385,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": "",
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return emptyDescriptionBoard, nil
 				}
 			},
@@ -432,7 +413,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
 				}
 			},
@@ -447,7 +428,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
@@ -462,7 +443,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
 				}
 			},

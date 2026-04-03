@@ -257,7 +257,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update board metadata for the current user (owner only)
+      description: UpdateById board metadata for the current user (owner only)
       parameters:
       - description: Board ID
         in: path
@@ -295,7 +295,7 @@ paths:
             $ref: '#/definitions/httpschema.Error'
       security:
       - BearerAuth: []
-      summary: Update a board by id
+      summary: UpdateById a board by id
       tags:
       - boards
   /v1/health:

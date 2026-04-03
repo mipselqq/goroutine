@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+	"testing"
 	"time"
 
 	"goroutine/internal/domain"
@@ -78,4 +79,25 @@ func ValidBoard() domain.Board {
 	}
 
 	return validBoard
+}
+
+func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string) domain.Board {
+	t.Helper()
+	domainName, err := domain.NewBoardName(name)
+	if err != nil {
+		t.Fatalf("Failed to create board name: %v", err)
+	}
+	domainDescription, err := domain.NewBoardDescription(description)
+	if err != nil {
+		t.Fatalf("Failed to create board description: %v", err)
+	}
+
+	return domain.Board{
+		ID:          base.ID,
+		OwnerID:     base.OwnerID,
+		Name:        domainName,
+		Description: domainDescription,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   base.UpdatedAt,
+	}
 }

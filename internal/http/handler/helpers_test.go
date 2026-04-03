@@ -28,11 +28,11 @@ func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domai
 }
 
 type MockBoards struct {
-	CreateFunc  func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	GetFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
-	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateFunc  func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	DeleteFunc  func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
+	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetFunc        func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
+	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateByIDFunc func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	DeleteFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
@@ -56,11 +56,11 @@ func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name dom
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
-func (m *MockBoards) Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	if m.UpdateFunc == nil {
+func (m *MockBoards) UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	if m.UpdateByIDFunc == nil {
 		return domain.Board{}, errors.New("BUG: UpdateFunc is called but not set")
 	}
-	return m.UpdateFunc(ctx, ownerID, boardID, name, description)
+	return m.UpdateByIDFunc(ctx, ownerID, boardID, name, description)
 }
 
 func (m *MockBoards) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {

@@ -185,7 +185,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update board metadata for the current user (owner only)",
+                "description": "UpdateById board metadata for the current user (owner only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -195,7 +195,7 @@ const docTemplate = `{
                 "tags": [
                     "boards"
                 ],
-                "summary": "Update a board by id",
+                "summary": "UpdateById a board by id",
                 "parameters": [
                     {
                         "type": "string",

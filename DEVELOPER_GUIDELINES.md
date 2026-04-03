@@ -115,7 +115,7 @@ For most features, touch layers in this order:
 
 ## 8) API Documentation
 
-- Update Swagger annotations in handlers when endpoint contract changes.
+- UpdateById Swagger annotations in handlers when endpoint contract changes.
 - `make swag` runs on each commit via lefthook, so contract/doc drift should not happen.
 
 ## 9) Development Culture and Versioning

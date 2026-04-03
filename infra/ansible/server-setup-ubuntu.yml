@@ -14,7 +14,7 @@
         gather_subset: '!all,min'
 
   tasks:
-    - name: Update apt cache
+    - name: UpdateById apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
@@ -57,7 +57,7 @@
       copy:
         dest: /etc/apt/apt.conf.d/20auto-upgrades
         content: |
-          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::UpdateById-Package-Lists "1";
           APT::Periodic::Download-Upgradeable-Packages "1";
           APT::Periodic::AutocleanInterval "7";
           APT::Periodic::Unattended-Upgrade "1";

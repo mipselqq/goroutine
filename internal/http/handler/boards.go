@@ -17,7 +17,7 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
@@ -180,8 +180,8 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateById godoc
-// @Summary Update a board by id
-// @Description Update board metadata for the current user (owner only)
+// @Summary UpdateById a board by id
+// @Description UpdateById board metadata for the current user (owner only)
 // @Tags boards
 // @Accept json
 // @Produce json
@@ -222,7 +222,7 @@ func (h *Boards) UpdateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.Update(r.Context(), userID, boardID, name, description)
+	board, err := h.service.UpdateById(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")

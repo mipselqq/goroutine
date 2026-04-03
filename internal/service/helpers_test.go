@@ -21,10 +21,11 @@ func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email)
 }
 
 type MockBoardRepository struct {
-	CreateFunc  func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	GetByIDFunc func(ctx context.Context, id domain.BoardID) (domain.Board, error)
-	GetManyFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	DeleteFunc  func(ctx context.Context, boardID domain.BoardID) error
+	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetByIDFunc    func(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateByIDFunc func(ctx context.Context, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	DeleteFunc     func(ctx context.Context, boardID domain.BoardID) error
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -40,7 +41,17 @@ func (m *MockBoardRepository) GetByID(ctx context.Context, id domain.BoardID) (d
 }
 
 func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+	if m.GetManyFunc == nil {
+		return nil, errors.New("BUG: GetManyFunc is not set")
+	}
 	return m.GetManyFunc(ctx, ownerID)
+}
+
+func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	if m.UpdateByIDFunc == nil {
+		return domain.Board{}, errors.New("BUG: UpdateByIDFunc is not set")
+	}
+	return m.UpdateByIDFunc(ctx, boardID, name, description)
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {

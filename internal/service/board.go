@@ -13,6 +13,7 @@ type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateByID(ctx context.Context, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
@@ -57,8 +58,24 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 	return board, nil
 }
 
-func (s *Board) Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	panic("not implemented")
+func (s *Board) UpdateById(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	board, err := s.repository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Board{}, ErrBoardNotFound
+		}
+		return domain.Board{}, fmt.Errorf("board service: update get by id: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != callerID {
+		return domain.Board{}, ErrBoardNotFound
+	}
+
+	updated, err := s.repository.UpdateByID(ctx, boardID, name, description)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("board service: update: %v: %w", err, ErrInternal)
+	}
+
+	return updated, nil
 }
 
 func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {

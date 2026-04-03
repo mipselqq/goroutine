@@ -103,6 +103,10 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 	return boards, nil
 }
 
+func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	panic("not implemented")
+}
+
 func (r *PgBoard) Delete(ctx context.Context, boardID domain.BoardID) error {
 	const query = `DELETE FROM boards WHERE id = $1`
 
