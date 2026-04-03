@@ -331,6 +331,185 @@ func TestBoards_GetByID(t *testing.T) {
 	}
 }
 
+func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string) domain.Board {
+	t.Helper()
+	domainName, err := domain.NewBoardName(name)
+	if err != nil {
+		t.Fatalf("Failed to create board name: %v", err)
+	}
+	domainDescription, err := domain.NewBoardDescription(description)
+	if err != nil {
+		t.Fatalf("Failed to create board description: %v", err)
+	}
+
+	return domain.Board{
+		ID:          base.ID,
+		OwnerID:     base.OwnerID,
+		Name:        domainName,
+		Description: domainDescription,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   base.UpdatedAt,
+	}
+}
+
+func TestBoards_UpdateById(t *testing.T) {
+	t.Parallel()
+	validBoard := testutil.ValidBoard()
+	updatedValidBoard := UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
+	emptyDescriptionBoard := UpdateValidBoard(t, &validBoard, "Updated Board Name", "")
+
+	okPath := "/v1/boards/" + validBoard.ID.String()
+
+	tests := []boardsTestCase{
+		{
+			name: "Success (full update)",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        updatedValidBoard.Name.String(),
+				"description": updatedValidBoard.Description.String(),
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
+						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
+					}
+					return updatedValidBoard, nil
+				}
+			},
+			expectedBody: map[string]string{
+				"id":          updatedValidBoard.ID.String(),
+				"ownerId":     updatedValidBoard.OwnerID.String(),
+				"name":        updatedValidBoard.Name.String(),
+				"description": updatedValidBoard.Description.String(),
+				"createdAt":   updatedValidBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   updatedValidBoard.UpdatedAt.Format(time.RFC3339),
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name: "Empty name",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        "",
+				"description": validBoard.Description.String(),
+			},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("name", []string{"Name is too short"}),
+		},
+		{
+			name: "Empty description",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        emptyDescriptionBoard.Name.String(),
+				"description": "",
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return emptyDescriptionBoard, nil
+				}
+			},
+			expectedBody: map[string]any{
+				"id":          emptyDescriptionBoard.ID.String(),
+				"ownerId":     emptyDescriptionBoard.OwnerID.String(),
+				"name":        emptyDescriptionBoard.Name.String(),
+				"description": emptyDescriptionBoard.Description.String(),
+				"createdAt":   emptyDescriptionBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   emptyDescriptionBoard.UpdatedAt.Format(time.RFC3339),
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "Invalid board id",
+			path:         "/v1/boards/not-a-uuid",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+		},
+		{
+			name: "Not found",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, service.ErrBoardNotFound
+				}
+			},
+			expectedCode: http.StatusNotFound,
+			expectedBody: notFoundErrorBody(),
+		},
+		{
+			name: "Internal error",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name: "Unknown error",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+					return domain.Board{}, errors.New("unknown")
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+		{
+			name: "No context user ID",
+			path: okPath,
+			inputBody: map[string]string{
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+			},
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPut, tt.path, tt.inputBody)
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
+
+			s := &MockBoards{}
+			if tt.setupMock != nil {
+				tt.setupMock(s)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
+			h.UpdateById(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
+}
+
 func TestBoards_Delete(t *testing.T) {
 	t.Parallel()
 

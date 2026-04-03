@@ -19,6 +19,7 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("GET /v1/whoami", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Auth.WhoAmI))))
 	mux.Handle("POST /v1/boards", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.Create))))
 	mux.Handle("GET /v1/boards/{boardId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.Get))))
+	mux.Handle("PUT /v1/boards/{boardId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.UpdateById))))
 	mux.Handle("DELETE /v1/boards/{boardId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.Delete))))
 	mux.Handle("GET /v1/boards", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.GetMany))))
 	mux.Handle("GET /v1/swagger/", httpSwagger.Handler(

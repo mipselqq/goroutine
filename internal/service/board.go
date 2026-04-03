@@ -57,6 +57,10 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 	return board, nil
 }
 
+func (s *Board) Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	panic("not implemented")
+}
+
 func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {
 	board, err := s.repository.GetByID(ctx, boardID)
 	if err != nil {

@@ -32,14 +32,12 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
+	boardsService := service.NewBoard(repository.NewPgBoard(pool))
 
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)
 
 	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
-
-	boardRepo := repository.NewPgBoard(pool)
-	boardsService := service.NewBoard(boardRepo)
 	boardsHandler := handler.NewBoards(logger, boardsService, responder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
