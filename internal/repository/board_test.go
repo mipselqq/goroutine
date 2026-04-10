@@ -203,6 +203,12 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 	validBoard := testutil.ValidBoard()
 	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String())
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only")
+	updatedName := updatedValidBoard.Name
+	updatedDescription := updatedValidBoard.Description
+	updatedNameOnly := updatedNameOnlyBoard.Name
+	updatedDescriptionOnly := updatedDescriptionOnlyBoard.Description
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "boards")
@@ -211,12 +217,44 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, updatedValidBoard.Name, updatedValidBoard.Description)
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
 		if !reflect.DeepEqual(updatedValidBoard, got) {
 			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedValidBoard, got)
+		}
+	})
+
+	t.Run("Success partial name only", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "updatebyid-partial-name@example.com")
+		InsertBoard(t, pool, &validBoard)
+
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
+		if err != nil {
+			t.Errorf("UpdateByID() error = %v", err)
+		}
+		if !reflect.DeepEqual(updatedNameOnlyBoard, got) {
+			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedNameOnlyBoard, got)
+		}
+	})
+
+	t.Run("Success partial description only", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "updatebyid-partial-description@example.com")
+		InsertBoard(t, pool, &validBoard)
+
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
+		if err != nil {
+			t.Errorf("UpdateByID() error = %v", err)
+		}
+		if !reflect.DeepEqual(updatedDescriptionOnlyBoard, got) {
+			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedDescriptionOnlyBoard, got)
 		}
 	})
 
@@ -226,7 +264,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
 
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), updatedValidBoard.Name, updatedValidBoard.Description)
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
 		}

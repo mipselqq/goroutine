@@ -120,8 +120,10 @@ func (d *BoardDescription) Scan(value any) error {
 	return nil
 }
 
-// To hide raw internals of the struct
-func String(b *Board) string {
+// Pointer receiver works only for pointer types, printing garbage for non-pointer boards
+//
+//nolint:gocritic
+func String(b Board) string {
 	return fmt.Sprintf(
 		"id:          %s\nownerId:     %s\nname:        %q\ndescription: %q\ncreatedAt:   %s\nupdatedAt:   %s",
 		b.ID.String(),

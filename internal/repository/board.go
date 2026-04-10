@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -103,15 +104,27 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 	return boards, nil
 }
 
-func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	const query = `
 		UPDATE boards
-		SET name = $1, description = $2
+		SET
+			name = COALESCE($1, name),
+			description = COALESCE($2, description)
 		WHERE id = $3
 		RETURNING id, owner_id, name, description, created_at, updated_at`
 
+	nameArg := sql.NullString{Valid: false}
+	if name != nil {
+		nameArg = sql.NullString{String: name.String(), Valid: true}
+	}
+
+	descriptionArg := sql.NullString{Valid: false}
+	if description != nil {
+		descriptionArg = sql.NullString{String: description.String(), Valid: true}
+	}
+
 	var board domain.Board
-	err := r.pool.QueryRow(ctx, query, name, description, boardID).Scan(
+	err := r.pool.QueryRow(ctx, query, nameArg, descriptionArg, boardID).Scan(
 		&board.ID,
 		&board.OwnerID,
 		&board.Name,

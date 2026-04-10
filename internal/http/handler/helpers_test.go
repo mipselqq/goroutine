@@ -31,7 +31,7 @@ type MockBoards struct {
 	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetFunc        func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByIDFunc func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	UpdateByIDFunc func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	DeleteFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
@@ -56,7 +56,7 @@ func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name dom
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
-func (m *MockBoards) UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+func (m *MockBoards) UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	if m.UpdateByIDFunc == nil {
 		return domain.Board{}, errors.New("BUG: UpdateFunc is called but not set")
 	}

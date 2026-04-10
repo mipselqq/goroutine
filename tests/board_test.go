@@ -154,6 +154,46 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("Expected updated description %q, got %q", updatedDescription, updated.Description)
 		}
 
+		// Partial update: name only
+		partialName := "Updated Name Only"
+		updateNameOnlyResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]string{
+			"name": partialName,
+		})
+		defer func() {
+			_ = updateNameOnlyResp.Body.Close()
+		}()
+		if updateNameOnlyResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected partial update status %d, got %d", http.StatusOK, updateNameOnlyResp.StatusCode)
+		}
+		var updatedNameOnly boardJSON
+		if err := json.NewDecoder(updateNameOnlyResp.Body).Decode(&updatedNameOnly); err != nil {
+			t.Fatalf("Decode partial update response: %v", err)
+		}
+		if updatedNameOnly.Name != partialName {
+			t.Errorf("Expected partial updated name %q, got %q", partialName, updatedNameOnly.Name)
+		}
+		if updatedNameOnly.Description != updatedDescription {
+			t.Errorf("Expected description to stay %q, got %q", updatedDescription, updatedNameOnly.Description)
+		}
+
+		updateNullResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]any{
+			"name":        nil,
+			"description": nil,
+		})
+		defer func() {
+			_ = updateNullResp.Body.Close()
+		}()
+		if updateNullResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected null update status %d, got %d", http.StatusOK, updateNullResp.StatusCode)
+		}
+		var updatedNull boardJSON
+		if err := json.NewDecoder(updateNullResp.Body).Decode(&updatedNull); err != nil {
+			t.Fatalf("Decode null update response: %v", err)
+		}
+		if updatedNull.Name != updatedNameOnly.Name || updatedNull.Description != updatedNameOnly.Description {
+			t.Errorf("Expected null update to keep fields, got %+v", updatedNull)
+		}
+
 		// Get by id after update
 		afterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
@@ -167,8 +207,8 @@ func TestBoard_HappyPath(t *testing.T) {
 		if err := json.NewDecoder(afterUpdateResp.Body).Decode(&afterUpdate); err != nil {
 			t.Fatalf("Decode get-by-id after update: %v", err)
 		}
-		if afterUpdate != updated {
-			t.Errorf("GET /v1/boards/{id} after update differs from update response:\ngot  %+v\nwant %+v", afterUpdate, updated)
+		if afterUpdate != updatedNull {
+			t.Errorf("GET /v1/boards/{id} after update differs from final update response:\ngot  %+v\nwant %+v", afterUpdate, updatedNull)
 		}
 
 		randomID := uuid.New().String()

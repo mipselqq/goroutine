@@ -336,11 +336,12 @@ func TestBoards_UpdateById(t *testing.T) {
 
 	validBoard := testutil.ValidBoard()
 	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String())
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only")
 	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "")
 
 	okPath := "/v1/boards/" + validBoard.ID.String()
 
-	// TODO: implement partial update
 	tests := []boardsTestCase{
 		{
 			name: "Success (full update)",
@@ -350,9 +351,15 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": updatedValidBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
 						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
+					}
+					if name == nil || *name != updatedValidBoard.Name {
+						t.Errorf("unexpected name %+v", name)
+					}
+					if description == nil || *description != updatedValidBoard.Description {
+						t.Errorf("unexpected description %+v", description)
 					}
 					return updatedValidBoard, nil
 				}
@@ -378,6 +385,82 @@ func TestBoards_UpdateById(t *testing.T) {
 			expectedBody: validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
+			name: "Success (name only)",
+			path: okPath,
+			inputBody: map[string]string{
+				"name": updatedNameOnlyBoard.Name.String(),
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+					if name == nil || *name != updatedNameOnlyBoard.Name {
+						t.Errorf("unexpected name %+v", name)
+					}
+					if description != nil {
+						t.Errorf("expected nil description, got %+v", description)
+					}
+					return updatedNameOnlyBoard, nil
+				}
+			},
+			expectedBody: map[string]any{
+				"id":          updatedNameOnlyBoard.ID.String(),
+				"ownerId":     updatedNameOnlyBoard.OwnerID.String(),
+				"name":        updatedNameOnlyBoard.Name.String(),
+				"description": updatedNameOnlyBoard.Description.String(),
+				"createdAt":   updatedNameOnlyBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   updatedNameOnlyBoard.UpdatedAt.Format(time.RFC3339),
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name: "Success (description only)",
+			path: okPath,
+			inputBody: map[string]string{
+				"description": updatedDescriptionOnlyBoard.Description.String(),
+			},
+			setupMock: func(s *MockBoards) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+					if name != nil {
+						t.Errorf("expected nil name, got %+v", name)
+					}
+					if description == nil || *description != updatedDescriptionOnlyBoard.Description {
+						t.Errorf("unexpected description %+v", description)
+					}
+					return updatedDescriptionOnlyBoard, nil
+				}
+			},
+			expectedBody: map[string]any{
+				"id":          updatedDescriptionOnlyBoard.ID.String(),
+				"ownerId":     updatedDescriptionOnlyBoard.OwnerID.String(),
+				"name":        updatedDescriptionOnlyBoard.Name.String(),
+				"description": updatedDescriptionOnlyBoard.Description.String(),
+				"createdAt":   updatedDescriptionOnlyBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   updatedDescriptionOnlyBoard.UpdatedAt.Format(time.RFC3339),
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:      "Success (null fields mean skip)",
+			path:      okPath,
+			inputBody: map[string]any{"name": nil, "description": nil},
+			setupMock: func(s *MockBoards) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+					if name != nil || description != nil {
+						t.Errorf("expected nil pointers, got name=%+v description=%+v", name, description)
+					}
+					return validBoard, nil
+				}
+			},
+			expectedBody: map[string]any{
+				"id":          validBoard.ID.String(),
+				"ownerId":     validBoard.OwnerID.String(),
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
+				"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
 			name: "Empty description",
 			path: okPath,
 			inputBody: map[string]string{
@@ -385,7 +468,10 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": "",
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+					if name == nil || description == nil {
+						t.Errorf("expected non-nil pointers")
+					}
 					return emptyDescriptionBoard, nil
 				}
 			},
@@ -413,7 +499,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
 				}
 			},
@@ -428,7 +514,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
@@ -443,7 +529,7 @@ func TestBoards_UpdateById(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupMock: func(s *MockBoards) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
 				}
 			},

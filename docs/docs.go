@@ -185,7 +185,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "UpdateById board metadata for the current user (owner only)",
+                "description": "Partially update board metadata for the current user (owner only). Provided fields are updated; omitted or null fields are ignored.",
                 "consumes": [
                     "application/json"
                 ],
@@ -205,12 +205,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Board details",
+                        "description": "Board fields to update",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.createBoardBody"
+                            "$ref": "#/definitions/handler.updateBoardBody"
                         }
                     }
                 ],
@@ -535,6 +535,19 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "secret-password"
+                }
+            }
+        },
+        "handler.updateBoardBody": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "My Board Description"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Board Name"
                 }
             }
         },

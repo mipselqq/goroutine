@@ -17,7 +17,7 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
@@ -34,6 +34,11 @@ func NewBoards(logger *slog.Logger, svc BoardsService, responder *httpschema.Err
 type createBoardBody struct {
 	Name        string `json:"name" example:"My Board Name"`
 	Description string `json:"description" example:"My Board Description"`
+}
+
+type updateBoardBody struct {
+	Name        *string `json:"name" example:"My Board Name"`
+	Description *string `json:"description" example:"My Board Description"`
 }
 
 type boardResponse struct {
@@ -181,13 +186,13 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 
 // UpdateById godoc
 // @Summary UpdateById a board by id
-// @Description UpdateById board metadata for the current user (owner only)
+// @Description Partially update board metadata for the current user (owner only). Provided fields are updated; omitted or null fields are ignored.
 // @Tags boards
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param boardId path string true "Board ID"
-// @Param body body createBoardBody true "Board details"
+// @Param body body updateBoardBody true "Board fields to update"
 // @Success 200 {object} boardResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
@@ -202,7 +207,7 @@ func (h *Boards) UpdateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body createBoardBody
+	var body updateBoardBody
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
@@ -210,8 +215,18 @@ func (h *Boards) UpdateById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	details := []httpschema.Detail{}
-	name := httpschema.ValidateField("name", body.Name, domain.NewBoardName, &details)
-	description := httpschema.ValidateField("description", body.Description, domain.NewBoardDescription, &details)
+	var name *domain.BoardName
+	if body.Name != nil {
+		value := httpschema.ValidateField("name", *body.Name, domain.NewBoardName, &details)
+		name = &value
+	}
+
+	var description *domain.BoardDescription
+	if body.Description != nil {
+		value := httpschema.ValidateField("description", *body.Description, domain.NewBoardDescription, &details)
+		description = &value
+	}
+
 	if len(details) > 0 {
 		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
 		return

@@ -13,7 +13,7 @@ type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByID(ctx context.Context, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
@@ -58,7 +58,13 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 	return board, nil
 }
 
-func (s *Board) UpdateById(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+func (s *Board) UpdateById(
+	ctx context.Context,
+	callerID domain.UserID,
+	boardID domain.BoardID,
+	name *domain.BoardName,
+	description *domain.BoardDescription,
+) (domain.Board, error) {
 	board, err := s.repository.GetByID(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
