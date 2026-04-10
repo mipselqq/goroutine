@@ -67,7 +67,7 @@ func ValidBoard() domain.Board {
 	description := ValidBoardDescription()
 	id := domain.NewBoardID()
 	userID := ValidUserID()
-	now := time.Now().UTC()
+	now := time.Now().UTC().Truncate(time.Millisecond)
 
 	validBoard := domain.Board{
 		ID:          id,

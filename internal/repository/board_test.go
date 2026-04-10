@@ -194,6 +194,45 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	})
 }
 
+func TestBoardRepository_UpdateByID(t *testing.T) {
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	defer pool.Close()
+
+	r := repository.NewPgBoard(pool)
+	userID := testutil.ValidUserID()
+
+	validBoard := testutil.ValidBoard()
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
+
+	t.Run("Success", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "updatebyid@example.com")
+		InsertBoard(t, pool, &validBoard)
+
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, updatedValidBoard.Name, updatedValidBoard.Description)
+		if err != nil {
+			t.Errorf("UpdateByID() error = %v", err)
+		}
+		if !reflect.DeepEqual(updatedValidBoard, got) {
+			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedValidBoard, got)
+		}
+	})
+
+	t.Run("Not found when missing", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
+
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), updatedValidBoard.Name, updatedValidBoard.Description)
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
+		}
+	})
+}
+
 func TestBoardRepository_Delete(t *testing.T) {
 	pool := testutil.SetupTestDB(t, "../../migrations")
 	defer pool.Close()
