@@ -29,11 +29,13 @@ func TestBoard_HappyPath(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 		testutil.TruncateTable(t, pool, "boards")
 
+		// Register
 		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
 
 		name := testutil.ValidBoardName().String()
 		description := testutil.ValidBoardDescription().String()
 
+		// Create
 		createResp := ac.Do(t, http.MethodPost, "/v1/boards", map[string]string{
 			"name":        name,
 			"description": description,
@@ -70,6 +72,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("Invalid updatedAt: %v", err)
 		}
 
+		// List
 		listResp := ac.Do(t, http.MethodGet, "/v1/boards", nil)
 		defer func() {
 			_ = listResp.Body.Close()
@@ -104,6 +107,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("Invalid list updatedAt: %v", err)
 		}
 
+		// Get by id
 		oneResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
 			_ = oneResp.Body.Close()
@@ -119,6 +123,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("GET /v1/boards/{id} body differs from create response:\ngot  %+v\nwant %+v", one, bResp)
 		}
 
+		// Update
 		updatedName := "Updated Board Name"
 		updatedDescription := "Updated Board Description"
 		updateResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]string{
@@ -149,20 +154,21 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("Expected updated description %q, got %q", updatedDescription, updated.Description)
 		}
 
-		oneAfterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		// Get by id after update
+		afterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
-			_ = oneAfterUpdateResp.Body.Close()
+			_ = afterUpdateResp.Body.Close()
 		}()
-		if oneAfterUpdateResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected get-by-id status %d after update, got %d", http.StatusOK, oneAfterUpdateResp.StatusCode)
+		if afterUpdateResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected get-by-id status %d after update, got %d", http.StatusOK, afterUpdateResp.StatusCode)
 		}
 
-		var oneAfterUpdate boardJSON
-		if err := json.NewDecoder(oneAfterUpdateResp.Body).Decode(&oneAfterUpdate); err != nil {
+		var afterUpdate boardJSON
+		if err := json.NewDecoder(afterUpdateResp.Body).Decode(&afterUpdate); err != nil {
 			t.Fatalf("Decode get-by-id after update: %v", err)
 		}
-		if oneAfterUpdate != updated {
-			t.Errorf("GET /v1/boards/{id} after update differs from update response:\ngot  %+v\nwant %+v", oneAfterUpdate, updated)
+		if afterUpdate != updated {
+			t.Errorf("GET /v1/boards/{id} after update differs from update response:\ngot  %+v\nwant %+v", afterUpdate, updated)
 		}
 
 		randomID := uuid.New().String()
@@ -179,6 +185,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		defer func() {
 			_ = crossResp.Body.Close()
 		}()
+		// TODO(refactor-1): use factor out to edge case, this is not a happy path
 		if crossResp.StatusCode != http.StatusNotFound {
 			t.Fatalf("Expected 404 when other user requests board by id, got %d", crossResp.StatusCode)
 		}
@@ -198,6 +205,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected other user to have 0 boards, got %d", len(otherList))
 		}
 
+		// Delete
 		delResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
 			_ = delResp.Body.Close()
@@ -206,6 +214,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected delete status %d, got %d", http.StatusNoContent, delResp.StatusCode)
 		}
 
+		// List after delete
 		afterDelResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
 		defer func() {
 			_ = afterDelResp.Body.Close()
@@ -214,6 +223,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected 404 after delete, got %d", afterDelResp.StatusCode)
 		}
 
+		// Get by id after delete
 		listAfterDel := ac.Do(t, http.MethodGet, "/v1/boards", nil)
 		defer func() {
 			_ = listAfterDel.Body.Close()
