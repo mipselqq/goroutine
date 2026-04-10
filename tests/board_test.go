@@ -119,6 +119,52 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("GET /v1/boards/{id} body differs from create response:\ngot  %+v\nwant %+v", one, bResp)
 		}
 
+		updatedName := "Updated Board Name"
+		updatedDescription := "Updated Board Description"
+		updateResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]string{
+			"name":        updatedName,
+			"description": updatedDescription,
+		})
+		defer func() {
+			_ = updateResp.Body.Close()
+		}()
+		if updateResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected update status %d, got %d", http.StatusOK, updateResp.StatusCode)
+		}
+
+		var updated boardJSON
+		if err := json.NewDecoder(updateResp.Body).Decode(&updated); err != nil {
+			t.Fatalf("Decode update response: %v", err)
+		}
+		if updated.ID != bResp.ID {
+			t.Errorf("Expected updated id %q, got %q", bResp.ID, updated.ID)
+		}
+		if updated.OwnerID != bResp.OwnerID {
+			t.Errorf("Expected updated ownerId %q, got %q", bResp.OwnerID, updated.OwnerID)
+		}
+		if updated.Name != updatedName {
+			t.Errorf("Expected updated name %q, got %q", updatedName, updated.Name)
+		}
+		if updated.Description != updatedDescription {
+			t.Errorf("Expected updated description %q, got %q", updatedDescription, updated.Description)
+		}
+
+		oneAfterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		defer func() {
+			_ = oneAfterUpdateResp.Body.Close()
+		}()
+		if oneAfterUpdateResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected get-by-id status %d after update, got %d", http.StatusOK, oneAfterUpdateResp.StatusCode)
+		}
+
+		var oneAfterUpdate boardJSON
+		if err := json.NewDecoder(oneAfterUpdateResp.Body).Decode(&oneAfterUpdate); err != nil {
+			t.Fatalf("Decode get-by-id after update: %v", err)
+		}
+		if oneAfterUpdate != updated {
+			t.Errorf("GET /v1/boards/{id} after update differs from update response:\ngot  %+v\nwant %+v", oneAfterUpdate, updated)
+		}
+
 		randomID := uuid.New().String()
 		notFoundResp := ac.Do(t, http.MethodGet, "/v1/boards/"+randomID, nil)
 		defer func() {
