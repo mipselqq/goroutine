@@ -58,7 +58,7 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 	return board, nil
 }
 
-func (s *Board) UpdateById(
+func (s *Board) UpdateByID(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,

@@ -56,7 +56,7 @@ func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name dom
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
-func (m *MockBoards) UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+func (m *MockBoards) UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	if m.UpdateByIDFunc == nil {
 		return domain.Board{}, errors.New("BUG: UpdateFunc is called but not set")
 	}

@@ -331,7 +331,7 @@ func TestBoards_GetByID(t *testing.T) {
 	}
 }
 
-func TestBoards_UpdateById(t *testing.T) {
+func TestBoards_UpdateByID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -568,7 +568,7 @@ func TestBoards_UpdateById(t *testing.T) {
 
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTime))
-			h.UpdateById(rr, req)
+			h.UpdateByID(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")

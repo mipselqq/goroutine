@@ -126,7 +126,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		// Update
 		updatedName := "Updated Board Name"
 		updatedDescription := "Updated Board Description"
-		updateResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]string{
+		updateResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]string{
 			"name":        updatedName,
 			"description": updatedDescription,
 		})
@@ -156,7 +156,7 @@ func TestBoard_HappyPath(t *testing.T) {
 
 		// Partial update: name only
 		partialName := "Updated Name Only"
-		updateNameOnlyResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]string{
+		updateNameOnlyResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]string{
 			"name": partialName,
 		})
 		defer func() {
@@ -176,7 +176,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("Expected description to stay %q, got %q", updatedDescription, updatedNameOnly.Description)
 		}
 
-		updateNullResp := ac.Do(t, http.MethodPut, "/v1/boards/"+bResp.ID, map[string]any{
+		updateNullResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]any{
 			"name":        nil,
 			"description": nil,
 		})

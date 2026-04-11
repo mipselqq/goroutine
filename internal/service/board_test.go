@@ -237,7 +237,7 @@ func TestBoard_Get(t *testing.T) {
 	}
 }
 
-func TestBoard_UpdateById(t *testing.T) {
+func TestBoard_UpdateByID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -414,13 +414,13 @@ func TestBoard_UpdateById(t *testing.T) {
 			tt.setupMock(r)
 			s := service.NewBoard(r)
 
-			got, err := s.UpdateById(context.Background(), tt.callerID, validBoard.ID, tt.inputName, tt.inputDescription)
+			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, tt.inputName, tt.inputDescription)
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
-				t.Errorf("UpdateById() board = %#v, want %#v", got, tt.wantBoard)
+				t.Errorf("UpdateByID() board = %#v, want %#v", got, tt.wantBoard)
 			}
 		})
 	}

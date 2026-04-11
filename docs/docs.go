@@ -195,7 +195,7 @@ const docTemplate = `{
                 "tags": [
                     "boards"
                 ],
-                "summary": "UpdateById a board by id",
+                "summary": "UpdateByID a board by id",
                 "parameters": [
                     {
                         "type": "string",

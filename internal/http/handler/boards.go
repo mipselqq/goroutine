@@ -17,7 +17,7 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateById(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
@@ -184,8 +184,8 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
-// UpdateById godoc
-// @Summary UpdateById a board by id
+// UpdateByID godoc
+// @Summary UpdateByID a board by id
 // @Description Partially update board metadata for the current user (owner only). Provided fields are updated; omitted or null fields are ignored.
 // @Tags boards
 // @Accept json
@@ -199,7 +199,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.Error "NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [put]
-func (h *Boards) UpdateById(w http.ResponseWriter, r *http.Request) {
+func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
@@ -237,7 +237,7 @@ func (h *Boards) UpdateById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.UpdateById(r.Context(), userID, boardID, name, description)
+	board, err := h.service.UpdateByID(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")

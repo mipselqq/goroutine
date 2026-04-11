@@ -305,7 +305,7 @@ paths:
             $ref: '#/definitions/httpschema.Error'
       security:
       - BearerAuth: []
-      summary: UpdateById a board by id
+      summary: UpdateByID a board by id
       tags:
       - boards
   /v1/health:
