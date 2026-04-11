@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
@@ -113,18 +112,8 @@ func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *
 		WHERE id = $3
 		RETURNING id, owner_id, name, description, created_at, updated_at`
 
-	nameArg := sql.NullString{Valid: false}
-	if name != nil {
-		nameArg = sql.NullString{String: name.String(), Valid: true}
-	}
-
-	descriptionArg := sql.NullString{Valid: false}
-	if description != nil {
-		descriptionArg = sql.NullString{String: description.String(), Valid: true}
-	}
-
 	var board domain.Board
-	err := r.pool.QueryRow(ctx, query, nameArg, descriptionArg, boardID).Scan(
+	err := r.pool.QueryRow(ctx, query, name, description, boardID).Scan(
 		&board.ID,
 		&board.OwnerID,
 		&board.Name,
