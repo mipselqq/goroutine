@@ -263,7 +263,7 @@ paths:
       summary: Get a board by id
       tags:
       - boards
-    put:
+    patch:
       consumes:
       - application/json
       description: Partially update board metadata for the current user (owner only).

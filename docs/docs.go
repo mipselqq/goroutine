@@ -179,7 +179,63 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently delete a board and its columns and tasks for the current user (owner only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "boards"
+                ],
+                "summary": "Delete a board by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            },
+            "patch": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -220,62 +276,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.boardResponse"
                         }
-                    },
-                    "400": {
-                        "description": "VALIDATION_ERROR",
-                        "schema": {
-                            "$ref": "#/definitions/httpschema.DetailedError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
-                        "schema": {
-                            "$ref": "#/definitions/httpschema.DetailedError"
-                        }
-                    },
-                    "404": {
-                        "description": "NOT_FOUND",
-                        "schema": {
-                            "$ref": "#/definitions/httpschema.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/httpschema.Error"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Permanently delete a board and its columns and tasks for the current user (owner only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "boards"
-                ],
-                "summary": "Delete a board by id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Board ID",
-                        "name": "boardId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
                     },
                     "400": {
                         "description": "VALIDATION_ERROR",

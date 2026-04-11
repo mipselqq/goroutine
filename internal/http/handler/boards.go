@@ -198,7 +198,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.Error "NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
-// @Router /v1/boards/{boardId} [put]
+// @Router /v1/boards/{boardId} [patch]
 func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
