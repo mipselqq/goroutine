@@ -78,6 +78,9 @@ func (s *Board) UpdateByID(
 
 	updated, err := s.repository.UpdateByID(ctx, boardID, name, description)
 	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Board{}, ErrBoardNotFound
+		}
 		return domain.Board{}, fmt.Errorf("board service: update: %v: %w", err, ErrInternal)
 	}
 
