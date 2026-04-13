@@ -3,10 +3,27 @@ package middleware
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+func AbstractMetricPath(rawPath string) string {
+	segments := strings.Split(rawPath, "/")
+	for i, segment := range segments {
+		if segment == "" {
+			continue
+		}
+
+		if _, err := uuid.Parse(segment); err == nil {
+			segments[i] = "{id}"
+		}
+	}
+
+	return strings.Join(segments, "/")
+}
 
 type Metrics struct {
 	HttpRequests *prometheus.CounterVec
@@ -48,7 +65,7 @@ func (w *StatusSpyWriter) WriteHeader(code int) {
 
 func (m *Metrics) Wrap(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
+		abstractPath := AbstractMetricPath(r.URL.Path)
 
 		startTime := time.Now()
 		spy := &StatusSpyWriter{ResponseWriter: w, StatusCode: http.StatusOK}
@@ -56,10 +73,10 @@ func (m *Metrics) Wrap(next http.Handler) http.HandlerFunc {
 		next.ServeHTTP(spy, r)
 
 		duration := time.Since(startTime).Seconds()
-		status := spy.StatusCode
+		responseStatus := spy.StatusCode
 		method := r.Method
 
-		m.HttpRequests.WithLabelValues(path, method, strconv.Itoa(status)).Inc()
-		m.HttpDuration.WithLabelValues(path, method).Observe(duration)
+		m.HttpRequests.WithLabelValues(abstractPath, method, strconv.Itoa(responseStatus)).Inc()
+		m.HttpDuration.WithLabelValues(abstractPath, method).Observe(duration)
 	})
 }
