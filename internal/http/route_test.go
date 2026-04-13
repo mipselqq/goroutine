@@ -17,7 +17,7 @@ func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
 	logger := testutil.NewTestLogger(t)
-	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Milli)
+	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 
 	handlers := &handler.Handlers{
 		Auth:   handler.NewAuth(logger, nil, responder),
