@@ -15,8 +15,13 @@ import (
 func FixedTimeNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
 func FixedTime5mFromNow() time.Time { return FixedTimeNow().Add(5 * time.Minute) }
 
-func FixedTime5mFromNowStr() string { return FixedTime5mFromNow().UTC().Format(time.RFC3339) }
-func FixedTimeNowStr() string       { return FixedTimeNow().UTC().Format(time.RFC3339) }
+const timeFormat = "2006-01-02T15:04:05.000Z07:00"
+
+func FixedTime5mFromNowStr() string {
+	return FixedTime5mFromNow().UTC().Format(timeFormat)
+}
+
+func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
 
 func must[T any](fn func(string) (T, error), s string) T {
 	v, err := fn(s)

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
@@ -46,8 +45,8 @@ type boardResponse struct {
 	OwnerID     string `json:"ownerId" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
 	Name        string `json:"name" example:"My Todo Name"`
 	Description string `json:"description" example:"My Todo Description"`
-	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50+03:00"`
-	UpdatedAt   string `json:"updatedAt" example:"2026-03-07T20:56:50+03:00"`
+	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50.000+03:00"`
+	UpdatedAt   string `json:"updatedAt" example:"2026-03-07T20:56:50.000+03:00"`
 }
 
 func NewBoardResponse(board *domain.Board) boardResponse {
@@ -56,9 +55,9 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 		OwnerID:     board.OwnerID.String(),
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
-		// FIXME: use millisecond precision and adjust tests
-		CreatedAt: board.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: board.UpdatedAt.Format(time.RFC3339),
+
+		CreatedAt: service.FormatRFC3339Millis(board.CreatedAt),
+		UpdatedAt: service.FormatRFC3339Millis(board.UpdatedAt),
 	}
 }
 

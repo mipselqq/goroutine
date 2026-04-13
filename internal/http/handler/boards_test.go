@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/handler"
@@ -27,6 +26,8 @@ type boardsTestCase struct {
 	expectedBody any
 	path         string
 }
+
+const timeFormat = "2006-01-02T15:04:05.000Z07:00"
 
 func TestBoards_Create(t *testing.T) {
 	t.Parallel()
@@ -51,8 +52,8 @@ func TestBoards_Create(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
 			},
 		},
 		{
@@ -159,8 +160,8 @@ func TestBoards_Get(t *testing.T) {
 					"ownerId":     validBoard.OwnerID.String(),
 					"name":        validBoard.Name.String(),
 					"description": validBoard.Description.String(),
-					"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
-					"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
+					"createdAt":   validBoard.CreatedAt.Format(timeFormat),
+					"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
 				},
 			},
 		},
@@ -249,8 +250,8 @@ func TestBoards_GetByID(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
 			},
 		},
 		{
@@ -369,8 +370,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"ownerId":     updatedValidBoard.OwnerID.String(),
 				"name":        updatedValidBoard.Name.String(),
 				"description": updatedValidBoard.Description.String(),
-				"createdAt":   updatedValidBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   updatedValidBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   updatedValidBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   updatedValidBoard.UpdatedAt.Format(timeFormat),
 			},
 			expectedCode: http.StatusOK,
 		},
@@ -406,8 +407,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"ownerId":     updatedNameOnlyBoard.OwnerID.String(),
 				"name":        updatedNameOnlyBoard.Name.String(),
 				"description": updatedNameOnlyBoard.Description.String(),
-				"createdAt":   updatedNameOnlyBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   updatedNameOnlyBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   updatedNameOnlyBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   updatedNameOnlyBoard.UpdatedAt.Format(timeFormat),
 			},
 			expectedCode: http.StatusOK,
 		},
@@ -433,8 +434,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"ownerId":     updatedDescriptionOnlyBoard.OwnerID.String(),
 				"name":        updatedDescriptionOnlyBoard.Name.String(),
 				"description": updatedDescriptionOnlyBoard.Description.String(),
-				"createdAt":   updatedDescriptionOnlyBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   updatedDescriptionOnlyBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   updatedDescriptionOnlyBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   updatedDescriptionOnlyBoard.UpdatedAt.Format(timeFormat),
 			},
 			expectedCode: http.StatusOK,
 		},
@@ -455,8 +456,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   validBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
 			},
 			expectedCode: http.StatusOK,
 		},
@@ -480,8 +481,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"ownerId":     emptyDescriptionBoard.OwnerID.String(),
 				"name":        emptyDescriptionBoard.Name.String(),
 				"description": emptyDescriptionBoard.Description.String(),
-				"createdAt":   emptyDescriptionBoard.CreatedAt.Format(time.RFC3339),
-				"updatedAt":   emptyDescriptionBoard.UpdatedAt.Format(time.RFC3339),
+				"createdAt":   emptyDescriptionBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   emptyDescriptionBoard.UpdatedAt.Format(timeFormat),
 			},
 			expectedCode: http.StatusOK,
 		},

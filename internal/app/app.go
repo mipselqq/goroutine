@@ -36,7 +36,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	})
 	boardsService := service.NewBoard(service.BoardRepository(boardsRepo), service.TimeNow)
 
-	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)
+	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Milli)
 
 	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
