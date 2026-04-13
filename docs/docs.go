@@ -466,7 +466,7 @@ const docTemplate = `{
             "properties": {
                 "createdAt": {
                     "type": "string",
-                    "example": "2026-03-07T20:56:50+03:00"
+                    "example": "2026-03-07T20:56:50.000+03:00"
                 },
                 "description": {
                     "type": "string",
@@ -486,7 +486,7 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string",
-                    "example": "2026-03-07T20:56:50+03:00"
+                    "example": "2026-03-07T20:56:50.000+03:00"
                 }
             }
         },

@@ -13,6 +13,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const timeFormat = "2006-01-02T15:04:05.000Z07:00"
+
 type boardJSON struct {
 	ID          string `json:"id"`
 	OwnerID     string `json:"ownerId"`
@@ -48,27 +50,27 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected status %d, got %d", http.StatusCreated, createResp.StatusCode)
 		}
 
-		var bResp boardJSON
-		if err := json.NewDecoder(createResp.Body).Decode(&bResp); err != nil {
+		var createdBoard boardJSON
+		if err := json.NewDecoder(createResp.Body).Decode(&createdBoard); err != nil {
 			t.Fatalf("Failed to decode board response: %v", err)
 		}
 
-		if _, err := uuid.Parse(bResp.ID); err != nil {
+		if _, err := uuid.Parse(createdBoard.ID); err != nil {
 			t.Errorf("Invalid board ID: %v", err)
 		}
-		if _, err := uuid.Parse(bResp.OwnerID); err != nil {
+		if _, err := uuid.Parse(createdBoard.OwnerID); err != nil {
 			t.Errorf("Invalid owner ID: %v", err)
 		}
-		if bResp.Name != name {
-			t.Errorf("Expected name %q, got %q", name, bResp.Name)
+		if createdBoard.Name != name {
+			t.Errorf("Expected name %q, got %q", name, createdBoard.Name)
 		}
-		if bResp.Description != description {
-			t.Errorf("Expected description %q, got %q", description, bResp.Description)
+		if createdBoard.Description != description {
+			t.Errorf("Expected description %q, got %q", description, createdBoard.Description)
 		}
-		if _, err := time.Parse(time.RFC3339, bResp.CreatedAt); err != nil {
+		if _, err := time.Parse(timeFormat, createdBoard.CreatedAt); err != nil {
 			t.Errorf("Invalid createdAt: %v", err)
 		}
-		if _, err := time.Parse(time.RFC3339, bResp.UpdatedAt); err != nil {
+		if _, err := time.Parse(timeFormat, createdBoard.UpdatedAt); err != nil {
 			t.Errorf("Invalid updatedAt: %v", err)
 		}
 
@@ -82,53 +84,51 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected list status %d, got %d", http.StatusOK, listResp.StatusCode)
 		}
 
-		var listBody []boardJSON
-		if err := json.NewDecoder(listResp.Body).Decode(&listBody); err != nil {
+		var listedBoards []boardJSON
+		if err := json.NewDecoder(listResp.Body).Decode(&listedBoards); err != nil {
 			t.Fatalf("Failed to decode list response: %v", err)
 		}
 
-		if len(listBody) != 1 {
-			t.Fatalf("Expected 1 board in list, got %d", len(listBody))
+		if len(listedBoards) != 1 {
+			t.Fatalf("Expected 1 board in list, got %d", len(listedBoards))
 		}
-		item := listBody[0]
-		if item.ID != bResp.ID {
-			t.Errorf("List id %q, create response id %q", item.ID, bResp.ID)
+		listedBoard := listedBoards[0]
+		if listedBoard.ID != createdBoard.ID {
+			t.Errorf("List id %q, create response id %q", listedBoard.ID, createdBoard.ID)
 		}
-		if item.OwnerID != bResp.OwnerID {
-			t.Errorf("List ownerId %q, create ownerId %q", item.OwnerID, bResp.OwnerID)
+		if listedBoard.OwnerID != createdBoard.OwnerID {
+			t.Errorf("List ownerId %q, create ownerId %q", listedBoard.OwnerID, createdBoard.OwnerID)
 		}
-		if item.Name != name || item.Description != description {
-			t.Errorf("List item name/description mismatch: got %+v", item)
+		if listedBoard.Name != name || listedBoard.Description != description {
+			t.Errorf("List item name/description mismatch: got %+v", listedBoard)
 		}
-		if _, err := time.Parse(time.RFC3339, item.CreatedAt); err != nil {
+		if _, err := time.Parse(timeFormat, listedBoard.CreatedAt); err != nil {
 			t.Errorf("Invalid list createdAt: %v", err)
 		}
-		if _, err := time.Parse(time.RFC3339, item.UpdatedAt); err != nil {
+		if _, err := time.Parse(timeFormat, listedBoard.UpdatedAt); err != nil {
 			t.Errorf("Invalid list updatedAt: %v", err)
 		}
 
 		// Get by id
-		oneResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		oneResp := ac.Do(t, http.MethodGet, "/v1/boards/"+createdBoard.ID, nil)
 		defer func() {
 			_ = oneResp.Body.Close()
 		}()
 		if oneResp.StatusCode != http.StatusOK {
 			t.Fatalf("Expected get-by-id status %d, got %d", http.StatusOK, oneResp.StatusCode)
 		}
-		var one boardJSON
-		if err := json.NewDecoder(oneResp.Body).Decode(&one); err != nil {
+		var boardByID boardJSON
+		if err := json.NewDecoder(oneResp.Body).Decode(&boardByID); err != nil {
 			t.Fatalf("Decode get-by-id: %v", err)
 		}
-		if one != bResp {
-			t.Errorf("GET /v1/boards/{id} body differs from create response:\ngot  %+v\nwant %+v", one, bResp)
+		if boardByID != createdBoard {
+			t.Errorf("GET /v1/boards/{id} body differs from create response:\ngot  %+v\nwant %+v", boardByID, createdBoard)
 		}
-
-		time.Sleep(1100 * time.Millisecond)
 
 		// Update
 		updatedName := "Updated Board Name"
 		updatedDescription := "Updated Board Description"
-		updateResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]string{
+		updateResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+createdBoard.ID, map[string]string{
 			"name":        updatedName,
 			"description": updatedDescription,
 		})
@@ -139,27 +139,27 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected update status %d, got %d", http.StatusOK, updateResp.StatusCode)
 		}
 
-		var updated boardJSON
-		if err := json.NewDecoder(updateResp.Body).Decode(&updated); err != nil {
+		var fullPatchBoard boardJSON
+		if err := json.NewDecoder(updateResp.Body).Decode(&fullPatchBoard); err != nil {
 			t.Fatalf("Decode update response: %v", err)
 		}
-		if updated.ID != bResp.ID {
-			t.Errorf("Expected updated id %q, got %q", bResp.ID, updated.ID)
+		if fullPatchBoard.ID != createdBoard.ID {
+			t.Errorf("Expected updated id %q, got %q", createdBoard.ID, fullPatchBoard.ID)
 		}
-		if updated.OwnerID != bResp.OwnerID {
-			t.Errorf("Expected updated ownerId %q, got %q", bResp.OwnerID, updated.OwnerID)
+		if fullPatchBoard.OwnerID != createdBoard.OwnerID {
+			t.Errorf("Expected updated ownerId %q, got %q", createdBoard.OwnerID, fullPatchBoard.OwnerID)
 		}
-		if updated.Name != updatedName {
-			t.Errorf("Expected updated name %q, got %q", updatedName, updated.Name)
+		if fullPatchBoard.Name != updatedName {
+			t.Errorf("Expected updated name %q, got %q", updatedName, fullPatchBoard.Name)
 		}
-		if updated.Description != updatedDescription {
-			t.Errorf("Expected updated description %q, got %q", updatedDescription, updated.Description)
+		if fullPatchBoard.Description != updatedDescription {
+			t.Errorf("Expected updated description %q, got %q", updatedDescription, fullPatchBoard.Description)
 		}
-		updatedAtAfterFull, err := time.Parse(time.RFC3339, updated.UpdatedAt)
+		updatedAtAfterFull, err := time.Parse(timeFormat, fullPatchBoard.UpdatedAt)
 		if err != nil {
 			t.Errorf("Invalid updatedAt after full PATCH: %v", err)
 		}
-		baselineUpdatedAt, err := time.Parse(time.RFC3339, bResp.UpdatedAt)
+		baselineUpdatedAt, err := time.Parse(timeFormat, createdBoard.UpdatedAt)
 		if err != nil {
 			t.Errorf("Invalid baseline updatedAt: %v", err)
 		}
@@ -167,11 +167,9 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("updatedAt must advance after PATCH with fields (Issue #105); got %v, previous %v", updatedAtAfterFull, baselineUpdatedAt)
 		}
 
-		time.Sleep(1100 * time.Millisecond)
-
 		// Partial update: name only
 		partialName := "Updated Name Only"
-		updateNameOnlyResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]string{
+		updateNameOnlyResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+createdBoard.ID, map[string]string{
 			"name": partialName,
 		})
 		defer func() {
@@ -180,19 +178,19 @@ func TestBoard_HappyPath(t *testing.T) {
 		if updateNameOnlyResp.StatusCode != http.StatusOK {
 			t.Fatalf("Expected partial update status %d, got %d", http.StatusOK, updateNameOnlyResp.StatusCode)
 		}
-		var updatedNameOnly boardJSON
+		var nameOnlyPatchBoard boardJSON
 
-		err = json.NewDecoder(updateNameOnlyResp.Body).Decode(&updatedNameOnly)
+		err = json.NewDecoder(updateNameOnlyResp.Body).Decode(&nameOnlyPatchBoard)
 		if err != nil {
 			t.Fatalf("Decode partial update response: %v", err)
 		}
-		if updatedNameOnly.Name != partialName {
-			t.Errorf("Expected partial updated name %q, got %q", partialName, updatedNameOnly.Name)
+		if nameOnlyPatchBoard.Name != partialName {
+			t.Errorf("Expected partial updated name %q, got %q", partialName, nameOnlyPatchBoard.Name)
 		}
-		if updatedNameOnly.Description != updatedDescription {
-			t.Errorf("Expected description to stay %q, got %q", updatedDescription, updatedNameOnly.Description)
+		if nameOnlyPatchBoard.Description != updatedDescription {
+			t.Errorf("Expected description to stay %q, got %q", updatedDescription, nameOnlyPatchBoard.Description)
 		}
-		updatedAtAfterPartial, err := time.Parse(time.RFC3339, updatedNameOnly.UpdatedAt)
+		updatedAtAfterPartial, err := time.Parse(timeFormat, nameOnlyPatchBoard.UpdatedAt)
 		if err != nil {
 			t.Errorf("Invalid updatedAt after partial PATCH: %v", err)
 		}
@@ -200,7 +198,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("updatedAt must advance after PATCH with name only; got %v, previous %v", updatedAtAfterPartial, updatedAtAfterFull)
 		}
 
-		updateNullResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]any{
+		updateNullResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+createdBoard.ID, map[string]any{
 			"name":        nil,
 			"description": nil,
 		})
@@ -210,19 +208,19 @@ func TestBoard_HappyPath(t *testing.T) {
 		if updateNullResp.StatusCode != http.StatusOK {
 			t.Fatalf("Expected null update status %d, got %d", http.StatusOK, updateNullResp.StatusCode)
 		}
-		var updatedNull boardJSON
-		if err := json.NewDecoder(updateNullResp.Body).Decode(&updatedNull); err != nil {
+		var nullPatchBoard boardJSON
+		if err := json.NewDecoder(updateNullResp.Body).Decode(&nullPatchBoard); err != nil {
 			t.Fatalf("Decode null update response: %v", err)
 		}
-		if updatedNull.Name != updatedNameOnly.Name || updatedNull.Description != updatedNameOnly.Description {
-			t.Errorf("Expected null update to keep fields, got %+v", updatedNull)
+		if nullPatchBoard.Name != nameOnlyPatchBoard.Name || nullPatchBoard.Description != nameOnlyPatchBoard.Description {
+			t.Errorf("Expected null update to keep fields, got %+v", nullPatchBoard)
 		}
-		if updatedNull.UpdatedAt != updatedNameOnly.UpdatedAt {
-			t.Errorf("no-op PATCH (null fields) must not bump updatedAt; got %q, want %q", updatedNull.UpdatedAt, updatedNameOnly.UpdatedAt)
+		if nullPatchBoard.UpdatedAt != nameOnlyPatchBoard.UpdatedAt {
+			t.Errorf("no-op PATCH (null fields) must not bump updatedAt; got %q, want %q", nullPatchBoard.UpdatedAt, nameOnlyPatchBoard.UpdatedAt)
 		}
 
 		// Get by id after update
-		afterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		afterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+createdBoard.ID, nil)
 		defer func() {
 			_ = afterUpdateResp.Body.Close()
 		}()
@@ -230,12 +228,12 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected get-by-id status %d after update, got %d", http.StatusOK, afterUpdateResp.StatusCode)
 		}
 
-		var afterUpdate boardJSON
-		if err := json.NewDecoder(afterUpdateResp.Body).Decode(&afterUpdate); err != nil {
+		var boardByIDAfterPatch boardJSON
+		if err := json.NewDecoder(afterUpdateResp.Body).Decode(&boardByIDAfterPatch); err != nil {
 			t.Fatalf("Decode get-by-id after update: %v", err)
 		}
-		if afterUpdate != updatedNull {
-			t.Errorf("GET /v1/boards/{id} after update differs from final update response:\ngot  %+v\nwant %+v", afterUpdate, updatedNull)
+		if boardByIDAfterPatch != nullPatchBoard {
+			t.Errorf("GET /v1/boards/{id} after update differs from final update response:\ngot  %+v\nwant %+v", boardByIDAfterPatch, nullPatchBoard)
 		}
 
 		randomID := uuid.New().String()
@@ -248,7 +246,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 
 		acOther := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
-		crossResp := acOther.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		crossResp := acOther.Do(t, http.MethodGet, "/v1/boards/"+createdBoard.ID, nil)
 		defer func() {
 			_ = crossResp.Body.Close()
 		}()
@@ -273,7 +271,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 
 		// Delete
-		delResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+bResp.ID, nil)
+		delResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+createdBoard.ID, nil)
 		defer func() {
 			_ = delResp.Body.Close()
 		}()
@@ -282,7 +280,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 
 		// List after delete
-		afterDelResp := ac.Do(t, http.MethodGet, "/v1/boards/"+bResp.ID, nil)
+		afterDelResp := ac.Do(t, http.MethodGet, "/v1/boards/"+createdBoard.ID, nil)
 		defer func() {
 			_ = afterDelResp.Body.Close()
 		}()
@@ -298,12 +296,12 @@ func TestBoard_HappyPath(t *testing.T) {
 		if listAfterDel.StatusCode != http.StatusOK {
 			t.Fatalf("Expected list status %d after delete, got %d", http.StatusOK, listAfterDel.StatusCode)
 		}
-		var listAfterBody []boardJSON
-		if err := json.NewDecoder(listAfterDel.Body).Decode(&listAfterBody); err != nil {
+		var listedBoardsAfterDelete []boardJSON
+		if err := json.NewDecoder(listAfterDel.Body).Decode(&listedBoardsAfterDelete); err != nil {
 			t.Fatalf("Decode list after delete: %v", err)
 		}
-		if len(listAfterBody) != 0 {
-			t.Fatalf("Expected 0 boards after delete, got %d", len(listAfterBody))
+		if len(listedBoardsAfterDelete) != 0 {
+			t.Fatalf("Expected 0 boards after delete, got %d", len(listedBoardsAfterDelete))
 		}
 	})
 }
