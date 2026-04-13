@@ -553,7 +553,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPut, tt.path, tt.inputBody)
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, tt.path, tt.inputBody)
 			if tt.context != nil {
 				req = req.WithContext(tt.context)
 			} else {
