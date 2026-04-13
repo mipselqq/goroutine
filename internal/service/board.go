@@ -24,6 +24,10 @@ type Board struct {
 }
 
 func NewBoard(r BoardRepository, timeFunc TimeFunc) *Board {
+	if timeFunc == nil {
+		panic("BUG: timeFunc is nil")
+	}
+
 	return &Board{repository: r, timeFunc: timeFunc}
 }
 
