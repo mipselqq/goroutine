@@ -56,8 +56,9 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 		OwnerID:     board.OwnerID.String(),
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
-		CreatedAt:   board.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   board.UpdatedAt.Format(time.RFC3339),
+		// FIXME: use millisecond precision and adjust tests
+		CreatedAt: board.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: board.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

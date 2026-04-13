@@ -123,6 +123,8 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("GET /v1/boards/{id} body differs from create response:\ngot  %+v\nwant %+v", one, bResp)
 		}
 
+		time.Sleep(1100 * time.Millisecond)
+
 		// Update
 		updatedName := "Updated Board Name"
 		updatedDescription := "Updated Board Description"
@@ -153,6 +155,19 @@ func TestBoard_HappyPath(t *testing.T) {
 		if updated.Description != updatedDescription {
 			t.Errorf("Expected updated description %q, got %q", updatedDescription, updated.Description)
 		}
+		updatedAtAfterFull, err := time.Parse(time.RFC3339, updated.UpdatedAt)
+		if err != nil {
+			t.Errorf("Invalid updatedAt after full PATCH: %v", err)
+		}
+		baselineUpdatedAt, err := time.Parse(time.RFC3339, bResp.UpdatedAt)
+		if err != nil {
+			t.Errorf("Invalid baseline updatedAt: %v", err)
+		}
+		if !updatedAtAfterFull.After(baselineUpdatedAt) {
+			t.Errorf("updatedAt must advance after PATCH with fields (Issue #105); got %v, previous %v", updatedAtAfterFull, baselineUpdatedAt)
+		}
+
+		time.Sleep(1100 * time.Millisecond)
 
 		// Partial update: name only
 		partialName := "Updated Name Only"
@@ -166,7 +181,9 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("Expected partial update status %d, got %d", http.StatusOK, updateNameOnlyResp.StatusCode)
 		}
 		var updatedNameOnly boardJSON
-		if err := json.NewDecoder(updateNameOnlyResp.Body).Decode(&updatedNameOnly); err != nil {
+
+		err = json.NewDecoder(updateNameOnlyResp.Body).Decode(&updatedNameOnly)
+		if err != nil {
 			t.Fatalf("Decode partial update response: %v", err)
 		}
 		if updatedNameOnly.Name != partialName {
@@ -174,6 +191,13 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 		if updatedNameOnly.Description != updatedDescription {
 			t.Errorf("Expected description to stay %q, got %q", updatedDescription, updatedNameOnly.Description)
+		}
+		updatedAtAfterPartial, err := time.Parse(time.RFC3339, updatedNameOnly.UpdatedAt)
+		if err != nil {
+			t.Errorf("Invalid updatedAt after partial PATCH: %v", err)
+		}
+		if !updatedAtAfterPartial.After(updatedAtAfterFull) {
+			t.Errorf("updatedAt must advance after PATCH with name only; got %v, previous %v", updatedAtAfterPartial, updatedAtAfterFull)
 		}
 
 		updateNullResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+bResp.ID, map[string]any{
@@ -192,6 +216,9 @@ func TestBoard_HappyPath(t *testing.T) {
 		}
 		if updatedNull.Name != updatedNameOnly.Name || updatedNull.Description != updatedNameOnly.Description {
 			t.Errorf("Expected null update to keep fields, got %+v", updatedNull)
+		}
+		if updatedNull.UpdatedAt != updatedNameOnly.UpdatedAt {
+			t.Errorf("no-op PATCH (null fields) must not bump updatedAt; got %q, want %q", updatedNull.UpdatedAt, updatedNameOnly.UpdatedAt)
 		}
 
 		// Get by id after update
