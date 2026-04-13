@@ -123,7 +123,7 @@ func (d *BoardDescription) Scan(value any) error {
 // Pointer receiver works only for pointer types, printing garbage for non-pointer boards
 //
 //nolint:gocritic
-func String(b Board) string {
+func (b *Board) String() string {
 	return fmt.Sprintf(
 		"id:          %s\nownerId:     %s\nname:        %q\ndescription: %q\ncreatedAt:   %s\nupdatedAt:   %s",
 		b.ID.String(),
