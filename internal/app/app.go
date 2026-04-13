@@ -27,19 +27,19 @@ type App struct {
 
 func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg prometheus.Registerer) *App {
 	userRepo := repository.NewPgUser(pool)
+	boardsRepo := repository.NewPgBoard(pool)
+
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
+	boardsService := service.NewBoard(service.BoardRepository(boardsRepo), service.TimeNow)
 
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeRFC3339Milli)
 
 	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
-
-	boardRepo := repository.NewPgBoard(pool)
-	boardsService := service.NewBoard(boardRepo)
 	boardsHandler := handler.NewBoards(logger, boardsService, responder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)

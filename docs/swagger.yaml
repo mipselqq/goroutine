@@ -54,6 +54,15 @@ definitions:
         example: secret-password
         type: string
     type: object
+  handler.updateBoardBody:
+    properties:
+      description:
+        example: My Board Description
+        type: string
+      name:
+        example: My Board Name
+        type: string
+    type: object
   handler.whoAmIResponse:
     properties:
       uid:
@@ -252,6 +261,51 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a board by id
+      tags:
+      - boards
+    patch:
+      consumes:
+      - application/json
+      description: Partially update board metadata for the current user (owner only).
+        Provided fields are updated; omitted or null fields are ignored.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Board fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateBoardBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.boardResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: UpdateByID a board by id
       tags:
       - boards
   /v1/health:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"goroutine/internal/domain"
 
@@ -101,6 +102,35 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 	}
 
 	return boards, nil
+}
+
+func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+	const query = `
+		UPDATE boards
+		SET
+			name = COALESCE($1, name),
+			description = COALESCE($2, description),
+			updated_at = $4
+		WHERE id = $3
+		RETURNING id, owner_id, name, description, created_at, updated_at`
+
+	var board domain.Board
+	err := r.pool.QueryRow(ctx, query, name, description, boardID, updatedAt).Scan(
+		&board.ID,
+		&board.OwnerID,
+		&board.Name,
+		&board.Description,
+		&board.CreatedAt,
+		&board.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Board{}, ErrRowNotFound
+		}
+		return domain.Board{}, fmt.Errorf("board repo: update by id: %v: %w", err, ErrInternal)
+	}
+
+	return board, nil
 }
 
 func (r *PgBoard) Delete(ctx context.Context, boardID domain.BoardID) error {

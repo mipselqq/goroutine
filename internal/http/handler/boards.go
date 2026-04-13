@@ -17,6 +17,7 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
@@ -35,6 +36,11 @@ type createBoardBody struct {
 	Description string `json:"description" example:"My Board Description"`
 }
 
+type updateBoardBody struct {
+	Name        *string `json:"name" example:"My Board Name"`
+	Description *string `json:"description" example:"My Board Description"`
+}
+
 type boardResponse struct {
 	ID          string `json:"id" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
 	OwnerID     string `json:"ownerId" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
@@ -50,8 +56,9 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 		OwnerID:     board.OwnerID.String(),
 		Name:        board.Name.String(),
 		Description: board.Description.String(),
-		CreatedAt:   board.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   board.UpdatedAt.Format(time.RFC3339),
+		// FIXME: use millisecond precision and adjust tests
+		CreatedAt: board.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: board.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
@@ -176,6 +183,73 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
+}
+
+// UpdateByID godoc
+// @Summary UpdateByID a board by id
+// @Description Partially update board metadata for the current user (owner only). Provided fields are updated; omitted or null fields are ignored.
+// @Tags boards
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param boardId path string true "Board ID"
+// @Param body body updateBoardBody true "Board fields to update"
+// @Success 200 {object} boardResponse
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 404 {object} httpschema.Error "NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards/{boardId} [patch]
+func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
+	rawID := r.PathValue("boardId")
+	boardID, err := domain.ParseBoardID(rawID)
+	if err != nil {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		return
+	}
+
+	var body updateBoardBody
+	err = json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		return
+	}
+
+	details := []httpschema.Detail{}
+	var name *domain.BoardName
+	if body.Name != nil {
+		value := httpschema.ValidateField("name", *body.Name, domain.NewBoardName, &details)
+		name = &value
+	}
+
+	var description *domain.BoardDescription
+	if body.Description != nil {
+		value := httpschema.ValidateField("description", *body.Description, domain.NewBoardDescription, &details)
+		description = &value
+	}
+
+	if len(details) > 0 {
+		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
+		return
+	}
+
+	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	if !ok {
+		return
+	}
+
+	board, err := h.service.UpdateByID(r.Context(), userID, boardID, name, description)
+	if err != nil {
+		if errors.Is(err, service.ErrBoardNotFound) {
+			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")
+			return
+		}
+		h.logger.ErrorContext(r.Context(), "Failed to update board", slog.String("err", err.Error()))
+		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		return
+	}
+
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewBoardResponse(&board))
 }
 
 // Delete godoc

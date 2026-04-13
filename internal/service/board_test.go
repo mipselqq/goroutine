@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -68,7 +69,7 @@ func TestBoard_Create(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupMock(r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, testutil.FixedTimeNow)
 
 			got, err := s.Create(context.Background(), validBoard.OwnerID, validBoard.Name, validBoard.Description)
 
@@ -132,7 +133,7 @@ func TestBoard_GetMany(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupMock(r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, testutil.FixedTimeNow)
 
 			got, err := s.GetMany(context.Background(), validBoard.OwnerID)
 
@@ -223,7 +224,7 @@ func TestBoard_Get(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupMock(r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, testutil.FixedTimeNow)
 
 			got, err := s.Get(context.Background(), tt.callerID, validBoard.ID)
 
@@ -232,6 +233,200 @@ func TestBoard_Get(t *testing.T) {
 			}
 			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
 				t.Errorf("Get() board = %#v, want %#v", got, tt.wantBoard)
+			}
+		})
+	}
+}
+
+func TestBoard_UpdateByID(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.FixedTime5mFromNow())
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.FixedTime5mFromNow())
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.FixedTime5mFromNow())
+	otherOwner := domain.NewUserID()
+
+	updatedName := updatedValidBoard.Name
+	updatedDescription := updatedValidBoard.Description
+	updatedNameOnly := updatedNameOnlyBoard.Name
+	updatedDescriptionOnly := updatedDescriptionOnlyBoard.Description
+
+	tests := []struct {
+		name             string
+		callerID         domain.UserID
+		inputName        *domain.BoardName
+		inputDescription *domain.BoardDescription
+		setupMock        func(r *MockBoardRepository)
+		expectedErr      error
+		wantBoard        domain.Board
+	}{
+		{
+			name:             "Success full update",
+			callerID:         validBoard.OwnerID,
+			inputName:        &updatedName,
+			inputDescription: &updatedDescription,
+			setupMock: func(r *MockBoardRepository) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+					if boardID != validBoard.ID {
+						t.Errorf("unexpected boardID %v", boardID)
+					}
+					if updatedAt != updatedValidBoard.UpdatedAt {
+						t.Errorf("unexpected updatedAt %v", updatedAt)
+					}
+					if name == nil || *name != updatedValidBoard.Name {
+						t.Errorf("unexpected name %+v", name)
+					}
+					if description == nil || *description != updatedValidBoard.Description {
+						t.Errorf("unexpected description %+v", description)
+					}
+					return updatedValidBoard, nil
+				}
+
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					if id != validBoard.ID {
+						t.Errorf("unexpected boardID %v", id)
+					}
+					return validBoard, nil
+				}
+			},
+			expectedErr: nil,
+			wantBoard:   updatedValidBoard,
+		},
+		{
+			name:      "Success update only name",
+			callerID:  validBoard.OwnerID,
+			inputName: &updatedNameOnly,
+			setupMock: func(r *MockBoardRepository) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+					if updatedAt != updatedNameOnlyBoard.UpdatedAt {
+						t.Errorf("unexpected updatedAt %v", updatedAt)
+					}
+					if name == nil || *name != updatedNameOnlyBoard.Name {
+						t.Errorf("unexpected name %+v", name)
+					}
+					if description != nil {
+						t.Errorf("unexpected description %+v", description)
+					}
+					return updatedNameOnlyBoard, nil
+				}
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			expectedErr: nil,
+			wantBoard:   updatedNameOnlyBoard,
+		},
+		{
+			name:             "Success update only description",
+			callerID:         validBoard.OwnerID,
+			inputDescription: &updatedDescriptionOnly,
+			setupMock: func(r *MockBoardRepository) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+					if updatedAt != updatedDescriptionOnlyBoard.UpdatedAt {
+						t.Errorf("unexpected updatedAt %v", updatedAt)
+					}
+					if name != nil {
+						t.Errorf("unexpected name %+v", name)
+					}
+					if description == nil || *description != updatedDescriptionOnlyBoard.Description {
+						t.Errorf("unexpected description %+v", description)
+					}
+					return updatedDescriptionOnlyBoard, nil
+				}
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			expectedErr: nil,
+			wantBoard:   updatedDescriptionOnlyBoard,
+		},
+		{
+			name:     "Success update no fields",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			expectedErr: nil,
+			wantBoard:   validBoard,
+		},
+		{
+			name:     "Not found when wrong owner",
+			callerID: otherOwner,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			expectedErr: service.ErrBoardNotFound,
+		},
+		{
+			name:     "Not found when row missing",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, repository.ErrRowNotFound
+				}
+			},
+			expectedErr: service.ErrBoardNotFound,
+		},
+		{
+			name:      "Internal error",
+			callerID:  validBoard.OwnerID,
+			inputName: &updatedName,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+					return domain.Board{}, repository.ErrInternal
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+		{
+			name:      "Unexpected error",
+			callerID:  validBoard.OwnerID,
+			inputName: &updatedName,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+					return domain.Board{}, errors.New("db exploded")
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+		{
+			name:     "Unexpected get by id error",
+			callerID: validBoard.OwnerID,
+			setupMock: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, errors.New("db exploded")
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &MockBoardRepository{}
+			tt.setupMock(r)
+			s := service.NewBoard(r, testutil.FixedTime5mFromNow)
+
+			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, tt.inputName, tt.inputDescription)
+
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
+				t.Errorf("UpdateByID() board = %#v, want %#v", got, tt.wantBoard)
 			}
 		})
 	}
@@ -342,7 +537,7 @@ func TestBoard_Delete(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupMock(r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, testutil.FixedTimeNow)
 
 			err := s.Delete(context.Background(), tt.callerID, validBoard.ID)
 
