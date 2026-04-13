@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -13,15 +14,21 @@ type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
 type Board struct {
 	repository BoardRepository
+	timeFunc   func() time.Time
 }
 
-func NewBoard(r BoardRepository) *Board {
-	return &Board{repository: r}
+func NewBoard(r BoardRepository, timeFunc TimeFunc) *Board {
+	if timeFunc == nil {
+		panic("BUG: timeFunc is nil")
+	}
+
+	return &Board{repository: r, timeFunc: timeFunc}
 }
 
 func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -55,6 +62,39 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 	}
 
 	return board, nil
+}
+
+func (s *Board) UpdateByID(
+	ctx context.Context,
+	callerID domain.UserID,
+	boardID domain.BoardID,
+	name *domain.BoardName,
+	description *domain.BoardDescription,
+) (domain.Board, error) {
+	board, err := s.repository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Board{}, ErrBoardNotFound
+		}
+		return domain.Board{}, fmt.Errorf("board service: update get by id: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != callerID {
+		return domain.Board{}, ErrBoardNotFound
+	}
+
+	if name == nil && description == nil {
+		return board, nil
+	}
+
+	updated, err := s.repository.UpdateByID(ctx, boardID, name, description, s.timeFunc())
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Board{}, ErrBoardNotFound
+		}
+		return domain.Board{}, fmt.Errorf("board service: update: %v: %w", err, ErrInternal)
+	}
+
+	return updated, nil
 }
 
 func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {

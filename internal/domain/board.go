@@ -120,6 +120,18 @@ func (d *BoardDescription) Scan(value any) error {
 	return nil
 }
 
+func (b Board) String() string {
+	return fmt.Sprintf(
+		"id:          %s\nownerId:     %s\nname:        %q\ndescription: %q\ncreatedAt:   %s\nupdatedAt:   %s",
+		b.ID.String(),
+		b.OwnerID.String(),
+		b.Name.String(),
+		b.Description.String(),
+		b.CreatedAt.UTC().Format(time.RFC3339Nano),
+		b.UpdatedAt.UTC().Format(time.RFC3339Nano),
+	)
+}
+
 type (
 	boardTag struct{}
 	BoardID  = UUID[boardTag]
