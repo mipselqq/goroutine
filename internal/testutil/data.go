@@ -12,7 +12,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func FixedTime() string { return "2026-01-01T00:00:00Z" }
+func FixedTimeNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
+func FixedTime5mFromNow() time.Time { return FixedTimeNow().Add(5 * time.Minute) }
+
+func FixedTime5mFromNowStr() string { return FixedTime5mFromNow().UTC().Format(time.RFC3339) }
+func FixedTimeNowStr() string       { return FixedTimeNow().UTC().Format(time.RFC3339) }
 
 func must[T any](fn func(string) (T, error), s string) T {
 	v, err := fn(s)
@@ -67,21 +71,21 @@ func ValidBoard() domain.Board {
 	description := ValidBoardDescription()
 	id := domain.NewBoardID()
 	userID := ValidUserID()
-	now := time.Now().UTC().Truncate(time.Millisecond)
+	pseudoNow := FixedTimeNow()
 
 	validBoard := domain.Board{
 		ID:          id,
 		OwnerID:     userID,
 		Name:        name,
 		Description: description,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		CreatedAt:   pseudoNow,
+		UpdatedAt:   pseudoNow,
 	}
 
 	return validBoard
 }
 
-func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string) domain.Board {
+func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string, updatedAt time.Time) domain.Board {
 	t.Helper()
 	domainName, err := domain.NewBoardName(name)
 	if err != nil {
@@ -98,6 +102,6 @@ func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string
 		Name:        domainName,
 		Description: domainDescription,
 		CreatedAt:   base.CreatedAt,
-		UpdatedAt:   base.UpdatedAt,
+		UpdatedAt:   updatedAt,
 	}
 }

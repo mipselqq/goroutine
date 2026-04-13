@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-type TimeFunc func() string
+type timeFunc func() string
 
 type ErrorResponder struct {
 	logger *slog.Logger
-	timeFn TimeFunc
+	timeFn timeFunc
 }
 
-func MustNewErrorResponder(logger *slog.Logger, timeFn TimeFunc) *ErrorResponder {
+func MustNewErrorResponder(logger *slog.Logger, timeFn timeFunc) *ErrorResponder {
 	if timeFn == nil {
 		panic("BUG: timeFn is nil")
 	}

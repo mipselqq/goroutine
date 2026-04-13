@@ -202,9 +202,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	userID := testutil.ValidUserID()
 
 	validBoard := testutil.ValidBoard()
-	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description")
-	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String())
-	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only")
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.FixedTime5mFromNow())
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.FixedTime5mFromNow())
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.FixedTime5mFromNow())
 	updatedName := updatedValidBoard.Name
 	updatedDescription := updatedValidBoard.Description
 	updatedNameOnly := updatedNameOnlyBoard.Name
@@ -217,7 +217,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription, testutil.FixedTime5mFromNow())
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
@@ -233,7 +233,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid-partial-name@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil, testutil.FixedTime5mFromNow())
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
@@ -249,7 +249,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid-partial-description@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly, testutil.FixedTime5mFromNow())
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
@@ -264,7 +264,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
 
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription, testutil.FixedTime5mFromNow())
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
 		}

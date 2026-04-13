@@ -74,7 +74,7 @@ func invalidJsonBody() map[string]any {
 	return map[string]any{
 		"code":      "VALIDATION_ERROR",
 		"message":   "Some fields are invalid",
-		"timestamp": testutil.FixedTime(),
+		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
 			map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
 		},
@@ -85,7 +85,7 @@ func internalErrorBody() map[string]any {
 	return map[string]any{
 		"code":      "INTERNAL_SERVER_ERROR",
 		"message":   "Internal server error",
-		"timestamp": testutil.FixedTime(),
+		"timestamp": testutil.FixedTimeNowStr(),
 	}
 }
 
@@ -93,7 +93,7 @@ func notFoundErrorBody() map[string]any {
 	return map[string]any{
 		"code":      "NOT_FOUND",
 		"message":   "Resource not found",
-		"timestamp": testutil.FixedTime(),
+		"timestamp": testutil.FixedTimeNowStr(),
 	}
 }
 
@@ -101,7 +101,7 @@ func unauthorizedTokenBody() map[string]any {
 	return map[string]any{
 		"code":      "INVALID_TOKEN",
 		"message":   "Invalid token",
-		"timestamp": testutil.FixedTime(),
+		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
 			map[string]any{"field": "Authorization", "issues": []string{"Invalid token"}},
 		},
@@ -112,7 +112,7 @@ func validationErrorBody(field string, issues []string) map[string]any {
 	return map[string]any{
 		"code":      "VALIDATION_ERROR",
 		"message":   "Some fields are invalid",
-		"timestamp": testutil.FixedTime(),
+		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
 			map[string]any{"field": field, "issues": issues},
 		},
