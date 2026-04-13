@@ -10,21 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func AbstractMetricPath(rawPath string) string {
-	segments := strings.Split(rawPath, "/")
-	for i, segment := range segments {
-		if segment == "" {
-			continue
-		}
-
-		if _, err := uuid.Parse(segment); err == nil {
-			segments[i] = "{id}"
-		}
-	}
-
-	return strings.Join(segments, "/")
-}
-
 type Metrics struct {
 	HttpRequests *prometheus.CounterVec
 	HttpDuration *prometheus.HistogramVec
@@ -79,4 +64,19 @@ func (m *Metrics) Wrap(next http.Handler) http.HandlerFunc {
 		m.HttpRequests.WithLabelValues(abstractPath, method, strconv.Itoa(responseStatus)).Inc()
 		m.HttpDuration.WithLabelValues(abstractPath, method).Observe(duration)
 	})
+}
+
+func AbstractMetricPath(rawPath string) string {
+	segments := strings.Split(rawPath, "/")
+	for i, segment := range segments {
+		if segment == "" {
+			continue
+		}
+
+		if _, err := uuid.Parse(segment); err == nil {
+			segments[i] = "{id}"
+		}
+	}
+
+	return strings.Join(segments, "/")
 }
