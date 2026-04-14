@@ -29,9 +29,8 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		header := r.Header.Get("Authorization")
 
 		if header == "" {
-			m.responder.Unauthorized(
-				w, "INVALID_AUTH_HEADER",
-				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Missing authorization header"}}},
+			m.responder.InvalidAuthHeader(
+				w, []httpschema.Detail{{Field: "Authorization", Issues: []string{"Missing authorization header"}}},
 			)
 			return
 		}
@@ -47,9 +46,8 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		}
 
 		if len(issues) > 0 {
-			m.responder.Unauthorized(
-				w, "INVALID_AUTH_HEADER",
-				[]httpschema.Detail{{Field: "Authorization", Issues: issues}},
+			m.responder.InvalidAuthHeader(
+				w, []httpschema.Detail{{Field: "Authorization", Issues: issues}},
 			)
 			return
 		}
@@ -57,9 +55,8 @@ func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
 		token := parts[1]
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
-			m.responder.Unauthorized(
-				w, "INVALID_TOKEN",
-				[]httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
+			m.responder.InvalidToken(
+				w, []httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
 			)
 			return
 		}

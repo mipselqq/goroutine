@@ -53,10 +53,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.responder.BadRequest(
-			w, "VALIDATION_ERROR",
-			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
-		)
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
 	}
 
@@ -64,7 +61,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	email := httpschema.ValidateField("email", body.Email, domain.NewEmail, &details)
 	password := httpschema.ValidateField("password", body.Password, domain.NewUserPassword, &details)
 	if len(details) > 0 {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
+		h.responder.ValidationError(w, details)
 		return
 	}
 
@@ -73,13 +70,9 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists),
 			errors.Is(err, service.ErrInvalidCredentials):
-			h.responder.BadRequest(
-				w, "INVALID_CREDENTIALS",
-				[]httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}},
-			)
+			h.responder.ValidButInappropriateCredentials(w, []httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}})
 		default:
-			h.logger.ErrorContext(r.Context(), "Failed to register user", slog.String("err", err.Error()))
-			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+			h.responder.InternalError(w, r, err)
 		}
 		return
 	}
@@ -115,10 +108,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.responder.BadRequest(
-			w, "VALIDATION_ERROR",
-			[]httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}},
-		)
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
 	}
 
@@ -126,7 +116,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	email := httpschema.ValidateField("email", body.Email, domain.NewEmail, &details)
 	password := httpschema.ValidateField("password", body.Password, domain.NewUserPassword, &details)
 	if len(details) > 0 {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
+		h.responder.ValidationError(w, details)
 		return
 	}
 
@@ -134,12 +124,11 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			h.responder.Unauthorized(w, "INVALID_CREDENTIALS", []httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid"}}})
+			h.responder.InvalidCredentials(w, []httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid"}}})
 		case errors.Is(err, service.ErrUserNotFound):
-			h.responder.Unauthorized(w, "USER_NOT_FOUND", []httpschema.Detail{})
+			h.responder.UserNotFound(w, []httpschema.Detail{})
 		default:
-			h.logger.ErrorContext(r.Context(), "Failed to login user", slog.String("err", err.Error()))
-			h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+			h.responder.InternalError(w, r, err)
 		}
 		return
 	}
@@ -166,9 +155,7 @@ func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
 		h.logger.ErrorContext(r.Context(), "BUG: failed to get user id from context")
-		h.responder.Error(
-			w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR",
-		)
+		h.responder.InternalError(w, r, errors.New("failed to get user id from context"))
 		return
 	}
 
