@@ -20,10 +20,12 @@ type MockUserRepository struct {
 }
 
 func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
+	AssertFuncNotNil("UserRepository.InsertFunc", m.InsertFunc)
 	return m.InsertFunc(ctx, email, hash)
 }
 
 func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
+	AssertFuncNotNil("UserRepository.GetByEmailFunc", m.GetByEmailFunc)
 	return m.GetByEmailFunc(ctx, email)
 }
 
