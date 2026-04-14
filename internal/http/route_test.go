@@ -33,48 +33,80 @@ func TestNewRouter_Full(t *testing.T) {
 
 	router := app.NewRouter(handlers, middlewares)
 
+	type entry struct {
+		name   string
+		method string
+		path   string
+	}
+
+	UUIDv7 := func() string {
+		return "018e1000-0000-7000-8000-000000000001"
+	}
+
 	tests := []struct {
-		name        string
-		method      string
-		path        string
-		wantMetrics bool
-		wantCors    bool
-		wantReqID   bool
-	}{ // TODO(refactor-1): use named fields, generate uuid
-		{"Register endpoint", http.MethodPost, "/v1/register", true, true, true},
-		{"Login endpoint", http.MethodPost, "/v1/login", true, true, true},
-		{"Health endpoint", http.MethodGet, "/v1/health", true, true, true},
-		{"Boards list endpoint", http.MethodGet, "/v1/boards", true, true, true},
-		{"Board by id endpoint", http.MethodGet, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
-		{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
-		{"Delete board endpoint", http.MethodDelete, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
-		{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html", false, true, true},
+		entry     entry
+		metrics   bool
+		cors      bool
+		requestID bool
+	}{
+		{
+			entry:   entry{"Register endpoint", http.MethodPost, "/v1/register"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Login endpoint", http.MethodPost, "/v1/login"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Health endpoint", http.MethodGet, "/v1/health"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Boards list endpoint", http.MethodGet, "/v1/boards"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Board by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Delete board endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html"},
+			metrics: false, cors: true, requestID: true,
+		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.method, tt.path, http.NoBody)
+		t.Run(tt.entry.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.entry.method, tt.entry.path, http.NoBody)
 			rr := httptest.NewRecorder()
 
 			router.ServeHTTP(rr, req)
 
 			if rr.Code == http.StatusNotFound {
-				t.Errorf("Path %q %q not registered in router (got 404)", tt.method, tt.path)
+				t.Errorf("Path %q %q not registered in router (got 404)", tt.entry.method, tt.entry.path)
 			}
 
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
-			if hasMetrics != tt.wantMetrics {
-				t.Errorf("Metrics middleware application mismatch for %q: got %v, want %v", tt.path, hasMetrics, tt.wantMetrics)
+			if hasMetrics != tt.metrics {
+				t.Errorf("Metrics middleware application mismatch for %q: got %v, want %v", tt.entry.path, hasMetrics, tt.metrics)
 			}
 
 			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
-			if hasCors != tt.wantCors {
-				t.Errorf("CORS middleware application mismatch for %q: got %v, want %v", tt.path, hasCors, tt.wantCors)
+			if hasCors != tt.cors {
+				t.Errorf("CORS middleware application mismatch for %q: got %v, want %v", tt.entry.path, hasCors, tt.cors)
 			}
 
 			hasReqID := rr.Header().Get("X-RequestId-Tracked") == "true"
-			if hasReqID != tt.wantReqID {
-				t.Errorf("RequestID middleware application mismatch for %q: got %v, want %v", tt.path, hasReqID, tt.wantReqID)
+			if hasReqID != tt.requestID {
+				t.Errorf("RequestID middleware application mismatch for %q: got %v, want %v", tt.entry.path, hasReqID, tt.requestID)
 			}
 		})
 	}

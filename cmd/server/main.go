@@ -24,6 +24,10 @@ var version = "no version bundled by linker"
 // @title Goroutine kanban API
 // @description A nice kanban board with a beautiful heart ✨
 // @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter JWT token with `Bearer ` prefix, e.g. `Bearer eyJhbGciOi...`
 func main() {
 	if os.Getenv("ENV") != "prod" {
 		_ = godotenv.Load(".env.dev")

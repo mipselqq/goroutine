@@ -2,7 +2,7 @@ package handler_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/testutil"
@@ -13,17 +13,19 @@ type MockAuth struct {
 	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error)
 }
 
-func (m *MockAuth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
-	if m.RegisterFunc == nil {
-		return errors.New("BUG: RegisterFunc is called but not set")
+func AssertFuncNotNil(funcName string, fn any) {
+	if fn == nil {
+		panic(fmt.Sprintf("BUG: Mock: %s is not set", funcName))
 	}
+}
+
+func (m *MockAuth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
+	AssertFuncNotNil("AuthService.RegisterFunc", m.RegisterFunc)
 	return m.RegisterFunc(ctx, email, password)
 }
 
 func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
-	if m.LoginFunc == nil {
-		return "", errors.New("BUG: LoginFunc is called but not set")
-	}
+	AssertFuncNotNil("AuthService.LoginFunc", m.LoginFunc)
 	return m.LoginFunc(ctx, email, password)
 }
 
@@ -36,37 +38,27 @@ type MockBoards struct {
 }
 
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
-	if m.GetFunc == nil {
-		return domain.Board{}, errors.New("BUG: GetFunc is called but not set")
-	}
+	AssertFuncNotNil("BoardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
 }
 
 func (m *MockBoards) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	if m.GetManyFunc == nil {
-		return nil, errors.New("BUG: GetManyFunc is called but not set")
-	}
+	AssertFuncNotNil("BoardsService.GetManyFunc", m.GetManyFunc)
 	return m.GetManyFunc(ctx, ownerID)
 }
 
 func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	if m.CreateFunc == nil {
-		return domain.Board{}, errors.New("BUG: CreateFunc is called but not set")
-	}
+	AssertFuncNotNil("BoardsService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
 func (m *MockBoards) UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
-	if m.UpdateByIDFunc == nil {
-		return domain.Board{}, errors.New("BUG: UpdateByIDFunc is called but not set")
-	}
+	AssertFuncNotNil("BoardsService.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, ownerID, boardID, name, description)
 }
 
 func (m *MockBoards) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
-	if m.DeleteFunc == nil {
-		return errors.New("BUG: DeleteFunc is called but not set")
-	}
+	AssertFuncNotNil("BoardsService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, ownerID, boardID)
 }
 

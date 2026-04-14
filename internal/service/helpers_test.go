@@ -2,11 +2,17 @@ package service_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"goroutine/internal/domain"
 )
+
+func AssertFuncNotNil(funcName string, fn any) {
+	if fn == nil {
+		panic(fmt.Sprintf("BUG: Mock: %s is not set", funcName))
+	}
+}
 
 type MockUserRepository struct {
 	InsertFunc     func(ctx context.Context, email domain.Email, hash string) error
@@ -14,10 +20,12 @@ type MockUserRepository struct {
 }
 
 func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
+	AssertFuncNotNil("UserRepository.InsertFunc", m.InsertFunc)
 	return m.InsertFunc(ctx, email, hash)
 }
 
 func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
+	AssertFuncNotNil("UserRepository.GetByEmailFunc", m.GetByEmailFunc)
 	return m.GetByEmailFunc(ctx, email)
 }
 
@@ -30,34 +38,26 @@ type MockBoardRepository struct {
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	// TODO(refactor-1): create a function assertFuncNotNil
+	AssertFuncNotNil("BoardRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
 func (m *MockBoardRepository) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
-	if m.GetByIDFunc == nil {
-		return domain.Board{}, errors.New("BUG: GetByIDFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.GetByIDFunc", m.GetByIDFunc)
 	return m.GetByIDFunc(ctx, id)
 }
 
 func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	if m.GetManyFunc == nil {
-		return nil, errors.New("BUG: GetManyFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.GetManyFunc", m.GetManyFunc)
 	return m.GetManyFunc(ctx, ownerID)
 }
 
 func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
-	if m.UpdateByIDFunc == nil {
-		return domain.Board{}, errors.New("BUG: UpdateByIDFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, boardID, name, description, updatedAt)
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
-	if m.DeleteFunc == nil {
-		return errors.New("BUG: DeleteFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID)
 }

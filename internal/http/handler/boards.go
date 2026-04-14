@@ -63,8 +63,6 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 
 type getManyBoardsResponse = []boardResponse
 
-// TODO(refactor-1): allow manual auth header pass into swagger panel if possible
-
 // Create godoc
 // @Summary Create a new board
 // @Description Create a new board for the current user
@@ -83,7 +81,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
 	}
 
@@ -91,7 +89,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 	name := httpschema.ValidateField("name", body.Name, domain.NewBoardName, &details)
 	description := httpschema.ValidateField("description", body.Description, domain.NewBoardDescription, &details)
 	if len(details) > 0 {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
+		h.responder.ValidationError(w, details)
 		return
 	}
 
@@ -102,8 +100,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 
 	board, err := h.service.Create(r.Context(), userID, name, description)
 	if err != nil {
-		h.logger.ErrorContext(r.Context(), "Failed to create board", slog.String("err", err.Error()))
-		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		h.responder.InternalError(w, r, err)
 		return
 	}
 
@@ -128,7 +125,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
 		return
 	}
 
@@ -140,11 +137,12 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 	board, err := h.service.Get(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
-			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")
+			// FIXME: remove this raw response workaround and make NOT_FOUND shape consistent via responder
+			// before 1.0.0 release. The current responder always returns some details. This is for a feature PR.
+			httpschema.RespondJSON(w, h.logger, http.StatusNotFound, h.responder.NewError("NOT_FOUND", httpschema.MapCodeToDescription("NOT_FOUND")))
 			return
 		}
-		h.logger.ErrorContext(r.Context(), "Failed to get board", slog.String("err", err.Error()))
-		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		h.responder.InternalError(w, r, err)
 		return
 	}
 
@@ -171,8 +169,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 
 	boards, err := h.service.GetMany(r.Context(), userID)
 	if err != nil {
-		h.logger.ErrorContext(r.Context(), "Failed to get many boards", slog.String("err", err.Error()))
-		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		h.responder.InternalError(w, r, err)
 		return
 	}
 
@@ -203,14 +200,14 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
 		return
 	}
 
 	var body updateBoardBody
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
 	}
 
@@ -228,7 +225,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(details) > 0 {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", details)
+		h.responder.ValidationError(w, details)
 		return
 	}
 
@@ -240,11 +237,10 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	board, err := h.service.UpdateByID(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
-			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")
+			httpschema.RespondJSON(w, h.logger, http.StatusNotFound, h.responder.NewError("NOT_FOUND", httpschema.MapCodeToDescription("NOT_FOUND")))
 			return
 		}
-		h.logger.ErrorContext(r.Context(), "Failed to update board", slog.String("err", err.Error()))
-		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		h.responder.InternalError(w, r, err)
 		return
 	}
 
@@ -269,7 +265,7 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
-		h.responder.BadRequest(w, "VALIDATION_ERROR", []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
 		return
 	}
 
@@ -281,12 +277,10 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Delete(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
-			h.responder.Error(w, http.StatusNotFound, "NOT_FOUND")
+			httpschema.RespondJSON(w, h.logger, http.StatusNotFound, h.responder.NewError("NOT_FOUND", httpschema.MapCodeToDescription("NOT_FOUND")))
 			return
 		}
-		h.logger.ErrorContext(r.Context(), "Failed to delete board", slog.String("err", err.Error()))
-		// TODO(refactor-1): add more specific responder methods
-		h.responder.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+		h.responder.InternalError(w, r, err)
 
 		return
 	}
@@ -306,8 +300,8 @@ func ExtractUserIDOrHandleMissing(w http.ResponseWriter, r *http.Request, h *Boa
 	}
 
 	if !valid {
-		h.logger.ErrorContext(r.Context(), "BUG: UserID not found in context. Middleware should have handled this.")
-		h.responder.Unauthorized(w, "INVALID_TOKEN", []httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}})
+		h.logger.ErrorContext(r.Context(), "BUG: valid UserID not found in context. Middleware should have handled this.")
+		h.responder.InvalidToken(w, []httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}})
 		return domain.UserID{}, false
 	}
 
