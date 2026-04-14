@@ -7,14 +7,18 @@ import (
 	"goroutine/internal/http/middleware"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	httpSwagger "github.com/swaggo/http-swagger/v2"
+)
+
+const (
+	swaggerBasePath = "/v1/swagger/"
+	loginPath       = "/v1/login"
 )
 
 func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("POST /v1/register", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Register)))
-	mux.Handle("POST /v1/login", m.Metrics.Wrap(http.HandlerFunc(h.Auth.Login)))
+	mux.Handle("POST "+loginPath, m.Metrics.Wrap(http.HandlerFunc(h.Auth.Login)))
 	mux.Handle("GET /v1/health", m.Metrics.Wrap(http.HandlerFunc(h.Health.Health)))
 	mux.Handle("GET /v1/whoami", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Auth.WhoAmI))))
 	mux.Handle("POST /v1/boards", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.Create))))
@@ -22,9 +26,7 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("PATCH /v1/boards/{boardId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.UpdateByID))))
 	mux.Handle("DELETE /v1/boards/{boardId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.Delete))))
 	mux.Handle("GET /v1/boards", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Boards.GetMany))))
-	mux.Handle("GET /v1/swagger/", httpSwagger.Handler(
-		httpSwagger.URL("/v1/swagger/doc.json"),
-	))
+	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
 
 	return m.RequestID.Wrap(m.CORS.Wrap(mux))
 }

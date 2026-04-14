@@ -63,8 +63,6 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 
 type getManyBoardsResponse = []boardResponse
 
-// TODO(refactor-1): allow manual auth header pass into swagger panel if possible
-
 // Create godoc
 // @Summary Create a new board
 // @Description Create a new board for the current user

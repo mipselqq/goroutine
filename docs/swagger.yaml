@@ -411,4 +411,10 @@ paths:
       summary: Get current user info
       tags:
       - auth
+securityDefinitions:
+  BearerAuth:
+    description: Enter JWT token with `Bearer ` prefix, e.g. `Bearer eyJhbGciOi...`
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
