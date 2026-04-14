@@ -2,10 +2,17 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"goroutine/internal/domain"
 )
+
+func AssertFuncNotNil(funcName string, fn any) {
+	if fn == nil {
+		panic(fmt.Sprintf("BUG: Mock: %s is not set", funcName))
+	}
+}
 
 type MockUserRepository struct {
 	InsertFunc     func(ctx context.Context, email domain.Email, hash string) error
@@ -29,36 +36,26 @@ type MockBoardRepository struct {
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	if m.CreateFunc == nil {
-		panic("BUG: Mock: BoardRepository.CreateFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
 func (m *MockBoardRepository) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
-	if m.GetByIDFunc == nil {
-		panic("BUG: Mock: BoardRepository.GetByIDFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.GetByIDFunc", m.GetByIDFunc)
 	return m.GetByIDFunc(ctx, id)
 }
 
 func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	if m.GetManyFunc == nil {
-		panic("BUG: Mock: BoardRepository.GetManyFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.GetManyFunc", m.GetManyFunc)
 	return m.GetManyFunc(ctx, ownerID)
 }
 
 func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
-	if m.UpdateByIDFunc == nil {
-		panic("BUG: Mock: BoardRepository.UpdateByIDFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, boardID, name, description, updatedAt)
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
-	if m.DeleteFunc == nil {
-		panic("BUG: Mock: BoardRepository.DeleteFunc is not set")
-	}
+	AssertFuncNotNil("BoardRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID)
 }
