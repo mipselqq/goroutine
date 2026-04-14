@@ -41,14 +41,70 @@ func TestNewRouter_Full(t *testing.T) {
 		wantCors    bool
 		wantReqID   bool
 	}{ // TODO(refactor-1): use named fields, generate uuid
-		{"Register endpoint", http.MethodPost, "/v1/register", true, true, true},
-		{"Login endpoint", http.MethodPost, "/v1/login", true, true, true},
-		{"Health endpoint", http.MethodGet, "/v1/health", true, true, true},
-		{"Boards list endpoint", http.MethodGet, "/v1/boards", true, true, true},
-		{"Board by id endpoint", http.MethodGet, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
-		{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
-		{"Delete board endpoint", http.MethodDelete, "/v1/boards/018e1000-0000-7000-8000-000000000001", true, true, true},
-		{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html", false, true, true},
+		{
+			name:        "Register endpoint",
+			method:      http.MethodPost,
+			path:        "/v1/register",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "Login endpoint",
+			method:      http.MethodPost,
+			path:        "/v1/login",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "Health endpoint",
+			method:      http.MethodGet,
+			path:        "/v1/health",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "Boards list endpoint",
+			method:      http.MethodGet,
+			path:        "/v1/boards",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "Board by id endpoint",
+			method:      http.MethodGet,
+			path:        "/v1/boards/018e1000-0000-7000-8000-000000000001",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "UpdateByID board endpoint",
+			method:      http.MethodPatch,
+			path:        "/v1/boards/018e1000-0000-7000-8000-000000000001",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "Delete board endpoint",
+			method:      http.MethodDelete,
+			path:        "/v1/boards/018e1000-0000-7000-8000-000000000001",
+			wantMetrics: true,
+			wantCors:    true,
+			wantReqID:   true,
+		},
+		{
+			name:        "Swagger endpoint",
+			method:      http.MethodGet,
+			path:        "/v1/swagger/index.html",
+			wantMetrics: false,
+			wantCors:    true,
+			wantReqID:   true,
+		},
 	}
 
 	for _, tt := range tests {
