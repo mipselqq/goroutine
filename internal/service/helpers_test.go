@@ -40,6 +40,8 @@ type MockBoardRepository struct {
 type MockColumnRepository struct {
 	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, createdAt time.Time, updatedAt time.Time) (domain.Column, error)
 	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	GetByIDFunc       func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
+	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -81,4 +83,20 @@ func (m *MockColumnRepository) Create(
 func (m *MockColumnRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
 	return m.ListByBoardIDFunc(ctx, boardID)
+}
+
+func (m *MockColumnRepository) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+	AssertFuncNotNil("ColumnRepository.GetByIDFunc", m.GetByIDFunc)
+	return m.GetByIDFunc(ctx, columnID)
+}
+
+func (m *MockColumnRepository) UpdateByID(
+	ctx context.Context,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+	name *domain.ColumnName,
+	updatedAt time.Time,
+) (domain.Column, error) {
+	AssertFuncNotNil("ColumnRepository.UpdateByIDFunc", m.UpdateByIDFunc)
+	return m.UpdateByIDFunc(ctx, boardID, columnID, name, updatedAt)
 }

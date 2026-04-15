@@ -33,6 +33,10 @@ func (r *ErrorResponder) BoardNotFound(w http.ResponseWriter, details []Detail) 
 	r.DetailedError(w, http.StatusNotFound, "BOARD_NOT_FOUND", details)
 }
 
+func (r *ErrorResponder) ColumnNotFound(w http.ResponseWriter, details []Detail) {
+	r.DetailedError(w, http.StatusNotFound, "COLUMN_NOT_FOUND", details)
+}
+
 func (r *ErrorResponder) UserNotFound(w http.ResponseWriter, details []Detail) {
 	r.DetailedError(w, http.StatusUnauthorized, "USER_NOT_FOUND", details)
 }

@@ -19,6 +19,8 @@ type ColumnRepository interface {
 		updatedAt time.Time,
 	) (domain.Column, error)
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
+	UpdateByID(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
 }
 
 type ColumnBoardRepository interface {
@@ -79,4 +81,48 @@ func (s *Column) List(ctx context.Context, callerID domain.UserID, boardID domai
 	}
 
 	return columns, nil
+}
+
+func (s *Column) UpdateByID(
+	ctx context.Context,
+	callerID domain.UserID,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+	name *domain.ColumnName,
+) (domain.Column, error) {
+	board, err := s.boardRepository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Column{}, ErrColumnNotFound
+		}
+		return domain.Column{}, fmt.Errorf("column service: update get board: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != callerID {
+		return domain.Column{}, ErrColumnNotFound
+	}
+
+	column, err := s.columnRepository.GetByID(ctx, columnID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Column{}, ErrColumnNotFound
+		}
+		return domain.Column{}, fmt.Errorf("column service: update get column: %v: %w", err, ErrInternal)
+	}
+	if column.BoardID != boardID {
+		return domain.Column{}, ErrColumnNotFound
+	}
+
+	if name == nil {
+		return column, nil
+	}
+
+	updated, err := s.columnRepository.UpdateByID(ctx, boardID, columnID, name, s.timeFunc())
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.Column{}, ErrColumnNotFound
+		}
+		return domain.Column{}, fmt.Errorf("column service: update by id: %v: %w", err, ErrInternal)
+	}
+
+	return updated, nil
 }

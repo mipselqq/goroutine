@@ -6,6 +6,7 @@ var codeMap = map[string]string{
 	"INTERNAL_SERVER_ERROR": "Internal server error",
 	"NOT_FOUND":             "Resource not found",
 	"BOARD_NOT_FOUND":       "Board not found",
+	"COLUMN_NOT_FOUND":      "Column not found",
 	"INVALID_AUTH_HEADER":   "Invalid authorization header",
 	"USER_NOT_FOUND":        "User not found",
 	"INVALID_TOKEN":         "Invalid token",
