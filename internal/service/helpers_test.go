@@ -38,7 +38,8 @@ type MockBoardRepository struct {
 }
 
 type MockColumnRepository struct {
-	CreateFunc func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, createdAt time.Time, updatedAt time.Time) (domain.Column, error)
+	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, createdAt time.Time, updatedAt time.Time) (domain.Column, error)
+	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -75,4 +76,9 @@ func (m *MockColumnRepository) Create(
 ) (domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, boardID, name, createdAt, updatedAt)
+}
+
+func (m *MockColumnRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+	AssertFuncNotNil("ColumnRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
+	return m.ListByBoardIDFunc(ctx, boardID)
 }

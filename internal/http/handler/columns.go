@@ -14,6 +14,7 @@ import (
 
 type ColumnsService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
+	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 }
 
 type Columns struct {
@@ -102,6 +103,49 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusCreated, NewColumnResponse(&column))
+}
+
+// List godoc
+// @Summary List all columns in a board
+// @Description Get all columns belonging to the specified board, ordered by position ASC.
+// @Tags columns
+// @Produce json
+// @Security BearerAuth
+// @Param boardId path string true "Board ID"
+// @Success 200 {array} columnResponse
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards/{boardId}/columns [get]
+func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
+	rawBoardID := r.PathValue("boardId")
+	boardID, err := domain.ParseBoardID(rawBoardID)
+	if err != nil {
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		return
+	}
+
+	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	if !ok {
+		return
+	}
+
+	columns, err := h.service.List(r.Context(), userID, boardID)
+	if err != nil {
+		if errors.Is(err, service.ErrBoardNotFound) {
+			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
+			return
+		}
+		h.responder.InternalError(w, r, err)
+		return
+	}
+
+	response := make([]columnResponse, 0, len(columns))
+	for i := range columns {
+		response = append(response, NewColumnResponse(&columns[i]))
+	}
+
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
 func (h *Columns) extractUserIDOrHandleMissing(w http.ResponseWriter, r *http.Request) (domain.UserID, bool) {
