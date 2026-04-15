@@ -19,16 +19,7 @@ func TestColumns_Create(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
-	validColumnName, _ := domain.NewColumnName("To Do")
-	validPosition, _ := domain.NewColumnPosition(1)
-	validColumn := domain.Column{
-		ID:        domain.NewColumnID(),
-		BoardID:   validBoard.ID,
-		Name:      validColumnName,
-		Position:  validPosition,
-		CreatedAt: testutil.FixedTimeNow(),
-		UpdatedAt: testutil.FixedTimeNow(),
-	}
+	validColumn := testutil.ValidColumn(validBoard.ID)
 
 	tests := []struct {
 		name         string
