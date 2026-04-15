@@ -336,6 +336,41 @@ paths:
       tags:
       - boards
   /v1/boards/{boardId}/columns:
+    get:
+      description: Get all columns belonging to the specified board, ordered by position
+        ASC.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.columnResponse'
+            type: array
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: BOARD_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: List all columns in a board
+      tags:
+      - columns
     post:
       consumes:
       - application/json

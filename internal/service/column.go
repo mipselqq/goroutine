@@ -18,6 +18,7 @@ type ColumnRepository interface {
 		createdAt time.Time,
 		updatedAt time.Time,
 	) (domain.Column, error)
+	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 }
 
 type ColumnBoardRepository interface {
@@ -57,4 +58,25 @@ func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID dom
 	}
 
 	return column, nil
+}
+
+func (s *Column) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+	board, err := s.boardRepository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return nil, ErrBoardNotFound
+		}
+		return nil, fmt.Errorf("column service: list get board: %v: %w", err, ErrInternal)
+	}
+
+	if board.OwnerID != callerID {
+		return nil, ErrBoardNotFound
+	}
+
+	columns, err := s.columnRepository.ListByBoardID(ctx, boardID)
+	if err != nil {
+		return nil, fmt.Errorf("column service: list: %v: %w", err, ErrInternal)
+	}
+
+	return columns, nil
 }

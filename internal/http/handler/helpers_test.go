@@ -39,6 +39,7 @@ type MockBoards struct {
 
 type MockColumns struct {
 	CreateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
+	ListFunc   func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 }
 
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
@@ -69,6 +70,11 @@ func (m *MockBoards) Delete(ctx context.Context, ownerID domain.UserID, boardID 
 func (m *MockColumns) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 	AssertFuncNotNil("ColumnsService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, callerID, boardID, name)
+}
+
+func (m *MockColumns) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+	AssertFuncNotNil("ColumnsService.ListFunc", m.ListFunc)
+	return m.ListFunc(ctx, callerID, boardID)
 }
 
 func invalidJsonBody() map[string]any {

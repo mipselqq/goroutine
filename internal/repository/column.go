@@ -64,3 +64,40 @@ func (r *PgColumn) Create(
 
 	return column, nil
 }
+
+func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+	const query = `
+		SELECT id, board_id, name, position, created_at, updated_at
+		FROM columns
+		WHERE board_id = $1
+		ORDER BY position ASC`
+
+	rows, err := r.pool.Query(ctx, query, boardID)
+	if err != nil {
+		return nil, fmt.Errorf("column repo: list: %v: %w", err, ErrInternal)
+	}
+	defer rows.Close()
+
+	var result []domain.Column
+	for rows.Next() {
+		var col domain.Column
+		err := rows.Scan(
+			&col.ID,
+			&col.BoardID,
+			&col.Name,
+			&col.Position,
+			&col.CreatedAt,
+			&col.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("column repo: list: scan: %v: %w", err, ErrInternal)
+		}
+		result = append(result, col)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("column repo: list: rows final error: %v: %w", err, ErrInternal)
+	}
+
+	return result, nil
+}
