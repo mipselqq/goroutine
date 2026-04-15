@@ -305,6 +305,11 @@ func TestColumns_UpdateByID(t *testing.T) {
 			name:      "Success (name update)",
 			path:      okPath,
 			inputBody: map[string]string{"name": updatedName.String()},
+			// FIXME: setupMock receives main t, and not one from a subtest.
+			// This is a critical bug across whole test suite that makes even failed subtests pass,
+			// and the main one will fail with errors which origin is unclear (which subtest failed?)
+			// All the setupMock blocks from app test suite must be rewritten to accept a subtest's t.
+			// Created https://github.com/mipselqq/goroutine/issues/148
 			setupMock: func(s *MockColumns) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
