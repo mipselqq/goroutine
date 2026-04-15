@@ -37,6 +37,10 @@ type MockBoardRepository struct {
 	DeleteFunc     func(ctx context.Context, boardID domain.BoardID) error
 }
 
+type MockColumnRepository struct {
+	CreateFunc func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, createdAt time.Time, updatedAt time.Time) (domain.Column, error)
+}
+
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 	AssertFuncNotNil("BoardRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
@@ -60,4 +64,15 @@ func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.Boa
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
 	AssertFuncNotNil("BoardRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID)
+}
+
+func (m *MockColumnRepository) Create(
+	ctx context.Context,
+	boardID domain.BoardID,
+	name domain.ColumnName,
+	createdAt time.Time,
+	updatedAt time.Time,
+) (domain.Column, error) {
+	AssertFuncNotNil("ColumnRepository.CreateFunc", m.CreateFunc)
+	return m.CreateFunc(ctx, boardID, name, createdAt, updatedAt)
 }

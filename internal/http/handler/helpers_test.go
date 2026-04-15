@@ -37,6 +37,10 @@ type MockBoards struct {
 	DeleteFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
+type MockColumns struct {
+	CreateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
+}
+
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
@@ -60,6 +64,11 @@ func (m *MockBoards) UpdateByID(ctx context.Context, ownerID domain.UserID, boar
 func (m *MockBoards) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 	AssertFuncNotNil("BoardsService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, ownerID, boardID)
+}
+
+func (m *MockColumns) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+	AssertFuncNotNil("ColumnsService.CreateFunc", m.CreateFunc)
+	return m.CreateFunc(ctx, callerID, boardID, name)
 }
 
 func invalidJsonBody() map[string]any {
@@ -86,6 +95,17 @@ func notFoundErrorBody() map[string]any {
 		"code":      "NOT_FOUND",
 		"message":   "Resource not found",
 		"timestamp": testutil.FixedTimeNowStr(),
+	}
+}
+
+func boardNotFoundErrorBody() map[string]any {
+	return map[string]any{
+		"code":      "BOARD_NOT_FOUND",
+		"message":   "Board not found",
+		"timestamp": testutil.FixedTimeNowStr(),
+		"details": []any{
+			map[string]any{"field": "boardId", "issues": []string{"Board not found"}},
+		},
 	}
 }
 

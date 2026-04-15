@@ -296,6 +296,76 @@
                 }
             }
         },
+        "/v1/boards/{boardId}/columns": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new column in board for the current user. Column is appended to the end.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "columns"
+                ],
+                "summary": "Create a new column",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Column details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createColumnBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handler.columnResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "BOARD_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/health": {
             "get": {
                 "description": "Check if the server is alive",
@@ -482,6 +552,35 @@
                 }
             }
         },
+        "handler.columnResponse": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a1"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "In Progress"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                }
+            }
+        },
         "handler.createBoardBody": {
             "type": "object",
             "properties": {
@@ -492,6 +591,15 @@
                 "name": {
                     "type": "string",
                     "example": "My Board Name"
+                }
+            }
+        },
+        "handler.createColumnBody": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "To Do"
                 }
             }
         },
