@@ -20,9 +20,10 @@ func TestNewRouter_Full(t *testing.T) {
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 
 	handlers := &handler.Handlers{
-		Auth:   handler.NewAuth(logger, nil, responder),
-		Health: handler.NewHealth(logger),
-		Boards: handler.NewBoards(logger, nil, responder),
+		Auth:    handler.NewAuth(logger, nil, responder),
+		Health:  handler.NewHealth(logger),
+		Boards:  handler.NewBoards(logger, nil, responder),
+		Columns: handler.NewColumns(logger, nil, responder),
 	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   &spyMetricsMiddleware{},
@@ -75,6 +76,14 @@ func TestNewRouter_Full(t *testing.T) {
 		},
 		{
 			entry:   entry{"Delete board endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Create column endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"List columns endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns"},
 			metrics: true, cors: true, requestID: true,
 		},
 		{
