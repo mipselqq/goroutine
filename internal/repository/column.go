@@ -101,3 +101,63 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 
 	return result, nil
 }
+
+func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+	const query = `
+		SELECT id, board_id, name, position, created_at, updated_at
+		FROM columns
+		WHERE id = $1`
+
+	var column domain.Column
+	err := r.pool.QueryRow(ctx, query, columnID).Scan(
+		&column.ID,
+		&column.BoardID,
+		&column.Name,
+		&column.Position,
+		&column.CreatedAt,
+		&column.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Column{}, ErrRowNotFound
+		}
+		return domain.Column{}, fmt.Errorf("column repo: get by id: %v: %w", err, ErrInternal)
+	}
+
+	return column, nil
+}
+
+func (r *PgColumn) UpdateByID(
+	ctx context.Context,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+	name *domain.ColumnName,
+	updatedAt time.Time,
+) (domain.Column, error) {
+	const query = `
+		UPDATE columns
+		SET
+			name = COALESCE($3, name),
+			updated_at = $4
+		WHERE board_id = $1
+		  AND id = $2
+		RETURNING id, board_id, name, position, created_at, updated_at`
+
+	var column domain.Column
+	err := r.pool.QueryRow(ctx, query, boardID, columnID, name, updatedAt).Scan(
+		&column.ID,
+		&column.BoardID,
+		&column.Name,
+		&column.Position,
+		&column.CreatedAt,
+		&column.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Column{}, ErrRowNotFound
+		}
+		return domain.Column{}, fmt.Errorf("column repo: update by id: %v: %w", err, ErrInternal)
+	}
+
+	return column, nil
+}

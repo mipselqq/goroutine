@@ -38,8 +38,9 @@ type MockBoards struct {
 }
 
 type MockColumns struct {
-	CreateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
-	ListFunc   func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
+	CreateFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
+	ListFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
+	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
 }
 
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
@@ -75,6 +76,22 @@ func (m *MockColumns) Create(ctx context.Context, callerID domain.UserID, boardI
 func (m *MockColumns) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 	AssertFuncNotNil("ColumnsService.ListFunc", m.ListFunc)
 	return m.ListFunc(ctx, callerID, boardID)
+}
+
+func (m *MockColumns) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+	AssertFuncNotNil("ColumnsService.UpdateByIDFunc", m.UpdateByIDFunc)
+	return m.UpdateByIDFunc(ctx, callerID, boardID, columnID, name)
+}
+
+func columnNotFoundErrorBody() map[string]any {
+	return map[string]any{
+		"code":      "COLUMN_NOT_FOUND",
+		"message":   "Column not found",
+		"timestamp": testutil.FixedTimeNowStr(),
+		"details": []any{
+			map[string]any{"field": "columnId", "issues": []string{"Column not found"}},
+		},
+	}
 }
 
 func invalidJsonBody() map[string]any {

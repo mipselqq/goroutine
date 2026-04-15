@@ -330,6 +330,12 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
                         "schema": {
@@ -406,6 +412,83 @@
                     },
                     "404": {
                         "description": "BOARD_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/boards/{boardId}/columns/{columnId}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partially update column metadata for the current user. Provided fields are updated; omitted or null fields are ignored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "columns"
+                ],
+                "summary": "Rename a column by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Column fields to update",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateColumnBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.columnResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "COLUMN_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -701,6 +784,15 @@
                 "name": {
                     "type": "string",
                     "example": "My Board Name"
+                }
+            }
+        },
+        "handler.updateColumnBody": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "In Progress"
                 }
             }
         },
