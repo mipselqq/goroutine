@@ -108,21 +108,12 @@ func (p *ColumnPosition) Scan(value any) error {
 		return nil
 	}
 
-	var parsed int64
-	switch v := value.(type) {
-	case int64:
-		parsed = v
-	case int32:
-		parsed = int64(v)
-	case int:
-		parsed = int64(v)
-	case float64:
-		parsed = int64(v)
-	default:
+	v, ok := value.(int64)
+	if !ok {
 		return fmt.Errorf("unexpected type for ColumnPosition: %T", value)
 	}
 
-	position, err := NewColumnPosition(parsed)
+	position, err := NewColumnPosition(v)
 	if err != nil {
 		return fmt.Errorf("column position: %w: %v", ErrDataCorrupted, err)
 	}
