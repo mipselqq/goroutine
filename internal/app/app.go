@@ -28,6 +28,7 @@ type App struct {
 func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg prometheus.Registerer) *App {
 	userRepo := repository.NewPgUser(pool)
 	boardsRepo := repository.NewPgBoard(pool)
+	columnsRepo := repository.NewPgColumn(pool)
 
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
@@ -35,12 +36,14 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	boardsService := service.NewBoard(service.BoardRepository(boardsRepo), service.TimeNow)
+	columnsService := service.NewColumn(service.ColumnRepository(columnsRepo), service.ColumnBoardRepository(boardsRepo), service.TimeNow)
 
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 
 	authHandler := handler.NewAuth(logger, authService, responder)
 	healthHandler := handler.NewHealth(logger)
 	boardsHandler := handler.NewBoards(logger, boardsService, responder)
+	columnsHandler := handler.NewColumns(logger, columnsService, responder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
@@ -49,7 +52,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 
-	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler}
+	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler, Columns: columnsHandler}
 	middlewares := &middleware.Middlewares{
 		Metrics:   metricsMiddleware,
 		CORS:      corsMiddleware,

@@ -59,6 +59,19 @@ func ValidBoardDescription() domain.BoardDescription {
 	return must(domain.NewBoardDescription, "Test Board Description")
 }
 
+func ValidColumnName() domain.ColumnName {
+	return must(domain.NewColumnName, "To Do")
+}
+
+func ValidColumnPosition() domain.ColumnPosition {
+	position, err := domain.NewColumnPosition(1)
+	if err != nil {
+		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
+	}
+
+	return position
+}
+
 func ValidJWTSecret() secrecy.SecretString {
 	return secrecy.SecretString("secret")
 }
@@ -108,5 +121,20 @@ func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string
 		Description: domainDescription,
 		CreatedAt:   base.CreatedAt,
 		UpdatedAt:   updatedAt,
+	}
+}
+
+func ValidColumn(boardID domain.BoardID) domain.Column {
+	name := ValidColumnName()
+	position := ValidColumnPosition()
+	pseudoNow := FixedTimeNow()
+
+	return domain.Column{
+		ID:        domain.NewColumnID(),
+		BoardID:   boardID,
+		Name:      name,
+		Position:  position,
+		CreatedAt: pseudoNow,
+		UpdatedAt: pseudoNow,
 	}
 }

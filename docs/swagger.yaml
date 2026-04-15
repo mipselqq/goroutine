@@ -21,6 +21,27 @@ definitions:
         example: "2026-03-07T20:56:50.000+03:00"
         type: string
     type: object
+  handler.columnResponse:
+    properties:
+      boardId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a1
+        type: string
+      createdAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+      id:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      name:
+        example: In Progress
+        type: string
+      position:
+        example: 1
+        type: integer
+      updatedAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+    type: object
   handler.createBoardBody:
     properties:
       description:
@@ -28,6 +49,12 @@ definitions:
         type: string
       name:
         example: My Board Name
+        type: string
+    type: object
+  handler.createColumnBody:
+    properties:
+      name:
+        example: To Do
         type: string
     type: object
   handler.loginBody:
@@ -308,6 +335,52 @@ paths:
       summary: UpdateByID a board by id
       tags:
       - boards
+  /v1/boards/{boardId}/columns:
+    post:
+      consumes:
+      - application/json
+      description: Create a new column in board for the current user. Column is appended
+        to the end.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createColumnBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.columnResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: BOARD_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Create a new column
+      tags:
+      - columns
   /v1/health:
     get:
       description: Check if the server is alive
