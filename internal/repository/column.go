@@ -163,6 +163,37 @@ func (r *PgColumn) UpdateByID(
 }
 
 func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+	const (
+		lockBoardQuery = `
+		SELECT 1
+		FROM boards
+		WHERE id = @board_id
+		FOR UPDATE`
+
+		deleteColumnQuery = `
+		DELETE FROM columns
+		WHERE board_id = @board_id
+		  AND id = @column_id
+		RETURNING position`
+
+		positionOffsetQuery = `
+		SELECT COALESCE(MAX(position), 0) + 1
+		FROM columns
+		WHERE board_id = @board_id`
+
+		bumpTrailingColumnsQuery = `
+		UPDATE columns
+		SET position = position + @position_offset
+		WHERE board_id = @board_id
+		  AND position > @deleted_position`
+
+		compactTrailingColumnsQuery = `
+		UPDATE columns
+		SET position = position - @position_offset - 1
+		WHERE board_id = @board_id
+		  AND position > @position_offset`
+	)
+
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("column repo: delete begin tx: %v: %w", err, ErrInternal)
@@ -171,14 +202,10 @@ func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 		_ = tx.Rollback(ctx)
 	}()
 
-	const lockBoardQuery = `
-		SELECT 1
-		FROM boards
-		WHERE id = $1
-		FOR UPDATE`
-
 	var locked int
-	err = tx.QueryRow(ctx, lockBoardQuery, boardID).Scan(&locked)
+	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&locked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrRowNotFound
@@ -186,14 +213,11 @@ func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 		return fmt.Errorf("column repo: delete lock board: %v: %w", err, ErrInternal)
 	}
 
-	const deleteColumnQuery = `
-		DELETE FROM columns
-		WHERE board_id = $1
-		  AND id = $2
-		RETURNING position`
-
 	var deletedPosition int64
-	err = tx.QueryRow(ctx, deleteColumnQuery, boardID, columnID).Scan(&deletedPosition)
+	err = tx.QueryRow(ctx, deleteColumnQuery, pgx.NamedArgs{
+		"board_id":  boardID,
+		"column_id": columnID,
+	}).Scan(&deletedPosition)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrRowNotFound
@@ -201,36 +225,27 @@ func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 		return fmt.Errorf("column repo: delete column: %v: %w", err, ErrInternal)
 	}
 
-	const positionOffsetQuery = `
-		SELECT COALESCE(MAX(position), 0) + 1
-		FROM columns
-		WHERE board_id = $1`
-
 	var positionOffset int64
-	err = tx.QueryRow(ctx, positionOffsetQuery, boardID).Scan(&positionOffset)
+	err = tx.QueryRow(ctx, positionOffsetQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&positionOffset)
 	if err != nil {
 		return fmt.Errorf("column repo: delete position offset: %v: %w", err, ErrInternal)
 	}
 
-	// Shift in two steps to avoid transient UNIQUE(board_id, position) conflicts
-	const bumpTrailingColumnsQuery = `
-		UPDATE columns
-		SET position = position + $2
-		WHERE board_id = $1
-		  AND position > $3`
-
-	_, err = tx.Exec(ctx, bumpTrailingColumnsQuery, boardID, positionOffset, deletedPosition)
+	_, err = tx.Exec(ctx, bumpTrailingColumnsQuery, pgx.NamedArgs{
+		"board_id":         boardID,
+		"position_offset":  positionOffset,
+		"deleted_position": deletedPosition,
+	})
 	if err != nil {
 		return fmt.Errorf("column repo: delete bump trailing columns: %v: %w", err, ErrInternal)
 	}
 
-	const compactTrailingColumnsQuery = `
-		UPDATE columns
-		SET position = position - $2 - 1
-		WHERE board_id = $1
-		  AND position > $2`
-
-	_, err = tx.Exec(ctx, compactTrailingColumnsQuery, boardID, positionOffset)
+	_, err = tx.Exec(ctx, compactTrailingColumnsQuery, pgx.NamedArgs{
+		"board_id":        boardID,
+		"position_offset": positionOffset,
+	})
 	if err != nil {
 		return fmt.Errorf("column repo: delete compact trailing columns: %v: %w", err, ErrInternal)
 	}

@@ -319,6 +319,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 		name3, _ := domain.NewColumnName("Done")
 		now := testutil.FixedTimeNow()
 
+		// TODO: use separate code for creating columns to decouple test suite
 		first, err := r.Create(context.Background(), board.ID, name1, now, now)
 		if err != nil {
 			t.Fatalf("Create first: %v", err)
