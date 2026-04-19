@@ -163,5 +163,36 @@ func (r *PgColumn) UpdateByID(
 }
 
 func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
-	panic("TODO: implement PgColumn.Delete with position shift")
+	const query = `
+		WITH board_lock AS (
+			SELECT id
+			FROM boards
+			WHERE id = $1
+			FOR UPDATE
+		), deleted AS (
+			DELETE FROM columns
+			WHERE board_id = (SELECT id FROM board_lock)
+			  AND id = $2
+			RETURNING position
+		), shifted AS (
+			UPDATE columns
+			SET position = position - 1
+			WHERE board_id = (SELECT id FROM board_lock)
+			  AND position > (SELECT position FROM deleted)
+		)
+		SELECT 1
+		FROM deleted
+	`
+
+	var ok int
+	err := r.pool.QueryRow(ctx, query, boardID, columnID).Scan(&ok)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRowNotFound
+		}
+
+		return fmt.Errorf("column repo: delete: %v: %w", err, ErrInternal)
+	}
+
+	return nil
 }
