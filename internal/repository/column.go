@@ -161,3 +161,7 @@ func (r *PgColumn) UpdateByID(
 
 	return column, nil
 }
+
+func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+	panic("TODO: implement PgColumn.Delete with position shift")
+}

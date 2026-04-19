@@ -427,6 +427,48 @@ paths:
       tags:
       - columns
   /v1/boards/{boardId}/columns/{columnId}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a column from board for the current user and
+        shift positions to close the gap.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete a column by id
+      tags:
+      - columns
     patch:
       consumes:
       - application/json

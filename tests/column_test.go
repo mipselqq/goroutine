@@ -173,3 +173,85 @@ func parseColumnsList(t *testing.T, resp *http.Response) []columnJSON {
 	}
 	return c
 }
+
+func TestColumn_Delete_ShiftsPositions(t *testing.T) {
+	httpClient, ts, pool := Prelude(t)
+
+	testutil.TruncateTable(t, pool, "columns")
+	testutil.TruncateTable(t, pool, "boards")
+	testutil.TruncateTable(t, pool, "users")
+
+	// 1. Register (already done via ac client)
+	ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
+
+	// 2. Create a board for the column ordering scenario
+	createBoardResp := ac.Do(t, http.MethodPost, "/v1/boards", map[string]string{
+		"name":        testutil.ValidBoardName().String(),
+		"description": testutil.ValidBoardDescription().String(),
+	})
+	defer func() {
+		_ = createBoardResp.Body.Close()
+	}()
+	if createBoardResp.StatusCode != http.StatusCreated {
+		t.Fatalf("create board status = %d, want %d", createBoardResp.StatusCode, http.StatusCreated)
+	}
+	board := parseBoard(t, createBoardResp)
+
+	// 3. Create the first column and keep its response for position checks
+	createFirstResp := ac.Do(t, http.MethodPost, "/v1/boards/"+board.ID+"/columns", map[string]string{"name": "Todo"})
+	defer func() {
+		_ = createFirstResp.Body.Close()
+	}()
+	if createFirstResp.StatusCode != http.StatusCreated {
+		t.Fatalf("create first column status = %d, want %d", createFirstResp.StatusCode, http.StatusCreated)
+	}
+	first := parseColumn(t, createFirstResp)
+
+	// 4. Create the second column that will be deleted later
+	createSecondResp := ac.Do(t, http.MethodPost, "/v1/boards/"+board.ID+"/columns", map[string]string{"name": "In Progress"})
+	defer func() {
+		_ = createSecondResp.Body.Close()
+	}()
+	if createSecondResp.StatusCode != http.StatusCreated {
+		t.Fatalf("create second column status = %d, want %d", createSecondResp.StatusCode, http.StatusCreated)
+	}
+	second := parseColumn(t, createSecondResp)
+
+	// 5. Create the third column so we can verify position shifting after delete
+	createThirdResp := ac.Do(t, http.MethodPost, "/v1/boards/"+board.ID+"/columns", map[string]string{"name": "Done"})
+	defer func() {
+		_ = createThirdResp.Body.Close()
+	}()
+	if createThirdResp.StatusCode != http.StatusCreated {
+		t.Fatalf("create third column status = %d, want %d", createThirdResp.StatusCode, http.StatusCreated)
+	}
+	third := parseColumn(t, createThirdResp)
+
+	// 6. Delete the middle column and expect the request to succeed
+	deleteResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+board.ID+"/columns/"+second.ID, nil)
+	defer func() {
+		_ = deleteResp.Body.Close()
+	}()
+	if deleteResp.StatusCode != http.StatusNoContent {
+		t.Fatalf("delete column status = %d, want %d", deleteResp.StatusCode, http.StatusNoContent)
+	}
+
+	// 7. List columns again and verify the remaining columns have compacted positions
+	listResp := ac.Do(t, http.MethodGet, "/v1/boards/"+board.ID+"/columns", nil)
+	defer func() {
+		_ = listResp.Body.Close()
+	}()
+	if listResp.StatusCode != http.StatusOK {
+		t.Fatalf("list columns status = %d, want %d", listResp.StatusCode, http.StatusOK)
+	}
+	columns := parseColumnsList(t, listResp)
+	if len(columns) != 2 {
+		t.Fatalf("expected 2 columns after delete, got %d", len(columns))
+	}
+	if columns[0].ID != first.ID || columns[0].Position != 1 {
+		t.Errorf("expected first column to stay position 1, got id=%s position=%d", columns[0].ID, columns[0].Position)
+	}
+	if columns[1].ID != third.ID || columns[1].Position != 2 {
+		t.Errorf("expected third column to shift to position 2, got id=%s position=%d", columns[1].ID, columns[1].Position)
+	}
+}

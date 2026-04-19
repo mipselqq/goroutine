@@ -296,3 +296,111 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		}
 	})
 }
+
+func TestColumnRepository_Delete(t *testing.T) {
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	defer pool.Close()
+
+	r := repository.NewPgColumn(pool)
+
+	t.Run("Success shift positions", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-delete-shift@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		name1, _ := domain.NewColumnName("Todo")
+		name2, _ := domain.NewColumnName("In Progress")
+		name3, _ := domain.NewColumnName("Done")
+		now := testutil.FixedTimeNow()
+
+		first, err := r.Create(context.Background(), board.ID, name1, now, now)
+		if err != nil {
+			t.Fatalf("Create first: %v", err)
+		}
+		second, err := r.Create(context.Background(), board.ID, name2, now, now)
+		if err != nil {
+			t.Fatalf("Create second: %v", err)
+		}
+		third, err := r.Create(context.Background(), board.ID, name3, now, now)
+		if err != nil {
+			t.Fatalf("Create third: %v", err)
+		}
+
+		err = r.Delete(context.Background(), board.ID, second.ID)
+		if err != nil {
+			t.Fatalf("Delete() error = %v", err)
+		}
+
+		got, err := r.ListByBoardID(context.Background(), board.ID)
+		if err != nil {
+			t.Fatalf("ListByBoardID() error = %v", err)
+		}
+
+		if len(got) != 2 {
+			t.Fatalf("expected 2 columns after delete, got %d", len(got))
+		}
+		if got[0].ID != first.ID {
+			t.Errorf("expected first column id %q, got %q", first.ID, got[0].ID)
+		}
+		if got[0].Position.Int64() != 1 {
+			t.Errorf("expected first position 1, got %d", got[0].Position.Int64())
+		}
+		if got[1].ID != third.ID {
+			t.Errorf("expected second column id %q, got %q", third.ID, got[1].ID)
+		}
+		if got[1].Position.Int64() != 2 {
+			t.Errorf("expected second position 2 after shift, got %d", got[1].Position.Int64())
+		}
+
+		_, err = r.GetByID(context.Background(), second.ID)
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("GetByID deleted column error = %v, want ErrRowNotFound", err)
+		}
+	})
+
+	t.Run("Not found by column id", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-delete-missing-col@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		err := r.Delete(context.Background(), board.ID, domain.NewColumnID())
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
+		}
+	})
+
+	t.Run("Not found by board id", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-delete-missing-board@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		name, _ := domain.NewColumnName("Todo")
+		created, err := r.Create(context.Background(), board.ID, name, testutil.FixedTimeNow(), testutil.FixedTimeNow())
+		if err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+
+		err = r.Delete(context.Background(), domain.NewBoardID(), created.ID)
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
+		}
+	})
+}
