@@ -163,35 +163,81 @@ func (r *PgColumn) UpdateByID(
 }
 
 func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
-	const query = `
-		WITH board_lock AS (
-			SELECT id
-			FROM boards
-			WHERE id = $1
-			FOR UPDATE
-		), deleted AS (
-			DELETE FROM columns
-			WHERE board_id = (SELECT id FROM board_lock)
-			  AND id = $2
-			RETURNING position
-		), shifted AS (
-			UPDATE columns
-			SET position = position - 1
-			WHERE board_id = (SELECT id FROM board_lock)
-			  AND position > (SELECT position FROM deleted)
-		)
-		SELECT 1
-		FROM deleted
-	`
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("column repo: delete begin tx: %v: %w", err, ErrInternal)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
-	var ok int
-	err := r.pool.QueryRow(ctx, query, boardID, columnID).Scan(&ok)
+	const lockBoardQuery = `
+		SELECT 1
+		FROM boards
+		WHERE id = $1
+		FOR UPDATE`
+
+	var locked int
+	err = tx.QueryRow(ctx, lockBoardQuery, boardID).Scan(&locked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrRowNotFound
 		}
+		return fmt.Errorf("column repo: delete lock board: %v: %w", err, ErrInternal)
+	}
 
-		return fmt.Errorf("column repo: delete: %v: %w", err, ErrInternal)
+	const deleteColumnQuery = `
+		DELETE FROM columns
+		WHERE board_id = $1
+		  AND id = $2
+		RETURNING position`
+
+	var deletedPosition int64
+	err = tx.QueryRow(ctx, deleteColumnQuery, boardID, columnID).Scan(&deletedPosition)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRowNotFound
+		}
+		return fmt.Errorf("column repo: delete column: %v: %w", err, ErrInternal)
+	}
+
+	const positionOffsetQuery = `
+		SELECT COALESCE(MAX(position), 0) + 1
+		FROM columns
+		WHERE board_id = $1`
+
+	var positionOffset int64
+	err = tx.QueryRow(ctx, positionOffsetQuery, boardID).Scan(&positionOffset)
+	if err != nil {
+		return fmt.Errorf("column repo: delete position offset: %v: %w", err, ErrInternal)
+	}
+
+	// Shift in two steps to avoid transient UNIQUE(board_id, position) conflicts
+	const bumpTrailingColumnsQuery = `
+		UPDATE columns
+		SET position = position + $2
+		WHERE board_id = $1
+		  AND position > $3`
+
+	_, err = tx.Exec(ctx, bumpTrailingColumnsQuery, boardID, positionOffset, deletedPosition)
+	if err != nil {
+		return fmt.Errorf("column repo: delete bump trailing columns: %v: %w", err, ErrInternal)
+	}
+
+	const compactTrailingColumnsQuery = `
+		UPDATE columns
+		SET position = position - $2 - 1
+		WHERE board_id = $1
+		  AND position > $2`
+
+	_, err = tx.Exec(ctx, compactTrailingColumnsQuery, boardID, positionOffset)
+	if err != nil {
+		return fmt.Errorf("column repo: delete compact trailing columns: %v: %w", err, ErrInternal)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("column repo: delete commit: %v: %w", err, ErrInternal)
 	}
 
 	return nil
