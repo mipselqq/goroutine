@@ -268,15 +268,7 @@ func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
 	}
 
 	details := []httpschema.Detail{}
-	targetPosition, err := domain.NewColumnPosition(body.TargetPosition)
-	if err != nil {
-		var ve *domain.ErrValidation
-		if errors.As(err, &ve) {
-			details = append(details, httpschema.Detail{Field: "targetPosition", Issues: ve.Issues})
-		} else {
-			details = append(details, httpschema.Detail{Field: "targetPosition", Issues: []string{err.Error()}})
-		}
-	}
+	targetPosition := httpschema.ValidateField("targetPosition", body.TargetPosition, domain.NewColumnPosition, &details)
 	if len(details) > 0 {
 		h.responder.ValidationError(w, details)
 		return

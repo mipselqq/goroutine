@@ -6,7 +6,7 @@ import (
 	"goroutine/internal/domain"
 )
 
-func ValidateField[T any](field, val string, constructor func(string) (T, error), details *[]Detail) T {
+func ValidateField[T any, V any](field string, val V, constructor func(V) (T, error), details *[]Detail) T {
 	res, err := constructor(val)
 	if err != nil {
 		var ve *domain.ErrValidation
