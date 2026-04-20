@@ -44,22 +44,22 @@ func TestColumnRepository_Create(t *testing.T) {
 		}
 
 		if column.ID.IsEmpty() {
-			t.Error("expected generated column id")
+			t.Error("got empty column id, want generated id")
 		}
 		if column.BoardID != board.ID {
-			t.Errorf("expected boardID %q, got %q", board.ID, column.BoardID)
+			t.Errorf("got boardID %q, want %q", column.BoardID, board.ID)
 		}
 		if column.Name != validColumn.Name {
-			t.Errorf("expected name %q, got %q", validColumn.Name, column.Name)
+			t.Errorf("got name %q, want %q", column.Name, validColumn.Name)
 		}
 		if column.Position.Int64() != 1 {
-			t.Errorf("expected position 1, got %d", column.Position.Int64())
+			t.Errorf("got position %d, want 1", column.Position.Int64())
 		}
 		if !column.CreatedAt.Equal(validColumn.CreatedAt) {
-			t.Errorf("expected createdAt %v, got %v", validColumn.CreatedAt, column.CreatedAt)
+			t.Errorf("got createdAt %v, want %v", column.CreatedAt, validColumn.CreatedAt)
 		}
 		if !column.UpdatedAt.Equal(validColumn.UpdatedAt) {
-			t.Errorf("expected updatedAt %v, got %v", validColumn.UpdatedAt, column.UpdatedAt)
+			t.Errorf("got updatedAt %v, want %v", column.UpdatedAt, validColumn.UpdatedAt)
 		}
 	})
 }
@@ -94,10 +94,10 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 		toCreate.UpdatedAt,
 	)
 	if err != nil {
-		t.Fatalf("Create second: %v", err)
+		t.Fatalf("Create() error = %v", err)
 	}
 	if second.Position.Int64() != 2 {
-		t.Errorf("second position expected 2, got %d", second.Position.Int64())
+		t.Errorf("got second position %d, want 2", second.Position.Int64())
 	}
 }
 
@@ -123,7 +123,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 			t.Fatalf("ListByBoardID() error = %v", err)
 		}
 		if len(columns) != 0 {
-			t.Fatalf("expected 0 columns, got %d", len(columns))
+			t.Fatalf("got %d columns, want 0", len(columns))
 		}
 	})
 
@@ -298,7 +298,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		targetPosition, err := domain.NewColumnPosition(3)
 		if err != nil {
-			t.Fatalf("NewColumnPosition: %v", err)
+			t.Fatalf("NewColumnPosition() error = %v", err)
 		}
 
 		gotPosition, err := r.Move(context.Background(), board.ID, first.ID, targetPosition)
@@ -311,16 +311,16 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		got := ListColumnsByBoardID(t, pool, board.ID)
 		if len(got) != 3 {
-			t.Fatalf("expected 3 columns after move, got %d", len(got))
+			t.Fatalf("got %d columns after move, want 3", len(got))
 		}
 		if got[0].ID != second.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("expected second column at position 1, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), second.ID, 1)
 		}
 		if got[1].ID != third.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("expected third column at position 2, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), third.ID, 2)
 		}
 		if got[2].ID != first.ID || got[2].Position.Int64() != 3 {
-			t.Errorf("expected first column at position 3, got id=%q position=%d", got[2].ID, got[2].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[2].ID, got[2].Position.Int64(), first.ID, 3)
 		}
 	})
 
@@ -345,7 +345,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		targetPosition, err := domain.NewColumnPosition(1)
 		if err != nil {
-			t.Fatalf("NewColumnPosition: %v", err)
+			t.Fatalf("NewColumnPosition() error = %v", err)
 		}
 
 		gotPosition, err := r.Move(context.Background(), board.ID, third.ID, targetPosition)
@@ -358,16 +358,16 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		got := ListColumnsByBoardID(t, pool, board.ID)
 		if len(got) != 3 {
-			t.Fatalf("expected 3 columns after move, got %d", len(got))
+			t.Fatalf("got %d columns after move, want 3", len(got))
 		}
 		if got[0].ID != third.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("expected third column at position 1, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), third.ID, 1)
 		}
 		if got[1].ID != first.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("expected first column at position 2, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), first.ID, 2)
 		}
 		if got[2].ID != second.ID || got[2].Position.Int64() != 3 {
-			t.Errorf("expected second column at position 3, got id=%q position=%d", got[2].ID, got[2].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[2].ID, got[2].Position.Int64(), second.ID, 3)
 		}
 	})
 
@@ -390,7 +390,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		targetPosition, err := domain.NewColumnPosition(2)
 		if err != nil {
-			t.Fatalf("NewColumnPosition: %v", err)
+			t.Fatalf("NewColumnPosition() error = %v", err)
 		}
 
 		gotPosition, err := r.Move(context.Background(), board.ID, second.ID, targetPosition)
@@ -403,13 +403,13 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		got := ListColumnsByBoardID(t, pool, board.ID)
 		if len(got) != 2 {
-			t.Fatalf("expected 2 columns after no-op move, got %d", len(got))
+			t.Fatalf("got %d columns after no-op move, want 2", len(got))
 		}
 		if got[0].ID != first.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("expected first column to stay at position 1, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), first.ID, 1)
 		}
 		if got[1].ID != second.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("expected second column to stay at position 2, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), second.ID, 2)
 		}
 	})
 
@@ -434,7 +434,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		targetPosition, err := domain.NewColumnPosition(4)
 		if err != nil {
-			t.Fatalf("NewColumnPosition: %v", err)
+			t.Fatalf("NewColumnPosition() error = %v", err)
 		}
 
 		_, err = r.Move(context.Background(), board.ID, second.ID, targetPosition)
@@ -444,16 +444,16 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		got := ListColumnsByBoardID(t, pool, board.ID)
 		if len(got) != 3 {
-			t.Fatalf("expected 3 columns after failed move, got %d", len(got))
+			t.Fatalf("got %d columns after failed move, want 3", len(got))
 		}
 		if got[0].ID != first.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("expected first column unchanged, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), first.ID, 1)
 		}
 		if got[1].ID != second.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("expected second column unchanged, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), second.ID, 2)
 		}
 		if got[2].ID != third.ID || got[2].Position.Int64() != 3 {
-			t.Errorf("expected third column unchanged, got id=%q position=%d", got[2].ID, got[2].Position.Int64())
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[2].ID, got[2].Position.Int64(), third.ID, 3)
 		}
 	})
 
@@ -470,7 +470,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		targetPosition, err := domain.NewColumnPosition(1)
 		if err != nil {
-			t.Fatalf("NewColumnPosition: %v", err)
+			t.Fatalf("NewColumnPosition() error = %v", err)
 		}
 
 		_, err = r.Move(context.Background(), board.ID, domain.NewColumnID(), targetPosition)
@@ -495,7 +495,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		targetPosition, err := domain.NewColumnPosition(1)
 		if err != nil {
-			t.Fatalf("NewColumnPosition: %v", err)
+			t.Fatalf("NewColumnPosition() error = %v", err)
 		}
 
 		_, err = r.Move(context.Background(), domain.NewBoardID(), created.ID, targetPosition)
@@ -538,24 +538,24 @@ func TestColumnRepository_Delete(t *testing.T) {
 		got := ListColumnsByBoardID(t, pool, board.ID)
 
 		if len(got) != 2 {
-			t.Fatalf("expected 2 columns after delete, got %d", len(got))
+			t.Fatalf("got %d columns after delete, want 2", len(got))
 		}
 		if got[0].ID != first.ID {
-			t.Errorf("expected first column id %q, got %q", first.ID, got[0].ID)
+			t.Errorf("got first column id %q, want %q", got[0].ID, first.ID)
 		}
 		if got[0].Position.Int64() != 1 {
-			t.Errorf("expected first position 1, got %d", got[0].Position.Int64())
+			t.Errorf("got first position %d, want 1", got[0].Position.Int64())
 		}
 		if got[1].ID != third.ID {
-			t.Errorf("expected second column id %q, got %q", third.ID, got[1].ID)
+			t.Errorf("got second column id %q, want %q", got[1].ID, third.ID)
 		}
 		if got[1].Position.Int64() != 2 {
-			t.Errorf("expected second position 2 after shift, got %d", got[1].Position.Int64())
+			t.Errorf("got second position %d after shift, want 2", got[1].Position.Int64())
 		}
 
 		_, ok := FindColumnByID(t, pool, second.ID)
 		if ok {
-			t.Error("expected deleted column to be absent in DB")
+			t.Error("got deleted column in DB, want absent")
 		}
 	})
 

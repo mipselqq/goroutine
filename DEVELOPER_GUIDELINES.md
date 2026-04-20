@@ -105,6 +105,23 @@ For most features, touch layers in this order:
 - Use scenario-oriented test names (`Success`, `Invalid JSON`, `User not found`).
 - Use `internal/testutil` for integration/e2e setup (`SetupTestDB`, `TruncateTable`).
 
+### 6.1 Test failure message naming
+
+- Use only two assertion/failure styles in tests:
+  - **Short form** when the context is already obvious from the subtest name or the assertion itself: `got ..., want ...`.
+  - **Long form** when the failing operation must be named explicitly, especially for unexpected errors, helper functions, or tests with multiple meaningful calls: `SomeCall() error = %v` or `SomeCall() = ..., want ...`.
+- Prefer `got` before `want`.
+- Do not write free-form prose like `unexpected error`, `Failed to decode ...`, `Create second board: ...`, or mixed forms like `QueryRow(Scan board row) error = %v`.
+- Write direct contrasts instead:
+  - Bad: `t.Fatalf("unexpected error: %v", err)`  
+    Good: `t.Fatalf("Create() error = %v", err)`
+  - Bad: `t.Fatalf("Failed to decode board: %v", err)`  
+    Good: `t.Fatalf("Board Decode() error = %v", err)`
+  - Bad: `t.Errorf("expected %q, got %q", want, got)`  
+    Good: `t.Errorf("got %q, want %q", got, want)`
+  - Bad: `t.Errorf("unexpected boardID %v", boardID)`  
+    Good: `t.Errorf("got boardID %v, want %v", boardID, wantBoardID)`
+
 ## 7) Migrations
 
 - Apply schema changes only via files in `migrations/`.

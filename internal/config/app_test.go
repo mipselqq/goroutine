@@ -48,7 +48,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 
 		diff := cmp.Diff(defaultAppConfig, cfg)
 		if diff != "" {
-			t.Errorf("app used unexpected values instead of defaults (-want +got):\n%s", diff)
+			t.Errorf("NewAppConfigFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
@@ -56,7 +56,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		setCustomAppEnvVars(t)
 
 		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
-		expectedCfg := config.AppConfig{
+		wantCfg := config.AppConfig{
 			Port:           "3000",
 			AdminPort:      "9092",
 			Host:           "127.0.0.1",
@@ -67,9 +67,9 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 			JWTExp:         time.Hour,
 			AllowedOrigins: config.ParseAllowedOrigins("http://example.com,http://test.com"),
 		}
-		diff := cmp.Diff(expectedCfg, cfg)
+		diff := cmp.Diff(wantCfg, cfg)
 		if diff != "" {
-			t.Errorf("app config used unexpected values instead of env vars (-want +got):\n%s", diff)
+			t.Errorf("NewAppConfigFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
@@ -80,7 +80,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 
 		for _, envVar := range appEnvVars {
 			if !strings.Contains(buf.String(), envVar) {
-				t.Errorf("expected warn on unset %q", envVar)
+				t.Errorf("got log output %q, want mention of %q", buf.String(), envVar)
 			}
 		}
 	})
@@ -92,7 +92,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		_ = config.NewAppConfigFromEnv(logger)
 
 		if buf.String() != "" {
-			t.Errorf("expected no warnings on all variables are set, got %q", buf.String())
+			t.Errorf("got warnings %q, want none", buf.String())
 		}
 	})
 }
@@ -100,11 +100,11 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 func TestAppConfig_LogValue(t *testing.T) {
 	v := defaultAppConfig.LogValue()
 	if v.Kind() != slog.KindGroup {
-		t.Fatalf("expected Group kind, got %v", v.Kind())
+		t.Fatalf("got kind %v, want Group", v.Kind())
 	}
 
 	attrs := v.Group()
-	expectedAttrs := map[string]string{
+	wantAttrs := map[string]string{
 		"port":            "8080",
 		"admin_port":      "9091",
 		"host":            "0.0.0.0",
@@ -116,5 +116,5 @@ func TestAppConfig_LogValue(t *testing.T) {
 		"allowed_origins": "[http://127.0.0.1:8080 http://localhost:8080]",
 	}
 
-	testutil.FailOnInvalidLogValue(t, attrs, expectedAttrs)
+	testutil.FailOnInvalidLogValue(t, attrs, wantAttrs)
 }

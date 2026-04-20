@@ -35,10 +35,10 @@ func TestUserRepository_Insert(t *testing.T) {
 		var dbEmail domain.Email
 		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email).Scan(&dbEmail)
 		if err != nil {
-			t.Errorf("Failed to find user in DB: %v", err)
+			t.Errorf("User row Scan() error = %v", err)
 		}
 		if dbEmail != email {
-			t.Errorf("Expected email %q, got %q", email, dbEmail)
+			t.Errorf("got email %q, want %q", dbEmail, email)
 		}
 	})
 
@@ -49,7 +49,7 @@ func TestUserRepository_Insert(t *testing.T) {
 		err := r.Insert(ctx, email, hash)
 
 		if !errors.Is(err, repository.ErrUniqueViolation) {
-			t.Errorf("Expected ErrUniqueViolation, got %v", err)
+			t.Errorf("got error %v, want ErrUniqueViolation", err)
 		}
 	})
 }
@@ -71,7 +71,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 
 		err := r.Insert(ctx, email, hash)
 		if err != nil {
-			t.Fatalf("Failed to insert user for test: %v", err)
+			t.Fatalf("Insert() error = %v", err)
 		}
 
 		gotID, gotHash, err := r.GetByEmail(ctx, email)
@@ -79,10 +79,10 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 			t.Errorf("GetByEmail() error = %v", err)
 		}
 		if gotHash != hash {
-			t.Errorf("Expected hash %q, got %q", hash, gotHash)
+			t.Errorf("got hash %q, want %q", gotHash, hash)
 		}
 		if gotID.IsEmpty() {
-			t.Errorf("Expected non-empty id, got %v", gotID)
+			t.Errorf("got id %v, want non-empty", gotID)
 		}
 	})
 
@@ -93,7 +93,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		_, _, err := r.GetByEmail(ctx, unknownEmail)
 
 		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Expected ErrRowNotFound, got %v", err)
+			t.Errorf("got error %v, want ErrRowNotFound", err)
 		}
 	})
 }

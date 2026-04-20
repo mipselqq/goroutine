@@ -31,10 +31,10 @@ func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
 	if os.Getenv("ENV") != "prod" {
 		err := godotenv.Load("../.env.dev")
 		if err != nil {
-			t.Fatalf("Failed to load .env.dev: %v", err)
+			t.Fatalf("godotenv.Load() error = %v", err)
 		}
 	} else {
-		t.Fatalf("BUG: tests run with ENV=prod, but should run with ENV=dev")
+		t.Fatalf("ENV = %q, want non-prod", os.Getenv("ENV"))
 	}
 
 	logger := testutil.NewTestLogger(t)
@@ -62,19 +62,19 @@ func Register(t *testing.T, c *http.Client, baseURL, email, password string) {
 		"password": password,
 	})
 	if err != nil {
-		t.Fatalf("register: marshal body: %v", err)
+		t.Fatalf("Register() json.Marshal() error = %v", err)
 	}
 
 	resp, err := c.Post(baseURL+"/v1/register", "application/json", bytes.NewReader(body))
 	if err != nil {
-		t.Fatalf("register: request: %v", err)
+		t.Fatalf("Register() Post() error = %v", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("register: status %d, want %d", resp.StatusCode, http.StatusOK)
+		t.Fatalf("Register() status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
 }
 
@@ -86,29 +86,29 @@ func Login(t *testing.T, c *http.Client, baseURL, email, password string) string
 		"password": password,
 	})
 	if err != nil {
-		t.Fatalf("login: marshal body: %v", err)
+		t.Fatalf("Login() json.Marshal() error = %v", err)
 	}
 
 	resp, err := c.Post(baseURL+"/v1/login", "application/json", bytes.NewReader(body))
 	if err != nil {
-		t.Fatalf("login: request: %v", err)
+		t.Fatalf("Login() Post() error = %v", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("login: status %d, want %d", resp.StatusCode, http.StatusOK)
+		t.Fatalf("Login() status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
 
 	var out struct {
 		Token string `json:"token"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		t.Fatalf("login: decode response: %v", err)
+		t.Fatalf("Login response Decode() error = %v", err)
 	}
 	if out.Token == "" {
-		t.Fatal("login: empty token in response")
+		t.Fatalf("got token %q, want non-empty", out.Token)
 	}
 
 	return out.Token
@@ -152,7 +152,7 @@ func (c *AuthenticatedClient) Do(t *testing.T, method, path string, body any) *h
 		default:
 			data, err := json.Marshal(b)
 			if err != nil {
-				t.Fatalf("authenticated request: marshal body: %v", err)
+				t.Fatalf("AuthenticatedClient.Do() json.Marshal() error = %v", err)
 			}
 			rdr = bytes.NewReader(data)
 		}
@@ -160,7 +160,7 @@ func (c *AuthenticatedClient) Do(t *testing.T, method, path string, body any) *h
 
 	req, err := http.NewRequest(method, c.BaseURL+path, rdr)
 	if err != nil {
-		t.Fatalf("authenticated request: new request: %v", err)
+		t.Fatalf("AuthenticatedClient.Do() NewRequest() error = %v", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 	if body != nil {
@@ -169,7 +169,7 @@ func (c *AuthenticatedClient) Do(t *testing.T, method, path string, body any) *h
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		t.Fatalf("authenticated request: %s %s: %v", method, path, err)
+		t.Fatalf("AuthenticatedClient.Do(%s %s) error = %v", method, path, err)
 	}
 
 	return resp

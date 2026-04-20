@@ -45,12 +45,12 @@ func TestCors_Wrap(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name            string
-		method          string
-		allowedOrigins  map[string]struct{}
-		reqHeaders      map[string]string
-		expectedStatus  int
-		expectedHeaders map[string]string
+		name           string
+		method         string
+		allowedOrigins map[string]struct{}
+		reqHeaders     map[string]string
+		wantStatus     int
+		wantHeaders    map[string]string
 	}{
 		{
 			name:           "No Origin Header",
@@ -59,8 +59,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders:     map[string]string{
 				// Not a browser
 			},
-			expectedStatus:  http.StatusTeapot,
-			expectedHeaders: map[string]string{},
+			wantStatus:  http.StatusTeapot,
+			wantHeaders: map[string]string{},
 		},
 		{
 			name:           "Origin Header is not allowed",
@@ -69,8 +69,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders: map[string]string{
 				"Origin": evilSite,
 			},
-			expectedStatus:  http.StatusForbidden,
-			expectedHeaders: emptyCORSHeaders,
+			wantStatus:  http.StatusForbidden,
+			wantHeaders: emptyCORSHeaders,
 		},
 		{
 			name:           "Origin Header is allowed",
@@ -79,8 +79,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders: map[string]string{
 				"Origin": goodSite,
 			},
-			expectedStatus:  http.StatusNoContent,
-			expectedHeaders: filledGoodCORSHeaders,
+			wantStatus:  http.StatusNoContent,
+			wantHeaders: filledGoodCORSHeaders,
 		},
 		{
 			name:           "Preflight rejected",
@@ -89,8 +89,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders: map[string]string{
 				"Origin": evilSite,
 			},
-			expectedStatus:  http.StatusForbidden,
-			expectedHeaders: emptyCORSHeaders,
+			wantStatus:  http.StatusForbidden,
+			wantHeaders: emptyCORSHeaders,
 		},
 		{
 			name:           "Preflight allowed",
@@ -99,8 +99,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders: map[string]string{
 				"Origin": goodSite,
 			},
-			expectedStatus:  http.StatusNoContent,
-			expectedHeaders: filledGoodCORSHeaders,
+			wantStatus:  http.StatusNoContent,
+			wantHeaders: filledGoodCORSHeaders,
 		},
 		{
 			name:           "Any origin allowed",
@@ -109,8 +109,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders: map[string]string{
 				"Origin": evilSite,
 			},
-			expectedStatus:  http.StatusTeapot,
-			expectedHeaders: filledEvilCORSHeaders,
+			wantStatus:  http.StatusTeapot,
+			wantHeaders: filledEvilCORSHeaders,
 		},
 		{
 			name:           "No allowed origins",
@@ -119,8 +119,8 @@ func TestCors_Wrap(t *testing.T) {
 			reqHeaders: map[string]string{
 				"Origin": goodSite,
 			},
-			expectedStatus:  http.StatusForbidden,
-			expectedHeaders: emptyCORSHeaders,
+			wantStatus:  http.StatusForbidden,
+			wantHeaders: emptyCORSHeaders,
 		},
 	}
 
@@ -129,7 +129,7 @@ func TestCors_Wrap(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(tt.expectedStatus)
+				w.WriteHeader(tt.wantStatus)
 			})
 
 			mw := middleware.NewCORS(testutil.NewTestLogger(t), tt.allowedOrigins)
@@ -142,10 +142,10 @@ func TestCors_Wrap(t *testing.T) {
 			wrapped := mw.Wrap(handler)
 			wrapped.ServeHTTP(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedStatus)
-			for k, v := range tt.expectedHeaders {
+			testutil.AssertStatusCode(t, rr, tt.wantStatus)
+			for k, v := range tt.wantHeaders {
 				if rr.Header().Get(k) != v {
-					t.Errorf("expected header %q, got %q", v, rr.Header().Get(k))
+					t.Errorf("got header %q=%q, want %q", k, rr.Header().Get(k), v)
 				}
 			}
 		})
@@ -160,6 +160,6 @@ func TestCors_WarnsAnyOriginAllowed(t *testing.T) {
 	_ = middleware.NewCORS(logger, config.ParseAllowedOrigins(goodSite+",*,"+awesomeSite))
 
 	if !strings.Contains(buf.String(), "too permissive") {
-		t.Errorf("expected warn about too permissive CORS middleware, got %q", buf.String())
+		t.Errorf("got log output %q, want mention of %q", buf.String(), "too permissive")
 	}
 }

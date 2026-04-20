@@ -20,7 +20,7 @@ func SetupTestDB(t *testing.T, migrationsDir string) *pgxpool.Pool {
 
 	pool, err := app.SetupDatabaseFromEnv(logger, migrationsDir)
 	if err != nil {
-		t.Fatalf("Failed to setup database: %v", err)
+		t.Fatalf("SetupDatabaseFromEnv() error = %v", err)
 	}
 
 	return pool
@@ -36,6 +36,6 @@ func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
 
 	_, err := pool.Exec(ctx, query)
 	if err != nil {
-		t.Fatalf("Failed to TRUNCATE TABLE %q: %v", name, err)
+		t.Fatalf("TRUNCATE TABLE %q error = %v", name, err)
 	}
 }

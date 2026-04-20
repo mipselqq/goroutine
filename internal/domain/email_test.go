@@ -11,48 +11,48 @@ func TestEmail(t *testing.T) {
 	t.Parallel()
 
 	emailTests := []struct {
-		name          string
-		input         string
-		expectedValue string
-		expectErr     bool
+		name      string
+		input     string
+		wantValue string
+		wantErr   bool
 	}{
 		{
-			name:      "Valid email",
-			input:     "test@example.com",
-			expectErr: false,
+			name:    "Valid email",
+			input:   "test@example.com",
+			wantErr: false,
 		},
 		{
-			name:      "Invalid email",
-			input:     "invalid-email",
-			expectErr: true,
+			name:    "Invalid email",
+			input:   "invalid-email",
+			wantErr: true,
 		},
 		{
-			name:      "Empty email",
-			input:     "",
-			expectErr: true,
+			name:    "Empty email",
+			input:   "",
+			wantErr: true,
 		},
 		{
-			name:      "Whitespace email",
-			input:     "   ",
-			expectErr: true,
+			name:    "Whitespace email",
+			input:   "   ",
+			wantErr: true,
 		},
 		{
-			name:          "Valid email with whitespace",
-			input:         "   test@example.com   ",
-			expectedValue: "test@example.com",
-			expectErr:     false,
+			name:      "Valid email with whitespace",
+			input:     "   test@example.com   ",
+			wantValue: "test@example.com",
+			wantErr:   false,
 		},
 		{
-			name:          "Uppercase email",
-			input:         "TEST@EXAMPLE.COM",
-			expectedValue: "test@example.com",
-			expectErr:     false,
+			name:      "Uppercase email",
+			input:     "TEST@EXAMPLE.COM",
+			wantValue: "test@example.com",
+			wantErr:   false,
 		},
 		{
-			name:          "Mixed case email",
-			input:         "TeSt@ExAmpLe.CoM",
-			expectedValue: "test@example.com",
-			expectErr:     false,
+			name:      "Mixed case email",
+			input:     "TeSt@ExAmpLe.CoM",
+			wantValue: "test@example.com",
+			wantErr:   false,
 		},
 	}
 
@@ -62,15 +62,15 @@ func TestEmail(t *testing.T) {
 
 			email, err := domain.NewEmail(tt.input)
 
-			if !tt.expectErr {
-				if tt.expectedValue != "" && email.String() != tt.expectedValue {
-					t.Errorf("expected email %q, got %q", tt.expectedValue, email)
+			if !tt.wantErr {
+				if tt.wantValue != "" && email.String() != tt.wantValue {
+					t.Errorf("got email %q, want %q", email, tt.wantValue)
 				}
 				if err != nil {
-					t.Errorf("did not expect error but got: %v", err)
+					t.Errorf("got error %v, want nil", err)
 				}
 			} else if err == nil {
-				t.Errorf("expected error but got none")
+				t.Error("got nil error, want non-nil")
 			}
 		})
 	}
@@ -80,31 +80,31 @@ func TestEmail_Scan(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		input     any
-		expectErr bool
-		errKind   error
+		name    string
+		input   any
+		wantErr bool
+		errKind error
 	}{
 		{
-			name:      "Valid email",
-			input:     "test@example.com",
-			expectErr: false,
+			name:    "Valid email",
+			input:   "test@example.com",
+			wantErr: false,
 		},
 		{
-			name:      "Invalid email",
-			input:     "invalid-email",
-			expectErr: true,
-			errKind:   domain.ErrDataCorrupted,
+			name:    "Invalid email",
+			input:   "invalid-email",
+			wantErr: true,
+			errKind: domain.ErrDataCorrupted,
 		},
 		{
-			name:      "Null value",
-			input:     nil,
-			expectErr: false,
+			name:    "Null value",
+			input:   nil,
+			wantErr: false,
 		},
 		{
-			name:      "Invalid type",
-			input:     123,
-			expectErr: true,
+			name:    "Invalid type",
+			input:   123,
+			wantErr: true,
 		},
 	}
 
@@ -115,14 +115,14 @@ func TestEmail_Scan(t *testing.T) {
 			var e domain.Email
 			err := e.Scan(tt.input)
 
-			if tt.expectErr {
+			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errKind != nil && !errors.Is(err, tt.errKind) {
-					t.Errorf("expected error %v, got %v", tt.errKind, err)
+					t.Errorf("got error %v, want %v", err, tt.errKind)
 				}
 			} else if err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}

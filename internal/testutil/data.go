@@ -107,11 +107,11 @@ func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string
 	t.Helper()
 	domainName, err := domain.NewBoardName(name)
 	if err != nil {
-		t.Fatalf("Failed to create board name: %v", err)
+		t.Fatalf("NewBoardName() error = %v", err)
 	}
 	domainDescription, err := domain.NewBoardDescription(description)
 	if err != nil {
-		t.Fatalf("Failed to create board description: %v", err)
+		t.Fatalf("NewBoardDescription() error = %v", err)
 	}
 
 	return domain.Board{
@@ -146,12 +146,12 @@ func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position 
 
 	domainName, err := domain.NewColumnName(name)
 	if err != nil {
-		t.Fatalf("Failed to create column name: %v", err)
+		t.Fatalf("NewColumnName() error = %v", err)
 	}
 
 	domainPosition, err := domain.NewColumnPosition(position)
 	if err != nil {
-		t.Fatalf("Failed to create column position: %v", err)
+		t.Fatalf("NewColumnPosition() error = %v", err)
 	}
 
 	column.Name = domainName
@@ -165,7 +165,7 @@ func UpdateValidColumn(t *testing.T, base *domain.Column, name string, updatedAt
 
 	domainName, err := domain.NewColumnName(name)
 	if err != nil {
-		t.Fatalf("Failed to create column name: %v", err)
+		t.Fatalf("NewColumnName() error = %v", err)
 	}
 
 	return domain.Column{
