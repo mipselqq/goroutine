@@ -27,8 +27,8 @@ func TestColumns_Create(t *testing.T) {
 		inputBody          any
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
-		expectedCode       int
-		expectedBody       any
+		wantCode           int
+		wantBody           any
 	}{
 		{
 			name:      "Success",
@@ -37,19 +37,19 @@ func TestColumns_Create(t *testing.T) {
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
-						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
 					if boardID != validBoard.ID {
-						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
 					if name != validColumn.Name {
-						t.Errorf("expected name %v, got %v", validColumn.Name, name)
+						t.Errorf("got name %v, want %v", name, validColumn.Name)
 					}
 					return validColumn, nil
 				}
 			},
-			expectedCode: http.StatusCreated,
-			expectedBody: map[string]any{
+			wantCode: http.StatusCreated,
+			wantBody: map[string]any{
 				"id":        validColumn.ID.String(),
 				"boardId":   validColumn.BoardID.String(),
 				"name":      validColumn.Name.String(),
@@ -59,33 +59,33 @@ func TestColumns_Create(t *testing.T) {
 			},
 		},
 		{
-			name:         "Invalid board id",
-			path:         "/v1/boards/not-a-uuid/columns",
-			inputBody:    map[string]string{"name": "To Do"},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			name:      "Invalid board id",
+			path:      "/v1/boards/not-a-uuid/columns",
+			inputBody: map[string]string{"name": "To Do"},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name:         "Invalid JSON",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns",
-			inputBody:    "{\"name\":\"broken\"",
-			expectedCode: http.StatusBadRequest,
-			expectedBody: invalidJsonBody(),
+			name:      "Invalid JSON",
+			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			inputBody: "{\"name\":\"broken\"",
+			wantCode:  http.StatusBadRequest,
+			wantBody:  invalidJsonBody(),
 		},
 		{
-			name:         "Invalid name",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns",
-			inputBody:    map[string]string{"name": "   "},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("name", []string{"Name is too short"}),
+			name:      "Invalid name",
+			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			inputBody: map[string]string{"name": "   "},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
-			name:         "Missing context user",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns",
-			inputBody:    map[string]string{"name": "To Do"},
-			context:      context.Background(),
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: unauthorizedTokenBody(),
+			name:      "Missing context user",
+			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			inputBody: map[string]string{"name": "To Do"},
+			context:   context.Background(),
+			wantCode:  http.StatusUnauthorized,
+			wantBody:  unauthorizedTokenBody(),
 		},
 		{
 			name:      "Board not found",
@@ -96,8 +96,8 @@ func TestColumns_Create(t *testing.T) {
 					return domain.Column{}, service.ErrBoardNotFound
 				}
 			},
-			expectedCode: http.StatusNotFound,
-			expectedBody: boardNotFoundErrorBody(),
+			wantCode: http.StatusNotFound,
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name:      "Internal error",
@@ -108,8 +108,8 @@ func TestColumns_Create(t *testing.T) {
 					return domain.Column{}, service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: internalErrorBody(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
 		},
 		{
 			name:      "Unexpected error",
@@ -120,8 +120,8 @@ func TestColumns_Create(t *testing.T) {
 					return domain.Column{}, errors.New("db exploded")
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: internalErrorBody(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
 		},
 	}
 
@@ -154,9 +154,9 @@ func TestColumns_Create(t *testing.T) {
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Create(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }
@@ -174,8 +174,8 @@ func TestColumns_List(t *testing.T) {
 		path               string
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
-		expectedCode       int
-		expectedBody       any
+		wantCode           int
+		wantBody           any
 	}{
 		{
 			name: "Success",
@@ -183,16 +183,16 @@ func TestColumns_List(t *testing.T) {
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					if callerID != validBoard.OwnerID {
-						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
 					if boardID != validBoard.ID {
-						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
 					return []domain.Column{first, second}, nil
 				}
 			},
-			expectedCode: http.StatusOK,
-			expectedBody: []map[string]any{
+			wantCode: http.StatusOK,
+			wantBody: []map[string]any{
 				{
 					"id":        first.ID.String(),
 					"boardId":   first.BoardID.String(),
@@ -212,17 +212,17 @@ func TestColumns_List(t *testing.T) {
 			},
 		},
 		{
-			name:         "Invalid board id",
-			path:         "/v1/boards/not-a-uuid/columns",
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			name:     "Invalid board id",
+			path:     "/v1/boards/not-a-uuid/columns",
+			wantCode: http.StatusBadRequest,
+			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name:         "Missing context user",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns",
-			context:      context.Background(),
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: unauthorizedTokenBody(),
+			name:     "Missing context user",
+			path:     "/v1/boards/" + validBoard.ID.String() + "/columns",
+			context:  context.Background(),
+			wantCode: http.StatusUnauthorized,
+			wantBody: unauthorizedTokenBody(),
 		},
 		{
 			name: "Board not found",
@@ -232,8 +232,8 @@ func TestColumns_List(t *testing.T) {
 					return nil, service.ErrBoardNotFound
 				}
 			},
-			expectedCode: http.StatusNotFound,
-			expectedBody: boardNotFoundErrorBody(),
+			wantCode: http.StatusNotFound,
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
@@ -243,8 +243,8 @@ func TestColumns_List(t *testing.T) {
 					return nil, service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: internalErrorBody(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
 		},
 	}
 
@@ -270,9 +270,9 @@ func TestColumns_List(t *testing.T) {
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.List(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }
@@ -284,7 +284,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	updatedName, err := domain.NewColumnName("Renamed Column")
 	if err != nil {
-		t.Fatalf("NewColumnName: %v", err)
+		t.Fatalf("NewColumnName() error = %v", err)
 	}
 	updatedColumn := validColumn
 	updatedColumn.Name = updatedName
@@ -298,8 +298,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 		inputBody          any
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
-		expectedCode       int
-		expectedBody       any
+		wantCode           int
+		wantBody           any
 	}{
 		{
 			name:      "Success (name update)",
@@ -308,22 +308,22 @@ func TestColumns_UpdateByID(t *testing.T) {
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
-						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
 					if boardID != validBoard.ID {
-						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
 					if columnID != validColumn.ID {
-						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+						t.Errorf("got column id %v, want %v", columnID, validColumn.ID)
 					}
 					if name == nil || *name != updatedName {
-						t.Errorf("expected updated name %v, got %+v", updatedName, name)
+						t.Errorf("got name %v, want %v", name, updatedName)
 					}
 					return updatedColumn, nil
 				}
 			},
-			expectedCode: http.StatusOK,
-			expectedBody: map[string]any{
+			wantCode: http.StatusOK,
+			wantBody: map[string]any{
 				"id":        updatedColumn.ID.String(),
 				"boardId":   updatedColumn.BoardID.String(),
 				"name":      updatedColumn.Name.String(),
@@ -339,13 +339,13 @@ func TestColumns_UpdateByID(t *testing.T) {
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					if name != nil {
-						t.Errorf("expected nil name for no-op patch, got %+v", name)
+						t.Errorf("got name %+v, want nil", name)
 					}
 					return validColumn, nil
 				}
 			},
-			expectedCode: http.StatusOK,
-			expectedBody: map[string]any{
+			wantCode: http.StatusOK,
+			wantBody: map[string]any{
 				"id":        validColumn.ID.String(),
 				"boardId":   validColumn.BoardID.String(),
 				"name":      validColumn.Name.String(),
@@ -355,40 +355,40 @@ func TestColumns_UpdateByID(t *testing.T) {
 			},
 		},
 		{
-			name:         "Invalid board id",
-			path:         "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
-			inputBody:    map[string]string{"name": "Renamed"},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			name:      "Invalid board id",
+			path:      "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
+			inputBody: map[string]string{"name": "Renamed"},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name:         "Invalid column id",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
-			inputBody:    map[string]string{"name": "Renamed"},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+			name:      "Invalid column id",
+			path:      "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
+			inputBody: map[string]string{"name": "Renamed"},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
 		},
 		{
-			name:         "Invalid JSON",
-			path:         okPath,
-			inputBody:    "{\"name\":\"broken\"",
-			expectedCode: http.StatusBadRequest,
-			expectedBody: invalidJsonBody(),
+			name:      "Invalid JSON",
+			path:      okPath,
+			inputBody: "{\"name\":\"broken\"",
+			wantCode:  http.StatusBadRequest,
+			wantBody:  invalidJsonBody(),
 		},
 		{
-			name:         "Invalid name",
-			path:         okPath,
-			inputBody:    map[string]string{"name": "   "},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("name", []string{"Name is too short"}),
+			name:      "Invalid name",
+			path:      okPath,
+			inputBody: map[string]string{"name": "   "},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
-			name:         "Missing context user",
-			path:         okPath,
-			inputBody:    map[string]string{"name": "Renamed"},
-			context:      context.Background(),
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: unauthorizedTokenBody(),
+			name:      "Missing context user",
+			path:      okPath,
+			inputBody: map[string]string{"name": "Renamed"},
+			context:   context.Background(),
+			wantCode:  http.StatusUnauthorized,
+			wantBody:  unauthorizedTokenBody(),
 		},
 		{
 			name:      "Column not found",
@@ -399,8 +399,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 					return domain.Column{}, service.ErrColumnNotFound
 				}
 			},
-			expectedCode: http.StatusNotFound,
-			expectedBody: columnNotFoundErrorBody(),
+			wantCode: http.StatusNotFound,
+			wantBody: columnNotFoundErrorBody(),
 		},
 		{
 			name:      "Internal error",
@@ -411,8 +411,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 					return domain.Column{}, service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: internalErrorBody(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
 		},
 	}
 
@@ -451,9 +451,9 @@ func TestColumns_UpdateByID(t *testing.T) {
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.UpdateByID(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }
@@ -465,7 +465,7 @@ func TestColumns_Move(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	targetPosition, err := domain.NewColumnPosition(2)
 	if err != nil {
-		t.Fatalf("NewColumnPosition: %v", err)
+		t.Fatalf("NewColumnPosition() error = %v", err)
 	}
 
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String() + "/position"
@@ -476,8 +476,8 @@ func TestColumns_Move(t *testing.T) {
 		inputBody          any
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
-		expectedCode       int
-		expectedBody       any
+		wantCode           int
+		wantBody           any
 	}{
 		{
 			name:      "Success",
@@ -486,60 +486,60 @@ func TestColumns_Move(t *testing.T) {
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, gotTargetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
 					if callerID != validBoard.OwnerID {
-						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
 					if boardID != validBoard.ID {
-						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
 					if columnID != validColumn.ID {
-						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+						t.Errorf("got column id %v, want %v", columnID, validColumn.ID)
 					}
 					if gotTargetPosition != targetPosition {
-						t.Errorf("expected target position %v, got %v", targetPosition, gotTargetPosition)
+						t.Errorf("got target position %v, want %v", gotTargetPosition, targetPosition)
 					}
 					return targetPosition, nil
 				}
 			},
-			expectedCode: http.StatusOK,
-			expectedBody: map[string]any{
+			wantCode: http.StatusOK,
+			wantBody: map[string]any{
 				"position": targetPosition.Int64(),
 			},
 		},
 		{
-			name:         "Invalid board id",
-			path:         "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String() + "/position",
-			inputBody:    map[string]int64{"targetPosition": 1},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			name:      "Invalid board id",
+			path:      "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String() + "/position",
+			inputBody: map[string]int64{"targetPosition": 1},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name:         "Invalid column id",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid/position",
-			inputBody:    map[string]int64{"targetPosition": 1},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+			name:      "Invalid column id",
+			path:      "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid/position",
+			inputBody: map[string]int64{"targetPosition": 1},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
 		},
 		{
-			name:         "Invalid JSON",
-			path:         okPath,
-			inputBody:    "{\"targetPosition\":",
-			expectedCode: http.StatusBadRequest,
-			expectedBody: invalidJsonBody(),
+			name:      "Invalid JSON",
+			path:      okPath,
+			inputBody: "{\"targetPosition\":",
+			wantCode:  http.StatusBadRequest,
+			wantBody:  invalidJsonBody(),
 		},
 		{
-			name:         "Invalid target position",
-			path:         okPath,
-			inputBody:    map[string]int64{"targetPosition": 0},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("targetPosition", []string{"Position is invalid"}),
+			name:      "Invalid target position",
+			path:      okPath,
+			inputBody: map[string]int64{"targetPosition": 0},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("targetPosition", []string{"Position is invalid"}),
 		},
 		{
-			name:         "Missing context user",
-			path:         okPath,
-			inputBody:    map[string]int64{"targetPosition": 1},
-			context:      context.Background(),
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: unauthorizedTokenBody(),
+			name:      "Missing context user",
+			path:      okPath,
+			inputBody: map[string]int64{"targetPosition": 1},
+			context:   context.Background(),
+			wantCode:  http.StatusUnauthorized,
+			wantBody:  unauthorizedTokenBody(),
 		},
 		{
 			name:      "Index out of bounds",
@@ -550,8 +550,8 @@ func TestColumns_Move(t *testing.T) {
 					return domain.ColumnPosition{}, service.ErrIndexOutOfBounds
 				}
 			},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("targetPosition", []string{"Index out of bounds"}),
+			wantCode: http.StatusBadRequest,
+			wantBody: validationErrorBody("targetPosition", []string{"Index out of bounds"}),
 		},
 		{
 			name:      "Column not found",
@@ -562,8 +562,8 @@ func TestColumns_Move(t *testing.T) {
 					return domain.ColumnPosition{}, service.ErrColumnNotFound
 				}
 			},
-			expectedCode: http.StatusNotFound,
-			expectedBody: columnNotFoundErrorBody(),
+			wantCode: http.StatusNotFound,
+			wantBody: columnNotFoundErrorBody(),
 		},
 		{
 			name:      "Internal error",
@@ -574,8 +574,8 @@ func TestColumns_Move(t *testing.T) {
 					return domain.ColumnPosition{}, service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: internalErrorBody(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
 		},
 	}
 
@@ -614,9 +614,9 @@ func TestColumns_Move(t *testing.T) {
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Move(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }
@@ -633,8 +633,8 @@ func TestColumns_Delete(t *testing.T) {
 		path               string
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
-		expectedCode       int
-		expectedBody       any
+		wantCode           int
+		wantBody           any
 	}{
 		{
 			name: "Success",
@@ -642,38 +642,38 @@ func TestColumns_Delete(t *testing.T) {
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					if callerID != validBoard.OwnerID {
-						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
 					if boardID != validBoard.ID {
-						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
 					if columnID != validColumn.ID {
-						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+						t.Errorf("got column id %v, want %v", columnID, validColumn.ID)
 					}
 					return nil
 				}
 			},
-			expectedCode: http.StatusNoContent,
-			expectedBody: nil,
+			wantCode: http.StatusNoContent,
+			wantBody: nil,
 		},
 		{
-			name:         "Invalid board id",
-			path:         "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			name:     "Invalid board id",
+			path:     "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
+			wantCode: http.StatusBadRequest,
+			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name:         "Invalid column id",
-			path:         "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
-			expectedCode: http.StatusBadRequest,
-			expectedBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+			name:     "Invalid column id",
+			path:     "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
+			wantCode: http.StatusBadRequest,
+			wantBody: validationErrorBody("columnId", []string{"Invalid column id"}),
 		},
 		{
-			name:         "Missing context user",
-			path:         okPath,
-			context:      context.Background(),
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: unauthorizedTokenBody(),
+			name:     "Missing context user",
+			path:     okPath,
+			context:  context.Background(),
+			wantCode: http.StatusUnauthorized,
+			wantBody: unauthorizedTokenBody(),
 		},
 		{
 			name: "Column not found",
@@ -683,8 +683,8 @@ func TestColumns_Delete(t *testing.T) {
 					return service.ErrColumnNotFound
 				}
 			},
-			expectedCode: http.StatusNotFound,
-			expectedBody: columnNotFoundErrorBody(),
+			wantCode: http.StatusNotFound,
+			wantBody: columnNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
@@ -694,8 +694,8 @@ func TestColumns_Delete(t *testing.T) {
 					return service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: internalErrorBody(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
 		},
 	}
 
@@ -727,11 +727,11 @@ func TestColumns_Delete(t *testing.T) {
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Delete(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
-			if tt.expectedCode != http.StatusNoContent {
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
+			if tt.wantCode != http.StatusNoContent {
 				testutil.AssertContentType(t, rr, "application/json")
 			}
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }

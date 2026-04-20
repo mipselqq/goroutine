@@ -43,7 +43,7 @@ func TestMapCodeToDescription(t *testing.T) {
 
 			description := httpschema.MapCodeToDescription(tt.code)
 			if description != tt.description {
-				t.Errorf("expected %q, got %q", tt.description, description)
+				t.Errorf("got %q, want %q", description, tt.description)
 			}
 		})
 	}

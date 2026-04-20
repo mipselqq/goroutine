@@ -15,52 +15,52 @@ func TestName(t *testing.T) {
 	borderlineLongName := strings.Repeat("a", 128)
 
 	nameTests := []struct {
-		name           string
-		input          string
-		expectedIssues []string
-		expectedValue  string
+		name       string
+		input      string
+		wantIssues []string
+		wantValue  string
 	}{
 		{
-			name:           "Valid name",
-			input:          "My Todo Name",
-			expectedIssues: nil,
-			expectedValue:  "My Todo Name",
+			name:       "Valid name",
+			input:      "My Todo Name",
+			wantIssues: nil,
+			wantValue:  "My Todo Name",
 		},
 		{
-			name:           "Long valid name",
-			input:          borderlineLongName,
-			expectedIssues: nil,
-			expectedValue:  borderlineLongName,
+			name:       "Long valid name",
+			input:      borderlineLongName,
+			wantIssues: nil,
+			wantValue:  borderlineLongName,
 		},
 		{
-			name:           "Too long but valid when trimmed",
-			input:          "      " + borderlineLongName + "     ",
-			expectedIssues: nil,
-			expectedValue:  borderlineLongName,
+			name:       "Too long but valid when trimmed",
+			input:      "      " + borderlineLongName + "     ",
+			wantIssues: nil,
+			wantValue:  borderlineLongName,
 		},
 		{
-			name:           "Too long name",
-			input:          borderlineLongName + "a",
-			expectedIssues: []string{"Name is too long"},
-			expectedValue:  "",
+			name:       "Too long name",
+			input:      borderlineLongName + "a",
+			wantIssues: []string{"Name is too long"},
+			wantValue:  "",
 		},
 		{
-			name:           "Empty name",
-			input:          "",
-			expectedIssues: []string{"Name is too short"},
-			expectedValue:  "",
+			name:       "Empty name",
+			input:      "",
+			wantIssues: []string{"Name is too short"},
+			wantValue:  "",
 		},
 		{
-			name:           "Whitespace name",
-			input:          "    ",
-			expectedIssues: []string{"Name is too short"},
-			expectedValue:  "",
+			name:       "Whitespace name",
+			input:      "    ",
+			wantIssues: []string{"Name is too short"},
+			wantValue:  "",
 		},
 		{
-			name:           "Single character name",
-			input:          "a",
-			expectedIssues: nil,
-			expectedValue:  "a",
+			name:       "Single character name",
+			input:      "a",
+			wantIssues: nil,
+			wantValue:  "a",
 		},
 	}
 
@@ -70,24 +70,24 @@ func TestName(t *testing.T) {
 
 			name, err := domain.NewBoardName(tt.input)
 
-			var actualIssues []string
+			var gotIssues []string
 			if err != nil {
 				var ve *domain.ErrValidation
 				if errors.As(err, &ve) {
-					actualIssues = ve.Issues
+					gotIssues = ve.Issues
 				} else {
-					actualIssues = []string{err.Error()}
+					gotIssues = []string{err.Error()}
 				}
 			}
 
-			if !reflect.DeepEqual(actualIssues, tt.expectedIssues) {
-				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
+			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
+				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
 			}
-			if name.String() != tt.expectedValue {
-				t.Errorf("expected value %q, got %q", tt.expectedValue, name)
+			if name.String() != tt.wantValue {
+				t.Errorf("got value %q, want %q", name, tt.wantValue)
 			}
-			if name.IsEmpty() != (tt.expectedValue == "") {
-				t.Errorf("expected is empty %t, got %t", tt.expectedValue == "", name.IsEmpty())
+			if name.IsEmpty() != (tt.wantValue == "") {
+				t.Errorf("got is empty %t, want %t", name.IsEmpty(), tt.wantValue == "")
 			}
 		})
 	}
@@ -99,46 +99,46 @@ func TestDescription(t *testing.T) {
 	borderlineLongDescription := strings.Repeat("a", 1024)
 
 	descriptionTests := []struct {
-		name           string
-		input          string
-		expectedIssues []string
-		expectedValue  string
+		name       string
+		input      string
+		wantIssues []string
+		wantValue  string
 	}{
 		{
-			name:           "Valid description",
-			input:          "My Todo Description",
-			expectedValue:  "My Todo Description",
-			expectedIssues: nil,
+			name:       "Valid description",
+			input:      "My Todo Description",
+			wantValue:  "My Todo Description",
+			wantIssues: nil,
 		},
 		{
-			name:           "Long valid description",
-			input:          borderlineLongDescription,
-			expectedValue:  borderlineLongDescription,
-			expectedIssues: nil,
+			name:       "Long valid description",
+			input:      borderlineLongDescription,
+			wantValue:  borderlineLongDescription,
+			wantIssues: nil,
 		},
 		{
-			name:           "Too long but valid when trimmed",
-			input:          "      " + borderlineLongDescription + "     ",
-			expectedValue:  borderlineLongDescription,
-			expectedIssues: nil,
+			name:       "Too long but valid when trimmed",
+			input:      "      " + borderlineLongDescription + "     ",
+			wantValue:  borderlineLongDescription,
+			wantIssues: nil,
 		},
 		{
-			name:           "Too long description",
-			input:          borderlineLongDescription + "a",
-			expectedIssues: []string{"Description is too long"},
-			expectedValue:  "",
+			name:       "Too long description",
+			input:      borderlineLongDescription + "a",
+			wantIssues: []string{"Description is too long"},
+			wantValue:  "",
 		},
 		{
-			name:           "Empty description",
-			input:          "",
-			expectedIssues: nil,
-			expectedValue:  "",
+			name:       "Empty description",
+			input:      "",
+			wantIssues: nil,
+			wantValue:  "",
 		},
 		{
-			name:           "Whitespace description",
-			input:          "    ",
-			expectedIssues: nil,
-			expectedValue:  "",
+			name:       "Whitespace description",
+			input:      "    ",
+			wantIssues: nil,
+			wantValue:  "",
 		},
 	}
 
@@ -148,24 +148,24 @@ func TestDescription(t *testing.T) {
 
 			description, err := domain.NewBoardDescription(tt.input)
 
-			var actualIssues []string
+			var gotIssues []string
 			if err != nil {
 				var validationError *domain.ErrValidation
 				if errors.As(err, &validationError) {
-					actualIssues = validationError.Issues
+					gotIssues = validationError.Issues
 				} else {
-					actualIssues = []string{err.Error()}
+					gotIssues = []string{err.Error()}
 				}
 			}
 
-			if !reflect.DeepEqual(actualIssues, tt.expectedIssues) {
-				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
+			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
+				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
 			}
-			if description.String() != tt.expectedValue {
-				t.Errorf("expected value %q, got %q", tt.expectedValue, description)
+			if description.String() != tt.wantValue {
+				t.Errorf("got value %q, want %q", description, tt.wantValue)
 			}
-			if description.IsEmpty() != (tt.expectedValue == "") {
-				t.Errorf("expected is empty %t, got %t", tt.expectedValue == "", description.IsEmpty())
+			if description.IsEmpty() != (tt.wantValue == "") {
+				t.Errorf("got is empty %t, want %t", description.IsEmpty(), tt.wantValue == "")
 			}
 		})
 	}
@@ -218,12 +218,12 @@ func TestBoardName_Scan(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 			} else if err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
@@ -270,12 +270,12 @@ func TestBoardDescription_Scan(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 			} else if err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
@@ -336,16 +336,16 @@ func TestBoardID_Scan(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("did not expect error, got %v", err)
+					t.Errorf("got error %v, want nil", err)
 				}
 				if tt.input != nil && id.IsEmpty() {
-					t.Error("expected BoardID to not be empty")
+					t.Error("got empty BoardID after Scan, want non-empty")
 				}
 			}
 		})

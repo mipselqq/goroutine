@@ -15,17 +15,17 @@ func TestColumnName(t *testing.T) {
 
 	borderlineLongName := strings.Repeat("a", 128)
 	tests := []struct {
-		name           string
-		input          string
-		expectedIssues []string
-		expectedValue  string
+		name       string
+		input      string
+		wantIssues []string
+		wantValue  string
 	}{
-		{name: "Valid", input: "In Progress", expectedValue: "In Progress"},
-		{name: "Long valid", input: borderlineLongName, expectedValue: borderlineLongName},
-		{name: "Too long but valid when trimmed", input: "   " + borderlineLongName + "   ", expectedValue: borderlineLongName},
-		{name: "Too long", input: borderlineLongName + "a", expectedIssues: []string{domain.ErrColumnNameTooLong}},
-		{name: "Empty", input: "", expectedIssues: []string{domain.ErrColumnNameTooShort}},
-		{name: "Whitespace", input: "   ", expectedIssues: []string{domain.ErrColumnNameTooShort}},
+		{name: "Valid", input: "In Progress", wantValue: "In Progress"},
+		{name: "Long valid", input: borderlineLongName, wantValue: borderlineLongName},
+		{name: "Too long but valid when trimmed", input: "   " + borderlineLongName + "   ", wantValue: borderlineLongName},
+		{name: "Too long", input: borderlineLongName + "a", wantIssues: []string{domain.ErrColumnNameTooLong}},
+		{name: "Empty", input: "", wantIssues: []string{domain.ErrColumnNameTooShort}},
+		{name: "Whitespace", input: "   ", wantIssues: []string{domain.ErrColumnNameTooShort}},
 	}
 
 	for _, tt := range tests {
@@ -33,21 +33,21 @@ func TestColumnName(t *testing.T) {
 			t.Parallel()
 
 			name, err := domain.NewColumnName(tt.input)
-			var actualIssues []string
+			var gotIssues []string
 			if err != nil {
 				var ve *domain.ErrValidation
 				if errors.As(err, &ve) {
-					actualIssues = ve.Issues
+					gotIssues = ve.Issues
 				} else {
-					actualIssues = []string{err.Error()}
+					gotIssues = []string{err.Error()}
 				}
 			}
 
-			if !reflect.DeepEqual(actualIssues, tt.expectedIssues) {
-				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
+			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
+				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
 			}
-			if name.String() != tt.expectedValue {
-				t.Errorf("expected value %q, got %q", tt.expectedValue, name.String())
+			if name.String() != tt.wantValue {
+				t.Errorf("got value %q, want %q", name.String(), tt.wantValue)
 			}
 		})
 	}
@@ -75,10 +75,10 @@ func TestParseColumnPosition(t *testing.T) {
 
 			_, err := domain.ParseColumnPosition(tt.input)
 			if tt.wantErr && err == nil {
-				t.Error("expected error, got nil")
+				t.Error("got nil error, want non-nil")
 			}
 			if !tt.wantErr && err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
@@ -88,16 +88,16 @@ func TestColumnPosition(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name           string
-		input          int64
-		expectedIssues []string
-		expectedValue  int64
+		name       string
+		input      int64
+		wantIssues []string
+		wantValue  int64
 	}{
-		{name: "Valid", input: 1, expectedValue: 1},
-		{name: "Valid max int32", input: math.MaxInt32, expectedValue: math.MaxInt32},
-		{name: "Zero", input: 0, expectedIssues: []string{domain.ErrColumnPositionValue}},
-		{name: "Negative", input: -10, expectedIssues: []string{domain.ErrColumnPositionValue}},
-		{name: "Overflow", input: math.MaxInt32 + 1, expectedIssues: []string{domain.ErrColumnPositionValue}},
+		{name: "Valid", input: 1, wantValue: 1},
+		{name: "Valid max int32", input: math.MaxInt32, wantValue: math.MaxInt32},
+		{name: "Zero", input: 0, wantIssues: []string{domain.ErrColumnPositionValue}},
+		{name: "Negative", input: -10, wantIssues: []string{domain.ErrColumnPositionValue}},
+		{name: "Overflow", input: math.MaxInt32 + 1, wantIssues: []string{domain.ErrColumnPositionValue}},
 	}
 
 	for _, tt := range tests {
@@ -105,21 +105,21 @@ func TestColumnPosition(t *testing.T) {
 			t.Parallel()
 
 			position, err := domain.NewColumnPosition(tt.input)
-			var actualIssues []string
+			var gotIssues []string
 			if err != nil {
 				var ve *domain.ErrValidation
 				if errors.As(err, &ve) {
-					actualIssues = ve.Issues
+					gotIssues = ve.Issues
 				} else {
-					actualIssues = []string{err.Error()}
+					gotIssues = []string{err.Error()}
 				}
 			}
 
-			if !reflect.DeepEqual(actualIssues, tt.expectedIssues) {
-				t.Errorf("expected issues %v, got %v", tt.expectedIssues, actualIssues)
+			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
+				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
 			}
-			if tt.expectedIssues == nil && position.Int64() != tt.expectedValue {
-				t.Errorf("expected value %d, got %d", tt.expectedValue, position.Int64())
+			if tt.wantIssues == nil && position.Int64() != tt.wantValue {
+				t.Errorf("got value %d, want %d", position.Int64(), tt.wantValue)
 			}
 		})
 	}
@@ -149,15 +149,15 @@ func TestColumnName_Scan(t *testing.T) {
 			err := name.Scan(tt.input)
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 				return
 			}
 
 			if err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
@@ -187,15 +187,15 @@ func TestColumnPosition_Scan(t *testing.T) {
 			err := position.Scan(tt.input)
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 				return
 			}
 
 			if err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}

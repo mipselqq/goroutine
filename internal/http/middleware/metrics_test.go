@@ -30,9 +30,9 @@ func TestAbstractMetricPath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			have := middleware.AbstractMetricPath(tt.rawPath)
-			if have != tt.abstractPath {
-				t.Errorf("AbstractMetricPath(%q) = %q, want %q", tt.rawPath, have, tt.abstractPath)
+			got := middleware.AbstractMetricPath(tt.rawPath)
+			if got != tt.abstractPath {
+				t.Errorf("AbstractMetricPath(%q) = %q, want %q", tt.rawPath, got, tt.abstractPath)
 			}
 		})
 	}

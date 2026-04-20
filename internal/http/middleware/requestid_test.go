@@ -22,35 +22,35 @@ func TestRequestIDMiddleware(t *testing.T) {
 	}
 
 	tests := []struct {
-		name              string
-		requestHeaders    map[string]string
-		expectedRequestID string
+		name           string
+		requestHeaders map[string]string
+		wantRequestID  string
 	}{
 		{
-			name:              "No input header",
-			requestHeaders:    map[string]string{},
-			expectedRequestID: mockRequestID,
+			name:           "No input header",
+			requestHeaders: map[string]string{},
+			wantRequestID:  mockRequestID,
 		},
 		{
 			name: "Valid input header",
 			requestHeaders: map[string]string{
 				"X-Request-Id": requestRequestID,
 			},
-			expectedRequestID: requestRequestID,
+			wantRequestID: requestRequestID,
 		},
 		{
 			name: "Empty input header",
 			requestHeaders: map[string]string{
 				"X-Request-Id": "",
 			},
-			expectedRequestID: mockRequestID,
+			wantRequestID: mockRequestID,
 		},
 		{
 			name: "Whitespace input header",
 			requestHeaders: map[string]string{
 				"X-Request-Id": "   ",
 			},
-			expectedRequestID: mockRequestID,
+			wantRequestID: mockRequestID,
 		},
 	}
 
@@ -59,13 +59,13 @@ func TestRequestIDMiddleware(t *testing.T) {
 			t.Parallel()
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if tt.expectedRequestID != "" {
+				if tt.wantRequestID != "" {
 					reqID, ok := r.Context().Value(httpschema.ContextKeyRequestID).(string)
 					if !ok {
 						t.Errorf("RequestID missing in context")
 					}
-					if reqID != tt.expectedRequestID {
-						t.Errorf("expected request ID in context %q, got %q", tt.expectedRequestID, reqID)
+					if reqID != tt.wantRequestID {
+						t.Errorf("got request ID in context %q, want %q", reqID, tt.wantRequestID)
 					}
 				}
 				w.WriteHeader(mockStatusCode)
@@ -85,10 +85,10 @@ func TestRequestIDMiddleware(t *testing.T) {
 
 			testutil.AssertStatusCode(t, rr, mockStatusCode)
 
-			if tt.expectedRequestID != "" {
+			if tt.wantRequestID != "" {
 				headerID := rr.Header().Get("X-Request-ID")
-				if headerID != tt.expectedRequestID {
-					t.Errorf("expected response request ID %q, got %q", tt.expectedRequestID, headerID)
+				if headerID != tt.wantRequestID {
+					t.Errorf("got response request ID %q, want %q", headerID, tt.wantRequestID)
 				}
 			}
 		})

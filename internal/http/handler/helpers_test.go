@@ -15,7 +15,7 @@ type MockAuthService struct {
 
 func AssertFuncNotNil(funcName string, fn any) {
 	if fn == nil {
-		panic(fmt.Sprintf("BUG: Mock: %s is not set", funcName))
+		panic(fmt.Sprintf("%s = nil, want configured mock", funcName))
 	}
 }
 

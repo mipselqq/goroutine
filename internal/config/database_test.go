@@ -38,7 +38,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 		diff := cmp.Diff(defaultPgConfig, cfg)
 		if diff != "" {
-			t.Errorf("pg config used unexpected values instead of defaults (-want +got):\n%s", diff)
+			t.Errorf("NewPGConfigFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
@@ -46,16 +46,16 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		setCustomPgEnvVars(t)
 
 		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
-		expectedCfg := config.PgConfig{
+		wantCfg := config.PgConfig{
 			User:     "custom_user",
 			Password: secrecy.SecretString("custom_pass"),
 			Host:     "custom_host",
 			Port:     "5433",
 			DB:       "custom_db",
 		}
-		diff := cmp.Diff(expectedCfg, cfg)
+		diff := cmp.Diff(wantCfg, cfg)
 		if diff != "" {
-			t.Errorf("pg config used unexpected values instead of env vars (-want +got):\n%s", diff)
+			t.Errorf("NewPGConfigFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
@@ -67,7 +67,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 		for _, envVar := range pgEnvVars {
 			if !strings.Contains(buf.String(), envVar) {
-				t.Errorf("expected warn on unset %q", envVar)
+				t.Errorf("got log output %q, want mention of %q", buf.String(), envVar)
 			}
 		}
 	})
@@ -79,25 +79,25 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		_ = config.NewPGConfigFromEnv(logger)
 
 		if buf.String() != "" {
-			t.Errorf("expected no warnings, got %q", buf.String())
+			t.Errorf("got warnings %q, want none", buf.String())
 		}
 	})
 }
 
 func TestPgConfig_BuildDSN(t *testing.T) {
-	expected := "postgres://user:password@127.0.0.1:5432/todo_db"
-	if got := defaultPgConfig.BuildDSN(); got != expected {
-		t.Errorf("expected %q, got %q", expected, got)
+	want := "postgres://user:password@127.0.0.1:5432/todo_db"
+	if got := defaultPgConfig.BuildDSN(); got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
 func TestPgConfig_LogValue(t *testing.T) {
 	v := defaultPgConfig.LogValue()
 	if v.Kind() != slog.KindGroup {
-		t.Fatalf("expected Group kind, got %v", v.Kind())
+		t.Fatalf("got kind %v, want Group", v.Kind())
 	}
 
-	expectedAttrs := map[string]string{
+	wantAttrs := map[string]string{
 		"user":     "user",
 		"password": "(8 chars)",
 		"host":     "127.0.0.1",
@@ -105,5 +105,5 @@ func TestPgConfig_LogValue(t *testing.T) {
 		"db":       "todo_db",
 	}
 
-	testutil.FailOnInvalidLogValue(t, v.Group(), expectedAttrs)
+	testutil.FailOnInvalidLogValue(t, v.Group(), wantAttrs)
 }

@@ -10,16 +10,16 @@ import (
 	"testing"
 )
 
-func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, expectedMediaType string) {
+func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, wantMediaType string) {
 	t.Helper()
 
 	contentType := rr.Header().Get("Content-Type")
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
-		t.Fatalf("Failed to parse MIME %q: %v", contentType, err)
+		t.Fatalf("mime.ParseMediaType(%q) error = %v", contentType, err)
 	}
-	if mediaType != expectedMediaType {
-		t.Errorf("Expected %q, got %q", expectedMediaType, mediaType)
+	if mediaType != wantMediaType {
+		t.Errorf("got content type %q, want %q", mediaType, wantMediaType)
 	}
 }
 
@@ -28,7 +28,7 @@ func MarshalJSONBody(t *testing.T, body any) string {
 
 	b, err := json.Marshal(body)
 	if err != nil {
-		t.Fatalf("Failed to marshal body: %v", err)
+		t.Fatalf("json.Marshal() error = %v", err)
 	}
 
 	return string(b)
@@ -45,7 +45,7 @@ func NewJSONRequestAndRecorder(t *testing.T, method, url string, body any) (*htt
 		var err error
 		resultingBytes, err = json.Marshal(body)
 		if err != nil {
-			t.Fatalf("Failed to marshal request body: %v", err)
+			t.Fatalf("json.Marshal(request body) error = %v", err)
 		}
 	}
 
@@ -56,40 +56,40 @@ func NewJSONRequestAndRecorder(t *testing.T, method, url string, body any) (*htt
 	return req, rr
 }
 
-func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, expectedStatusCode int) {
+func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, wantStatusCode int) {
 	t.Helper()
 
-	if rr.Code != expectedStatusCode {
-		t.Errorf("Expected status code %d, got %d", expectedStatusCode, rr.Code)
+	if rr.Code != wantStatusCode {
+		t.Errorf("got status %d, want %d", rr.Code, wantStatusCode)
 	}
 }
 
-func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, expected any) {
+func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, want any) {
 	t.Helper()
 
-	if expected == nil {
+	if want == nil {
 		if rr.Body.Len() != 0 {
-			t.Fatalf("Expected body to be empty, got %q", rr.Body.String())
+			t.Fatalf("got body %q, want empty", rr.Body.String())
 		}
 		return
 	}
 
-	expectedJSON, err := json.Marshal(expected)
+	wantJSON, err := json.Marshal(want)
 	if err != nil {
-		t.Fatalf("Failed to marshal expected body: %v", err)
+		t.Fatalf("json.Marshal(want) error = %v", err)
 	}
 
-	actualBody := rr.Body.Bytes()
+	gotBody := rr.Body.Bytes()
 
-	var actualDecoded, expectedDecoded any
-	if err := json.Unmarshal(actualBody, &actualDecoded); err != nil {
-		t.Fatalf("Failed to unmarshal actual body: %v\nBody: %q", err, string(actualBody))
+	var gotDecoded, wantDecoded any
+	if err := json.Unmarshal(gotBody, &gotDecoded); err != nil {
+		t.Fatalf("json.Unmarshal(response body) error = %v\nBody: %q", err, string(gotBody))
 	}
-	if err := json.Unmarshal(expectedJSON, &expectedDecoded); err != nil {
-		t.Fatalf("Failed to unmarshal expected body: %v\nBody: %q", err, string(expectedJSON))
+	if err := json.Unmarshal(wantJSON, &wantDecoded); err != nil {
+		t.Fatalf("json.Unmarshal(want JSON) error = %v\nWant JSON: %q", err, string(wantJSON))
 	}
 
-	if !reflect.DeepEqual(actualDecoded, expectedDecoded) {
-		t.Errorf("Response body mismatch\nExpected: %s\nGot: %s", string(expectedJSON), string(actualBody))
+	if !reflect.DeepEqual(gotDecoded, wantDecoded) {
+		t.Errorf("got response body %s, want %s", string(gotBody), string(wantJSON))
 	}
 }

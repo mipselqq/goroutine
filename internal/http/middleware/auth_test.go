@@ -22,17 +22,17 @@ func TestAuth(t *testing.T) {
 		name             string
 		headerName       string
 		headerValue      string
-		expectedStatus   int
-		expectedUserID   domain.UserID
-		expectedBody     any
+		wantStatus       int
+		wantUserID       domain.UserID
+		wantBody         any
 		setupAuthService func(r *MockAuthService)
 	}{
 		{
-			name:           "Valid token",
-			headerName:     "Authorization",
-			headerValue:    "Bearer valid.token.here",
-			expectedStatus: mockStatusCode,
-			expectedUserID: userID,
+			name:        "Valid token",
+			headerName:  "Authorization",
+			headerValue: "Bearer valid.token.here",
+			wantStatus:  mockStatusCode,
+			wantUserID:  userID,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return userID, nil
@@ -40,16 +40,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Invalid token",
-			headerName:     "Authorization",
-			headerValue:    "Bearer invalid.token.here",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Invalid token",
+			headerName:  "Authorization",
+			headerValue: "Bearer invalid.token.here",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrInvalidToken
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_TOKEN",
 				"message":   "Invalid token",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -59,16 +59,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Token expired",
-			headerName:     "Authorization",
-			headerValue:    "Bearer expired.token.here",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Token expired",
+			headerName:  "Authorization",
+			headerValue: "Bearer expired.token.here",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrTokenExpired
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_TOKEN",
 				"message":   "Invalid token",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -78,16 +78,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Invalid signing method",
-			headerName:     "Authorization",
-			headerValue:    "Bearer invalid.signing.method.token.here",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Invalid signing method",
+			headerName:  "Authorization",
+			headerValue: "Bearer invalid.signing.method.token.here",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrInvalidSigningMethod
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_TOKEN",
 				"message":   "Invalid token",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -97,16 +97,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Empty header value",
-			headerName:     "Authorization",
-			headerValue:    "",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Empty header value",
+			headerName:  "Authorization",
+			headerValue: "",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -116,16 +116,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Missing token",
-			headerName:     "Authorization",
-			headerValue:    "Bearer",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Missing token",
+			headerName:  "Authorization",
+			headerValue: "Bearer",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -135,16 +135,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Empty token",
-			headerName:     "Authorization",
-			headerValue:    "Bearer ",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Empty token",
+			headerName:  "Authorization",
+			headerValue: "Bearer ",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -154,16 +154,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Extra parts in header",
-			headerName:     "Authorization",
-			headerValue:    "Bearer token extra-part",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Extra parts in header",
+			headerName:  "Authorization",
+			headerValue: "Bearer token extra-part",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -173,11 +173,11 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Extra spaces in header",
-			headerName:     "Authorization",
-			headerValue:    "   Bearer     valid.token.here   ",
-			expectedStatus: mockStatusCode,
-			expectedUserID: userID,
+			name:        "Extra spaces in header",
+			headerName:  "Authorization",
+			headerValue: "   Bearer     valid.token.here   ",
+			wantStatus:  mockStatusCode,
+			wantUserID:  userID,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return userID, nil
@@ -185,11 +185,11 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Random casing in header",
-			headerName:     "AuThorIzAtIoN",
-			headerValue:    "bEaReR vAlId.tOkEn.hErE",
-			expectedStatus: mockStatusCode,
-			expectedUserID: userID,
+			name:        "Random casing in header",
+			headerName:  "AuThorIzAtIoN",
+			headerValue: "bEaReR vAlId.tOkEn.hErE",
+			wantStatus:  mockStatusCode,
+			wantUserID:  userID,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return userID, nil
@@ -197,16 +197,16 @@ func TestAuth(t *testing.T) {
 			},
 		},
 		{
-			name:           "Wrong prefix",
-			headerName:     "Authorization",
-			headerValue:    "Basic some-token",
-			expectedStatus: http.StatusUnauthorized,
+			name:        "Wrong prefix",
+			headerName:  "Authorization",
+			headerValue: "Basic some-token",
+			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
-			expectedBody: map[string]any{
+			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -227,11 +227,11 @@ func TestAuth(t *testing.T) {
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				id, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 				if !ok {
-					t.Errorf("Expected user ID, got %v", id)
+					t.Errorf("got context user ID ok=%v, want true", ok)
 				}
 
-				if id != tt.expectedUserID {
-					t.Errorf("Expected user ID %v, got %v", tt.expectedUserID, id)
+				if id != tt.wantUserID {
+					t.Errorf("got user ID %v, want %v", id, tt.wantUserID)
 				}
 
 				w.WriteHeader(mockStatusCode)
@@ -249,8 +249,8 @@ func TestAuth(t *testing.T) {
 			if rr.Code != mockStatusCode {
 				testutil.AssertContentType(t, rr, "application/json")
 			}
-			testutil.AssertStatusCode(t, rr, tt.expectedStatus)
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertStatusCode(t, rr, tt.wantStatus)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }

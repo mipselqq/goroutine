@@ -112,22 +112,22 @@ func TestNewRouter_Full(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			if rr.Code == http.StatusNotFound {
-				t.Errorf("Path %q %q not registered in router (got 404)", tt.entry.method, tt.entry.path)
+				t.Errorf("got 404 for %s %q, want registered route", tt.entry.method, tt.entry.path)
 			}
 
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
 			if hasMetrics != tt.metrics {
-				t.Errorf("Metrics middleware application mismatch for %q: got %v, want %v", tt.entry.path, hasMetrics, tt.metrics)
+				t.Errorf("got metrics middleware=%v for %q, want %v", hasMetrics, tt.entry.path, tt.metrics)
 			}
 
 			hasCors := rr.Header().Get("X-Cors-Tracked") == "true"
 			if hasCors != tt.cors {
-				t.Errorf("CORS middleware application mismatch for %q: got %v, want %v", tt.entry.path, hasCors, tt.cors)
+				t.Errorf("got CORS middleware=%v for %q, want %v", hasCors, tt.entry.path, tt.cors)
 			}
 
 			hasReqID := rr.Header().Get("X-RequestId-Tracked") == "true"
 			if hasReqID != tt.requestID {
-				t.Errorf("RequestID middleware application mismatch for %q: got %v, want %v", tt.entry.path, hasReqID, tt.requestID)
+				t.Errorf("got request ID middleware=%v for %q, want %v", hasReqID, tt.entry.path, tt.requestID)
 			}
 		})
 	}
@@ -150,6 +150,6 @@ func TestNewAdminRouter(t *testing.T) {
 	_, pattern := router.Handler(req)
 
 	if pattern == "" {
-		t.Errorf("Path GET /metrics not registered in admin router")
+		t.Errorf("got empty pattern for GET /metrics, want registered route")
 	}
 }

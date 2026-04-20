@@ -12,7 +12,7 @@ func TestRun(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "/v1/health" {
-				t.Errorf("expected path /v1/health, got %q", r.URL.Path)
+				t.Errorf("got path %q, want /v1/health", r.URL.Path)
 			}
 			w.WriteHeader(http.StatusOK)
 		}))
@@ -21,7 +21,7 @@ func TestRun(t *testing.T) {
 		u, _ := url.Parse(ts.URL)
 		err := run(u.Hostname(), u.Port(), 1*time.Second)
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatalf("run() error = %v", err)
 		}
 	})
 
@@ -34,7 +34,7 @@ func TestRun(t *testing.T) {
 		u, _ := url.Parse(ts.URL)
 		err := run(u.Hostname(), u.Port(), 1*time.Second)
 		if err == nil {
-			t.Fatal("expected error, got nil")
+			t.Fatal("got nil error, want non-nil")
 		}
 	})
 
@@ -48,14 +48,14 @@ func TestRun(t *testing.T) {
 		u, _ := url.Parse(ts.URL)
 		err := run(u.Hostname(), u.Port(), 10*time.Millisecond)
 		if err == nil {
-			t.Fatal("expected timeout error, got nil")
+			t.Fatal("got nil error, want non-nil")
 		}
 	})
 
 	t.Run("unreachable host", func(t *testing.T) {
 		err := run("127.0.0.1", "0", 1*time.Second)
 		if err == nil {
-			t.Fatal("expected error for unreachable host, got nil")
+			t.Fatal("got nil error, want non-nil")
 		}
 	})
 }

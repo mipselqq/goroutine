@@ -15,10 +15,10 @@ func TestNewUserID(t *testing.T) {
 	id := domain.NewUserID()
 
 	if id.IsEmpty() {
-		t.Error("NewUserID() should not be empty")
+		t.Error("got empty UserID from NewUserID(), want non-empty")
 	}
 	if id.UUID().Version() != 7 {
-		t.Errorf("Expected UUID v7, got v%d", id.UUID().Version())
+		t.Errorf("got UUID version %d, want 7", id.UUID().Version())
 	}
 }
 
@@ -34,12 +34,12 @@ func TestParseUserID(t *testing.T) {
 	}
 
 	if id.String() != s {
-		t.Errorf("Expected %q, got %q", s, id)
+		t.Errorf("ParseUserID() = %q, want %q", id, s)
 	}
 
 	_, err = domain.ParseUserID("invalid")
 	if err == nil {
-		t.Error("ParseUserID() with invalid string should return error")
+		t.Error("got nil error from ParseUserID(\"invalid\"), want non-nil")
 	}
 }
 
@@ -97,16 +97,16 @@ func TestUserID_Scan(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("did not expect error, got %v", err)
+					t.Errorf("got error %v, want nil", err)
 				}
 				if tt.input != nil && id.IsEmpty() {
-					t.Error("expected UserID to not be empty")
+					t.Error("got empty UserID after Scan, want non-empty")
 				}
 			}
 		})
@@ -117,29 +117,29 @@ func TestUserPassword(t *testing.T) {
 	t.Parallel()
 
 	passwordTests := []struct {
-		name      string
-		input     string
-		expectErr bool
+		name    string
+		input   string
+		wantErr bool
 	}{
 		{
-			name:      "Valid password",
-			input:     "securePass123",
-			expectErr: false,
+			name:    "Valid password",
+			input:   "securePass123",
+			wantErr: false,
 		},
 		{
-			name:      "Less than 6 characters",
-			input:     "12345",
-			expectErr: true,
+			name:    "Less than 6 characters",
+			input:   "12345",
+			wantErr: true,
 		},
 		{
-			name:      "Empty password",
-			input:     "",
-			expectErr: true,
+			name:    "Empty password",
+			input:   "",
+			wantErr: true,
 		},
 		{
-			name:      "Whitespace password",
-			input:     "     ",
-			expectErr: true,
+			name:    "Whitespace password",
+			input:   "     ",
+			wantErr: true,
 		},
 	}
 
@@ -148,11 +148,11 @@ func TestUserPassword(t *testing.T) {
 			t.Parallel()
 
 			_, err := domain.NewUserPassword(tt.input)
-			if tt.expectErr && err == nil {
-				t.Errorf("expected error but got none")
+			if tt.wantErr && err == nil {
+				t.Error("got nil error, want non-nil")
 			}
-			if !tt.expectErr && err != nil {
-				t.Errorf("did not expect error but got: %v", err)
+			if !tt.wantErr && err != nil {
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
@@ -205,12 +205,12 @@ func TestUserPassword_Scan(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("expected error, got nil")
+					t.Error("got nil error, want non-nil")
 				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("expected error %v, got %v", tt.errIs, err)
+					t.Errorf("got error %v, want %v", err, tt.errIs)
 				}
 			} else if err != nil {
-				t.Errorf("did not expect error, got %v", err)
+				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
