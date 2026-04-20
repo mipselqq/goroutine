@@ -53,11 +53,8 @@ func (r *ErrorResponder) InvalidCredentials(w http.ResponseWriter, details []Det
 	r.DetailedError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", details)
 }
 
-// This looks like a design mistake.
-// For example, if login and password are both valid and user already exists, the request is not bad.
-// FIXME: break API contract before the 1.0.0 release and use a better status code.
-func (r *ErrorResponder) ValidButInappropriateCredentials(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusBadRequest, "INVALID_CREDENTIALS", details)
+func (r *ErrorResponder) UserAlreadyExists(w http.ResponseWriter, details []Detail) {
+	r.DetailedError(w, http.StatusConflict, "USER_ALREADY_EXISTS", details)
 }
 
 func (r *ErrorResponder) InvalidToken(w http.ResponseWriter, details []Detail) {

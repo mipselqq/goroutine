@@ -130,6 +130,7 @@ func notFoundErrorBody() map[string]any {
 		"code":      "NOT_FOUND",
 		"message":   "Resource not found",
 		"timestamp": testutil.FixedTimeNowStr(),
+		"details":   []any{},
 	}
 }
 
@@ -140,6 +141,17 @@ func boardNotFoundErrorBody() map[string]any {
 		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
 			map[string]any{"field": "boardId", "issues": []string{"Board not found"}},
+		},
+	}
+}
+
+func userAlreadyExistsErrorBody() map[string]any {
+	return map[string]any{
+		"code":      "USER_ALREADY_EXISTS",
+		"message":   "User already exists",
+		"timestamp": testutil.FixedTimeNowStr(),
+		"details": []any{
+			map[string]any{"field": "email", "issues": []string{"Email already registered"}},
 		},
 	}
 }

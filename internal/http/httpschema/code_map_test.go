@@ -24,6 +24,11 @@ func TestMapCodeToDescription(t *testing.T) {
 			code:        "INDEX_OUT_OF_BOUNDS",
 			description: "Index out of bounds",
 		},
+		{
+			name:        "known conflict error code",
+			code:        "USER_ALREADY_EXISTS",
+			description: "User already exists",
+		},
 		// Other cases omitted since they're identical to the known code
 		{
 			name:        "unknown code fallback",

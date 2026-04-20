@@ -4,6 +4,7 @@ var codeMap = map[string]string{
 	"INVALID_CREDENTIALS":   "Invalid login or password",
 	"VALIDATION_ERROR":      "Some fields are invalid",
 	"INTERNAL_SERVER_ERROR": "Internal server error",
+	"USER_ALREADY_EXISTS":   "User already exists",
 	"NOT_FOUND":             "Resource not found",
 	"BOARD_NOT_FOUND":       "Board not found",
 	"COLUMN_NOT_FOUND":      "Column not found",

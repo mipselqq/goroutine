@@ -168,7 +168,7 @@ const docTemplate = `{
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.Error"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
                     "500": {
@@ -224,7 +224,7 @@ const docTemplate = `{
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.Error"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
                     "500": {
@@ -292,7 +292,7 @@ const docTemplate = `{
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/httpschema.Error"
+                            "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
                     "500": {
@@ -754,7 +754,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "VALIDATION_ERROR or INVALID_CREDENTIALS",
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "409": {
+                        "description": "USER_ALREADY_EXISTS",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
