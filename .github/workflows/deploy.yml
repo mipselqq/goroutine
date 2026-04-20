@@ -88,3 +88,43 @@ jobs:
     with:
       env_name: production
     secrets: inherit
+
+  ping-staging-health:
+    name: Ping Staging Health
+    needs: deploy-staging
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 1
+    steps:
+      - name: Ping /v1/health
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            --silent \
+            --retry 5 \
+            --retry-delay 5 \
+            --retry-max-time 30 \
+            --retry-all-errors \
+            "http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}/v1/health"
+
+  ping-prod-health:
+    name: Ping Production Health
+    needs: deploy-prod
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 1
+    steps:
+      - name: Ping /v1/health
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            --silent \
+            --retry 5 \
+            --retry-delay 5 \
+            --retry-max-time 30 \
+            --retry-all-errors \
+            "http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}/v1/health"
