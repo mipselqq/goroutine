@@ -260,7 +260,7 @@ paths:
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/httpschema.Error'
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -298,7 +298,7 @@ paths:
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/httpschema.Error'
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -343,7 +343,7 @@ paths:
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/httpschema.Error'
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -649,7 +649,11 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.Status'
         "400":
-          description: VALIDATION_ERROR or INVALID_CREDENTIALS
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "409":
+          description: USER_ALREADY_EXISTS
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":

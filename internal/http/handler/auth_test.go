@@ -108,15 +108,8 @@ func TestAuth_Register(t *testing.T) {
 					return service.ErrUserAlreadyExists
 				}
 			},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
-				"code":      "INVALID_CREDENTIALS",
-				"message":   "Invalid login or password",
-				"timestamp": testutil.FixedTimeNowStr(),
-				"details": []any{
-					map[string]any{"field": "email or password", "issues": []string{"Invalid credentials"}},
-				},
-			},
+			expectedCode: http.StatusConflict,
+			expectedBody: userAlreadyExistsErrorBody(),
 		},
 		{
 			name:      "Unknown error",

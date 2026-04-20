@@ -45,7 +45,8 @@ type registerBody struct {
 // @Produce json
 // @Param body body registerBody true "Registration details"
 // @Success 200 {object} httpschema.Status
-// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR or INVALID_CREDENTIALS"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 409 {object} httpschema.DetailedError "USER_ALREADY_EXISTS"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
@@ -68,9 +69,8 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Register(r.Context(), email, password)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrUserAlreadyExists),
-			errors.Is(err, service.ErrInvalidCredentials):
-			h.responder.ValidButInappropriateCredentials(w, []httpschema.Detail{{Field: "email or password", Issues: []string{"Invalid credentials"}}})
+		case errors.Is(err, service.ErrUserAlreadyExists):
+			h.responder.UserAlreadyExists(w, []httpschema.Detail{{Field: "email", Issues: []string{"Email already registered"}}})
 		default:
 			h.responder.InternalError(w, r, err)
 		}
