@@ -16,6 +16,7 @@ type ColumnsService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
 	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 	UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
+	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 type Columns struct {
@@ -218,6 +219,54 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewColumnResponse(&column))
+}
+
+// Delete godoc
+// @Summary Delete a column by id
+// @Description Permanently delete a column from board for the current user and shift positions to close the gap.
+// @Tags columns
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param boardId path string true "Board ID"
+// @Param columnId path string true "Column ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards/{boardId}/columns/{columnId} [delete]
+func (h *Columns) Delete(w http.ResponseWriter, r *http.Request) {
+	rawBoardID := r.PathValue("boardId")
+	boardID, err := domain.ParseBoardID(rawBoardID)
+	if err != nil {
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		return
+	}
+
+	rawColumnID := r.PathValue("columnId")
+	columnID, err := domain.ParseColumnID(rawColumnID)
+	if err != nil {
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Invalid column id"}}})
+		return
+	}
+
+	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	if !ok {
+		return
+	}
+
+	err = h.service.Delete(r.Context(), userID, boardID, columnID)
+	if err != nil {
+		if errors.Is(err, service.ErrColumnNotFound) {
+			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})
+			return
+		}
+		h.responder.InternalError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Columns) extractUserIDOrHandleMissing(w http.ResponseWriter, r *http.Request) (domain.UserID, bool) {

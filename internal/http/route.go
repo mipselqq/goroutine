@@ -29,6 +29,7 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("POST /v1/boards/{boardId}/columns", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.Create))))
 	mux.Handle("GET /v1/boards/{boardId}/columns", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.List))))
 	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.UpdateByID))))
+	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.Delete))))
 	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
 
 	return m.RequestID.Wrap(m.CORS.Wrap(mux))

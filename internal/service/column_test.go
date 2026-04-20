@@ -450,3 +450,128 @@ func TestColumn_UpdateByID(t *testing.T) {
 		})
 	}
 }
+
+func TestColumn_Delete(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	validColumn := testutil.ValidColumn(validBoard.ID)
+
+	tests := []struct {
+		name        string
+		callerID    domain.UserID
+		columnID    domain.ColumnID
+		setupBoards func(r *MockBoardRepository)
+		setupColumn func(r *MockColumnRepository)
+		expectedErr error
+	}{
+		{
+			name:     "Success",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					if id != validBoard.ID {
+						t.Errorf("expected board id %v, got %v", validBoard.ID, id)
+					}
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+					if boardID != validBoard.ID {
+						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+					}
+					if columnID != validColumn.ID {
+						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+					}
+					return nil
+				}
+			},
+		},
+		{
+			name:     "Board not found",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, repository.ErrRowNotFound
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+					t.Fatalf("should not be called")
+					return nil
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Caller has no access",
+			callerID: domain.NewUserID(),
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+					t.Fatalf("should not be called")
+					return nil
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Column not found",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+					return repository.ErrRowNotFound
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Delete internal error",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+					return errors.New("delete failed")
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			boardRepo := &MockBoardRepository{}
+			columnRepo := &MockColumnRepository{}
+			tt.setupBoards(boardRepo)
+			tt.setupColumn(columnRepo)
+
+			s := service.NewColumn(columnRepo, boardRepo, testutil.FixedTimeNow)
+			err := s.Delete(context.Background(), tt.callerID, validBoard.ID, tt.columnID)
+
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
+	}
+}

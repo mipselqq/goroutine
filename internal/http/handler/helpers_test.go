@@ -41,6 +41,7 @@ type MockColumns struct {
 	CreateFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
 	ListFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
+	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
@@ -81,6 +82,11 @@ func (m *MockColumns) List(ctx context.Context, callerID domain.UserID, boardID 
 func (m *MockColumns) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 	AssertFuncNotNil("ColumnsService.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, callerID, boardID, columnID, name)
+}
+
+func (m *MockColumns) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
+	AssertFuncNotNil("ColumnsService.DeleteFunc", m.DeleteFunc)
+	return m.DeleteFunc(ctx, callerID, boardID, columnID)
 }
 
 func columnNotFoundErrorBody() map[string]any {

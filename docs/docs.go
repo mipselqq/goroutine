@@ -434,6 +434,69 @@ const docTemplate = `{
             }
         },
         "/v1/boards/{boardId}/columns/{columnId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently delete a column from board for the current user and shift positions to close the gap.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "columns"
+                ],
+                "summary": "Delete a column by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            },
             "patch": {
                 "security": [
                     {
