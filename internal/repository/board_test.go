@@ -165,20 +165,29 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		CreateUser(t, pool, userID, "getmany-order@example.com")
 
-		first, err := r.Create(context.Background(), userID, boardName, boardDescription)
-		if err != nil {
-			t.Fatalf("Create() error = %v", err)
-		}
-
 		otherName, err := domain.NewBoardName(boardName.String() + "-2")
 		if err != nil {
 			t.Fatalf("NewBoardName() error = %v", err)
 		}
-		time.Sleep(5 * time.Millisecond)
-		second, err := r.Create(context.Background(), userID, otherName, boardDescription)
-		if err != nil {
-			t.Fatalf("Create() error = %v", err)
+		first := domain.Board{
+			ID:          domain.NewBoardID(),
+			OwnerID:     userID,
+			Name:        boardName,
+			Description: boardDescription,
+			CreatedAt:   testutil.FixedTimeNow(),
+			UpdatedAt:   testutil.FixedTimeNow(),
 		}
+		second := domain.Board{
+			ID:          domain.NewBoardID(),
+			OwnerID:     userID,
+			Name:        otherName,
+			Description: boardDescription,
+			CreatedAt:   testutil.FixedTime5mFromNow(),
+			UpdatedAt:   testutil.FixedTime5mFromNow(),
+		}
+
+		InsertBoard(t, pool, &first)
+		InsertBoard(t, pool, &second)
 
 		got, err := r.GetMany(context.Background(), userID)
 		if err != nil {
@@ -277,8 +286,6 @@ func TestBoardRepository_Delete(t *testing.T) {
 
 	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
-	boardName := testutil.ValidBoardName()
-	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "boards")
@@ -286,19 +293,17 @@ func TestBoardRepository_Delete(t *testing.T) {
 
 		CreateUser(t, pool, userID, "delete@example.com")
 
-		board, err := r.Create(context.Background(), userID, boardName, boardDescription)
-		if err != nil {
-			t.Fatalf("Create() error = %v", err)
-		}
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
 
-		err = r.Delete(context.Background(), board.ID)
+		err := r.Delete(context.Background(), board.ID)
 		if err != nil {
 			t.Errorf("Delete() error = %v", err)
 		}
 
-		_, err = r.GetByID(context.Background(), board.ID)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("GetByID() error = %v, want ErrRowNotFound", err)
+		_, ok := FindBoardByID(t, pool, board.ID)
+		if ok {
+			t.Errorf("got board %q in DB, want deleted row", board.ID)
 		}
 	})
 

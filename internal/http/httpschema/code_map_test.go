@@ -15,23 +15,23 @@ func TestMapCodeToDescription(t *testing.T) {
 		description string
 	}{
 		{
-			name:        "known code",
+			name:        "Known code",
 			code:        "INVALID_CREDENTIALS",
 			description: "Invalid login or password",
 		},
 		{
-			name:        "known move error code",
+			name:        "Known move error code",
 			code:        "INDEX_OUT_OF_BOUNDS",
 			description: "Index out of bounds",
 		},
 		{
-			name:        "known conflict error code",
+			name:        "Known conflict error code",
 			code:        "USER_ALREADY_EXISTS",
 			description: "User already exists",
 		},
 		// Other cases omitted since they're identical to the known code
 		{
-			name:        "unknown code fallback",
+			name:        "Unknown code fallback",
 			code:        "SOME_NON_EXISTENT_CODE",
 			description: "Unknown error",
 		},

@@ -45,7 +45,7 @@ func TestUserRepository_Insert(t *testing.T) {
 	t.Run("Duplicate email", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
-		_ = r.Insert(ctx, email, hash)
+		InsertUser(t, pool, testutil.ValidUserID(), email, hash)
 		err := r.Insert(ctx, email, hash)
 
 		if !errors.Is(err, repository.ErrUniqueViolation) {
@@ -65,14 +65,12 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 
 	email := testutil.ValidEmail()
 	hash := testutil.ValidPasswordHash()
+	userID := testutil.ValidUserID()
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "users")
 
-		err := r.Insert(ctx, email, hash)
-		if err != nil {
-			t.Fatalf("Insert() error = %v", err)
-		}
+		InsertUser(t, pool, userID, email, hash)
 
 		gotID, gotHash, err := r.GetByEmail(ctx, email)
 		if err != nil {
@@ -81,8 +79,8 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		if gotHash != hash {
 			t.Errorf("got hash %q, want %q", gotHash, hash)
 		}
-		if gotID.IsEmpty() {
-			t.Errorf("got id %v, want non-empty", gotID)
+		if gotID != userID {
+			t.Errorf("got id %q, want %q", gotID, userID)
 		}
 	})
 
