@@ -142,8 +142,8 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		InsertBoard(t, pool, &boardB)
 
 		first := testutil.ValidColumn(boardA.ID)
-		second := testutil.ValidColumnAtPosition(t, boardA.ID, "In Progress", 2)
-		otherBoardColumn := testutil.ValidColumnAtPosition(t, boardB.ID, "Done", 1)
+		second := testutil.NewValidColumn(t, boardA.ID, "In Progress", 2)
+		otherBoardColumn := testutil.NewValidColumn(t, boardB.ID, "Done", 1)
 
 		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
@@ -289,8 +289,8 @@ func TestColumnRepository_Delete(t *testing.T) {
 		InsertBoard(t, pool, &board)
 
 		first := testutil.ValidColumn(board.ID)
-		second := testutil.ValidColumnAtPosition(t, board.ID, "In Progress", 2)
-		third := testutil.ValidColumnAtPosition(t, board.ID, "Done", 3)
+		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
+		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
 		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)

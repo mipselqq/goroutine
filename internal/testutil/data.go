@@ -139,7 +139,7 @@ func ValidColumn(boardID domain.BoardID) domain.Column {
 	}
 }
 
-func ValidColumnAtPosition(t *testing.T, boardID domain.BoardID, name string, position int64) domain.Column {
+func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position int64) domain.Column {
 	t.Helper()
 
 	column := ValidColumn(boardID)
