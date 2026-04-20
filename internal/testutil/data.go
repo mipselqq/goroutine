@@ -138,3 +138,42 @@ func ValidColumn(boardID domain.BoardID) domain.Column {
 		UpdatedAt: pseudoNow,
 	}
 }
+
+func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position int64) domain.Column {
+	t.Helper()
+
+	column := ValidColumn(boardID)
+
+	domainName, err := domain.NewColumnName(name)
+	if err != nil {
+		t.Fatalf("Failed to create column name: %v", err)
+	}
+
+	domainPosition, err := domain.NewColumnPosition(position)
+	if err != nil {
+		t.Fatalf("Failed to create column position: %v", err)
+	}
+
+	column.Name = domainName
+	column.Position = domainPosition
+
+	return column
+}
+
+func UpdateValidColumn(t *testing.T, base *domain.Column, name string, updatedAt time.Time) domain.Column {
+	t.Helper()
+
+	domainName, err := domain.NewColumnName(name)
+	if err != nil {
+		t.Fatalf("Failed to create column name: %v", err)
+	}
+
+	return domain.Column{
+		ID:        base.ID,
+		BoardID:   base.BoardID,
+		Name:      domainName,
+		Position:  base.Position,
+		CreatedAt: base.CreatedAt,
+		UpdatedAt: updatedAt,
+	}
+}
