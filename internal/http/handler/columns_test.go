@@ -463,6 +463,169 @@ func TestColumns_UpdateByID(t *testing.T) {
 	}
 }
 
+func TestColumns_Move(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	validColumn := testutil.ValidColumn(validBoard.ID)
+	targetPosition, err := domain.NewColumnPosition(2)
+	if err != nil {
+		t.Fatalf("NewColumnPosition: %v", err)
+	}
+
+	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String() + "/position"
+
+	tests := []struct {
+		name         string
+		path         string
+		inputBody    any
+		context      context.Context
+		setupMock    func(s *MockColumns)
+		expectedCode int
+		expectedBody any
+	}{
+		{
+			name:      "Success",
+			path:      okPath,
+			inputBody: map[string]int64{"targetPosition": targetPosition.Int64()},
+			setupMock: func(s *MockColumns) {
+				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, gotTargetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					if callerID != validBoard.OwnerID {
+						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+					}
+					if boardID != validBoard.ID {
+						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+					}
+					if columnID != validColumn.ID {
+						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+					}
+					if gotTargetPosition != targetPosition {
+						t.Errorf("expected target position %v, got %v", targetPosition, gotTargetPosition)
+					}
+					return targetPosition, nil
+				}
+			},
+			expectedCode: http.StatusOK,
+			expectedBody: map[string]any{
+				"position": targetPosition.Int64(),
+			},
+		},
+		{
+			name:         "Invalid board id",
+			path:         "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String() + "/position",
+			inputBody:    map[string]int64{"targetPosition": 1},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+		},
+		{
+			name:         "Invalid column id",
+			path:         "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid/position",
+			inputBody:    map[string]int64{"targetPosition": 1},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+		},
+		{
+			name:         "Invalid JSON",
+			path:         okPath,
+			inputBody:    "{\"targetPosition\":",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: invalidJsonBody(),
+		},
+		{
+			name:         "Invalid target position",
+			path:         okPath,
+			inputBody:    map[string]int64{"targetPosition": 0},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("targetPosition", []string{"Position is invalid"}),
+		},
+		{
+			name:         "Missing context user",
+			path:         okPath,
+			inputBody:    map[string]int64{"targetPosition": 1},
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+		{
+			name:      "Index out of bounds",
+			path:      okPath,
+			inputBody: map[string]int64{"targetPosition": 10},
+			setupMock: func(s *MockColumns) {
+				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					return domain.ColumnPosition{}, service.ErrIndexOutOfBounds
+				}
+			},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("targetPosition", []string{"Index out of bounds"}),
+		},
+		{
+			name:      "Column not found",
+			path:      okPath,
+			inputBody: map[string]int64{"targetPosition": 1},
+			setupMock: func(s *MockColumns) {
+				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					return domain.ColumnPosition{}, service.ErrColumnNotFound
+				}
+			},
+			expectedCode: http.StatusNotFound,
+			expectedBody: columnNotFoundErrorBody(),
+		},
+		{
+			name:      "Internal error",
+			path:      okPath,
+			inputBody: map[string]int64{"targetPosition": 1},
+			setupMock: func(s *MockColumns) {
+				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					return domain.ColumnPosition{}, service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var req *http.Request
+			if raw, ok := tt.inputBody.(string); ok {
+				req = httptest.NewRequest(http.MethodPut, tt.path, strings.NewReader(raw))
+				req.Header.Set("Content-Type", "application/json")
+			} else {
+				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPut, tt.path, tt.inputBody)
+			}
+
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+
+			boardAndColumn := strings.TrimPrefix(tt.path, "/v1/boards/")
+			parts := strings.Split(boardAndColumn, "/columns/")
+			if len(parts) == 2 {
+				req.SetPathValue("boardId", parts[0])
+				req.SetPathValue("columnId", strings.TrimSuffix(parts[1], "/position"))
+			}
+
+			rr := httptest.NewRecorder()
+			mockColumns := &MockColumns{}
+			if tt.setupMock != nil {
+				tt.setupMock(mockColumns)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h.Move(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
+}
+
 func TestColumns_Delete(t *testing.T) {
 	t.Parallel()
 

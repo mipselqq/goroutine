@@ -271,6 +271,240 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 	})
 }
 
+func TestColumnRepository_Move(t *testing.T) {
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	defer pool.Close()
+
+	r := repository.NewPgColumn(pool)
+
+	t.Run("Success move down", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-move-down@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		first := testutil.ValidColumn(board.ID)
+		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
+		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
+
+		InsertColumn(t, pool, &first)
+		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &third)
+
+		targetPosition, err := domain.NewColumnPosition(3)
+		if err != nil {
+			t.Fatalf("NewColumnPosition: %v", err)
+		}
+
+		gotPosition, err := r.Move(context.Background(), board.ID, first.ID, targetPosition)
+		if err != nil {
+			t.Fatalf("Move() error = %v", err)
+		}
+		if gotPosition != targetPosition {
+			t.Fatalf("Move() position = %v, want %v", gotPosition, targetPosition)
+		}
+
+		got := ListColumnsByBoardID(t, pool, board.ID)
+		if len(got) != 3 {
+			t.Fatalf("expected 3 columns after move, got %d", len(got))
+		}
+		if got[0].ID != second.ID || got[0].Position.Int64() != 1 {
+			t.Errorf("expected second column at position 1, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+		}
+		if got[1].ID != third.ID || got[1].Position.Int64() != 2 {
+			t.Errorf("expected third column at position 2, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+		}
+		if got[2].ID != first.ID || got[2].Position.Int64() != 3 {
+			t.Errorf("expected first column at position 3, got id=%q position=%d", got[2].ID, got[2].Position.Int64())
+		}
+	})
+
+	t.Run("Success move up", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-move-up@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		first := testutil.ValidColumn(board.ID)
+		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
+		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
+
+		InsertColumn(t, pool, &first)
+		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &third)
+
+		targetPosition, err := domain.NewColumnPosition(1)
+		if err != nil {
+			t.Fatalf("NewColumnPosition: %v", err)
+		}
+
+		gotPosition, err := r.Move(context.Background(), board.ID, third.ID, targetPosition)
+		if err != nil {
+			t.Fatalf("Move() error = %v", err)
+		}
+		if gotPosition != targetPosition {
+			t.Fatalf("Move() position = %v, want %v", gotPosition, targetPosition)
+		}
+
+		got := ListColumnsByBoardID(t, pool, board.ID)
+		if len(got) != 3 {
+			t.Fatalf("expected 3 columns after move, got %d", len(got))
+		}
+		if got[0].ID != third.ID || got[0].Position.Int64() != 1 {
+			t.Errorf("expected third column at position 1, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+		}
+		if got[1].ID != first.ID || got[1].Position.Int64() != 2 {
+			t.Errorf("expected first column at position 2, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+		}
+		if got[2].ID != second.ID || got[2].Position.Int64() != 3 {
+			t.Errorf("expected second column at position 3, got id=%q position=%d", got[2].ID, got[2].Position.Int64())
+		}
+	})
+
+	t.Run("Success no-op", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-move-noop@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		first := testutil.ValidColumn(board.ID)
+		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
+
+		InsertColumn(t, pool, &first)
+		InsertColumn(t, pool, &second)
+
+		targetPosition, err := domain.NewColumnPosition(2)
+		if err != nil {
+			t.Fatalf("NewColumnPosition: %v", err)
+		}
+
+		gotPosition, err := r.Move(context.Background(), board.ID, second.ID, targetPosition)
+		if err != nil {
+			t.Fatalf("Move() error = %v", err)
+		}
+		if gotPosition != targetPosition {
+			t.Fatalf("Move() position = %v, want %v", gotPosition, targetPosition)
+		}
+
+		got := ListColumnsByBoardID(t, pool, board.ID)
+		if len(got) != 2 {
+			t.Fatalf("expected 2 columns after no-op move, got %d", len(got))
+		}
+		if got[0].ID != first.ID || got[0].Position.Int64() != 1 {
+			t.Errorf("expected first column to stay at position 1, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+		}
+		if got[1].ID != second.ID || got[1].Position.Int64() != 2 {
+			t.Errorf("expected second column to stay at position 2, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+		}
+	})
+
+	t.Run("Index out of bounds", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-move-oob@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		first := testutil.ValidColumn(board.ID)
+		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
+		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
+
+		InsertColumn(t, pool, &first)
+		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &third)
+
+		targetPosition, err := domain.NewColumnPosition(4)
+		if err != nil {
+			t.Fatalf("NewColumnPosition: %v", err)
+		}
+
+		_, err = r.Move(context.Background(), board.ID, second.ID, targetPosition)
+		if !errors.Is(err, repository.ErrIndexOutOfBounds) {
+			t.Fatalf("Move() error = %v, want ErrIndexOutOfBounds", err)
+		}
+
+		got := ListColumnsByBoardID(t, pool, board.ID)
+		if len(got) != 3 {
+			t.Fatalf("expected 3 columns after failed move, got %d", len(got))
+		}
+		if got[0].ID != first.ID || got[0].Position.Int64() != 1 {
+			t.Errorf("expected first column unchanged, got id=%q position=%d", got[0].ID, got[0].Position.Int64())
+		}
+		if got[1].ID != second.ID || got[1].Position.Int64() != 2 {
+			t.Errorf("expected second column unchanged, got id=%q position=%d", got[1].ID, got[1].Position.Int64())
+		}
+		if got[2].ID != third.ID || got[2].Position.Int64() != 3 {
+			t.Errorf("expected third column unchanged, got id=%q position=%d", got[2].ID, got[2].Position.Int64())
+		}
+	})
+
+	t.Run("Not found by column id", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-move-missing-col@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		targetPosition, err := domain.NewColumnPosition(1)
+		if err != nil {
+			t.Fatalf("NewColumnPosition: %v", err)
+		}
+
+		_, err = r.Move(context.Background(), board.ID, domain.NewColumnID(), targetPosition)
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("Move() error = %v, want ErrRowNotFound", err)
+		}
+	})
+
+	t.Run("Not found by board id", func(t *testing.T) {
+		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateTable(t, pool, "users")
+
+		userID := testutil.ValidUserID()
+		CreateUser(t, pool, userID, "column-move-missing-board@example.com")
+
+		board := testutil.ValidBoard()
+		InsertBoard(t, pool, &board)
+
+		created := testutil.ValidColumn(board.ID)
+		InsertColumn(t, pool, &created)
+
+		targetPosition, err := domain.NewColumnPosition(1)
+		if err != nil {
+			t.Fatalf("NewColumnPosition: %v", err)
+		}
+
+		_, err = r.Move(context.Background(), domain.NewBoardID(), created.ID, targetPosition)
+		if !errors.Is(err, repository.ErrRowNotFound) {
+			t.Errorf("Move() error = %v, want ErrRowNotFound", err)
+		}
+	})
+}
+
 func TestColumnRepository_Delete(t *testing.T) {
 	pool := testutil.SetupTestDB(t, "../../migrations")
 	defer pool.Close()

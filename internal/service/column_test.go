@@ -451,6 +451,221 @@ func TestColumn_UpdateByID(t *testing.T) {
 	}
 }
 
+func TestColumn_Move(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	validColumn := testutil.ValidColumn(validBoard.ID)
+	targetPosition, err := domain.NewColumnPosition(2)
+	if err != nil {
+		t.Fatalf("NewColumnPosition: %v", err)
+	}
+
+	tests := []struct {
+		name         string
+		callerID     domain.UserID
+		columnID     domain.ColumnID
+		setupBoards  func(r *MockBoardRepository)
+		setupColumn  func(r *MockColumnRepository)
+		expectedErr  error
+		wantPosition domain.ColumnPosition
+	}{
+		{
+			name:     "Success",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					if columnID != validColumn.ID {
+						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+					}
+					return validColumn, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, gotTargetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					if boardID != validBoard.ID {
+						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+					}
+					if columnID != validColumn.ID {
+						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+					}
+					if gotTargetPosition != targetPosition {
+						t.Errorf("expected target position %v, got %v", targetPosition, gotTargetPosition)
+					}
+					return targetPosition, nil
+				}
+			},
+			wantPosition: targetPosition,
+		},
+		{
+			name:     "Board not found",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, repository.ErrRowNotFound
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					t.Fatalf("should not be called")
+					return domain.Column{}, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					t.Fatalf("should not be called")
+					return domain.ColumnPosition{}, nil
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Caller has no access",
+			callerID: domain.NewUserID(),
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					t.Fatalf("should not be called")
+					return domain.Column{}, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					t.Fatalf("should not be called")
+					return domain.ColumnPosition{}, nil
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Column belongs to another board",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					otherBoardColumn := validColumn
+					otherBoardColumn.BoardID = domain.NewBoardID()
+					return otherBoardColumn, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					t.Fatalf("should not be called")
+					return domain.ColumnPosition{}, nil
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Column not found",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					return domain.Column{}, repository.ErrRowNotFound
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					t.Fatalf("should not be called")
+					return domain.ColumnPosition{}, nil
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Index out of bounds",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					return validColumn, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					return domain.ColumnPosition{}, repository.ErrIndexOutOfBounds
+				}
+			},
+			expectedErr: service.ErrIndexOutOfBounds,
+		},
+		{
+			name:     "Move row not found",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					return validColumn, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					return domain.ColumnPosition{}, repository.ErrRowNotFound
+				}
+			},
+			expectedErr: service.ErrColumnNotFound,
+		},
+		{
+			name:     "Move internal error",
+			callerID: validBoard.OwnerID,
+			columnID: validColumn.ID,
+			setupBoards: func(r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumn: func(r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					return validColumn, nil
+				}
+				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+					return domain.ColumnPosition{}, errors.New("move failed")
+				}
+			},
+			expectedErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			boardRepo := &MockBoardRepository{}
+			columnRepo := &MockColumnRepository{}
+			tt.setupBoards(boardRepo)
+			tt.setupColumn(columnRepo)
+
+			s := service.NewColumn(columnRepo, boardRepo, testutil.FixedTimeNow)
+			got, err := s.Move(context.Background(), tt.callerID, validBoard.ID, tt.columnID, targetPosition)
+
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+			if tt.expectedErr == nil && got != tt.wantPosition {
+				t.Errorf("Move() position = %v, want %v", got, tt.wantPosition)
+			}
+		})
+	}
+}
+
 func TestColumn_Delete(t *testing.T) {
 	t.Parallel()
 

@@ -37,6 +37,10 @@ func (r *ErrorResponder) ColumnNotFound(w http.ResponseWriter, details []Detail)
 	r.DetailedError(w, http.StatusNotFound, "COLUMN_NOT_FOUND", details)
 }
 
+func (r *ErrorResponder) IndexOutOfBounds(w http.ResponseWriter, details []Detail) {
+	r.DetailedError(w, http.StatusBadRequest, "INDEX_OUT_OF_BOUNDS", details)
+}
+
 func (r *ErrorResponder) UserNotFound(w http.ResponseWriter, details []Detail) {
 	r.DetailedError(w, http.StatusUnauthorized, "USER_NOT_FOUND", details)
 }

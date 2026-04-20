@@ -21,6 +21,7 @@ type ColumnRepository interface {
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 	UpdateByID(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
+	Move(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
@@ -154,4 +155,47 @@ func (s *Column) Delete(
 	}
 
 	return nil
+}
+
+func (s *Column) Move(
+	ctx context.Context,
+	callerID domain.UserID,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+	targetPosition domain.ColumnPosition,
+) (domain.ColumnPosition, error) {
+	board, err := s.boardRepository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.ColumnPosition{}, ErrColumnNotFound
+		}
+		return domain.ColumnPosition{}, fmt.Errorf("column service: move get board: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != callerID {
+		return domain.ColumnPosition{}, ErrColumnNotFound
+	}
+
+	column, err := s.columnRepository.GetByID(ctx, columnID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.ColumnPosition{}, ErrColumnNotFound
+		}
+		return domain.ColumnPosition{}, fmt.Errorf("column service: move get column: %v: %w", err, ErrInternal)
+	}
+	if column.BoardID != boardID {
+		return domain.ColumnPosition{}, ErrColumnNotFound
+	}
+
+	position, err := s.columnRepository.Move(ctx, boardID, columnID, targetPosition)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return domain.ColumnPosition{}, ErrColumnNotFound
+		}
+		if errors.Is(err, repository.ErrIndexOutOfBounds) {
+			return domain.ColumnPosition{}, ErrIndexOutOfBounds
+		}
+		return domain.ColumnPosition{}, fmt.Errorf("column service: move: %v: %w", err, ErrInternal)
+	}
+
+	return position, nil
 }

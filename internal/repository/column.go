@@ -162,6 +162,151 @@ func (r *PgColumn) UpdateByID(
 	return column, nil
 }
 
+func (r *PgColumn) Move(
+	ctx context.Context,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+	targetPosition domain.ColumnPosition,
+) (domain.ColumnPosition, error) {
+	const (
+		// SET position order is not guaranteed, so we disable uniqueness constraint for this transaction.
+
+		// 1. Lock the board row so no concurrent operation can reorder columns in the same board.
+		lockBoardQuery = `
+		SELECT 1
+		FROM boards
+		WHERE id = @board_id
+		FOR UPDATE`
+
+		// 2. Defer the unique constraint until COMMIT for this transaction only.
+		deferPositionConstraintQuery = `
+		SET CONSTRAINTS columns_board_id_position_key DEFERRED`
+
+		// 3. Read the current position of the column we are moving.
+		getCurrentPositionQuery = `
+		SELECT position
+		FROM columns
+		WHERE board_id = @board_id
+		  AND id = @column_id`
+
+		// 4. Read how many columns the board currently has to validate targetPosition.
+		countColumnsQuery = `
+		SELECT COUNT(*)
+		FROM columns
+		WHERE board_id = @board_id`
+
+		// 5. If the moved column goes down, shift neighbors from (current, target] one slot up.
+		//    Example: moving 2 -> 5 means 3,4,5 become 2,3,4.
+		moveNeighborsDownQuery = `
+		UPDATE columns
+		SET position = position - 1
+		WHERE board_id = @board_id
+		  AND position > @current_position
+		  AND position <= @target_position`
+
+		// 5. If the moved column goes up, shift neighbors from [target, current) one slot down.
+		//    Example: moving 5 -> 2 means 2,3,4 become 3,4,5.
+		moveNeighborsUpQuery = `
+		UPDATE columns
+		SET position = position + 1
+		WHERE board_id = @board_id
+		  AND position >= @target_position
+		  AND position < @current_position`
+
+		// 6. Put the moved column into targetPosition after neighbors have been shifted.
+		moveColumnIntoTargetQuery = `
+		UPDATE columns
+		SET position = @target_position
+		WHERE board_id = @board_id
+		  AND id = @column_id`
+	)
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move begin tx: %v: %w", err, ErrInternal)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	var locked int
+	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&locked)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ColumnPosition{}, ErrRowNotFound
+		}
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move lock board: %v: %w", err, ErrInternal)
+	}
+
+	_, err = tx.Exec(ctx, deferPositionConstraintQuery)
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move defer position constraint: %v: %w", err, ErrInternal)
+	}
+
+	var currentPosition int64
+	err = tx.QueryRow(ctx, getCurrentPositionQuery, pgx.NamedArgs{
+		"board_id":  boardID,
+		"column_id": columnID,
+	}).Scan(&currentPosition)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ColumnPosition{}, ErrRowNotFound
+		}
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move get current position: %v: %w", err, ErrInternal)
+	}
+
+	var columnsCount int64
+	err = tx.QueryRow(ctx, countColumnsQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&columnsCount)
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move count columns: %v: %w", err, ErrInternal)
+	}
+
+	targetPositionInt := targetPosition.Int64()
+	if targetPositionInt > columnsCount {
+		return domain.ColumnPosition{}, ErrIndexOutOfBounds
+	}
+	if targetPositionInt == currentPosition {
+		return targetPosition, nil
+	}
+
+	moveNeighborsArgs := pgx.NamedArgs{
+		"board_id":         boardID,
+		"current_position": currentPosition,
+		"target_position":  targetPositionInt,
+	}
+	if currentPosition < targetPositionInt {
+		_, err = tx.Exec(ctx, moveNeighborsDownQuery, moveNeighborsArgs)
+		if err != nil {
+			return domain.ColumnPosition{}, fmt.Errorf("column repo: move neighbors down: %v: %w", err, ErrInternal)
+		}
+	} else {
+		_, err = tx.Exec(ctx, moveNeighborsUpQuery, moveNeighborsArgs)
+		if err != nil {
+			return domain.ColumnPosition{}, fmt.Errorf("column repo: move neighbors up: %v: %w", err, ErrInternal)
+		}
+	}
+
+	_, err = tx.Exec(ctx, moveColumnIntoTargetQuery, pgx.NamedArgs{
+		"board_id":        boardID,
+		"column_id":       columnID,
+		"target_position": targetPosition,
+	})
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move column into target: %v: %w", err, ErrInternal)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move commit: %v: %w", err, ErrInternal)
+	}
+
+	return targetPosition, nil
+}
+
 func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
 	const (
 		lockBoardQuery = `

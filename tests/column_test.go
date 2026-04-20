@@ -23,6 +23,10 @@ type columnJSON struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
+type columnPositionJSON struct {
+	Position int64 `json:"position"`
+}
+
 func TestColumn_HappyPath(t *testing.T) {
 	httpClient, ts, pool := Prelude(t)
 
@@ -214,6 +218,42 @@ func TestColumn_HappyPath(t *testing.T) {
 		if listedAfterDelete[1].ID != thirdColumn.ID || listedAfterDelete[1].Position != 2 {
 			t.Errorf("Expected third column to shift to position 2, got id=%s position=%d", listedAfterDelete[1].ID, listedAfterDelete[1].Position)
 		}
+
+		// 10. Move the remaining second column to the first position and expect the new position in response
+		moveResp := ac.Do(t, http.MethodPut, "/v1/boards/"+board.ID+"/columns/"+thirdColumn.ID+"/position", map[string]int64{
+			"targetPosition": 1,
+		})
+		defer func() {
+			_ = moveResp.Body.Close()
+		}()
+		if moveResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected move status %d, got %d", http.StatusOK, moveResp.StatusCode)
+		}
+
+		movedPosition := parseColumnPosition(t, moveResp)
+		if movedPosition.Position != 1 {
+			t.Errorf("Expected move response position %d, got %d", 1, movedPosition.Position)
+		}
+
+		// 11. List columns again and verify move reordered the remaining columns
+		listAfterMoveResp := ac.Do(t, http.MethodGet, "/v1/boards/"+board.ID+"/columns", nil)
+		defer func() {
+			_ = listAfterMoveResp.Body.Close()
+		}()
+		if listAfterMoveResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected list status %d after move, got %d", http.StatusOK, listAfterMoveResp.StatusCode)
+		}
+
+		listedAfterMove := parseColumnsList(t, listAfterMoveResp)
+		if len(listedAfterMove) != 2 {
+			t.Fatalf("Expected 2 columns after move, got %d", len(listedAfterMove))
+		}
+		if listedAfterMove[0].ID != thirdColumn.ID || listedAfterMove[0].Position != 1 {
+			t.Errorf("Expected third column to move to position 1, got id=%s position=%d", listedAfterMove[0].ID, listedAfterMove[0].Position)
+		}
+		if listedAfterMove[1].ID != updatedNameColumn.ID || listedAfterMove[1].Position != 2 {
+			t.Errorf("Expected updated first column to shift to position 2, got id=%s position=%d", listedAfterMove[1].ID, listedAfterMove[1].Position)
+		}
 	})
 }
 
@@ -233,4 +273,13 @@ func parseColumnsList(t *testing.T, resp *http.Response) []columnJSON {
 		t.Fatalf("decode columns list: %v", err)
 	}
 	return c
+}
+
+func parseColumnPosition(t *testing.T, resp *http.Response) columnPositionJSON {
+	t.Helper()
+	var p columnPositionJSON
+	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
+		t.Fatalf("decode column position: %v", err)
+	}
+	return p
 }
