@@ -16,9 +16,9 @@ import (
 )
 
 type TestCase struct {
-	name        string
-	setupMock   func(r *MockUserRepository)
-	expectedErr error
+	name          string
+	setupUserRepo func(r *MockUserRepository)
+	expectedErr   error
 }
 
 func TestAuth_Register(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAuth_Register(t *testing.T) {
 		{
 			name:        "Success",
 			expectedErr: nil,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					if hash == testutil.ValidPassword().String() {
 						return errors.New("service saved plaintext password!")
@@ -40,7 +40,7 @@ func TestAuth_Register(t *testing.T) {
 		{
 			name:        "User already exists",
 			expectedErr: service.ErrUserAlreadyExists,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrUniqueViolation
 				}
@@ -49,7 +49,7 @@ func TestAuth_Register(t *testing.T) {
 		{
 			name:        "Internal repository error",
 			expectedErr: service.ErrInternal,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrInternal
 				}
@@ -58,7 +58,7 @@ func TestAuth_Register(t *testing.T) {
 		{
 			name:        "Unexpected repository error",
 			expectedErr: service.ErrInternal,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return errors.New("Super unknown error happened")
 				}
@@ -71,7 +71,7 @@ func TestAuth_Register(t *testing.T) {
 			t.Parallel()
 
 			r := &MockUserRepository{}
-			tt.setupMock(r)
+			tt.setupUserRepo(r)
 			s := service.NewAuth(r, testutil.ValidJWTOptions())
 
 			err := s.Register(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
@@ -89,7 +89,7 @@ func TestAuth_Login(t *testing.T) {
 	tests := []TestCase{
 		{
 			name: "Success",
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return testutil.ValidUserID(), testutil.ValidPasswordHash(), nil
 				}
@@ -99,7 +99,7 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name:        "User not found",
 			expectedErr: service.ErrUserNotFound,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return domain.UserID{}, "", repository.ErrRowNotFound
 				}
@@ -108,7 +108,7 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name:        "Invalid password",
 			expectedErr: service.ErrInvalidCredentials,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return testutil.ValidUserID(), testutil.AnotherValidPasswordHash(), nil
 				}
@@ -117,7 +117,7 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name:        "Internal repository error",
 			expectedErr: service.ErrInternal,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return domain.UserID{}, "", repository.ErrInternal
 				}
@@ -126,7 +126,7 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name:        "Unexpected repository error",
 			expectedErr: service.ErrInternal,
-			setupMock: func(r *MockUserRepository) {
+			setupUserRepo: func(r *MockUserRepository) {
 				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return domain.UserID{}, "", errors.New("Super unknown error happened")
 				}
@@ -139,7 +139,7 @@ func TestAuth_Login(t *testing.T) {
 			t.Parallel()
 
 			r := &MockUserRepository{}
-			tt.setupMock(r)
+			tt.setupUserRepo(r)
 			jwtOpts := testutil.ValidJWTOptions()
 			s := service.NewAuth(r, jwtOpts)
 

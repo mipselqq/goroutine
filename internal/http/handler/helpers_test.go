@@ -8,7 +8,7 @@ import (
 	"goroutine/internal/testutil"
 )
 
-type MockAuth struct {
+type MockAuthService struct {
 	RegisterFunc func(ctx context.Context, email domain.Email, password domain.UserPassword) error
 	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error)
 }
@@ -19,17 +19,17 @@ func AssertFuncNotNil(funcName string, fn any) {
 	}
 }
 
-func (m *MockAuth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
+func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 	AssertFuncNotNil("AuthService.RegisterFunc", m.RegisterFunc)
 	return m.RegisterFunc(ctx, email, password)
 }
 
-func (m *MockAuth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
+func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
 	AssertFuncNotNil("AuthService.LoginFunc", m.LoginFunc)
 	return m.LoginFunc(ctx, email, password)
 }
 
-type MockBoards struct {
+type MockBoardService struct {
 	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetFunc        func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
@@ -37,7 +37,7 @@ type MockBoards struct {
 	DeleteFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
-type MockColumns struct {
+type MockColumnService struct {
 	CreateFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
 	ListFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
@@ -45,52 +45,52 @@ type MockColumns struct {
 	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
-func (m *MockBoards) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+func (m *MockBoardService) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
 }
 
-func (m *MockBoards) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+func (m *MockBoardService) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 	AssertFuncNotNil("BoardsService.GetManyFunc", m.GetManyFunc)
 	return m.GetManyFunc(ctx, ownerID)
 }
 
-func (m *MockBoards) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+func (m *MockBoardService) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
-func (m *MockBoards) UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+func (m *MockBoardService) UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, ownerID, boardID, name, description)
 }
 
-func (m *MockBoards) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
+func (m *MockBoardService) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 	AssertFuncNotNil("BoardsService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, ownerID, boardID)
 }
 
-func (m *MockColumns) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+func (m *MockColumnService) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 	AssertFuncNotNil("ColumnsService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, callerID, boardID, name)
 }
 
-func (m *MockColumns) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+func (m *MockColumnService) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 	AssertFuncNotNil("ColumnsService.ListFunc", m.ListFunc)
 	return m.ListFunc(ctx, callerID, boardID)
 }
 
-func (m *MockColumns) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+func (m *MockColumnService) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 	AssertFuncNotNil("ColumnsService.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, callerID, boardID, columnID, name)
 }
 
-func (m *MockColumns) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
+func (m *MockColumnService) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
 	AssertFuncNotNil("ColumnsService.MoveFunc", m.MoveFunc)
 	return m.MoveFunc(ctx, callerID, boardID, columnID, targetPosition)
 }
 
-func (m *MockColumns) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
+func (m *MockColumnService) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 	AssertFuncNotNil("ColumnsService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, callerID, boardID, columnID)
 }
