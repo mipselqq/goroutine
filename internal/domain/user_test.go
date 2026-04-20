@@ -30,7 +30,7 @@ func TestParseUserID(t *testing.T) {
 
 	id, err := domain.ParseUserID(s)
 	if err != nil {
-		t.Errorf("ParseUserID(): got error %v, want nil", err)
+		t.Errorf("ParseUserID() error = %v", err)
 	}
 
 	if id.String() != s {
