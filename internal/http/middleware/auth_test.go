@@ -19,13 +19,13 @@ func TestAuth(t *testing.T) {
 	mockStatusCode := http.StatusTeapot
 
 	tests := []struct {
-		name           string
-		headerName     string
-		headerValue    string
-		expectedStatus int
-		expectedUserID domain.UserID
-		expectedBody   any
-		setupMock      func(r *MockAuth)
+		name             string
+		headerName       string
+		headerValue      string
+		expectedStatus   int
+		expectedUserID   domain.UserID
+		expectedBody     any
+		setupAuthService func(r *MockAuthService)
 	}{
 		{
 			name:           "Valid token",
@@ -33,7 +33,7 @@ func TestAuth(t *testing.T) {
 			headerValue:    "Bearer valid.token.here",
 			expectedStatus: mockStatusCode,
 			expectedUserID: userID,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return userID, nil
 				}
@@ -44,7 +44,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Bearer invalid.token.here",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrInvalidToken
 				}
@@ -63,7 +63,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Bearer expired.token.here",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrTokenExpired
 				}
@@ -82,7 +82,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Bearer invalid.signing.method.token.here",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrInvalidSigningMethod
 				}
@@ -101,7 +101,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
@@ -120,7 +120,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Bearer",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
@@ -139,7 +139,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Bearer ",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
@@ -158,7 +158,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Bearer token extra-part",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
@@ -178,7 +178,7 @@ func TestAuth(t *testing.T) {
 			headerValue:    "   Bearer     valid.token.here   ",
 			expectedStatus: mockStatusCode,
 			expectedUserID: userID,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return userID, nil
 				}
@@ -190,7 +190,7 @@ func TestAuth(t *testing.T) {
 			headerValue:    "bEaReR vAlId.tOkEn.hErE",
 			expectedStatus: mockStatusCode,
 			expectedUserID: userID,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return userID, nil
 				}
@@ -201,7 +201,7 @@ func TestAuth(t *testing.T) {
 			headerName:     "Authorization",
 			headerValue:    "Basic some-token",
 			expectedStatus: http.StatusUnauthorized,
-			setupMock: func(r *MockAuth) {
+			setupAuthService: func(r *MockAuthService) {
 				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
@@ -221,8 +221,8 @@ func TestAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := &MockAuth{}
-			tt.setupMock(s)
+			s := &MockAuthService{}
+			tt.setupAuthService(s)
 
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				id, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)

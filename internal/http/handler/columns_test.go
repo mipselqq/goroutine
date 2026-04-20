@@ -22,19 +22,19 @@ func TestColumns_Create(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 
 	tests := []struct {
-		name         string
-		path         string
-		inputBody    any
-		context      context.Context
-		setupMock    func(s *MockColumns)
-		expectedCode int
-		expectedBody any
+		name               string
+		path               string
+		inputBody          any
+		context            context.Context
+		setupColumnService func(t *testing.T, s *MockColumnService)
+		expectedCode       int
+		expectedBody       any
 	}{
 		{
 			name:      "Success",
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": validColumn.Name.String()},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
@@ -91,7 +91,7 @@ func TestColumns_Create(t *testing.T) {
 			name:      "Board not found",
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": "To Do"},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 					return domain.Column{}, service.ErrBoardNotFound
 				}
@@ -103,7 +103,7 @@ func TestColumns_Create(t *testing.T) {
 			name:      "Internal error",
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": "To Do"},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 					return domain.Column{}, service.ErrInternal
 				}
@@ -115,7 +115,7 @@ func TestColumns_Create(t *testing.T) {
 			name:      "Unexpected error",
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": "To Do"},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
 					return domain.Column{}, errors.New("db exploded")
 				}
@@ -145,9 +145,9 @@ func TestColumns_Create(t *testing.T) {
 			req.SetPathValue("boardId", strings.TrimPrefix(strings.TrimSuffix(tt.path, "/columns"), "/v1/boards/"))
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumns{}
-			if tt.setupMock != nil {
-				tt.setupMock(mockColumns)
+			mockColumns := &MockColumnService{}
+			if tt.setupColumnService != nil {
+				tt.setupColumnService(t, mockColumns)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -170,17 +170,17 @@ func TestColumns_List(t *testing.T) {
 	second.Position, _ = domain.NewColumnPosition(first.Position.Int64() + 1)
 
 	tests := []struct {
-		name         string
-		path         string
-		context      context.Context
-		setupMock    func(s *MockColumns)
-		expectedCode int
-		expectedBody any
+		name               string
+		path               string
+		context            context.Context
+		setupColumnService func(t *testing.T, s *MockColumnService)
+		expectedCode       int
+		expectedBody       any
 	}{
 		{
 			name: "Success",
 			path: "/v1/boards/" + validBoard.ID.String() + "/columns",
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
@@ -227,7 +227,7 @@ func TestColumns_List(t *testing.T) {
 		{
 			name: "Board not found",
 			path: "/v1/boards/" + validBoard.ID.String() + "/columns",
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, service.ErrBoardNotFound
 				}
@@ -238,7 +238,7 @@ func TestColumns_List(t *testing.T) {
 		{
 			name: "Internal error",
 			path: "/v1/boards/" + validBoard.ID.String() + "/columns",
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, service.ErrInternal
 				}
@@ -261,9 +261,9 @@ func TestColumns_List(t *testing.T) {
 			req.SetPathValue("boardId", strings.TrimPrefix(strings.TrimSuffix(tt.path, "/columns"), "/v1/boards/"))
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumns{}
-			if tt.setupMock != nil {
-				tt.setupMock(mockColumns)
+			mockColumns := &MockColumnService{}
+			if tt.setupColumnService != nil {
+				tt.setupColumnService(t, mockColumns)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -293,24 +293,19 @@ func TestColumns_UpdateByID(t *testing.T) {
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String()
 
 	tests := []struct {
-		name         string
-		path         string
-		inputBody    any
-		context      context.Context
-		setupMock    func(s *MockColumns)
-		expectedCode int
-		expectedBody any
+		name               string
+		path               string
+		inputBody          any
+		context            context.Context
+		setupColumnService func(t *testing.T, s *MockColumnService)
+		expectedCode       int
+		expectedBody       any
 	}{
 		{
 			name:      "Success (name update)",
 			path:      okPath,
 			inputBody: map[string]string{"name": updatedName.String()},
-			// FIXME: setupMock receives main t, and not one from a subtest.
-			// This is a critical bug across whole test suite that makes even failed subtests pass,
-			// and the main one will fail with errors which origin is unclear (which subtest failed?)
-			// All the setupMock blocks from app test suite must be rewritten to accept a subtest's t.
-			// Created https://github.com/mipselqq/goroutine/issues/148
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
@@ -341,7 +336,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			name:      "Success (empty body no-op)",
 			path:      okPath,
 			inputBody: map[string]any{},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					if name != nil {
 						t.Errorf("expected nil name for no-op patch, got %+v", name)
@@ -399,7 +394,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			name:      "Column not found",
 			path:      okPath,
 			inputBody: map[string]string{"name": "Renamed"},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					return domain.Column{}, service.ErrColumnNotFound
 				}
@@ -411,7 +406,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			name:      "Internal error",
 			path:      okPath,
 			inputBody: map[string]string{"name": "Renamed"},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
 					return domain.Column{}, service.ErrInternal
 				}
@@ -447,9 +442,9 @@ func TestColumns_UpdateByID(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumns{}
-			if tt.setupMock != nil {
-				tt.setupMock(mockColumns)
+			mockColumns := &MockColumnService{}
+			if tt.setupColumnService != nil {
+				tt.setupColumnService(t, mockColumns)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -476,19 +471,19 @@ func TestColumns_Move(t *testing.T) {
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String() + "/position"
 
 	tests := []struct {
-		name         string
-		path         string
-		inputBody    any
-		context      context.Context
-		setupMock    func(s *MockColumns)
-		expectedCode int
-		expectedBody any
+		name               string
+		path               string
+		inputBody          any
+		context            context.Context
+		setupColumnService func(t *testing.T, s *MockColumnService)
+		expectedCode       int
+		expectedBody       any
 	}{
 		{
 			name:      "Success",
 			path:      okPath,
 			inputBody: map[string]int64{"targetPosition": targetPosition.Int64()},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, gotTargetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
@@ -550,7 +545,7 @@ func TestColumns_Move(t *testing.T) {
 			name:      "Index out of bounds",
 			path:      okPath,
 			inputBody: map[string]int64{"targetPosition": 10},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
 					return domain.ColumnPosition{}, service.ErrIndexOutOfBounds
 				}
@@ -562,7 +557,7 @@ func TestColumns_Move(t *testing.T) {
 			name:      "Column not found",
 			path:      okPath,
 			inputBody: map[string]int64{"targetPosition": 1},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
 					return domain.ColumnPosition{}, service.ErrColumnNotFound
 				}
@@ -574,7 +569,7 @@ func TestColumns_Move(t *testing.T) {
 			name:      "Internal error",
 			path:      okPath,
 			inputBody: map[string]int64{"targetPosition": 1},
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
 					return domain.ColumnPosition{}, service.ErrInternal
 				}
@@ -610,9 +605,9 @@ func TestColumns_Move(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumns{}
-			if tt.setupMock != nil {
-				tt.setupMock(mockColumns)
+			mockColumns := &MockColumnService{}
+			if tt.setupColumnService != nil {
+				tt.setupColumnService(t, mockColumns)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -634,17 +629,17 @@ func TestColumns_Delete(t *testing.T) {
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String()
 
 	tests := []struct {
-		name         string
-		path         string
-		context      context.Context
-		setupMock    func(s *MockColumns)
-		expectedCode int
-		expectedBody any
+		name               string
+		path               string
+		context            context.Context
+		setupColumnService func(t *testing.T, s *MockColumnService)
+		expectedCode       int
+		expectedBody       any
 	}{
 		{
 			name: "Success",
 			path: okPath,
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
@@ -683,7 +678,7 @@ func TestColumns_Delete(t *testing.T) {
 		{
 			name: "Column not found",
 			path: okPath,
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					return service.ErrColumnNotFound
 				}
@@ -694,7 +689,7 @@ func TestColumns_Delete(t *testing.T) {
 		{
 			name: "Internal error",
 			path: okPath,
-			setupMock: func(s *MockColumns) {
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					return service.ErrInternal
 				}
@@ -723,9 +718,9 @@ func TestColumns_Delete(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumns{}
-			if tt.setupMock != nil {
-				tt.setupMock(mockColumns)
+			mockColumns := &MockColumnService{}
+			if tt.setupColumnService != nil {
+				tt.setupColumnService(t, mockColumns)
 			}
 
 			logger := testutil.NewTestLogger(t)

@@ -18,13 +18,13 @@ import (
 )
 
 type boardsTestCase struct {
-	name         string
-	inputBody    any
-	context      context.Context
-	setupMock    func(s *MockBoards)
-	expectedCode int
-	expectedBody any
-	path         string
+	name              string
+	inputBody         any
+	context           context.Context
+	setupBoardService func(t *testing.T, s *MockBoardService)
+	expectedCode      int
+	expectedBody      any
+	path              string
 }
 
 const timeFormat = "2006-01-02T15:04:05.000Z07:00"
@@ -38,7 +38,7 @@ func TestBoards_Create(t *testing.T) {
 		{
 			name:      "Success",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("expected ownerID %v, got %v", validBoard.OwnerID, ownerID)
@@ -84,7 +84,7 @@ func TestBoards_Create(t *testing.T) {
 		{
 			name:      "Internal error",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
@@ -95,7 +95,7 @@ func TestBoards_Create(t *testing.T) {
 		{
 			name:      "Unknown error",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown error")
 				}
@@ -117,10 +117,10 @@ func TestBoards_Create(t *testing.T) {
 				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
 
-			s := &MockBoards{}
+			s := &MockBoardService{}
 
-			if tt.setupMock != nil {
-				tt.setupMock(s)
+			if tt.setupBoardService != nil {
+				tt.setupBoardService(t, s)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -144,7 +144,7 @@ func TestBoards_Get(t *testing.T) {
 		{
 			name:      "Success",
 			inputBody: "",
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("expected ownerID %v, got %v", validBoard.OwnerID, ownerID)
@@ -175,7 +175,7 @@ func TestBoards_Get(t *testing.T) {
 		{
 			name:      "Internal error",
 			inputBody: "",
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, service.ErrInternal
 				}
@@ -186,7 +186,7 @@ func TestBoards_Get(t *testing.T) {
 		{
 			name:      "Unknown error",
 			inputBody: "",
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, errors.New("unknown error")
 				}
@@ -208,10 +208,10 @@ func TestBoards_Get(t *testing.T) {
 				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
 
-			s := &MockBoards{}
+			s := &MockBoardService{}
 
-			if tt.setupMock != nil {
-				tt.setupMock(s)
+			if tt.setupBoardService != nil {
+				tt.setupBoardService(t, s)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -236,7 +236,7 @@ func TestBoards_GetByID(t *testing.T) {
 		{
 			name: "Success",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
 						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
@@ -263,7 +263,7 @@ func TestBoards_GetByID(t *testing.T) {
 		{
 			name: "Not found",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
 				}
@@ -274,7 +274,7 @@ func TestBoards_GetByID(t *testing.T) {
 		{
 			name: "Internal error",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
@@ -285,7 +285,7 @@ func TestBoards_GetByID(t *testing.T) {
 		{
 			name: "Unknown error",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
 				}
@@ -316,9 +316,9 @@ func TestBoards_GetByID(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoards{}
-			if tt.setupMock != nil {
-				tt.setupMock(s)
+			s := &MockBoardService{}
+			if tt.setupBoardService != nil {
+				tt.setupBoardService(t, s)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -351,7 +351,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name":        updatedValidBoard.Name.String(),
 				"description": updatedValidBoard.Description.String(),
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
 						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
@@ -391,7 +391,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			inputBody: map[string]string{
 				"name": updatedNameOnlyBoard.Name.String(),
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name == nil || *name != updatedNameOnlyBoard.Name {
 						t.Errorf("unexpected name %+v", name)
@@ -418,7 +418,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			inputBody: map[string]string{
 				"description": updatedDescriptionOnlyBoard.Description.String(),
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name != nil {
 						t.Errorf("expected nil name, got %+v", name)
@@ -443,7 +443,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			name:      "Success (null fields mean skip)",
 			path:      okPath,
 			inputBody: map[string]any{"name": nil, "description": nil},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name != nil || description != nil {
 						t.Errorf("expected nil pointers, got name=%+v description=%+v", name, description)
@@ -468,7 +468,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name":        emptyDescriptionBoard.Name.String(),
 				"description": "",
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name == nil || description == nil {
 						t.Errorf("expected non-nil pointers")
@@ -499,7 +499,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
 				}
@@ -514,7 +514,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
@@ -529,7 +529,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
 			},
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
 				}
@@ -562,9 +562,9 @@ func TestBoards_UpdateByID(t *testing.T) {
 			}
 			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
 
-			s := &MockBoards{}
-			if tt.setupMock != nil {
-				tt.setupMock(s)
+			s := &MockBoardService{}
+			if tt.setupBoardService != nil {
+				tt.setupBoardService(t, s)
 			}
 
 			logger := testutil.NewTestLogger(t)
@@ -588,7 +588,7 @@ func TestBoards_Delete(t *testing.T) {
 		{
 			name: "Success",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					if ownerID != validBoard.OwnerID || boardID != validBoard.ID {
 						t.Errorf("unexpected ownerID %v boardID %v", ownerID, boardID)
@@ -608,7 +608,7 @@ func TestBoards_Delete(t *testing.T) {
 		{
 			name: "Not found",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					return service.ErrBoardNotFound
 				}
@@ -619,7 +619,7 @@ func TestBoards_Delete(t *testing.T) {
 		{
 			name: "Internal error",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					return service.ErrInternal
 				}
@@ -630,7 +630,7 @@ func TestBoards_Delete(t *testing.T) {
 		{
 			name: "Unknown error",
 			path: okPath,
-			setupMock: func(s *MockBoards) {
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					return errors.New("unknown")
 				}
@@ -661,9 +661,9 @@ func TestBoards_Delete(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoards{}
-			if tt.setupMock != nil {
-				tt.setupMock(s)
+			s := &MockBoardService{}
+			if tt.setupBoardService != nil {
+				tt.setupBoardService(t, s)
 			}
 
 			logger := testutil.NewTestLogger(t)
