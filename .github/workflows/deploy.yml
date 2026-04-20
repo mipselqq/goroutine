@@ -103,7 +103,10 @@ jobs:
             --fail \
             --show-error \
             --silent \
-            --max-time 10 \
+            --retry 5 \
+            --retry-delay 5 \
+            --retry-max-time 30 \
+            --retry-all-errors \
             "http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}/v1/health"
 
   ping-prod-health:
@@ -120,5 +123,8 @@ jobs:
             --fail \
             --show-error \
             --silent \
-            --max-time 10 \
+            --retry 5 \
+            --retry-delay 5 \
+            --retry-max-time 30 \
+            --retry-all-errors \
             "http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}/v1/health"
