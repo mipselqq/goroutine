@@ -93,7 +93,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -129,7 +129,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -160,7 +160,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [get]
 func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
-	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -227,7 +227,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -267,7 +267,7 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := ExtractUserIDOrHandleMissing(w, r, h)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -284,24 +284,4 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func ExtractUserIDOrHandleMissing(w http.ResponseWriter, r *http.Request, h *Boards) (domain.UserID, bool) {
-	valid := true
-
-	userID, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
-	if !ok {
-		valid = false
-	}
-	if userID.IsEmpty() {
-		valid = false
-	}
-
-	if !valid {
-		h.logger.ErrorContext(r.Context(), "BUG: valid UserID not found in context. Middleware should have handled this.")
-		h.responder.InvalidToken(w, []httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}})
-		return domain.UserID{}, false
-	}
-
-	return userID, valid
 }

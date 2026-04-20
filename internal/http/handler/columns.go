@@ -102,7 +102,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -141,7 +141,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -212,7 +212,7 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -274,7 +274,7 @@ func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -326,7 +326,7 @@ func (h *Columns) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := h.extractUserIDOrHandleMissing(w, r)
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
@@ -342,24 +342,4 @@ func (h *Columns) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func (h *Columns) extractUserIDOrHandleMissing(w http.ResponseWriter, r *http.Request) (domain.UserID, bool) {
-	valid := true
-
-	userID, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
-	if !ok {
-		valid = false
-	}
-	if userID.IsEmpty() {
-		valid = false
-	}
-
-	if !valid {
-		h.logger.ErrorContext(r.Context(), "BUG: valid UserID not found in context. Middleware should have handled this.")
-		h.responder.InvalidToken(w, []httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}})
-		return domain.UserID{}, false
-	}
-
-	return userID, true
 }
