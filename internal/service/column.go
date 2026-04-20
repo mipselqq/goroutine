@@ -21,6 +21,7 @@ type ColumnRepository interface {
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 	UpdateByID(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
+	Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 type ColumnBoardRepository interface {
@@ -125,4 +126,32 @@ func (s *Column) UpdateByID(
 	}
 
 	return updated, nil
+}
+
+func (s *Column) Delete(
+	ctx context.Context,
+	callerID domain.UserID,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+) error {
+	board, err := s.boardRepository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return ErrColumnNotFound
+		}
+		return fmt.Errorf("column service: delete get board: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != callerID {
+		return ErrColumnNotFound
+	}
+
+	err = s.columnRepository.Delete(ctx, boardID, columnID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return ErrColumnNotFound
+		}
+		return fmt.Errorf("column service: delete: %v: %w", err, ErrInternal)
+	}
+
+	return nil
 }

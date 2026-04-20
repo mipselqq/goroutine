@@ -153,6 +153,67 @@ func TestColumn_HappyPath(t *testing.T) {
 		if diff := cmp.Diff(updatedNameColumn, listedAfterUpdate[0]); diff != "" {
 			t.Errorf("List item after update mismatch (-want +got):\n%s", diff)
 		}
+
+		// 6. Create the second column so we can later delete it from the middle of the ordered list
+		createSecondResp := ac.Do(t, http.MethodPost, "/v1/boards/"+board.ID+"/columns", map[string]string{
+			"name": "In Progress",
+		})
+		defer func() {
+			_ = createSecondResp.Body.Close()
+		}()
+		if createSecondResp.StatusCode != http.StatusCreated {
+			t.Fatalf("Expected second create status %d, got %d", http.StatusCreated, createSecondResp.StatusCode)
+		}
+
+		secondColumn := parseColumn(t, createSecondResp)
+		if secondColumn.Position != 2 {
+			t.Errorf("Expected second column position %d, got %d", 2, secondColumn.Position)
+		}
+
+		// 7. Create the third column so delete can verify position compaction for trailing items
+		createThirdResp := ac.Do(t, http.MethodPost, "/v1/boards/"+board.ID+"/columns", map[string]string{
+			"name": "Done",
+		})
+		defer func() {
+			_ = createThirdResp.Body.Close()
+		}()
+		if createThirdResp.StatusCode != http.StatusCreated {
+			t.Fatalf("Expected third create status %d, got %d", http.StatusCreated, createThirdResp.StatusCode)
+		}
+
+		thirdColumn := parseColumn(t, createThirdResp)
+		if thirdColumn.Position != 3 {
+			t.Errorf("Expected third column position %d, got %d", 3, thirdColumn.Position)
+		}
+
+		// 8. Delete the middle column and expect the request to succeed
+		deleteResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+board.ID+"/columns/"+secondColumn.ID, nil)
+		defer func() {
+			_ = deleteResp.Body.Close()
+		}()
+		if deleteResp.StatusCode != http.StatusNoContent {
+			t.Fatalf("Expected delete status %d, got %d", http.StatusNoContent, deleteResp.StatusCode)
+		}
+
+		// 9. List columns again and verify delete preserved the first column and compacted positions
+		listAfterDeleteResp := ac.Do(t, http.MethodGet, "/v1/boards/"+board.ID+"/columns", nil)
+		defer func() {
+			_ = listAfterDeleteResp.Body.Close()
+		}()
+		if listAfterDeleteResp.StatusCode != http.StatusOK {
+			t.Fatalf("Expected list status %d after delete, got %d", http.StatusOK, listAfterDeleteResp.StatusCode)
+		}
+
+		listedAfterDelete := parseColumnsList(t, listAfterDeleteResp)
+		if len(listedAfterDelete) != 2 {
+			t.Fatalf("Expected 2 columns after delete, got %d", len(listedAfterDelete))
+		}
+		if listedAfterDelete[0].ID != updatedNameColumn.ID || listedAfterDelete[0].Name != updatedNameColumn.Name || listedAfterDelete[0].Position != 1 {
+			t.Errorf("Expected updated first column to stay at position 1, got id=%s name=%q position=%d", listedAfterDelete[0].ID, listedAfterDelete[0].Name, listedAfterDelete[0].Position)
+		}
+		if listedAfterDelete[1].ID != thirdColumn.ID || listedAfterDelete[1].Position != 2 {
+			t.Errorf("Expected third column to shift to position 2, got id=%s position=%d", listedAfterDelete[1].ID, listedAfterDelete[1].Position)
+		}
 	})
 }
 

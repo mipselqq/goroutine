@@ -161,3 +161,102 @@ func (r *PgColumn) UpdateByID(
 
 	return column, nil
 }
+
+func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+	const (
+		lockBoardQuery = `
+		SELECT 1
+		FROM boards
+		WHERE id = @board_id
+		FOR UPDATE`
+
+		deleteColumnQuery = `
+		DELETE FROM columns
+		WHERE board_id = @board_id
+		  AND id = @column_id
+		RETURNING position`
+
+		// Workaround:
+		// UNIQUE(board_id, position) may be violated during simple offsetting since crawling order is not guaranteed
+		// So we shift all the columns out of working scope and then move them back in the correct order
+		positionOffsetQuery = `
+		SELECT COALESCE(MAX(position), 0) + 1
+		FROM columns
+		WHERE board_id = @board_id`
+
+		bumpTrailingColumnsQuery = `
+		UPDATE columns
+		SET position = position + @position_offset
+		WHERE board_id = @board_id
+		  AND position > @deleted_position`
+
+		compactTrailingColumnsQuery = `
+		UPDATE columns
+		SET position = position - @position_offset - 1
+		WHERE board_id = @board_id
+		  AND position > @position_offset`
+	)
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("column repo: delete begin tx: %v: %w", err, ErrInternal)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	var locked int
+	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&locked)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRowNotFound
+		}
+		return fmt.Errorf("column repo: delete lock board: %v: %w", err, ErrInternal)
+	}
+
+	var deletedPosition int64
+	err = tx.QueryRow(ctx, deleteColumnQuery, pgx.NamedArgs{
+		"board_id":  boardID,
+		"column_id": columnID,
+	}).Scan(&deletedPosition)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRowNotFound
+		}
+		return fmt.Errorf("column repo: delete column: %v: %w", err, ErrInternal)
+	}
+
+	var positionOffset int64
+	err = tx.QueryRow(ctx, positionOffsetQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&positionOffset)
+	if err != nil {
+		return fmt.Errorf("column repo: delete position offset: %v: %w", err, ErrInternal)
+	}
+
+	_, err = tx.Exec(ctx, bumpTrailingColumnsQuery, pgx.NamedArgs{
+		"board_id":         boardID,
+		"position_offset":  positionOffset,
+		"deleted_position": deletedPosition,
+	})
+	if err != nil {
+		return fmt.Errorf("column repo: delete bump trailing columns: %v: %w", err, ErrInternal)
+	}
+
+	_, err = tx.Exec(ctx, compactTrailingColumnsQuery, pgx.NamedArgs{
+		"board_id":        boardID,
+		"position_offset": positionOffset,
+	})
+	if err != nil {
+		return fmt.Errorf("column repo: delete compact trailing columns: %v: %w", err, ErrInternal)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("column repo: delete commit: %v: %w", err, ErrInternal)
+	}
+
+	return nil
+}

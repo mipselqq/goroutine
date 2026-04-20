@@ -91,6 +91,10 @@ func TestNewRouter_Full(t *testing.T) {
 			metrics: true, cors: true, requestID: true,
 		},
 		{
+			entry:   entry{"Delete column endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
 			entry:   entry{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html"},
 			metrics: false, cors: true, requestID: true,
 		},

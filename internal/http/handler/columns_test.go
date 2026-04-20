@@ -53,7 +53,7 @@ func TestColumns_Create(t *testing.T) {
 				"id":        validColumn.ID.String(),
 				"boardId":   validColumn.BoardID.String(),
 				"name":      validColumn.Name.String(),
-				"position":  float64(validColumn.Position.Int64()),
+				"position":  validColumn.Position.Int64(),
 				"createdAt": validColumn.CreatedAt.Format(timeFormat),
 				"updatedAt": validColumn.UpdatedAt.Format(timeFormat),
 			},
@@ -197,7 +197,7 @@ func TestColumns_List(t *testing.T) {
 					"id":        first.ID.String(),
 					"boardId":   first.BoardID.String(),
 					"name":      first.Name.String(),
-					"position":  float64(first.Position.Int64()),
+					"position":  first.Position.Int64(),
 					"createdAt": first.CreatedAt.Format(timeFormat),
 					"updatedAt": first.UpdatedAt.Format(timeFormat),
 				},
@@ -205,7 +205,7 @@ func TestColumns_List(t *testing.T) {
 					"id":        second.ID.String(),
 					"boardId":   second.BoardID.String(),
 					"name":      second.Name.String(),
-					"position":  float64(second.Position.Int64()),
+					"position":  second.Position.Int64(),
 					"createdAt": second.CreatedAt.Format(timeFormat),
 					"updatedAt": second.UpdatedAt.Format(timeFormat),
 				},
@@ -332,7 +332,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 				"id":        updatedColumn.ID.String(),
 				"boardId":   updatedColumn.BoardID.String(),
 				"name":      updatedColumn.Name.String(),
-				"position":  float64(updatedColumn.Position.Int64()),
+				"position":  updatedColumn.Position.Int64(),
 				"createdAt": updatedColumn.CreatedAt.Format(timeFormat),
 				"updatedAt": updatedColumn.UpdatedAt.Format(timeFormat),
 			},
@@ -354,7 +354,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 				"id":        validColumn.ID.String(),
 				"boardId":   validColumn.BoardID.String(),
 				"name":      validColumn.Name.String(),
-				"position":  float64(validColumn.Position.Int64()),
+				"position":  validColumn.Position.Int64(),
 				"createdAt": validColumn.CreatedAt.Format(timeFormat),
 				"updatedAt": validColumn.UpdatedAt.Format(timeFormat),
 			},
@@ -458,6 +458,121 @@ func TestColumns_UpdateByID(t *testing.T) {
 
 			testutil.AssertStatusCode(t, rr, tt.expectedCode)
 			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+		})
+	}
+}
+
+func TestColumns_Delete(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	validColumn := testutil.ValidColumn(validBoard.ID)
+	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String()
+
+	tests := []struct {
+		name         string
+		path         string
+		context      context.Context
+		setupMock    func(s *MockColumns)
+		expectedCode int
+		expectedBody any
+	}{
+		{
+			name: "Success",
+			path: okPath,
+			setupMock: func(s *MockColumns) {
+				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
+					if callerID != validBoard.OwnerID {
+						t.Errorf("expected caller id %v, got %v", validBoard.OwnerID, callerID)
+					}
+					if boardID != validBoard.ID {
+						t.Errorf("expected board id %v, got %v", validBoard.ID, boardID)
+					}
+					if columnID != validColumn.ID {
+						t.Errorf("expected column id %v, got %v", validColumn.ID, columnID)
+					}
+					return nil
+				}
+			},
+			expectedCode: http.StatusNoContent,
+			expectedBody: nil,
+		},
+		{
+			name:         "Invalid board id",
+			path:         "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+		},
+		{
+			name:         "Invalid column id",
+			path:         "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+		},
+		{
+			name:         "Missing context user",
+			path:         okPath,
+			context:      context.Background(),
+			expectedCode: http.StatusUnauthorized,
+			expectedBody: unauthorizedTokenBody(),
+		},
+		{
+			name: "Column not found",
+			path: okPath,
+			setupMock: func(s *MockColumns) {
+				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
+					return service.ErrColumnNotFound
+				}
+			},
+			expectedCode: http.StatusNotFound,
+			expectedBody: columnNotFoundErrorBody(),
+		},
+		{
+			name: "Internal error",
+			path: okPath,
+			setupMock: func(s *MockColumns) {
+				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
+					return service.ErrInternal
+				}
+			},
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: internalErrorBody(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(http.MethodDelete, tt.path, http.NoBody)
+			if tt.context != nil {
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+
+			boardAndColumn := strings.TrimPrefix(tt.path, "/v1/boards/")
+			parts := strings.Split(boardAndColumn, "/columns/")
+			if len(parts) == 2 {
+				req.SetPathValue("boardId", parts[0])
+				req.SetPathValue("columnId", parts[1])
+			}
+
+			rr := httptest.NewRecorder()
+			mockColumns := &MockColumns{}
+			if tt.setupMock != nil {
+				tt.setupMock(mockColumns)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h.Delete(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			if tt.expectedCode != http.StatusNoContent {
+				testutil.AssertContentType(t, rr, "application/json")
+			}
 			testutil.AssertResponseBody(t, rr, tt.expectedBody)
 		})
 	}
