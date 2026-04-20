@@ -169,18 +169,15 @@ func (r *PgColumn) Move(
 	targetPosition domain.ColumnPosition,
 ) (domain.ColumnPosition, error) {
 	const (
-		// We cannot move columns in place with a simple "position = position +/- 1":
-		// UNIQUE(board_id, position) may be violated temporarily, because PostgreSQL does not guarantee
-		// the order in which rows are updated inside one UPDATE statement.
+		// columns_board_id_position_key is DEFERRABLE INITIALLY IMMEDIATE.
+		// We explicitly defer it for this transaction, so the move can be written
+		// in the most obvious form:
+		// 1. shift neighboring columns by one position;
+		// 2. put the moved column into targetPosition;
+		// 3. let PostgreSQL validate uniqueness at COMMIT, when every row is already in the final place.
 		//
-		// So the move works in explicit steps:
-		// 1. Lock the board row, so concurrent create/delete/move operations cannot reorder the same board.
-		// 2. Read the current position of the moved column.
-		// 3. Read the current column count and max position to validate targetPosition and compute delta.
-		// 4. Move the whole affected interval out of the working range by +delta.
-		//    After that, every working position inside [min(current, target), max(current, target)] is free.
-		// 5. Move only the neighboring columns back into the working range, already shifted by one slot.
-		// 6. Put the moved column into the target position, which is still free at that point.
+		// Without SET CONSTRAINTS ... DEFERRED, the simple in-place updates below could fail with a temporary
+		// duplicate (board_id, position) before the moved column reaches its final slot.
 
 		// 1. Lock the board row so no concurrent operation can reorder columns in the same board.
 		lockBoardQuery = `
@@ -189,49 +186,42 @@ func (r *PgColumn) Move(
 		WHERE id = @board_id
 		FOR UPDATE`
 
-		// 2. Read the current position of the column we are moving.
+		// 2. Defer the unique constraint until COMMIT for this transaction only.
+		deferPositionConstraintQuery = `
+		SET CONSTRAINTS columns_board_id_position_key DEFERRED`
+
+		// 3. Read the current position of the column we are moving.
 		getCurrentPositionQuery = `
 		SELECT position
 		FROM columns
 		WHERE board_id = @board_id
 		  AND id = @column_id`
 
-		// 3. Read how many columns the board currently has and what the current max position is.
-		//    count(columns) is used for bounds validation, max(position) is used to compute delta.
-		countAndMaxPositionQuery = `
-		SELECT COUNT(*), COALESCE(MAX(position), 0)
+		// 4. Read how many columns the board currently has to validate targetPosition.
+		countColumnsQuery = `
+		SELECT COUNT(*)
 		FROM columns
 		WHERE board_id = @board_id`
 
-		// 4. Move the whole affected interval out of the working range.
-		//    Example: if positions 2..4 are affected and delta is 5, they become 7..9.
-		//    This frees positions 2..4, so the final slots can be filled safely afterwards.
-		bumpAffectedRangeQuery = `
-		UPDATE columns
-		SET position = position + @position_offset
-		WHERE board_id = @board_id
-		  AND position >= @affected_left
-		  AND position <= @affected_right`
-
-		// 5. If the moved column goes down, return neighbors from (current, target]
-		//    one slot up: 3,4,5 -> 2,3,4. The target slot stays free for the moved column.
+		// 5. If the moved column goes down, shift neighbors from (current, target] one slot up.
+		//    Example: moving 2 -> 5 means 3,4,5 become 2,3,4.
 		moveNeighborsDownQuery = `
 		UPDATE columns
-		SET position = position - @position_offset - 1
+		SET position = position - 1
 		WHERE board_id = @board_id
-		  AND position > @current_position_offset
-		  AND position <= @target_position_offset`
+		  AND position > @current_position
+		  AND position <= @target_position`
 
-		// 5. If the moved column goes up, return neighbors from [target, current)
-		//    one slot down: 2,3,4 -> 3,4,5. The target slot stays free for the moved column.
+		// 5. If the moved column goes up, shift neighbors from [target, current) one slot down.
+		//    Example: moving 5 -> 2 means 2,3,4 become 3,4,5.
 		moveNeighborsUpQuery = `
 		UPDATE columns
-		SET position = position - @position_offset + 1
+		SET position = position + 1
 		WHERE board_id = @board_id
-		  AND position >= @target_position_offset
-		  AND position < @current_position_offset`
+		  AND position >= @target_position
+		  AND position < @current_position`
 
-		// 6. Put the moved column into the target position after neighbors have been restored.
+		// 6. Put the moved column into targetPosition after neighbors have been shifted.
 		moveColumnIntoTargetQuery = `
 		UPDATE columns
 		SET position = @target_position
@@ -258,6 +248,11 @@ func (r *PgColumn) Move(
 		return domain.ColumnPosition{}, fmt.Errorf("column repo: move lock board: %v: %w", err, ErrInternal)
 	}
 
+	_, err = tx.Exec(ctx, deferPositionConstraintQuery)
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move defer position constraint: %v: %w", err, ErrInternal)
+	}
+
 	var currentPosition int64
 	err = tx.QueryRow(ctx, getCurrentPositionQuery, pgx.NamedArgs{
 		"board_id":  boardID,
@@ -271,12 +266,11 @@ func (r *PgColumn) Move(
 	}
 
 	var columnsCount int64
-	var maxPosition int64
-	err = tx.QueryRow(ctx, countAndMaxPositionQuery, pgx.NamedArgs{
+	err = tx.QueryRow(ctx, countColumnsQuery, pgx.NamedArgs{
 		"board_id": boardID,
-	}).Scan(&columnsCount, &maxPosition)
+	}).Scan(&columnsCount)
 	if err != nil {
-		return domain.ColumnPosition{}, fmt.Errorf("column repo: move count and max position: %v: %w", err, ErrInternal)
+		return domain.ColumnPosition{}, fmt.Errorf("column repo: move count columns: %v: %w", err, ErrInternal)
 	}
 
 	targetPositionInt := targetPosition.Int64()
@@ -287,27 +281,10 @@ func (r *PgColumn) Move(
 		return targetPosition, nil
 	}
 
-	positionOffset := maxPosition + 1
-	affectedLeft := min(currentPosition, targetPositionInt)
-	affectedRight := max(currentPosition, targetPositionInt)
-
-	_, err = tx.Exec(ctx, bumpAffectedRangeQuery, pgx.NamedArgs{
-		"board_id":        boardID,
-		"position_offset": positionOffset,
-		"affected_left":   affectedLeft,
-		"affected_right":  affectedRight,
-	})
-	if err != nil {
-		return domain.ColumnPosition{}, fmt.Errorf("column repo: move bump affected range: %v: %w", err, ErrInternal)
-	}
-
-	currentPositionOffset := currentPosition + positionOffset
-	targetPositionOffset := targetPositionInt + positionOffset
 	moveNeighborsArgs := pgx.NamedArgs{
-		"board_id":                boardID,
-		"position_offset":         positionOffset,
-		"current_position_offset": currentPositionOffset,
-		"target_position_offset":  targetPositionOffset,
+		"board_id":         boardID,
+		"current_position": currentPosition,
+		"target_position":  targetPositionInt,
 	}
 	if currentPosition < targetPositionInt {
 		_, err = tx.Exec(ctx, moveNeighborsDownQuery, moveNeighborsArgs)
