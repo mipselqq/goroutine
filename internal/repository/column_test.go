@@ -30,13 +30,15 @@ func TestColumnRepository_Create(t *testing.T) {
 		board := testutil.ValidBoard()
 		InsertBoard(t, pool, &board)
 
-		name, err := domain.NewColumnName("In Progress")
-		if err != nil {
-			t.Fatalf("NewColumnName: %v", err)
-		}
-		now := testutil.FixedTimeNow()
+		validColumn := testutil.ValidColumn(board.ID)
 
-		column, err := r.Create(context.Background(), board.ID, name, now, now)
+		column, err := r.Create(
+			context.Background(),
+			board.ID,
+			validColumn.Name,
+			validColumn.CreatedAt,
+			validColumn.UpdatedAt,
+		)
 		if err != nil {
 			t.Fatalf("Create() error = %v", err)
 		}
@@ -47,17 +49,17 @@ func TestColumnRepository_Create(t *testing.T) {
 		if column.BoardID != board.ID {
 			t.Errorf("expected boardID %q, got %q", board.ID, column.BoardID)
 		}
-		if column.Name != name {
-			t.Errorf("expected name %q, got %q", name, column.Name)
+		if column.Name != validColumn.Name {
+			t.Errorf("expected name %q, got %q", validColumn.Name, column.Name)
 		}
 		if column.Position.Int64() != 1 {
 			t.Errorf("expected position 1, got %d", column.Position.Int64())
 		}
-		if !column.CreatedAt.Equal(now) {
-			t.Errorf("expected createdAt %v, got %v", now, column.CreatedAt)
+		if !column.CreatedAt.Equal(validColumn.CreatedAt) {
+			t.Errorf("expected createdAt %v, got %v", validColumn.CreatedAt, column.CreatedAt)
 		}
-		if !column.UpdatedAt.Equal(now) {
-			t.Errorf("expected updatedAt %v, got %v", now, column.UpdatedAt)
+		if !column.UpdatedAt.Equal(validColumn.UpdatedAt) {
+			t.Errorf("expected updatedAt %v, got %v", validColumn.UpdatedAt, column.UpdatedAt)
 		}
 	})
 }
@@ -78,21 +80,21 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 	board := testutil.ValidBoard()
 	InsertBoard(t, pool, &board)
 
-	nameA, _ := domain.NewColumnName("Todo")
-	nameB, _ := domain.NewColumnName("Done")
-	now := testutil.FixedTimeNow()
+	existing := testutil.ValidColumn(board.ID)
+	InsertColumn(t, pool, &existing)
 
-	first, err := r.Create(context.Background(), board.ID, nameA, now, now)
-	if err != nil {
-		t.Fatalf("Create first: %v", err)
-	}
-	second, err := r.Create(context.Background(), board.ID, nameB, now, now)
+	toCreate := testutil.ValidColumn(board.ID)
+	toCreate = testutil.UpdateValidColumn(t, &toCreate, "Done", toCreate.UpdatedAt)
+
+	second, err := r.Create(
+		context.Background(),
+		board.ID,
+		toCreate.Name,
+		toCreate.CreatedAt,
+		toCreate.UpdatedAt,
+	)
 	if err != nil {
 		t.Fatalf("Create second: %v", err)
-	}
-
-	if first.Position.Int64() != 1 {
-		t.Errorf("first position expected 1, got %d", first.Position.Int64())
 	}
 	if second.Position.Int64() != 2 {
 		t.Errorf("second position expected 2, got %d", second.Position.Int64())
@@ -139,23 +141,13 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		boardB := testutil.ValidBoard()
 		InsertBoard(t, pool, &boardB)
 
-		name1, _ := domain.NewColumnName("Todo")
-		name2, _ := domain.NewColumnName("In Progress")
-		name3, _ := domain.NewColumnName("Done")
-		now := testutil.FixedTimeNow()
+		first := testutil.ValidColumn(boardA.ID)
+		second := testutil.ValidColumnAtPosition(t, boardA.ID, "In Progress", 2)
+		otherBoardColumn := testutil.ValidColumnAtPosition(t, boardB.ID, "Done", 1)
 
-		first, err := r.Create(context.Background(), boardA.ID, name1, now, now)
-		if err != nil {
-			t.Fatalf("Create first: %v", err)
-		}
-		second, err := r.Create(context.Background(), boardA.ID, name2, now, now)
-		if err != nil {
-			t.Fatalf("Create second: %v", err)
-		}
-		_, err = r.Create(context.Background(), boardB.ID, name3, now, now)
-		if err != nil {
-			t.Fatalf("Create other board: %v", err)
-		}
+		InsertColumn(t, pool, &first)
+		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &otherBoardColumn)
 
 		got, err := r.ListByBoardID(context.Background(), boardA.ID)
 		if err != nil {
@@ -186,12 +178,8 @@ func TestColumnRepository_GetByID(t *testing.T) {
 		board := testutil.ValidBoard()
 		InsertBoard(t, pool, &board)
 
-		name, _ := domain.NewColumnName("Todo")
-		now := testutil.FixedTimeNow()
-		created, err := r.Create(context.Background(), board.ID, name, now, now)
-		if err != nil {
-			t.Fatalf("Create: %v", err)
-		}
+		created := testutil.ValidColumn(board.ID)
+		InsertColumn(t, pool, &created)
 
 		got, err := r.GetByID(context.Background(), created.ID)
 		if err != nil {
@@ -229,28 +217,17 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		board := testutil.ValidBoard()
 		InsertBoard(t, pool, &board)
 
-		name, _ := domain.NewColumnName("Todo")
-		now := testutil.FixedTimeNow()
-		created, err := r.Create(context.Background(), board.ID, name, now, now)
-		if err != nil {
-			t.Fatalf("Create: %v", err)
-		}
+		created := testutil.ValidColumn(board.ID)
+		InsertColumn(t, pool, &created)
 
-		updatedName, _ := domain.NewColumnName("Renamed")
-		updatedAt := testutil.FixedTime5mFromNow()
-		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &updatedName, updatedAt)
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
+		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &want.Name, want.UpdatedAt)
 		if err != nil {
 			t.Fatalf("UpdateByID() error = %v", err)
 		}
 
-		if updated.Name != updatedName {
-			t.Errorf("expected name %q, got %q", updatedName, updated.Name)
-		}
-		if !updated.UpdatedAt.Equal(updatedAt) {
-			t.Errorf("expected updatedAt %v, got %v", updatedAt, updated.UpdatedAt)
-		}
-		if updated.Position != created.Position {
-			t.Errorf("expected position %v, got %v", created.Position, updated.Position)
+		if !reflect.DeepEqual(want, updated) {
+			t.Errorf("UpdateByID() = %#v, want %#v", updated, want)
 		}
 	})
 
@@ -283,14 +260,11 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		board := testutil.ValidBoard()
 		InsertBoard(t, pool, &board)
 
-		name, _ := domain.NewColumnName("Todo")
-		created, err := r.Create(context.Background(), board.ID, name, testutil.FixedTimeNow(), testutil.FixedTimeNow())
-		if err != nil {
-			t.Fatalf("Create: %v", err)
-		}
+		created := testutil.ValidColumn(board.ID)
+		InsertColumn(t, pool, &created)
 
-		updatedName, _ := domain.NewColumnName("Renamed")
-		_, err = r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &updatedName, testutil.FixedTime5mFromNow())
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name, want.UpdatedAt)
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
 		}
@@ -314,34 +288,20 @@ func TestColumnRepository_Delete(t *testing.T) {
 		board := testutil.ValidBoard()
 		InsertBoard(t, pool, &board)
 
-		name1, _ := domain.NewColumnName("Todo")
-		name2, _ := domain.NewColumnName("In Progress")
-		name3, _ := domain.NewColumnName("Done")
-		now := testutil.FixedTimeNow()
+		first := testutil.ValidColumn(board.ID)
+		second := testutil.ValidColumnAtPosition(t, board.ID, "In Progress", 2)
+		third := testutil.ValidColumnAtPosition(t, board.ID, "Done", 3)
 
-		// TODO: use separate code for creating columns to decouple test suite
-		first, err := r.Create(context.Background(), board.ID, name1, now, now)
-		if err != nil {
-			t.Fatalf("Create first: %v", err)
-		}
-		second, err := r.Create(context.Background(), board.ID, name2, now, now)
-		if err != nil {
-			t.Fatalf("Create second: %v", err)
-		}
-		third, err := r.Create(context.Background(), board.ID, name3, now, now)
-		if err != nil {
-			t.Fatalf("Create third: %v", err)
-		}
+		InsertColumn(t, pool, &first)
+		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &third)
 
-		err = r.Delete(context.Background(), board.ID, second.ID)
+		err := r.Delete(context.Background(), board.ID, second.ID)
 		if err != nil {
 			t.Fatalf("Delete() error = %v", err)
 		}
 
-		got, err := r.ListByBoardID(context.Background(), board.ID)
-		if err != nil {
-			t.Fatalf("ListByBoardID() error = %v", err)
-		}
+		got := ListColumnsByBoardID(t, pool, board.ID)
 
 		if len(got) != 2 {
 			t.Fatalf("expected 2 columns after delete, got %d", len(got))
@@ -359,9 +319,9 @@ func TestColumnRepository_Delete(t *testing.T) {
 			t.Errorf("expected second position 2 after shift, got %d", got[1].Position.Int64())
 		}
 
-		_, err = r.GetByID(context.Background(), second.ID)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("GetByID deleted column error = %v, want ErrRowNotFound", err)
+		_, ok := FindColumnByID(t, pool, second.ID)
+		if ok {
+			t.Error("expected deleted column to be absent in DB")
 		}
 	})
 
@@ -393,13 +353,10 @@ func TestColumnRepository_Delete(t *testing.T) {
 		board := testutil.ValidBoard()
 		InsertBoard(t, pool, &board)
 
-		name, _ := domain.NewColumnName("Todo")
-		created, err := r.Create(context.Background(), board.ID, name, testutil.FixedTimeNow(), testutil.FixedTimeNow())
-		if err != nil {
-			t.Fatalf("Create: %v", err)
-		}
+		created := testutil.ValidColumn(board.ID)
+		InsertColumn(t, pool, &created)
 
-		err = r.Delete(context.Background(), domain.NewBoardID(), created.ID)
+		err := r.Delete(context.Background(), domain.NewBoardID(), created.ID)
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
 		}

@@ -2,11 +2,13 @@ package repository_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"goroutine/internal/domain"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -43,4 +45,99 @@ func InsertBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	if err != nil {
 		t.Fatalf("insert board: %v", err)
 	}
+}
+
+func InsertColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `
+		INSERT INTO columns (id, board_id, name, position, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := pool.Exec(ctx, q,
+		column.ID,
+		column.BoardID,
+		column.Name,
+		column.Position,
+		column.CreatedAt,
+		column.UpdatedAt,
+	)
+	if err != nil {
+		t.Fatalf("insert column: %v", err)
+	}
+}
+
+func FindColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `
+		SELECT id, board_id, name, position, created_at, updated_at
+		FROM columns
+		WHERE id = $1`
+
+	var column domain.Column
+	err := pool.QueryRow(ctx, q, columnID).Scan(
+		&column.ID,
+		&column.BoardID,
+		&column.Name,
+		&column.Position,
+		&column.CreatedAt,
+		&column.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Column{}, false
+		}
+		t.Fatalf("find column by id: %v", err)
+	}
+
+	return column, true
+}
+
+func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) []domain.Column {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `
+		SELECT id, board_id, name, position, created_at, updated_at
+		FROM columns
+		WHERE board_id = $1
+		ORDER BY position ASC`
+
+	rows, err := pool.Query(ctx, q, boardID)
+	if err != nil {
+		t.Fatalf("list columns by board id: %v", err)
+	}
+	defer rows.Close()
+
+	var columns []domain.Column
+	for rows.Next() {
+		var column domain.Column
+		err := rows.Scan(
+			&column.ID,
+			&column.BoardID,
+			&column.Name,
+			&column.Position,
+			&column.CreatedAt,
+			&column.UpdatedAt,
+		)
+		if err != nil {
+			t.Fatalf("list columns by board id scan: %v", err)
+		}
+
+		columns = append(columns, column)
+	}
+
+	if err := rows.Err(); err != nil {
+		t.Fatalf("list columns by board id rows: %v", err)
+	}
+
+	return columns
 }
