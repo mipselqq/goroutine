@@ -176,6 +176,9 @@ func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 		  AND id = @column_id
 		RETURNING position`
 
+		// Workaround:
+		// UNIQUE(board_id, position) may be violated during simple offsetting since crawling order is not guaranteed
+		// So we shift all the columns out of working scope and then move them back in the correct order
 		positionOffsetQuery = `
 		SELECT COALESCE(MAX(position), 0) + 1
 		FROM columns
