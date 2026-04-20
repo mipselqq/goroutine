@@ -624,7 +624,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "VALIDATION_ERROR or INDEX_OUT_OF_BOUNDS",
+                        "description": "VALIDATION_ERROR",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }

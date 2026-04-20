@@ -144,17 +144,6 @@ func boardNotFoundErrorBody() map[string]any {
 	}
 }
 
-func indexOutOfBoundsErrorBody() map[string]any {
-	return map[string]any{
-		"code":      "INDEX_OUT_OF_BOUNDS",
-		"message":   "Index out of bounds",
-		"timestamp": testutil.FixedTimeNowStr(),
-		"details": []any{
-			map[string]any{"field": "targetPosition", "issues": []string{"Index out of bounds"}},
-		},
-	}
-}
-
 func unauthorizedTokenBody() map[string]any {
 	return map[string]any{
 		"code":      "INVALID_TOKEN",

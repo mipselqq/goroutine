@@ -241,7 +241,7 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 // @Param columnId path string true "Column ID"
 // @Param body body moveColumnBody true "Target position"
 // @Success 200 {object} columnPositionResponse
-// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR or INDEX_OUT_OF_BOUNDS"
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
@@ -294,7 +294,7 @@ func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, service.ErrIndexOutOfBounds) {
-			h.responder.IndexOutOfBounds(w, []httpschema.Detail{{Field: "targetPosition", Issues: []string{"Index out of bounds"}}})
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "targetPosition", Issues: []string{"Index out of bounds"}}})
 			return
 		}
 		h.responder.InternalError(w, r, err)

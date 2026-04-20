@@ -556,7 +556,7 @@ func TestColumns_Move(t *testing.T) {
 				}
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: indexOutOfBoundsErrorBody(),
+			expectedBody: validationErrorBody("targetPosition", []string{"Index out of bounds"}),
 		},
 		{
 			name:      "Column not found",
