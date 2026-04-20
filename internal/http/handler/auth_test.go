@@ -18,8 +18,8 @@ type authTestCase struct {
 	name             string
 	inputBody        any
 	setupAuthService func(t *testing.T, s *MockAuthService)
-	expectedCode     int
-	expectedBody     any
+	wantCode         int
+	wantBody         any
 }
 
 func TestAuth_Register(t *testing.T) {
@@ -35,16 +35,16 @@ func TestAuth_Register(t *testing.T) {
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
 				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) error {
 					if e != email {
-						t.Errorf("expected email %q, got %q", email, e)
+						t.Errorf("got email %q, want %q", e, email)
 					}
 					if p != password {
-						t.Errorf("expected password %q, got %q", password, p)
+						t.Errorf("got password %q, want %q", p, password)
 					}
 					return nil
 				}
 			},
-			expectedCode: http.StatusOK,
-			expectedBody: map[string]string{"status": "ok"},
+			wantCode: http.StatusOK,
+			wantBody: map[string]string{"status": "ok"},
 		},
 		{
 			name:      "Internal error",
@@ -54,18 +54,18 @@ func TestAuth_Register(t *testing.T) {
 					return service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
+			wantCode: http.StatusInternalServerError,
+			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
 				"timestamp": testutil.FixedTimeNowStr(),
 			},
 		},
 		{
-			name:         "Invalid email format",
-			inputBody:    map[string]string{"email": "invalid-email", "password": password.String()},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Invalid email format",
+			inputBody: map[string]string{"email": "invalid-email", "password": password.String()},
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -75,10 +75,10 @@ func TestAuth_Register(t *testing.T) {
 			},
 		},
 		{
-			name:         "Password too short",
-			inputBody:    map[string]string{"email": email.String(), "password": "123"},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Password too short",
+			inputBody: map[string]string{"email": email.String(), "password": "123"},
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -88,10 +88,10 @@ func TestAuth_Register(t *testing.T) {
 			},
 		},
 		{
-			name:         "Invalid JSON",
-			inputBody:    json.RawMessage([]byte(`{"email": "test@example.com", "password": "password"`)), // missing closing brace
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Invalid JSON",
+			inputBody: json.RawMessage([]byte(`{"email": "test@example.com", "password": "password"`)), // missing closing brace
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -108,8 +108,8 @@ func TestAuth_Register(t *testing.T) {
 					return service.ErrUserAlreadyExists
 				}
 			},
-			expectedCode: http.StatusConflict,
-			expectedBody: userAlreadyExistsErrorBody(),
+			wantCode: http.StatusConflict,
+			wantBody: userAlreadyExistsErrorBody(),
 		},
 		{
 			name:      "Unknown error",
@@ -119,8 +119,8 @@ func TestAuth_Register(t *testing.T) {
 					return errors.New("unknown error")
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
+			wantCode: http.StatusInternalServerError,
+			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -144,9 +144,9 @@ func TestAuth_Register(t *testing.T) {
 			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Register(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }
@@ -164,16 +164,16 @@ func TestAuth_Login(t *testing.T) {
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
 				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) (string, error) {
 					if e != email {
-						t.Errorf("expected email %q, got %q", email, e)
+						t.Errorf("got email %q, want %q", e, email)
 					}
 					if p != password {
-						t.Errorf("expected password %q, got %q", password, p)
+						t.Errorf("got password %q, want %q", p, password)
 					}
 					return "jwt_token", nil
 				}
 			},
-			expectedCode: http.StatusOK,
-			expectedBody: map[string]string{"token": "jwt_token"},
+			wantCode: http.StatusOK,
+			wantBody: map[string]string{"token": "jwt_token"},
 		},
 		{
 			name:      "Invalid credentials",
@@ -183,8 +183,8 @@ func TestAuth_Login(t *testing.T) {
 					return "", service.ErrInvalidCredentials
 				}
 			},
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: map[string]any{
+			wantCode: http.StatusUnauthorized,
+			wantBody: map[string]any{
 				"code":      "INVALID_CREDENTIALS",
 				"message":   "Invalid login or password",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -201,8 +201,8 @@ func TestAuth_Login(t *testing.T) {
 					return "", service.ErrUserNotFound // Enumeration and timing attacks are known, this is fine
 				}
 			},
-			expectedCode: http.StatusUnauthorized,
-			expectedBody: map[string]any{
+			wantCode: http.StatusUnauthorized,
+			wantBody: map[string]any{
 				"code":      "USER_NOT_FOUND",
 				"message":   "User not found",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -217,18 +217,18 @@ func TestAuth_Login(t *testing.T) {
 					return "", service.ErrInternal
 				}
 			},
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
+			wantCode: http.StatusInternalServerError,
+			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
 				"timestamp": testutil.FixedTimeNowStr(),
 			},
 		},
 		{
-			name:         "Empty email",
-			inputBody:    map[string]string{"email": "", "password": password.String()},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Empty email",
+			inputBody: map[string]string{"email": "", "password": password.String()},
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -238,10 +238,10 @@ func TestAuth_Login(t *testing.T) {
 			},
 		},
 		{
-			name:         "Invalid email format",
-			inputBody:    map[string]string{"email": "invalid-email", "password": password.String()},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Invalid email format",
+			inputBody: map[string]string{"email": "invalid-email", "password": password.String()},
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -251,10 +251,10 @@ func TestAuth_Login(t *testing.T) {
 			},
 		},
 		{
-			name:         "Empty email and password",
-			inputBody:    map[string]any{"email": "", "password": ""},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Empty email and password",
+			inputBody: map[string]any{"email": "", "password": ""},
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -265,10 +265,10 @@ func TestAuth_Login(t *testing.T) {
 			},
 		},
 		{
-			name:         "Empty password",
-			inputBody:    map[string]string{"email": email.String(), "password": ""},
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Empty password",
+			inputBody: map[string]string{"email": email.String(), "password": ""},
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -278,10 +278,10 @@ func TestAuth_Login(t *testing.T) {
 			},
 		},
 		{
-			name:         "Invalid JSON",
-			inputBody:    json.RawMessage([]byte(`{"email": "test@example.com"`)), // missing password and closing brace
-			expectedCode: http.StatusBadRequest,
-			expectedBody: map[string]any{
+			name:      "Invalid JSON",
+			inputBody: json.RawMessage([]byte(`{"email": "test@example.com"`)), // missing password and closing brace
+			wantCode:  http.StatusBadRequest,
+			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -307,9 +307,9 @@ func TestAuth_Login(t *testing.T) {
 			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Login(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }
@@ -318,22 +318,22 @@ func TestAuth_WhoAmI(t *testing.T) {
 	testUserID := testutil.ValidUserID()
 
 	tests := []struct {
-		name         string
-		context      context.Context
-		expectedCode int
-		expectedBody any
+		name     string
+		context  context.Context
+		wantCode int
+		wantBody any
 	}{
 		{
-			name:         "Success",
-			context:      context.WithValue(context.Background(), httpschema.ContextKeyUserID, testUserID),
-			expectedCode: http.StatusOK,
-			expectedBody: map[string]string{"uid": testUserID.String()},
+			name:     "Success",
+			context:  context.WithValue(context.Background(), httpschema.ContextKeyUserID, testUserID),
+			wantCode: http.StatusOK,
+			wantBody: map[string]string{"uid": testUserID.String()},
 		},
 		{
-			name:         "No user ID",
-			context:      context.Background(),
-			expectedCode: http.StatusInternalServerError,
-			expectedBody: map[string]any{
+			name:     "No user ID",
+			context:  context.Background(),
+			wantCode: http.StatusInternalServerError,
+			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
 				"timestamp": testutil.FixedTimeNowStr(),
@@ -352,9 +352,9 @@ func TestAuth_WhoAmI(t *testing.T) {
 			h := handler.NewAuth(logger, &MockAuthService{}, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.WhoAmI(rr, req)
 
-			testutil.AssertStatusCode(t, rr, tt.expectedCode)
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
-			testutil.AssertResponseBody(t, rr, tt.expectedBody)
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
 		})
 	}
 }

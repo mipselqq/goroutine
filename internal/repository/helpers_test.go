@@ -21,7 +21,7 @@ func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email string
 	const query = `INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)`
 	_, err := pool.Exec(ctx, query, id, email, "hash")
 	if err != nil {
-		t.Fatalf("Failed to create user: %v", err)
+		t.Fatalf("CreateUser() error = %v", err)
 	}
 }
 
@@ -43,7 +43,7 @@ func InsertBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 		board.UpdatedAt,
 	)
 	if err != nil {
-		t.Fatalf("insert board: %v", err)
+		t.Fatalf("InsertBoard() error = %v", err)
 	}
 }
 
@@ -65,7 +65,7 @@ func InsertColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 		column.UpdatedAt,
 	)
 	if err != nil {
-		t.Fatalf("insert column: %v", err)
+		t.Fatalf("InsertColumn() error = %v", err)
 	}
 }
 
@@ -93,7 +93,7 @@ func FindColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) 
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, false
 		}
-		t.Fatalf("find column by id: %v", err)
+		t.Fatalf("FindColumnByID() error = %v", err)
 	}
 
 	return column, true
@@ -113,7 +113,7 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 
 	rows, err := pool.Query(ctx, q, boardID)
 	if err != nil {
-		t.Fatalf("list columns by board id: %v", err)
+		t.Fatalf("ListColumnsByBoardID() error = %v", err)
 	}
 	defer rows.Close()
 
@@ -129,14 +129,14 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 			&column.UpdatedAt,
 		)
 		if err != nil {
-			t.Fatalf("list columns by board id scan: %v", err)
+			t.Fatalf("Column row Scan() error = %v", err)
 		}
 
 		columns = append(columns, column)
 	}
 
 	if err := rows.Err(); err != nil {
-		t.Fatalf("list columns by board id rows: %v", err)
+		t.Fatalf("rows.Err() error = %v", err)
 	}
 
 	return columns

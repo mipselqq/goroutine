@@ -34,25 +34,25 @@ func TestBoardRepository_Create(t *testing.T) {
 			t.Errorf("Create() error = %v", err)
 		}
 		if board.ID.IsEmpty() {
-			t.Errorf("Expected board ID to be generated, got empty")
+			t.Errorf("got empty board ID, want generated ID")
 		}
 		if board.OwnerID != userID {
-			t.Errorf("Expected owner ID %q, got %q", userID, board.OwnerID)
+			t.Errorf("got owner ID %q, want %q", board.OwnerID, userID)
 		}
 		if board.Name != boardName {
-			t.Errorf("Expected name %q, got %q", boardName, board.Name)
+			t.Errorf("got name %q, want %q", board.Name, boardName)
 		}
 		if board.Description != boardDescription {
-			t.Errorf("Expected description %q, got %q", boardDescription, board.Description)
+			t.Errorf("got description %q, want %q", board.Description, boardDescription)
 		}
 		if board.CreatedAt.IsZero() {
-			t.Errorf("Expected created at to be set, got zero value")
+			t.Errorf("got zero createdAt, want set value")
 		}
 		if board.UpdatedAt.IsZero() {
-			t.Errorf("Expected updated at to be set, got zero value")
+			t.Errorf("got zero updatedAt, want set value")
 		}
 		if !board.CreatedAt.Equal(board.UpdatedAt) {
-			t.Errorf("Expected created at and updated at to be the same, got %v and %v", board.CreatedAt, board.UpdatedAt)
+			t.Errorf("got createdAt=%v updatedAt=%v, want equal", board.CreatedAt, board.UpdatedAt)
 		}
 
 		const query = `
@@ -70,22 +70,22 @@ func TestBoardRepository_Create(t *testing.T) {
 		err = pool.QueryRow(context.Background(), query, board.ID).
 			Scan(&dbOwnerID, &dbName, &dbDescription, &dbCreatedAt, &dbUpdatedAt)
 		if err != nil {
-			t.Fatalf("Failed to find board in DB by ID %q: %v", board.ID, err)
+			t.Fatalf("Board row Scan() error = %v", err)
 		}
 		if dbOwnerID != userID {
-			t.Errorf("DB: expected owner ID %q, got %q", userID, dbOwnerID)
+			t.Errorf("DB: got owner ID %q, want %q", dbOwnerID, userID)
 		}
 		if dbName != boardName {
-			t.Errorf("DB: expected name %q, got %q", boardName, dbName)
+			t.Errorf("DB: got name %q, want %q", dbName, boardName)
 		}
 		if dbDescription != boardDescription {
-			t.Errorf("DB: expected description %q, got %q", boardDescription, dbDescription)
+			t.Errorf("DB: got description %q, want %q", dbDescription, boardDescription)
 		}
 		if !dbCreatedAt.Equal(board.CreatedAt) {
-			t.Errorf("DB: expected created_at %v, got %v", board.CreatedAt, dbCreatedAt)
+			t.Errorf("DB: got created_at %v, want %v", dbCreatedAt, board.CreatedAt)
 		}
 		if !dbUpdatedAt.Equal(board.UpdatedAt) {
-			t.Errorf("DB: expected updated_at %v, got %v", board.UpdatedAt, dbUpdatedAt)
+			t.Errorf("DB: got updated_at %v, want %v", dbUpdatedAt, board.UpdatedAt)
 		}
 	})
 }
@@ -155,7 +155,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			t.Errorf("GetMany() error = %v", err)
 		}
 		if len(got) != 0 {
-			t.Errorf("expected no boards, got %d", len(got))
+			t.Errorf("got %d boards, want 0", len(got))
 		}
 	})
 
@@ -167,17 +167,17 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		first, err := r.Create(context.Background(), userID, boardName, boardDescription)
 		if err != nil {
-			t.Fatalf("Create first board: %v", err)
+			t.Fatalf("Create() error = %v", err)
 		}
 
 		otherName, err := domain.NewBoardName(boardName.String() + "-2")
 		if err != nil {
-			t.Fatalf("NewBoardName: %v", err)
+			t.Fatalf("NewBoardName() error = %v", err)
 		}
 		time.Sleep(5 * time.Millisecond)
 		second, err := r.Create(context.Background(), userID, otherName, boardDescription)
 		if err != nil {
-			t.Fatalf("Create second board: %v", err)
+			t.Fatalf("Create() error = %v", err)
 		}
 
 		got, err := r.GetMany(context.Background(), userID)
@@ -185,7 +185,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			t.Errorf("GetMany() error = %v", err)
 		}
 		if len(got) != 2 {
-			t.Fatalf("expected 2 boards, got %d", len(got))
+			t.Fatalf("got %d boards, want 2", len(got))
 		}
 		want := []domain.Board{first, second}
 		if !reflect.DeepEqual(want, got) {
@@ -288,7 +288,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 
 		board, err := r.Create(context.Background(), userID, boardName, boardDescription)
 		if err != nil {
-			t.Fatalf("Create: %v", err)
+			t.Fatalf("Create() error = %v", err)
 		}
 
 		err = r.Delete(context.Background(), board.ID)
@@ -298,7 +298,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 
 		_, err = r.GetByID(context.Background(), board.ID)
 		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("GetByID after delete: %v, want ErrRowNotFound", err)
+			t.Errorf("GetByID() error = %v, want ErrRowNotFound", err)
 		}
 	})
 

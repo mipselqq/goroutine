@@ -14,14 +14,14 @@ func TestSecretString(t *testing.T) {
 	ssRevealed := ss.RevealSecret()
 
 	if ss.RevealSecret() != s {
-		t.Fatalf("Expected %q after reveal, got %q", s, ssRevealed)
+		t.Fatalf("got %q after reveal, want %q", ssRevealed, s)
 	}
 
 	ssHiddenRepr := ss.String()
 	ssLogged := ss.LogValue().String()
 
 	if ssLogged != ssHiddenRepr {
-		t.Fatalf("Expected LogValue %q == String %q", ssLogged, ssHiddenRepr)
+		t.Fatalf("LogValue().String() = %q, want String() = %q", ssLogged, ssHiddenRepr)
 	}
 
 	sLower := strings.ToLower(s)

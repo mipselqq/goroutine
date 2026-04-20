@@ -21,7 +21,7 @@ func TestBoard_Create(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupBoardRepo func(t *testing.T, r *MockBoardRepository)
-		expectedErr    error
+		wantErr        error
 		wantBoard      domain.Board
 	}{
 		{
@@ -29,19 +29,19 @@ func TestBoard_Create(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.CreateFunc = func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
-						t.Errorf("expected ownerID %v, got %v", validBoard.OwnerID, ownerID)
+						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
 					if name != validBoard.Name {
-						t.Errorf("expected name %v, got %v", validBoard.Name, name)
+						t.Errorf("got name %v, want %v", name, validBoard.Name)
 					}
 					if description != validBoard.Description {
-						t.Errorf("expected description %v, got %v", validBoard.Description, description)
+						t.Errorf("got description %v, want %v", description, validBoard.Description)
 					}
 					return validBoard, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoard:   validBoard,
+			wantErr:   nil,
+			wantBoard: validBoard,
 		},
 		{
 			name: "Internal error",
@@ -50,7 +50,7 @@ func TestBoard_Create(t *testing.T) {
 					return domain.Board{}, repository.ErrInternal
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name: "Unexpected error",
@@ -59,7 +59,7 @@ func TestBoard_Create(t *testing.T) {
 					return domain.Board{}, errors.New("unexpected error")
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 	}
 
@@ -73,10 +73,10 @@ func TestBoard_Create(t *testing.T) {
 
 			got, err := s.Create(context.Background(), validBoard.OwnerID, validBoard.Name, validBoard.Description)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
+			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
 				t.Errorf("Create() board = %#v, want %#v", got, tt.wantBoard)
 			}
 		})
@@ -91,7 +91,7 @@ func TestBoard_GetMany(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupBoardRepo func(t *testing.T, r *MockBoardRepository)
-		expectedErr    error
+		wantErr        error
 		wantBoards     []domain.Board
 	}{
 		{
@@ -99,13 +99,13 @@ func TestBoard_GetMany(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
-						t.Errorf("expected ownerID %v, got %v", validBoard.OwnerID, ownerID)
+						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
 					return []domain.Board{validBoard}, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoards:  []domain.Board{validBoard},
+			wantErr:    nil,
+			wantBoards: []domain.Board{validBoard},
 		},
 		{
 			name: "Internal error",
@@ -114,7 +114,7 @@ func TestBoard_GetMany(t *testing.T) {
 					return nil, repository.ErrInternal
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name: "Unexpected error",
@@ -123,7 +123,7 @@ func TestBoard_GetMany(t *testing.T) {
 					return nil, errors.New("unexpected error")
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 	}
 
@@ -137,10 +137,10 @@ func TestBoard_GetMany(t *testing.T) {
 
 			got, err := s.GetMany(context.Background(), validBoard.OwnerID)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoards, got) {
+			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoards, got) {
 				t.Errorf("GetMany() = %#v, want %#v", got, tt.wantBoards)
 			}
 		})
@@ -151,7 +151,7 @@ type boardServiceGetTestCase struct {
 	name           string
 	callerID       domain.UserID
 	setupBoardRepo func(t *testing.T, r *MockBoardRepository)
-	expectedErr    error
+	wantErr        error
 	wantBoard      domain.Board
 }
 
@@ -168,13 +168,13 @@ func TestBoard_Get(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					if id != validBoard.ID {
-						t.Errorf("expected board id %v, got %v", validBoard.ID, id)
+						t.Errorf("got board id %v, want %v", id, validBoard.ID)
 					}
 					return validBoard, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoard:   validBoard,
+			wantErr:   nil,
+			wantBoard: validBoard,
 		},
 		{
 			name:     "Not found when not owner",
@@ -184,7 +184,7 @@ func TestBoard_Get(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:     "Not found when row missing",
@@ -194,7 +194,7 @@ func TestBoard_Get(t *testing.T) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:     "Internal error from repository",
@@ -204,7 +204,7 @@ func TestBoard_Get(t *testing.T) {
 					return domain.Board{}, repository.ErrInternal
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name:     "Unexpected error from repository",
@@ -214,7 +214,7 @@ func TestBoard_Get(t *testing.T) {
 					return domain.Board{}, errors.New("db exploded")
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 	}
 
@@ -228,10 +228,10 @@ func TestBoard_Get(t *testing.T) {
 
 			got, err := s.Get(context.Background(), tt.callerID, validBoard.ID)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
+			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
 				t.Errorf("Get() board = %#v, want %#v", got, tt.wantBoard)
 			}
 		})
@@ -258,7 +258,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 		inputName        *domain.BoardName
 		inputDescription *domain.BoardDescription
 		setupBoardRepo   func(t *testing.T, r *MockBoardRepository)
-		expectedErr      error
+		wantErr          error
 		wantBoard        domain.Board
 	}{
 		{
@@ -269,29 +269,29 @@ func TestBoard_UpdateByID(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
 					if boardID != validBoard.ID {
-						t.Errorf("unexpected boardID %v", boardID)
+						t.Errorf("got boardID %v, want %v", boardID, validBoard.ID)
 					}
 					if updatedAt != updatedValidBoard.UpdatedAt {
-						t.Errorf("unexpected updatedAt %v", updatedAt)
+						t.Errorf("got updatedAt %v, want %v", updatedAt, updatedValidBoard.UpdatedAt)
 					}
 					if name == nil || *name != updatedValidBoard.Name {
-						t.Errorf("unexpected name %+v", name)
+						t.Errorf("got name %+v, want %+v", name, updatedValidBoard.Name)
 					}
 					if description == nil || *description != updatedValidBoard.Description {
-						t.Errorf("unexpected description %+v", description)
+						t.Errorf("got description %+v, want %+v", description, updatedValidBoard.Description)
 					}
 					return updatedValidBoard, nil
 				}
 
 				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					if id != validBoard.ID {
-						t.Errorf("unexpected boardID %v", id)
+						t.Errorf("got boardID %v, want %v", id, validBoard.ID)
 					}
 					return validBoard, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoard:   updatedValidBoard,
+			wantErr:   nil,
+			wantBoard: updatedValidBoard,
 		},
 		{
 			name:      "Success update only name",
@@ -300,13 +300,13 @@ func TestBoard_UpdateByID(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
 					if updatedAt != updatedNameOnlyBoard.UpdatedAt {
-						t.Errorf("unexpected updatedAt %v", updatedAt)
+						t.Errorf("got updatedAt %v, want %v", updatedAt, updatedNameOnlyBoard.UpdatedAt)
 					}
 					if name == nil || *name != updatedNameOnlyBoard.Name {
-						t.Errorf("unexpected name %+v", name)
+						t.Errorf("got name %+v, want %+v", name, updatedNameOnlyBoard.Name)
 					}
 					if description != nil {
-						t.Errorf("unexpected description %+v", description)
+						t.Errorf("got description %+v, want nil", description)
 					}
 					return updatedNameOnlyBoard, nil
 				}
@@ -314,8 +314,8 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoard:   updatedNameOnlyBoard,
+			wantErr:   nil,
+			wantBoard: updatedNameOnlyBoard,
 		},
 		{
 			name:             "Success update only description",
@@ -324,13 +324,13 @@ func TestBoard_UpdateByID(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
 					if updatedAt != updatedDescriptionOnlyBoard.UpdatedAt {
-						t.Errorf("unexpected updatedAt %v", updatedAt)
+						t.Errorf("got updatedAt %v, want %v", updatedAt, updatedDescriptionOnlyBoard.UpdatedAt)
 					}
 					if name != nil {
-						t.Errorf("unexpected name %+v", name)
+						t.Errorf("got name %+v, want nil", name)
 					}
 					if description == nil || *description != updatedDescriptionOnlyBoard.Description {
-						t.Errorf("unexpected description %+v", description)
+						t.Errorf("got description %+v, want %+v", description, updatedDescriptionOnlyBoard.Description)
 					}
 					return updatedDescriptionOnlyBoard, nil
 				}
@@ -338,8 +338,8 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoard:   updatedDescriptionOnlyBoard,
+			wantErr:   nil,
+			wantBoard: updatedDescriptionOnlyBoard,
 		},
 		{
 			name:     "Success update no fields",
@@ -349,8 +349,8 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedErr: nil,
-			wantBoard:   validBoard,
+			wantErr:   nil,
+			wantBoard: validBoard,
 		},
 		{
 			name:     "Not found when wrong owner",
@@ -360,7 +360,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:     "Not found when row missing",
@@ -370,7 +370,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:      "Internal error",
@@ -384,7 +384,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return domain.Board{}, repository.ErrInternal
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name:      "Unexpected error",
@@ -398,7 +398,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return domain.Board{}, errors.New("db exploded")
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name:     "Unexpected get by id error",
@@ -408,7 +408,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 					return domain.Board{}, errors.New("db exploded")
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 	}
 
@@ -422,10 +422,10 @@ func TestBoard_UpdateByID(t *testing.T) {
 
 			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, tt.inputName, tt.inputDescription)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.expectedErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
+			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
 				t.Errorf("UpdateByID() board = %#v, want %#v", got, tt.wantBoard)
 			}
 		})
@@ -442,7 +442,7 @@ func TestBoard_Delete(t *testing.T) {
 		name           string
 		callerID       domain.UserID
 		setupBoardRepo func(t *testing.T, r *MockBoardRepository)
-		expectedErr    error
+		wantErr        error
 	}{
 		{
 			name:     "Success",
@@ -450,18 +450,18 @@ func TestBoard_Delete(t *testing.T) {
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					if id != validBoard.ID {
-						t.Errorf("unexpected boardID %v", id)
+						t.Errorf("got boardID %v, want %v", id, validBoard.ID)
 					}
 					return validBoard, nil
 				}
 				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID) error {
 					if boardID != validBoard.ID {
-						t.Errorf("unexpected boardID %v", boardID)
+						t.Errorf("got boardID %v, want %v", boardID, validBoard.ID)
 					}
 					return nil
 				}
 			},
-			expectedErr: nil,
+			wantErr: nil,
 		},
 		{
 			name:     "Not found when wrong owner",
@@ -471,7 +471,7 @@ func TestBoard_Delete(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:     "Not found when row missing",
@@ -481,7 +481,7 @@ func TestBoard_Delete(t *testing.T) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:     "Internal error from repository",
@@ -491,7 +491,7 @@ func TestBoard_Delete(t *testing.T) {
 					return domain.Board{}, repository.ErrInternal
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name:     "Unexpected error from repository",
@@ -501,7 +501,7 @@ func TestBoard_Delete(t *testing.T) {
 					return domain.Board{}, errors.New("db exploded")
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 		{
 			name:     "Delete returns not found",
@@ -514,7 +514,7 @@ func TestBoard_Delete(t *testing.T) {
 					return repository.ErrRowNotFound
 				}
 			},
-			expectedErr: service.ErrBoardNotFound,
+			wantErr: service.ErrBoardNotFound,
 		},
 		{
 			name:     "Delete returns internal",
@@ -527,7 +527,7 @@ func TestBoard_Delete(t *testing.T) {
 					return repository.ErrInternal
 				}
 			},
-			expectedErr: service.ErrInternal,
+			wantErr: service.ErrInternal,
 		},
 	}
 
@@ -541,8 +541,8 @@ func TestBoard_Delete(t *testing.T) {
 
 			err := s.Delete(context.Background(), tt.callerID, validBoard.ID)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 		})
 	}

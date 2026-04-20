@@ -48,28 +48,28 @@ func TestBoard_HappyPath(t *testing.T) {
 		}()
 
 		if createResp.StatusCode != http.StatusCreated {
-			t.Fatalf("Expected status %d, got %d", http.StatusCreated, createResp.StatusCode)
+			t.Fatalf("got status %d, want %d", createResp.StatusCode, http.StatusCreated)
 		}
 
 		createdBoard := parseBoard(t, createResp)
 
 		if _, err := uuid.Parse(createdBoard.ID); err != nil {
-			t.Errorf("Invalid board ID: %v", err)
+			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdBoard.ID, err)
 		}
 		if _, err := uuid.Parse(createdBoard.OwnerID); err != nil {
-			t.Errorf("Invalid owner ID: %v", err)
+			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdBoard.OwnerID, err)
 		}
 		if createdBoard.Name != name {
-			t.Errorf("Expected name %q, got %q", name, createdBoard.Name)
+			t.Errorf("got name %q, want %q", createdBoard.Name, name)
 		}
 		if createdBoard.Description != description {
-			t.Errorf("Expected description %q, got %q", description, createdBoard.Description)
+			t.Errorf("got description %q, want %q", createdBoard.Description, description)
 		}
 		if _, err := time.Parse(timeFormat, createdBoard.CreatedAt); err != nil {
-			t.Errorf("Invalid createdAt: %v", err)
+			t.Errorf("time.Parse(%q) error = %v, want nil", createdBoard.CreatedAt, err)
 		}
 		if _, err := time.Parse(timeFormat, createdBoard.UpdatedAt); err != nil {
-			t.Errorf("Invalid updatedAt: %v", err)
+			t.Errorf("time.Parse(%q) error = %v, want nil", createdBoard.UpdatedAt, err)
 		}
 
 		// 3. Get by id, store response in getByIDBoard, and perform deep comparison with createdBoard
@@ -78,7 +78,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			_ = oneResp.Body.Close()
 		}()
 		if oneResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected Get by id status %d, got %d", http.StatusOK, oneResp.StatusCode)
+			t.Fatalf("got Get by id status %d, want %d", oneResp.StatusCode, http.StatusOK)
 		}
 
 		getByIDBoard := parseBoard(t, oneResp)
@@ -93,12 +93,12 @@ func TestBoard_HappyPath(t *testing.T) {
 		}()
 
 		if listResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected list status %d, got %d", http.StatusOK, listResp.StatusCode)
+			t.Fatalf("got list status %d, want %d", listResp.StatusCode, http.StatusOK)
 		}
 
 		listedBoards := parseBoardsList(t, listResp)
 		if len(listedBoards) != 1 {
-			t.Fatalf("Expected 1 board in list, got %d", len(listedBoards))
+			t.Fatalf("got %d boards in list, want 1", len(listedBoards))
 		}
 		if diff := cmp.Diff(createdBoard, listedBoards[0]); diff != "" {
 			t.Errorf("List item mismatch (-want +got):\n%s", diff)
@@ -113,7 +113,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			_ = updateNameResp.Body.Close()
 		}()
 		if updateNameResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected Update by id status %d, got %d", http.StatusOK, updateNameResp.StatusCode)
+			t.Fatalf("got Update by id status %d, want %d", updateNameResp.StatusCode, http.StatusOK)
 		}
 
 		updatedNameBoard := parseBoard(t, updateNameResp)
@@ -123,12 +123,12 @@ func TestBoard_HappyPath(t *testing.T) {
 		checkBoard.Name = createdBoard.Name
 		checkBoard.UpdatedAt = createdBoard.UpdatedAt
 		if diff := cmp.Diff(createdBoard, checkBoard); diff != "" {
-			t.Errorf("Update by id changed unexpected fields (-want +got):\n%s", diff)
+			t.Errorf("UpdateByID() diff (-want +got):\n%s", diff)
 		}
 
 		// Verify specific changes
 		if updatedNameBoard.Name != updatedName {
-			t.Errorf("Expected updated name %q, got %q", updatedName, updatedNameBoard.Name)
+			t.Errorf("got updated name %q, want %q", updatedNameBoard.Name, updatedName)
 		}
 
 		updatedAtTime, _ := time.Parse(timeFormat, updatedNameBoard.UpdatedAt)
@@ -144,7 +144,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		}()
 
 		if afterUpdateResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected Get by id status %d after update, got %d", http.StatusOK, afterUpdateResp.StatusCode)
+			t.Fatalf("got Get by id status %d after update, want %d", afterUpdateResp.StatusCode, http.StatusOK)
 		}
 
 		getByIDBoardAfterUpdate := parseBoard(t, afterUpdateResp)
@@ -158,7 +158,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			_ = delResp.Body.Close()
 		}()
 		if delResp.StatusCode != http.StatusNoContent {
-			t.Fatalf("Expected Delete by id status %d, got %d", http.StatusNoContent, delResp.StatusCode)
+			t.Fatalf("got Delete by id status %d, want %d", delResp.StatusCode, http.StatusNoContent)
 		}
 
 		// 8. List boards and ensure an empty list is returned
@@ -167,12 +167,12 @@ func TestBoard_HappyPath(t *testing.T) {
 			_ = listAfterDelResp.Body.Close()
 		}()
 		if listAfterDelResp.StatusCode != http.StatusOK {
-			t.Fatalf("Expected list status %d after delete, got %d", http.StatusOK, listAfterDelResp.StatusCode)
+			t.Fatalf("got list status %d after delete, want %d", listAfterDelResp.StatusCode, http.StatusOK)
 		}
 
 		listedAfterDelete := parseBoardsList(t, listAfterDelResp)
 		if len(listedAfterDelete) != 0 {
-			t.Fatalf("Expected 0 boards after delete, got %d", len(listedAfterDelete))
+			t.Fatalf("got %d boards after delete, want 0", len(listedAfterDelete))
 		}
 	})
 }
@@ -181,7 +181,7 @@ func parseBoard(t *testing.T, resp *http.Response) boardJSON {
 	t.Helper()
 	var b boardJSON
 	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
-		t.Fatalf("Failed to decode board: %v", err)
+		t.Fatalf("Board Decode() error = %v", err)
 	}
 	return b
 }
@@ -190,7 +190,7 @@ func parseBoardsList(t *testing.T, resp *http.Response) []boardJSON {
 	t.Helper()
 	var b []boardJSON
 	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
-		t.Fatalf("Failed to decode boards list: %v", err)
+		t.Fatalf("Boards list Decode() error = %v", err)
 	}
 	return b
 }
