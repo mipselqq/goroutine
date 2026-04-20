@@ -42,6 +42,7 @@ type MockColumnRepository struct {
 	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetByIDFunc       func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
+	MoveFunc          func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	DeleteFunc        func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
@@ -100,6 +101,16 @@ func (m *MockColumnRepository) UpdateByID(
 ) (domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.UpdateByIDFunc", m.UpdateByIDFunc)
 	return m.UpdateByIDFunc(ctx, boardID, columnID, name, updatedAt)
+}
+
+func (m *MockColumnRepository) Move(
+	ctx context.Context,
+	boardID domain.BoardID,
+	columnID domain.ColumnID,
+	targetPosition domain.ColumnPosition,
+) (domain.ColumnPosition, error) {
+	AssertFuncNotNil("ColumnRepository.MoveFunc", m.MoveFunc)
+	return m.MoveFunc(ctx, boardID, columnID, targetPosition)
 }
 
 func (m *MockColumnRepository) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {

@@ -21,6 +21,12 @@ definitions:
         example: "2026-03-07T20:56:50.000+03:00"
         type: string
     type: object
+  handler.columnPositionResponse:
+    properties:
+      position:
+        example: 2
+        type: integer
+    type: object
   handler.columnResponse:
     properties:
       boardId:
@@ -71,6 +77,12 @@ definitions:
       token:
         example: jwt-token
         type: string
+    type: object
+  handler.moveColumnBody:
+    properties:
+      targetPosition:
+        example: 1
+        type: integer
     type: object
   handler.registerBody:
     properties:
@@ -517,6 +529,57 @@ paths:
       security:
       - BearerAuth: []
       summary: Rename a column by id
+      tags:
+      - columns
+  /v1/boards/{boardId}/columns/{columnId}/position:
+    put:
+      consumes:
+      - application/json
+      description: Move a column within a board for the current user and shift neighboring
+        columns accordingly.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      - description: Target position
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.moveColumnBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.columnPositionResponse'
+        "400":
+          description: VALIDATION_ERROR or INDEX_OUT_OF_BOUNDS
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Move a column to a new position
       tags:
       - columns
   /v1/health:

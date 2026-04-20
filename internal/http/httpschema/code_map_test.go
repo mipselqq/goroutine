@@ -19,6 +19,11 @@ func TestMapCodeToDescription(t *testing.T) {
 			code:        "INVALID_CREDENTIALS",
 			description: "Invalid login or password",
 		},
+		{
+			name:        "known move error code",
+			code:        "INDEX_OUT_OF_BOUNDS",
+			description: "Index out of bounds",
+		},
 		// Other cases omitted since they're identical to the known code
 		{
 			name:        "unknown code fallback",

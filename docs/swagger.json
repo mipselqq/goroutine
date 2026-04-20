@@ -565,6 +565,83 @@
                 }
             }
         },
+        "/v1/boards/{boardId}/columns/{columnId}/position": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Move a column within a board for the current user and shift neighboring columns accordingly.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "columns"
+                ],
+                "summary": "Move a column to a new position",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Target position",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.moveColumnBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.columnPositionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR or INDEX_OUT_OF_BOUNDS",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/health": {
             "get": {
                 "description": "Check if the server is alive",
@@ -751,6 +828,15 @@
                 }
             }
         },
+        "handler.columnPositionResponse": {
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
         "handler.columnResponse": {
             "type": "object",
             "properties": {
@@ -821,6 +907,15 @@
                 "token": {
                     "type": "string",
                     "example": "jwt-token"
+                }
+            }
+        },
+        "handler.moveColumnBody": {
+            "type": "object",
+            "properties": {
+                "targetPosition": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },

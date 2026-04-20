@@ -6,6 +6,7 @@ var (
 	ErrInternal             = errors.New("internal error happened")
 	ErrBoardNotFound        = errors.New("board not found")
 	ErrColumnNotFound       = errors.New("column not found")
+	ErrIndexOutOfBounds     = errors.New("index out of bounds")
 	ErrUserAlreadyExists    = errors.New("user already exists")
 	ErrInvalidCredentials   = errors.New("invalid email or password")
 	ErrUserNotFound         = errors.New("user not found")
