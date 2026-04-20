@@ -169,15 +169,7 @@ func (r *PgColumn) Move(
 	targetPosition domain.ColumnPosition,
 ) (domain.ColumnPosition, error) {
 	const (
-		// columns_board_id_position_key is DEFERRABLE INITIALLY IMMEDIATE.
-		// We explicitly defer it for this transaction, so the move can be written
-		// in the most obvious form:
-		// 1. shift neighboring columns by one position;
-		// 2. put the moved column into targetPosition;
-		// 3. let PostgreSQL validate uniqueness at COMMIT, when every row is already in the final place.
-		//
-		// Without SET CONSTRAINTS ... DEFERRED, the simple in-place updates below could fail with a temporary
-		// duplicate (board_id, position) before the moved column reaches its final slot.
+		// SET position order is not guaranteed, so we disable uniqueness constraint for this transaction.
 
 		// 1. Lock the board row so no concurrent operation can reorder columns in the same board.
 		lockBoardQuery = `
