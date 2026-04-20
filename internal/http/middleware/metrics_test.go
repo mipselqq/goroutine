@@ -49,21 +49,21 @@ func TestMetrics_Collection(t *testing.T) {
 		handlerStatus int
 	}{
 		{
-			name:          "register 200",
+			name:          "Register 200",
 			requestPath:   "/v1/register",
 			abstractPath:  "/v1/register",
 			method:        http.MethodPost,
 			handlerStatus: http.StatusOK,
 		},
 		{
-			name:          "health 403",
+			name:          "Health 403",
 			requestPath:   "/v1/health",
 			abstractPath:  "/v1/health",
 			method:        http.MethodGet,
 			handlerStatus: http.StatusForbidden,
 		},
 		{
-			name:          "board by id path label uses placeholder",
+			name:          "Board by id path label uses placeholder",
 			requestPath:   "/v1/boards/550e8400-e29b-41d4-a716-446655440000",
 			abstractPath:  "/v1/boards/{id}",
 			method:        http.MethodGet,
