@@ -77,7 +77,7 @@ func TestBoard_Create(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantBoard, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantBoard, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("Create() board mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -143,7 +143,7 @@ func TestBoard_GetMany(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantBoards, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantBoards, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -236,7 +236,7 @@ func TestBoard_Get(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantBoard, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantBoard, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("Get() board mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -423,7 +423,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantBoard, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantBoard, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("UpdateByID() board mismatch (-want +got):\n%s", diff)
 				}
 			}

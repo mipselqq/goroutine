@@ -6,7 +6,7 @@ import (
 	"goroutine/internal/domain"
 )
 
-func DomainCmpOpts() cmp.Option {
+func CmpAllowUnexported() cmp.Option {
 	return cmp.AllowUnexported(
 		domain.BoardID{},
 		domain.BoardName{},

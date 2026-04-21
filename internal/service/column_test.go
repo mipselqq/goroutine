@@ -131,7 +131,7 @@ func TestColumn_Create(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantColumn, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantColumn, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("Create() column mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -238,7 +238,7 @@ func TestColumn_List(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantColumns, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantColumns, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("List() columns mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -443,7 +443,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if diff := cmp.Diff(tt.wantColumn, got, testutil.DomainCmpOpts()); diff != "" {
+				if diff := cmp.Diff(tt.wantColumn, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("UpdateByID() column mismatch (-want +got):\n%s", diff)
 				}
 			}

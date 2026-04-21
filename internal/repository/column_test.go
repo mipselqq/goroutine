@@ -70,7 +70,7 @@ func TestColumnRepository_Create(t *testing.T) {
 		if !ok {
 			t.Fatalf("created column %q not found in DB", column.ID)
 		}
-		if diff := cmp.Diff(column, stored, testutil.DomainCmpOpts()); diff != "" {
+		if diff := cmp.Diff(column, stored, testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("got stored column mismatch (-want +got):\n%s", diff)
 		}
 	})
@@ -165,7 +165,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		}
 
 		want := []domain.Column{first, second}
-		if diff := cmp.Diff(want, got, testutil.DomainCmpOpts()); diff != "" {
+		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("ListByBoardID() mismatch (-want +got):\n%s", diff)
 		}
 	})
@@ -195,7 +195,7 @@ func TestColumnRepository_GetByID(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetByID() error = %v", err)
 		}
-		if diff := cmp.Diff(created, got, testutil.DomainCmpOpts()); diff != "" {
+		if diff := cmp.Diff(created, got, testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("GetByID() mismatch (-want +got):\n%s", diff)
 		}
 	})
@@ -243,7 +243,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		if !ok {
 			t.Fatalf("updated column %q not found in DB", want.ID)
 		}
-		if diff := cmp.Diff(got, stored, testutil.DomainCmpOpts()); diff != "" {
+		if diff := cmp.Diff(got, stored, testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("got stored column mismatch (-want +got):\n%s", diff)
 		}
 	}

@@ -214,7 +214,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			t.Fatalf("got %d boards, want 2", len(got))
 		}
 		want := []domain.Board{first, second}
-		if diff := cmp.Diff(want, got, testutil.DomainCmpOpts()); diff != "" {
+		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
 		}
 	})
@@ -267,7 +267,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		if !ok {
 			t.Fatalf("updated board %q not found in DB", validBoard.ID)
 		}
-		if diff := cmp.Diff(got, stored, testutil.DomainCmpOpts()); diff != "" {
+		if diff := cmp.Diff(got, stored, testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("got stored board mismatch (-want +got):\n%s", diff)
 		}
 	}
