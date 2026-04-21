@@ -25,7 +25,7 @@ func TestBoardRepository_Create(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "test@example.com")
+		CreateFixedUser(t, pool)
 
 		board, err := r.Create(context.Background(), userID, boardName, boardDescription)
 		if err != nil {
@@ -86,7 +86,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "getbyid@example.com")
+		CreateFixedUser(t, pool)
 
 		now := time.Now().UTC()
 		want := domain.Board{
@@ -141,7 +141,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	t.Run("Success empty", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "getmany-empty@example.com")
+		CreateFixedUser(t, pool)
 
 		got, err := r.GetMany(context.Background(), userID)
 		if err != nil {
@@ -155,7 +155,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	t.Run("Success returns boards in created order", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "getmany-order@example.com")
+		CreateFixedUser(t, pool)
 
 		otherName, err := domain.NewBoardName(boardName.String() + "-2")
 		if err != nil {
@@ -197,8 +197,6 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 func TestBoardRepository_UpdateByID(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
-
-	userID := testutil.ValidUserID()
 
 	validBoard := testutil.ValidBoard()
 	createdAtBeforeUpdate := time.Now().UTC()
@@ -248,7 +246,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid@example.com")
+		CreateFixedUser(t, pool)
 		InsertBoard(t, pool, &validBoard)
 
 		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
@@ -261,7 +259,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	t.Run("Success partial name only", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid-partial-name@example.com")
+		CreateFixedUser(t, pool)
 		InsertBoard(t, pool, &validBoard)
 
 		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
@@ -274,7 +272,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	t.Run("Success partial description only", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid-partial-description@example.com")
+		CreateFixedUser(t, pool)
 		InsertBoard(t, pool, &validBoard)
 
 		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
@@ -287,7 +285,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	t.Run("Not found when missing", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
+		CreateFixedUser(t, pool)
 
 		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
 		assertErrRowNotFound(t, err)
@@ -297,12 +295,10 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 func TestBoardRepository_Delete(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
-	userID := testutil.ValidUserID()
-
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		board := insertFixedUserAndBoard(t, pool, "delete@example.com")
+		board := insertFixedUserAndBoard(t, pool)
 
 		err := r.Delete(context.Background(), board.ID)
 		if err != nil {
@@ -318,7 +314,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 	t.Run("Not found when missing", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "delete-missing@example.com")
+		CreateFixedUser(t, pool)
 
 		err := r.Delete(context.Background(), domain.NewBoardID())
 		assertErrRowNotFound(t, err)

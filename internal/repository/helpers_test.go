@@ -14,15 +14,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email string) {
+func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
-	domainEmail, err := domain.NewEmail(email)
-	if err != nil {
-		t.Fatalf("create user email: %v", err)
-	}
-
-	InsertUser(t, pool, id, domainEmail, "hash")
+	id := testutil.ValidUserID()
+	domainEmail := testutil.ValidEmail()
+	InsertUser(t, pool, id, domainEmail, testutil.ValidPasswordHash())
 }
 
 func InsertUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain.Email, hash string) {
@@ -185,11 +182,10 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	return columns
 }
 
-func insertFixedUserAndBoard(t *testing.T, pool *pgxpool.Pool, email string) domain.Board {
+func insertFixedUserAndBoard(t *testing.T, pool *pgxpool.Pool) domain.Board {
 	t.Helper()
 
-	userID := testutil.ValidUserID()
-	CreateUser(t, pool, userID, email)
+	CreateFixedUser(t, pool)
 	board := testutil.ValidBoard()
 	InsertBoard(t, pool, &board)
 
