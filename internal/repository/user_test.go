@@ -90,8 +90,6 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		unknownEmail, _ := domain.NewEmail("unknown@example.com")
 		_, _, err := r.GetByEmail(ctx, unknownEmail)
 
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("got error %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }

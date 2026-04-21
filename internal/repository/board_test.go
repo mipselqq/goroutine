@@ -4,7 +4,6 @@ package repository_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -146,9 +145,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 		testutil.TruncateTable(t, pool, "boards")
 
 		_, err := r.GetByID(context.Background(), domain.NewBoardID())
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("GetByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
 
@@ -321,9 +318,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
 
 		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
 
@@ -338,10 +333,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 		testutil.TruncateTable(t, pool, "boards")
 		testutil.TruncateTable(t, pool, "users")
 
-		CreateUser(t, pool, userID, "delete@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool, "delete@example.com")
 
 		err := r.Delete(context.Background(), board.ID)
 		if err != nil {
@@ -361,8 +353,6 @@ func TestBoardRepository_Delete(t *testing.T) {
 		CreateUser(t, pool, userID, "delete-missing@example.com")
 
 		err := r.Delete(context.Background(), domain.NewBoardID())
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
