@@ -54,37 +54,24 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		const query = `
-		SELECT owner_id, name, description, created_at, updated_at 
-		FROM boards 
-		WHERE id = $1`
-
-		var (
-			dbOwnerID     domain.UserID
-			dbName        domain.BoardName
-			dbDescription domain.BoardDescription
-			dbCreatedAt   time.Time
-			dbUpdatedAt   time.Time
-		)
-		err = pool.QueryRow(context.Background(), query, board.ID).
-			Scan(&dbOwnerID, &dbName, &dbDescription, &dbCreatedAt, &dbUpdatedAt)
-		if err != nil {
-			t.Fatalf("Board row Scan() error = %v", err)
+		stored, ok := FindBoardByID(t, pool, board.ID)
+		if !ok {
+			t.Fatalf("created board %q not found in DB", board.ID)
 		}
-		if dbOwnerID != userID {
-			t.Errorf("DB: got owner ID %q, want %q", dbOwnerID, userID)
+		if stored.OwnerID != userID {
+			t.Errorf("DB: got owner ID %q, want %q", stored.OwnerID, userID)
 		}
-		if dbName != boardName {
-			t.Errorf("DB: got name %q, want %q", dbName, boardName)
+		if stored.Name != boardName {
+			t.Errorf("DB: got name %q, want %q", stored.Name, boardName)
 		}
-		if dbDescription != boardDescription {
-			t.Errorf("DB: got description %q, want %q", dbDescription, boardDescription)
+		if stored.Description != boardDescription {
+			t.Errorf("DB: got description %q, want %q", stored.Description, boardDescription)
 		}
-		if !dbCreatedAt.Equal(board.CreatedAt) {
-			t.Errorf("DB: got created_at %v, want %v", dbCreatedAt, board.CreatedAt)
+		if !stored.CreatedAt.Equal(board.CreatedAt) {
+			t.Errorf("DB: got created_at %v, want %v", stored.CreatedAt, board.CreatedAt)
 		}
-		if !dbUpdatedAt.Equal(board.UpdatedAt) {
-			t.Errorf("DB: got updated_at %v, want %v", dbUpdatedAt, board.UpdatedAt)
+		if !stored.UpdatedAt.Equal(board.UpdatedAt) {
+			t.Errorf("DB: got updated_at %v, want %v", stored.UpdatedAt, board.UpdatedAt)
 		}
 	})
 }
