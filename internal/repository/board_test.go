@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -15,10 +16,8 @@ import (
 )
 
 func TestBoardRepository_Create(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 	boardName := testutil.ValidBoardName()
 	boardDescription := testutil.ValidBoardDescription()
@@ -91,10 +90,8 @@ func TestBoardRepository_Create(t *testing.T) {
 }
 
 func TestBoardRepository_GetByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 	boardName := testutil.ValidBoardName()
 	boardDescription := testutil.ValidBoardDescription()
@@ -148,10 +145,8 @@ func TestBoardRepository_GetByID(t *testing.T) {
 }
 
 func TestBoardRepository_GetMany(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 	boardName := testutil.ValidBoardName()
 	boardDescription := testutil.ValidBoardDescription()
@@ -214,10 +209,8 @@ func TestBoardRepository_GetMany(t *testing.T) {
 }
 
 func TestBoardRepository_UpdateByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 
 	validBoard := testutil.ValidBoard()
@@ -315,10 +308,8 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 }
 
 func TestBoardRepository_Delete(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 
 	t.Run("Success", func(t *testing.T) {
@@ -345,4 +336,13 @@ func TestBoardRepository_Delete(t *testing.T) {
 		err := r.Delete(context.Background(), domain.NewBoardID())
 		assertErrRowNotFound(t, err)
 	})
+}
+
+func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgBoard) {
+	t.Helper()
+
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	t.Cleanup(func() { pool.Close() })
+
+	return pool, repository.NewPgBoard(pool)
 }

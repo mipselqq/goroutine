@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -16,10 +17,7 @@ import (
 )
 
 func TestColumnRepository_Create(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
@@ -71,10 +69,7 @@ func TestColumnRepository_Create(t *testing.T) {
 }
 
 func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	testutil.TruncateAllTables(t, pool)
 
@@ -100,10 +95,7 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 }
 
 func TestColumnRepository_ListByBoardID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success empty", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
@@ -152,10 +144,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 }
 
 func TestColumnRepository_GetByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
@@ -183,10 +172,7 @@ func TestColumnRepository_GetByID(t *testing.T) {
 }
 
 func TestColumnRepository_UpdateByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	assertUpdatedColumn := func(t *testing.T, got domain.Column, want domain.Column) {
 		t.Helper()
@@ -266,10 +252,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 }
 
 func TestColumnRepository_Move(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success move down", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
@@ -420,10 +403,7 @@ func TestColumnRepository_Move(t *testing.T) {
 }
 
 func TestColumnRepository_Delete(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success shift positions", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
@@ -477,4 +457,13 @@ func TestColumnRepository_Delete(t *testing.T) {
 		err := r.Delete(context.Background(), domain.NewBoardID(), created.ID)
 		assertErrRowNotFound(t, err)
 	})
+}
+
+func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgColumn) {
+	t.Helper()
+
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	t.Cleanup(func() { pool.Close() })
+
+	return pool, repository.NewPgColumn(pool)
 }

@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/testutil"
 )
 
 func TestUserRepository_Insert(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
+	pool, r := userRepoPrelude(t)
 
-	r := repository.NewPgUser(pool)
-	defer pool.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -55,11 +55,8 @@ func TestUserRepository_Insert(t *testing.T) {
 }
 
 func TestUserRepository_GetByEmail(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
+	pool, r := userRepoPrelude(t)
 
-	r := repository.NewPgUser(pool)
-
-	defer pool.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -92,4 +89,13 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 
 		assertErrRowNotFound(t, err)
 	})
+}
+
+func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgUser) {
+	t.Helper()
+
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	t.Cleanup(func() { pool.Close() })
+
+	return pool, repository.NewPgUser(pool)
 }
