@@ -3,8 +3,9 @@ package service_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -75,8 +76,10 @@ func TestBoard_Create(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
-				t.Errorf("Create() board = %#v, want %#v", got, tt.wantBoard)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantBoard, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("Create() board mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -139,8 +142,10 @@ func TestBoard_GetMany(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoards, got) {
-				t.Errorf("GetMany() = %#v, want %#v", got, tt.wantBoards)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantBoards, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -230,8 +235,10 @@ func TestBoard_Get(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
-				t.Errorf("Get() board = %#v, want %#v", got, tt.wantBoard)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantBoard, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("Get() board mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -415,8 +422,10 @@ func TestBoard_UpdateByID(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantBoard, got) {
-				t.Errorf("UpdateByID() board = %#v, want %#v", got, tt.wantBoard)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantBoard, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("UpdateByID() board mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}

@@ -2,9 +2,10 @@ package domain_test
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"goroutine/internal/domain"
 )
@@ -80,8 +81,8 @@ func TestName(t *testing.T) {
 				}
 			}
 
-			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
-				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
+			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
+				t.Errorf("got issues mismatch (-want +got):\n%s", diff)
 			}
 			if name.String() != tt.wantValue {
 				t.Errorf("got value %q, want %q", name, tt.wantValue)
@@ -158,8 +159,8 @@ func TestDescription(t *testing.T) {
 				}
 			}
 
-			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
-				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
+			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
+				t.Errorf("got issues mismatch (-want +got):\n%s", diff)
 			}
 			if description.String() != tt.wantValue {
 				t.Errorf("got value %q, want %q", description, tt.wantValue)

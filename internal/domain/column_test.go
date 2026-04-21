@@ -3,9 +3,10 @@ package domain_test
 import (
 	"errors"
 	"math"
-	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"goroutine/internal/domain"
 )
@@ -43,8 +44,8 @@ func TestColumnName(t *testing.T) {
 				}
 			}
 
-			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
-				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
+			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
+				t.Errorf("got issues mismatch (-want +got):\n%s", diff)
 			}
 			if name.String() != tt.wantValue {
 				t.Errorf("got value %q, want %q", name.String(), tt.wantValue)
@@ -115,8 +116,8 @@ func TestColumnPosition(t *testing.T) {
 				}
 			}
 
-			if !reflect.DeepEqual(gotIssues, tt.wantIssues) {
-				t.Errorf("got issues %v, want %v", gotIssues, tt.wantIssues)
+			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
+				t.Errorf("got issues mismatch (-want +got):\n%s", diff)
 			}
 			if tt.wantIssues == nil && position.Int64() != tt.wantValue {
 				t.Errorf("got value %d, want %d", position.Int64(), tt.wantValue)

@@ -3,8 +3,9 @@ package service_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -129,8 +130,10 @@ func TestColumn_Create(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantColumn, got) {
-				t.Errorf("Create() column = %#v, want %#v", got, tt.wantColumn)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantColumn, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("Create() column mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -234,8 +237,10 @@ func TestColumn_List(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantColumns, got) {
-				t.Errorf("List() columns = %#v, want %#v", got, tt.wantColumns)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantColumns, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("List() columns mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -437,8 +442,10 @@ func TestColumn_UpdateByID(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
-			if tt.wantErr == nil && !reflect.DeepEqual(tt.wantColumn, got) {
-				t.Errorf("UpdateByID() column = %#v, want %#v", got, tt.wantColumn)
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantColumn, got, testutil.DomainCmpOpts()); diff != "" {
+					t.Errorf("UpdateByID() column mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}

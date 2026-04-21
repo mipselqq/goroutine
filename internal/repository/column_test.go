@@ -5,9 +5,10 @@ package repository_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -69,8 +70,8 @@ func TestColumnRepository_Create(t *testing.T) {
 		if !ok {
 			t.Fatalf("created column %q not found in DB", column.ID)
 		}
-		if !reflect.DeepEqual(column, stored) {
-			t.Errorf("stored column = %#v, want %#v", stored, column)
+		if diff := cmp.Diff(column, stored, testutil.DomainCmpOpts()); diff != "" {
+			t.Errorf("got stored column mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
@@ -164,8 +165,8 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		}
 
 		want := []domain.Column{first, second}
-		if !reflect.DeepEqual(want, got) {
-			t.Errorf("ListByBoardID() = %#v, want %#v", got, want)
+		if diff := cmp.Diff(want, got, testutil.DomainCmpOpts()); diff != "" {
+			t.Errorf("ListByBoardID() mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
@@ -194,8 +195,8 @@ func TestColumnRepository_GetByID(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetByID() error = %v", err)
 		}
-		if !reflect.DeepEqual(created, got) {
-			t.Errorf("GetByID() = %#v, want %#v", got, created)
+		if diff := cmp.Diff(created, got, testutil.DomainCmpOpts()); diff != "" {
+			t.Errorf("GetByID() mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -242,8 +243,8 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		if !ok {
 			t.Fatalf("updated column %q not found in DB", want.ID)
 		}
-		if !reflect.DeepEqual(got, stored) {
-			t.Errorf("stored column = %#v, want %#v", stored, got)
+		if diff := cmp.Diff(got, stored, testutil.DomainCmpOpts()); diff != "" {
+			t.Errorf("got stored column mismatch (-want +got):\n%s", diff)
 		}
 	}
 
