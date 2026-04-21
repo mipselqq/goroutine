@@ -5,9 +5,10 @@ package repository_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -213,8 +214,8 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			t.Fatalf("got %d boards, want 2", len(got))
 		}
 		want := []domain.Board{first, second}
-		if !reflect.DeepEqual(want, got) {
-			t.Errorf("GetMany() = %#v, want %#v", got, want)
+		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
+			t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
@@ -266,8 +267,8 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		if !ok {
 			t.Fatalf("updated board %q not found in DB", validBoard.ID)
 		}
-		if !reflect.DeepEqual(got, stored) {
-			t.Errorf("stored board = %#v, want %#v", stored, got)
+		if diff := cmp.Diff(got, stored, testutil.CmpAllowUnexported()); diff != "" {
+			t.Errorf("got stored board mismatch (-want +got):\n%s", diff)
 		}
 	}
 

@@ -6,8 +6,9 @@ import (
 	"mime"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, wantMediaType string) {
@@ -89,7 +90,7 @@ func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, want any) {
 		t.Fatalf("json.Unmarshal(want JSON) error = %v\nWant JSON: %q", err, string(wantJSON))
 	}
 
-	if !reflect.DeepEqual(gotDecoded, wantDecoded) {
-		t.Errorf("got response body %s, want %s", string(gotBody), string(wantJSON))
+	if diff := cmp.Diff(wantDecoded, gotDecoded); diff != "" {
+		t.Errorf("got response body mismatch (-want +got):\n%s", diff)
 	}
 }
