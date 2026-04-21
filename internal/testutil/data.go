@@ -72,6 +72,23 @@ func ValidColumnPosition() domain.ColumnPosition {
 	return position
 }
 
+func ValidTaskName() domain.TaskName {
+	return must(domain.NewTaskName, "Write tests")
+}
+
+func ValidTaskDescription() domain.TaskDescription {
+	return must(domain.NewTaskDescription, "Cover the new endpoint with tests")
+}
+
+func ValidTaskPosition() domain.TaskPosition {
+	position, err := domain.NewTaskPosition(1)
+	if err != nil {
+		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
+	}
+
+	return position
+}
+
 func ValidJWTSecret() secrecy.SecretString {
 	return secrecy.SecretString("secret")
 }
@@ -175,5 +192,73 @@ func UpdateValidColumn(t *testing.T, base *domain.Column, name string, updatedAt
 		Position:  base.Position,
 		CreatedAt: base.CreatedAt,
 		UpdatedAt: updatedAt,
+	}
+}
+
+func ValidTask(columnID domain.ColumnID) domain.Task {
+	name := ValidTaskName()
+	description := ValidTaskDescription()
+	position := ValidTaskPosition()
+	pseudoNow := FixedTimeNow()
+
+	return domain.Task{
+		ID:          domain.NewTaskID(),
+		ColumnID:    columnID,
+		Name:        name,
+		Description: description,
+		Position:    position,
+		CreatedAt:   pseudoNow,
+		UpdatedAt:   pseudoNow,
+	}
+}
+
+func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description string, position int64) domain.Task {
+	t.Helper()
+
+	task := ValidTask(columnID)
+
+	domainName, err := domain.NewTaskName(name)
+	if err != nil {
+		t.Fatalf("NewTaskName() error = %v", err)
+	}
+
+	domainDescription, err := domain.NewTaskDescription(description)
+	if err != nil {
+		t.Fatalf("NewTaskDescription() error = %v", err)
+	}
+
+	domainPosition, err := domain.NewTaskPosition(position)
+	if err != nil {
+		t.Fatalf("NewTaskPosition() error = %v", err)
+	}
+
+	task.Name = domainName
+	task.Description = domainDescription
+	task.Position = domainPosition
+
+	return task
+}
+
+func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, updatedAt time.Time) domain.Task {
+	t.Helper()
+
+	domainName, err := domain.NewTaskName(name)
+	if err != nil {
+		t.Fatalf("NewTaskName() error = %v", err)
+	}
+
+	domainDescription, err := domain.NewTaskDescription(description)
+	if err != nil {
+		t.Fatalf("NewTaskDescription() error = %v", err)
+	}
+
+	return domain.Task{
+		ID:          base.ID,
+		ColumnID:    base.ColumnID,
+		Name:        domainName,
+		Description: domainDescription,
+		Position:    base.Position,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   updatedAt,
 	}
 }

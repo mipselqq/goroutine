@@ -31,6 +31,11 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.UpdateByID))))
 	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/position", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.Move))))
 	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Columns.Delete))))
+	mux.Handle("POST /v1/boards/{boardId}/columns/{columnId}/tasks", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Tasks.Create))))
+	mux.Handle("GET /v1/boards/{boardId}/columns/{columnId}/tasks", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Tasks.List))))
+	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Tasks.UpdateByID))))
+	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Tasks.Move))))
+	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", m.Metrics.Wrap(m.Auth.Wrap(http.HandlerFunc(h.Tasks.Delete))))
 	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
 
 	return m.RequestID.Wrap(m.CORS.Wrap(mux))

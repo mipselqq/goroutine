@@ -63,6 +63,15 @@ definitions:
         example: To Do
         type: string
     type: object
+  handler.createTaskBody:
+    properties:
+      description:
+        example: Cover the new endpoint with tests
+        type: string
+      name:
+        example: Write tests
+        type: string
+    type: object
   handler.loginBody:
     properties:
       email:
@@ -84,6 +93,15 @@ definitions:
         example: 1
         type: integer
     type: object
+  handler.moveTaskBody:
+    properties:
+      targetColumnId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      targetPosition:
+        example: 1
+        type: integer
+    type: object
   handler.registerBody:
     properties:
       email:
@@ -91,6 +109,39 @@ definitions:
         type: string
       password:
         example: secret-password
+        type: string
+    type: object
+  handler.taskPositionResponse:
+    properties:
+      columnId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      position:
+        example: 2
+        type: integer
+    type: object
+  handler.taskResponse:
+    properties:
+      columnId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      createdAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+      description:
+        example: Cover the new endpoint with tests
+        type: string
+      id:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a3
+        type: string
+      name:
+        example: Write tests
+        type: string
+      position:
+        example: 1
+        type: integer
+      updatedAt:
+        example: "2026-03-07T20:56:50.000+03:00"
         type: string
     type: object
   handler.updateBoardBody:
@@ -106,6 +157,15 @@ definitions:
     properties:
       name:
         example: In Progress
+        type: string
+    type: object
+  handler.updateTaskBody:
+    properties:
+      description:
+        example: Cover edge cases
+        type: string
+      name:
+        example: Rewrite tests
         type: string
     type: object
   handler.whoAmIResponse:
@@ -582,6 +642,260 @@ paths:
       summary: Move a column to a new position
       tags:
       - columns
+  /v1/boards/{boardId}/columns/{columnId}/tasks:
+    get:
+      description: Get all tasks belonging to the specified column, ordered by position
+        ASC.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.taskResponse'
+            type: array
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: List all tasks in a column
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Create a new task in a column for the current user. Task is appended
+        to the end of the column.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      - description: Task details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createTaskBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.taskResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Create a new task
+      tags:
+      - tasks
+  /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a task from a column for the current user and
+        shift positions to close the gap.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: taskId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: TASK_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete a task by id
+      tags:
+      - tasks
+    patch:
+      consumes:
+      - application/json
+      description: Partially update task metadata for the current user. Provided fields
+        are updated; omitted or null fields are ignored.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: taskId
+        required: true
+        type: string
+      - description: Task fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateTaskBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.taskResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: TASK_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Update a task by id
+      tags:
+      - tasks
+  /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position:
+    put:
+      consumes:
+      - application/json
+      description: Move a task within its column or across columns in the same board
+        and shift neighboring tasks accordingly.
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      - description: Column ID
+        in: path
+        name: columnId
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: taskId
+        required: true
+        type: string
+      - description: Target column and position
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.moveTaskBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.taskPositionResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: TASK_NOT_FOUND or COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Move a task to a new position, possibly to another column
+      tags:
+      - tasks
   /v1/health:
     get:
       description: Check if the server is alive

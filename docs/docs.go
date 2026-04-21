@@ -650,6 +650,387 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/boards/{boardId}/columns/{columnId}/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all tasks belonging to the specified column, ordered by position ASC.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "List all tasks in a column",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handler.taskResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new task in a column for the current user. Task is appended to the end of the column.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Create a new task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Task details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createTaskBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handler.taskResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently delete a task from a column for the current user and shift positions to close the gap.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Delete a task by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "TASK_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partially update task metadata for the current user. Provided fields are updated; omitted or null fields are ignored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Update a task by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Task fields to update",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateTaskBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.taskResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "TASK_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Move a task within its column or across columns in the same board and shift neighboring tasks accordingly.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Move a task to a new position, possibly to another column",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Column ID",
+                        "name": "columnId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Target column and position",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.moveTaskBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.taskPositionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "TASK_NOT_FOUND or COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/health": {
             "get": {
                 "description": "Check if the server is alive",
@@ -902,6 +1283,19 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.createTaskBody": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Cover the new endpoint with tests"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Write tests"
+                }
+            }
+        },
         "handler.loginBody": {
             "type": "object",
             "properties": {
@@ -933,6 +1327,19 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.moveTaskBody": {
+            "type": "object",
+            "properties": {
+                "targetColumnId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "targetPosition": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "handler.registerBody": {
             "type": "object",
             "properties": {
@@ -943,6 +1350,52 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "secret-password"
+                }
+            }
+        },
+        "handler.taskPositionResponse": {
+            "type": "object",
+            "properties": {
+                "columnId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "handler.taskResponse": {
+            "type": "object",
+            "properties": {
+                "columnId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Cover the new endpoint with tests"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a3"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Write tests"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
                 }
             }
         },
@@ -965,6 +1418,19 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "In Progress"
+                }
+            }
+        },
+        "handler.updateTaskBody": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Cover edge cases"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Rewrite tests"
                 }
             }
         },

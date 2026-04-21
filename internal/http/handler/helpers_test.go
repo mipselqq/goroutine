@@ -45,6 +45,14 @@ type MockColumnService struct {
 	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
+type MockTaskService struct {
+	CreateFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
+	ListFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error)
+	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
+	MoveFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error)
+	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
+}
+
 func (m *MockBoardService) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
@@ -95,6 +103,31 @@ func (m *MockColumnService) Delete(ctx context.Context, callerID domain.UserID, 
 	return m.DeleteFunc(ctx, callerID, boardID, columnID)
 }
 
+func (m *MockTaskService) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error) {
+	AssertFuncNotNil("TasksService.CreateFunc", m.CreateFunc)
+	return m.CreateFunc(ctx, callerID, boardID, columnID, name, description)
+}
+
+func (m *MockTaskService) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+	AssertFuncNotNil("TasksService.ListFunc", m.ListFunc)
+	return m.ListFunc(ctx, callerID, boardID, columnID)
+}
+
+func (m *MockTaskService) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+	AssertFuncNotNil("TasksService.UpdateByIDFunc", m.UpdateByIDFunc)
+	return m.UpdateByIDFunc(ctx, callerID, boardID, columnID, taskID, name, description)
+}
+
+func (m *MockTaskService) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
+	AssertFuncNotNil("TasksService.MoveFunc", m.MoveFunc)
+	return m.MoveFunc(ctx, callerID, boardID, columnID, taskID, targetColumnID, targetPosition)
+}
+
+func (m *MockTaskService) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error {
+	AssertFuncNotNil("TasksService.DeleteFunc", m.DeleteFunc)
+	return m.DeleteFunc(ctx, callerID, boardID, columnID, taskID)
+}
+
 func columnNotFoundErrorBody() map[string]any {
 	return map[string]any{
 		"code":      "COLUMN_NOT_FOUND",
@@ -102,6 +135,28 @@ func columnNotFoundErrorBody() map[string]any {
 		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
 			map[string]any{"field": "columnId", "issues": []string{"Column not found"}},
+		},
+	}
+}
+
+func columnNotFoundErrorBodyField(field string) map[string]any {
+	return map[string]any{
+		"code":      "COLUMN_NOT_FOUND",
+		"message":   "Column not found",
+		"timestamp": testutil.FixedTimeNowStr(),
+		"details": []any{
+			map[string]any{"field": field, "issues": []string{"Column not found"}},
+		},
+	}
+}
+
+func taskNotFoundErrorBody() map[string]any {
+	return map[string]any{
+		"code":      "TASK_NOT_FOUND",
+		"message":   "Task not found",
+		"timestamp": testutil.FixedTimeNowStr(),
+		"details": []any{
+			map[string]any{"field": "taskId", "issues": []string{"Task not found"}},
 		},
 	}
 }

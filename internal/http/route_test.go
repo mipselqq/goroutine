@@ -24,6 +24,7 @@ func TestNewRouter_Full(t *testing.T) {
 		Health:  handler.NewHealth(logger),
 		Boards:  handler.NewBoards(logger, nil, responder),
 		Columns: handler.NewColumns(logger, nil, responder),
+		Tasks:   handler.NewTasks(logger, nil, responder),
 	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   &spyMetricsMiddleware{},
@@ -96,6 +97,26 @@ func TestNewRouter_Full(t *testing.T) {
 		},
 		{
 			entry:   entry{"Delete column endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Create task endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"List tasks endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"UpdateByID task endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Move task endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7() + "/position"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
+			entry:   entry{"Delete task endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
 			metrics: true, cors: true, requestID: true,
 		},
 		{

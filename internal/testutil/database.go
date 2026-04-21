@@ -48,7 +48,7 @@ func TruncateAllTables(t *testing.T, pool *pgxpool.Pool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	names := []string{"columns", "boards", "users"}
+	names := []string{"tasks", "columns", "boards", "users"}
 	parts := make([]string, len(names))
 	for i, name := range names {
 		parts[i] = pgx.Identifier{name}.Sanitize()

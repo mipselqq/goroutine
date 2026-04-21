@@ -8,6 +8,7 @@ var codeMap = map[string]string{
 	"NOT_FOUND":             "Resource not found",
 	"BOARD_NOT_FOUND":       "Board not found",
 	"COLUMN_NOT_FOUND":      "Column not found",
+	"TASK_NOT_FOUND":        "Task not found",
 	"INDEX_OUT_OF_BOUNDS":   "Index out of bounds",
 	"INVALID_AUTH_HEADER":   "Invalid authorization header",
 	"USER_NOT_FOUND":        "User not found",

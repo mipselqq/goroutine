@@ -182,6 +182,104 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	return columns
 }
 
+func InsertTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `
+		INSERT INTO tasks (id, column_id, name, description, position, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	_, err := pool.Exec(ctx, q,
+		task.ID,
+		task.ColumnID,
+		task.Name,
+		task.Description,
+		task.Position,
+		task.CreatedAt,
+		task.UpdatedAt,
+	)
+	if err != nil {
+		t.Fatalf("InsertTask() error = %v", err)
+	}
+}
+
+func FindTaskByID(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `
+		SELECT id, column_id, name, description, position, created_at, updated_at
+		FROM tasks
+		WHERE id = $1`
+
+	var task domain.Task
+	err := pool.QueryRow(ctx, q, taskID).Scan(
+		&task.ID,
+		&task.ColumnID,
+		&task.Name,
+		&task.Description,
+		&task.Position,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Task{}, false
+		}
+		t.Fatalf("FindTaskByID() error = %v", err)
+	}
+
+	return task, true
+}
+
+func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) []domain.Task {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `
+		SELECT id, column_id, name, description, position, created_at, updated_at
+		FROM tasks
+		WHERE column_id = $1
+		ORDER BY position ASC`
+
+	rows, err := pool.Query(ctx, q, columnID)
+	if err != nil {
+		t.Fatalf("ListTasksByColumnID() error = %v", err)
+	}
+	defer rows.Close()
+
+	var tasks []domain.Task
+	for rows.Next() {
+		var task domain.Task
+		err := rows.Scan(
+			&task.ID,
+			&task.ColumnID,
+			&task.Name,
+			&task.Description,
+			&task.Position,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			t.Fatalf("Task row Scan() error = %v", err)
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		t.Fatalf("rows.Err() error = %v", err)
+	}
+
+	return tasks
+}
+
 func insertFixedUserAndBoard(t *testing.T, pool *pgxpool.Pool) domain.Board {
 	t.Helper()
 
@@ -190,6 +288,16 @@ func insertFixedUserAndBoard(t *testing.T, pool *pgxpool.Pool) domain.Board {
 	InsertBoard(t, pool, &board)
 
 	return board
+}
+
+func insertFixedUserBoardAndColumn(t *testing.T, pool *pgxpool.Pool) (domain.Board, domain.Column) {
+	t.Helper()
+
+	board := insertFixedUserAndBoard(t, pool)
+	column := testutil.ValidColumn(board.ID)
+	InsertColumn(t, pool, &column)
+
+	return board, column
 }
 
 func mustColumnPosition(t *testing.T, n int64) domain.ColumnPosition {
@@ -203,6 +311,17 @@ func mustColumnPosition(t *testing.T, n int64) domain.ColumnPosition {
 	return p
 }
 
+func mustTaskPosition(t *testing.T, n int64) domain.TaskPosition {
+	t.Helper()
+
+	p, err := domain.NewTaskPosition(n)
+	if err != nil {
+		t.Fatalf("NewTaskPosition(%d): %v", n, err)
+	}
+
+	return p
+}
+
 func assertColumnIDAndPosition(t *testing.T, col *domain.Column, wantID domain.ColumnID, wantPos int64) {
 	t.Helper()
 
@@ -211,6 +330,17 @@ func assertColumnIDAndPosition(t *testing.T, col *domain.Column, wantID domain.C
 	}
 	if col.Position.Int64() != wantPos {
 		t.Errorf("got position %d, want %d", col.Position.Int64(), wantPos)
+	}
+}
+
+func assertTaskIDAndPosition(t *testing.T, task *domain.Task, wantID domain.TaskID, wantPos int64) {
+	t.Helper()
+
+	if task.ID != wantID {
+		t.Errorf("got id %q, want %q", task.ID, wantID)
+	}
+	if task.Position.Int64() != wantPos {
+		t.Errorf("got position %d, want %d", task.Position.Int64(), wantPos)
 	}
 }
 
