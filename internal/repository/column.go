@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"goroutine/internal/domain"
 
@@ -24,8 +23,6 @@ func (r *PgColumn) Create(
 	ctx context.Context,
 	boardID domain.BoardID,
 	name domain.ColumnName,
-	createdAt time.Time,
-	updatedAt time.Time,
 ) (domain.Column, error) {
 	const query = `
 		WITH board_lock AS (
@@ -38,8 +35,8 @@ func (r *PgColumn) Create(
 			FROM columns
 			WHERE board_id = $1
 		), inserted AS (
-			INSERT INTO columns (board_id, name, position, created_at, updated_at)
-			SELECT $1, $2, next_pos.position, $3, $4
+			INSERT INTO columns (board_id, name, position)
+			SELECT $1, $2, next_pos.position
 			FROM board_lock, next_pos
 			RETURNING id, board_id, name, position, created_at, updated_at
 		)
@@ -47,7 +44,7 @@ func (r *PgColumn) Create(
 		FROM inserted`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, boardID, name, createdAt, updatedAt).Scan(
+	err := r.pool.QueryRow(ctx, query, boardID, name).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
@@ -132,19 +129,18 @@ func (r *PgColumn) UpdateByID(
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
 	name *domain.ColumnName,
-	updatedAt time.Time,
 ) (domain.Column, error) {
 	const query = `
 		UPDATE columns
 		SET
 			name = COALESCE($3, name),
-			updated_at = $4
+			updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
 		WHERE board_id = $1
 		  AND id = $2
 		RETURNING id, board_id, name, position, created_at, updated_at`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, boardID, columnID, name, updatedAt).Scan(
+	err := r.pool.QueryRow(ctx, query, boardID, columnID, name).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,

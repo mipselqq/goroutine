@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"goroutine/internal/app"
 	"goroutine/internal/config"
@@ -173,4 +174,9 @@ func (c *AuthenticatedClient) Do(t *testing.T, method, path string, body any) *h
 	}
 
 	return resp
+}
+
+func WaitForTimestampTicker(t *testing.T) {
+	t.Helper()
+	time.Sleep(5 * time.Millisecond)
 }

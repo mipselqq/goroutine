@@ -1,0 +1,9 @@
+-- +goose Up
+ALTER TABLE columns
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
+
+-- +goose Down
+ALTER TABLE columns
+    ALTER COLUMN created_at DROP DEFAULT,
+    ALTER COLUMN updated_at DROP DEFAULT;

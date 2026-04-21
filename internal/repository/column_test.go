@@ -7,6 +7,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -36,8 +37,6 @@ func TestColumnRepository_Create(t *testing.T) {
 			context.Background(),
 			board.ID,
 			validColumn.Name,
-			validColumn.CreatedAt,
-			validColumn.UpdatedAt,
 		)
 		if err != nil {
 			t.Fatalf("Create() error = %v", err)
@@ -55,11 +54,23 @@ func TestColumnRepository_Create(t *testing.T) {
 		if column.Position.Int64() != 1 {
 			t.Errorf("got position %d, want 1", column.Position.Int64())
 		}
-		if !column.CreatedAt.Equal(validColumn.CreatedAt) {
-			t.Errorf("got createdAt %v, want %v", column.CreatedAt, validColumn.CreatedAt)
+		if column.CreatedAt.IsZero() {
+			t.Errorf("got zero createdAt, want set value")
 		}
-		if !column.UpdatedAt.Equal(validColumn.UpdatedAt) {
-			t.Errorf("got updatedAt %v, want %v", column.UpdatedAt, validColumn.UpdatedAt)
+		if column.UpdatedAt.IsZero() {
+			t.Errorf("got zero updatedAt, want set value")
+		}
+		if !column.CreatedAt.Equal(column.UpdatedAt) {
+			t.Errorf("got createdAt=%v updatedAt=%v, want equal", column.CreatedAt, column.UpdatedAt)
+		}
+		AssertTimestampPrecisionAtLeastMillis(t, pool, "columns", "created_at", "updated_at")
+
+		stored, ok := FindColumnByID(t, pool, column.ID)
+		if !ok {
+			t.Fatalf("created column %q not found in DB", column.ID)
+		}
+		if !reflect.DeepEqual(column, stored) {
+			t.Errorf("stored column = %#v, want %#v", stored, column)
 		}
 	})
 }
@@ -90,8 +101,6 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 		context.Background(),
 		board.ID,
 		toCreate.Name,
-		toCreate.CreatedAt,
-		toCreate.UpdatedAt,
 	)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -206,6 +215,38 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 
 	r := repository.NewPgColumn(pool)
 
+	assertUpdatedColumn := func(t *testing.T, got domain.Column, want domain.Column) {
+		t.Helper()
+
+		if got.ID != want.ID {
+			t.Errorf("got id %q, want %q", got.ID, want.ID)
+		}
+		if got.BoardID != want.BoardID {
+			t.Errorf("got boardID %q, want %q", got.BoardID, want.BoardID)
+		}
+		if got.Name != want.Name {
+			t.Errorf("got name %q, want %q", got.Name, want.Name)
+		}
+		if got.Position != want.Position {
+			t.Errorf("got position %d, want %d", got.Position.Int64(), want.Position.Int64())
+		}
+		if !got.CreatedAt.Truncate(time.Millisecond).Equal(want.CreatedAt.Truncate(time.Millisecond)) {
+			t.Errorf("got createdAt %v, want %v (at millisecond precision)", got.CreatedAt, want.CreatedAt)
+		}
+		if !got.UpdatedAt.After(want.UpdatedAt) {
+			t.Errorf("got updatedAt %v, want after %v", got.UpdatedAt, want.UpdatedAt)
+		}
+		AssertTimestampPrecisionAtLeastMillis(t, pool, "columns", "created_at", "updated_at")
+
+		stored, ok := FindColumnByID(t, pool, want.ID)
+		if !ok {
+			t.Fatalf("updated column %q not found in DB", want.ID)
+		}
+		if !reflect.DeepEqual(got, stored) {
+			t.Errorf("stored column = %#v, want %#v", stored, got)
+		}
+	}
+
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "columns")
 		testutil.TruncateTable(t, pool, "boards")
@@ -218,17 +259,19 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		InsertBoard(t, pool, &board)
 
 		created := testutil.ValidColumn(board.ID)
+		createdAtBeforeUpdate := time.Now().UTC()
+		updatedAtBeforeUpdate := createdAtBeforeUpdate
+		created.CreatedAt = createdAtBeforeUpdate
+		created.UpdatedAt = updatedAtBeforeUpdate
 		InsertColumn(t, pool, &created)
 
 		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
-		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &want.Name, want.UpdatedAt)
+		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &want.Name)
 		if err != nil {
 			t.Fatalf("UpdateByID() error = %v", err)
 		}
 
-		if !reflect.DeepEqual(want, updated) {
-			t.Errorf("UpdateByID() = %#v, want %#v", updated, want)
-		}
+		assertUpdatedColumn(t, updated, want)
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
@@ -243,7 +286,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		InsertBoard(t, pool, &board)
 
 		updatedName, _ := domain.NewColumnName("Renamed")
-		_, err := r.UpdateByID(context.Background(), board.ID, domain.NewColumnID(), &updatedName, testutil.FixedTime5mFromNow())
+		_, err := r.UpdateByID(context.Background(), board.ID, domain.NewColumnID(), &updatedName)
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
 		}
@@ -264,7 +307,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		InsertColumn(t, pool, &created)
 
 		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name, want.UpdatedAt)
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name)
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
 		}

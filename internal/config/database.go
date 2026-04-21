@@ -37,6 +37,11 @@ func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 		return nil, err
 	}
 
+	if config.ConnConfig.RuntimeParams == nil {
+		config.ConnConfig.RuntimeParams = map[string]string{}
+	}
+	config.ConnConfig.RuntimeParams["timezone"] = "UTC"
+
 	return config, nil
 }
 

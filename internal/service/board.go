@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -14,21 +13,16 @@ type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error)
+	UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
 type Board struct {
 	repository BoardRepository
-	timeFunc   func() time.Time
 }
 
-func NewBoard(r BoardRepository, timeFunc TimeFunc) *Board {
-	if timeFunc == nil {
-		panic("BUG: timeFunc is nil")
-	}
-
-	return &Board{repository: r, timeFunc: timeFunc}
+func NewBoard(r BoardRepository) *Board {
+	return &Board{repository: r}
 }
 
 func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -86,7 +80,7 @@ func (s *Board) UpdateByID(
 		return board, nil
 	}
 
-	updated, err := s.repository.UpdateByID(ctx, boardID, name, description, s.timeFunc())
+	updated, err := s.repository.UpdateByID(ctx, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
