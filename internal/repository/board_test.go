@@ -54,6 +54,7 @@ func TestBoardRepository_Create(t *testing.T) {
 		if !board.CreatedAt.Equal(board.UpdatedAt) {
 			t.Errorf("got createdAt=%v updatedAt=%v, want equal", board.CreatedAt, board.UpdatedAt)
 		}
+		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
 		const query = `
 		SELECT owner_id, name, description, created_at, updated_at 
@@ -105,7 +106,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 
 		CreateUser(t, pool, userID, "getbyid@example.com")
 
-		now := time.Now().UTC().Truncate(time.Microsecond)
+		now := time.Now().UTC()
 		want := domain.Board{
 			ID:          domain.NewBoardID(),
 			OwnerID:     userID,
@@ -120,8 +121,23 @@ func TestBoardRepository_GetByID(t *testing.T) {
 		if err != nil {
 			t.Errorf("GetByID() error = %v", err)
 		}
-		if !reflect.DeepEqual(want, got) {
-			t.Errorf("GetByID() = %#v, want %#v", got, want)
+		if got.ID != want.ID {
+			t.Errorf("got id %q, want %q", got.ID, want.ID)
+		}
+		if got.OwnerID != want.OwnerID {
+			t.Errorf("got ownerID %q, want %q", got.OwnerID, want.OwnerID)
+		}
+		if got.Name != want.Name {
+			t.Errorf("got name %q, want %q", got.Name, want.Name)
+		}
+		if got.Description != want.Description {
+			t.Errorf("got description %q, want %q", got.Description, want.Description)
+		}
+		if !got.CreatedAt.Truncate(time.Millisecond).Equal(want.CreatedAt.Truncate(time.Millisecond)) {
+			t.Errorf("got createdAt %v, want %v (at millisecond precision)", got.CreatedAt, want.CreatedAt)
+		}
+		if !got.UpdatedAt.Truncate(time.Millisecond).Equal(want.UpdatedAt.Truncate(time.Millisecond)) {
+			t.Errorf("got updatedAt %v, want %v (at millisecond precision)", got.UpdatedAt, want.UpdatedAt)
 		}
 	})
 
@@ -211,13 +227,49 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	userID := testutil.ValidUserID()
 
 	validBoard := testutil.ValidBoard()
-	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.FixedTime5mFromNow())
-	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.FixedTime5mFromNow())
-	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.FixedTime5mFromNow())
+	createdAtBeforeUpdate := time.Now().UTC()
+	updatedAtBeforeUpdate := createdAtBeforeUpdate
+	validBoard.CreatedAt = createdAtBeforeUpdate
+	validBoard.UpdatedAt = updatedAtBeforeUpdate
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", validBoard.UpdatedAt)
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), validBoard.UpdatedAt)
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", validBoard.UpdatedAt)
 	updatedName := updatedValidBoard.Name
 	updatedDescription := updatedValidBoard.Description
 	updatedNameOnly := updatedNameOnlyBoard.Name
 	updatedDescriptionOnly := updatedDescriptionOnlyBoard.Description
+
+	assertUpdatedBoard := func(t *testing.T, got domain.Board, want domain.Board) {
+		t.Helper()
+
+		if got.ID != want.ID {
+			t.Errorf("got id %q, want %q", got.ID, want.ID)
+		}
+		if got.OwnerID != want.OwnerID {
+			t.Errorf("got ownerID %q, want %q", got.OwnerID, want.OwnerID)
+		}
+		if got.Name != want.Name {
+			t.Errorf("got name %q, want %q", got.Name, want.Name)
+		}
+		if got.Description != want.Description {
+			t.Errorf("got description %q, want %q", got.Description, want.Description)
+		}
+		if !got.CreatedAt.Truncate(time.Millisecond).Equal(want.CreatedAt.Truncate(time.Millisecond)) {
+			t.Errorf("got createdAt %v, want %v (at millisecond precision)", got.CreatedAt, want.CreatedAt)
+		}
+		if !got.UpdatedAt.After(want.UpdatedAt) {
+			t.Errorf("got updatedAt %v, want after %v", got.UpdatedAt, want.UpdatedAt)
+		}
+		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
+
+		stored, ok := FindBoardByID(t, pool, validBoard.ID)
+		if !ok {
+			t.Fatalf("updated board %q not found in DB", validBoard.ID)
+		}
+		if !reflect.DeepEqual(got, stored) {
+			t.Errorf("stored board = %#v, want %#v", stored, got)
+		}
+	}
 
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateTable(t, pool, "boards")
@@ -226,13 +278,11 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription, testutil.FixedTime5mFromNow())
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
-		if !reflect.DeepEqual(updatedValidBoard, got) {
-			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedValidBoard, got)
-		}
+		assertUpdatedBoard(t, got, updatedValidBoard)
 	})
 
 	t.Run("Success partial name only", func(t *testing.T) {
@@ -242,13 +292,11 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid-partial-name@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil, testutil.FixedTime5mFromNow())
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
-		if !reflect.DeepEqual(updatedNameOnlyBoard, got) {
-			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedNameOnlyBoard, got)
-		}
+		assertUpdatedBoard(t, got, updatedNameOnlyBoard)
 	})
 
 	t.Run("Success partial description only", func(t *testing.T) {
@@ -258,13 +306,11 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		CreateUser(t, pool, userID, "updatebyid-partial-description@example.com")
 		InsertBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly, testutil.FixedTime5mFromNow())
+		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
-		if !reflect.DeepEqual(updatedDescriptionOnlyBoard, got) {
-			t.Errorf("UpdateByID() mismatch:\nwant:\n%s\ngot:\n%s", updatedDescriptionOnlyBoard, got)
-		}
+		assertUpdatedBoard(t, got, updatedDescriptionOnlyBoard)
 	})
 
 	t.Run("Not found when missing", func(t *testing.T) {
@@ -273,7 +319,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
 
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription, testutil.FixedTime5mFromNow())
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
 		if !errors.Is(err, repository.ErrRowNotFound) {
 			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
 		}
@@ -318,9 +364,4 @@ func TestBoardRepository_Delete(t *testing.T) {
 			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
 		}
 	})
-}
-
-func WaitForTimestampTicker(t *testing.T) {
-	t.Helper()
-	time.Sleep(5 * time.Millisecond)
 }

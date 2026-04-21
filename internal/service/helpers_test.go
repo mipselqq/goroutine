@@ -3,7 +3,6 @@ package service_test
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"goroutine/internal/domain"
 )
@@ -33,15 +32,15 @@ type MockBoardRepository struct {
 	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByIDFunc    func(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByIDFunc func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error)
+	UpdateByIDFunc func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	DeleteFunc     func(ctx context.Context, boardID domain.BoardID) error
 }
 
 type MockColumnRepository struct {
-	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, createdAt time.Time, updatedAt time.Time) (domain.Column, error)
+	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
 	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetByIDFunc       func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
-	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
+	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
 	MoveFunc          func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	DeleteFunc        func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
@@ -61,9 +60,9 @@ func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID
 	return m.GetManyFunc(ctx, ownerID)
 }
 
-func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription, updatedAt time.Time) (domain.Board, error) {
+func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	AssertFuncNotNil("BoardRepository.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, boardID, name, description, updatedAt)
+	return m.UpdateByIDFunc(ctx, boardID, name, description)
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
@@ -75,11 +74,9 @@ func (m *MockColumnRepository) Create(
 	ctx context.Context,
 	boardID domain.BoardID,
 	name domain.ColumnName,
-	createdAt time.Time,
-	updatedAt time.Time,
 ) (domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.CreateFunc", m.CreateFunc)
-	return m.CreateFunc(ctx, boardID, name, createdAt, updatedAt)
+	return m.CreateFunc(ctx, boardID, name)
 }
 
 func (m *MockColumnRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
@@ -97,10 +94,9 @@ func (m *MockColumnRepository) UpdateByID(
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
 	name *domain.ColumnName,
-	updatedAt time.Time,
 ) (domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, boardID, columnID, name, updatedAt)
+	return m.UpdateByIDFunc(ctx, boardID, columnID, name)
 }
 
 func (m *MockColumnRepository) Move(

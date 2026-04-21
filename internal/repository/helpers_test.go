@@ -182,3 +182,28 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 
 	return columns
 }
+
+func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tableName string, columnNames ...string) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const query = `
+		SELECT datetime_precision
+		FROM information_schema.columns
+		WHERE table_schema = current_schema()
+		  AND table_name = $1
+		  AND column_name = $2`
+
+	for _, columnName := range columnNames {
+		var precision int32
+		err := pool.QueryRow(ctx, query, tableName, columnName).Scan(&precision)
+		if err != nil {
+			t.Fatalf("timestamp precision lookup for %s.%s: %v", tableName, columnName, err)
+		}
+		if precision < 3 {
+			t.Errorf("got datetime_precision=%d for %s.%s, want >= 3", precision, tableName, columnName)
+		}
+	}
+}

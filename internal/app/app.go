@@ -35,8 +35,8 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	boardsService := service.NewBoard(service.BoardRepository(boardsRepo), service.TimeNow)
-	columnsService := service.NewColumn(service.ColumnRepository(columnsRepo), service.ColumnBoardRepository(boardsRepo), service.TimeNow)
+	boardsService := service.NewBoard(service.BoardRepository(boardsRepo))
+	columnsService := service.NewColumn(service.ColumnRepository(columnsRepo), service.ColumnBoardRepository(boardsRepo))
 
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 

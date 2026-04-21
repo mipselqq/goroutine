@@ -106,6 +106,7 @@ func TestBoard_HappyPath(t *testing.T) {
 
 		// 5. Update by id with name only, store response in updatedNameBoard, validate fields, and ensure updatedAt advanced
 		updatedName := "Updated Name Only"
+		WaitForTimestampTicker(t)
 		updateNameResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+createdBoard.ID, map[string]string{
 			"name": updatedName,
 		})
@@ -131,10 +132,10 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("got updated name %q, want %q", updatedNameBoard.Name, updatedName)
 		}
 
-		updatedAtTime, _ := time.Parse(timeFormat, updatedNameBoard.UpdatedAt)
-		baselineUpdatedAt, _ := time.Parse(timeFormat, createdBoard.UpdatedAt)
-		if !updatedAtTime.After(baselineUpdatedAt) {
-			t.Errorf("updatedAt must advance after Update by id; got %v, previous %v", updatedAtTime, baselineUpdatedAt)
+		updatedAtAfterUpdate, _ := time.Parse(timeFormat, updatedNameBoard.UpdatedAt)
+		updatedAtBeforeUpdate, _ := time.Parse(timeFormat, createdBoard.UpdatedAt)
+		if !updatedAtAfterUpdate.After(updatedAtBeforeUpdate) {
+			t.Errorf("updatedAt must advance after Update by id; got %v, previous %v", updatedAtAfterUpdate, updatedAtBeforeUpdate)
 		}
 
 		// 6. Get by id again, store response in getByIDBoardAfterUpdate, and perform deep comparison with updatedNameBoard

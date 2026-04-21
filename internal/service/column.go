@@ -4,23 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 )
 
 type ColumnRepository interface {
-	Create(
-		ctx context.Context,
-		boardID domain.BoardID,
-		name domain.ColumnName,
-		createdAt time.Time,
-		updatedAt time.Time,
-	) (domain.Column, error)
+	Create(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
-	UpdateByID(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, updatedAt time.Time) (domain.Column, error)
+	UpdateByID(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
 	Move(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
@@ -32,15 +25,10 @@ type ColumnBoardRepository interface {
 type Column struct {
 	columnRepository ColumnRepository
 	boardRepository  ColumnBoardRepository
-	timeFunc         func() time.Time
 }
 
-func NewColumn(columnRepo ColumnRepository, boardRepo ColumnBoardRepository, timeFunc TimeFunc) *Column {
-	if timeFunc == nil {
-		panic("BUG: timeFunc is nil")
-	}
-
-	return &Column{columnRepository: columnRepo, boardRepository: boardRepo, timeFunc: timeFunc}
+func NewColumn(columnRepo ColumnRepository, boardRepo ColumnBoardRepository) *Column {
+	return &Column{columnRepository: columnRepo, boardRepository: boardRepo}
 }
 
 func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
@@ -55,8 +43,7 @@ func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID dom
 		return domain.Column{}, ErrBoardNotFound
 	}
 
-	now := s.timeFunc()
-	column, err := s.columnRepository.Create(ctx, boardID, name, now, now)
+	column, err := s.columnRepository.Create(ctx, boardID, name)
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("column service: create: %v: %w", err, ErrInternal)
 	}
@@ -118,7 +105,7 @@ func (s *Column) UpdateByID(
 		return column, nil
 	}
 
-	updated, err := s.columnRepository.UpdateByID(ctx, boardID, columnID, name, s.timeFunc())
+	updated, err := s.columnRepository.UpdateByID(ctx, boardID, columnID, name)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Column{}, ErrColumnNotFound

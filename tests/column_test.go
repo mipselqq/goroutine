@@ -110,6 +110,7 @@ func TestColumn_HappyPath(t *testing.T) {
 
 		// 4. Update by id with name only, store response in updatedNameColumn, validate fields, and ensure updatedAt advanced
 		updatedName := "Updated Name Only"
+		WaitForTimestampTicker(t)
 		updateNameResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+board.ID+"/columns/"+createdColumn.ID, map[string]string{
 			"name": updatedName,
 		})
@@ -135,10 +136,10 @@ func TestColumn_HappyPath(t *testing.T) {
 			t.Errorf("got updated name %q, want %q", updatedNameColumn.Name, updatedName)
 		}
 
-		updatedAtTime, _ := time.Parse(timeFormat, updatedNameColumn.UpdatedAt)
-		baselineUpdatedAt, _ := time.Parse(timeFormat, createdColumn.UpdatedAt)
-		if !updatedAtTime.After(baselineUpdatedAt) {
-			t.Errorf("updatedAt must advance after Update by id; got %v, previous %v", updatedAtTime, baselineUpdatedAt)
+		updatedAtAfterUpdate, _ := time.Parse(timeFormat, updatedNameColumn.UpdatedAt)
+		updatedAtBeforeUpdate, _ := time.Parse(timeFormat, createdColumn.UpdatedAt)
+		if !updatedAtAfterUpdate.After(updatedAtBeforeUpdate) {
+			t.Errorf("updatedAt must advance after Update by id; got %v, previous %v", updatedAtAfterUpdate, updatedAtBeforeUpdate)
 		}
 
 		// 5. List columns again, get the first column, and perform deep comparison with updatedNameColumn
