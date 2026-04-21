@@ -134,7 +134,7 @@ func (r *PgColumn) UpdateByID(
 		UPDATE columns
 		SET
 			name = COALESCE($3, name),
-			updated_at = CURRENT_TIMESTAMP
+			updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
 		WHERE board_id = $1
 		  AND id = $2
 		RETURNING id, board_id, name, position, created_at, updated_at`

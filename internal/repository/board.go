@@ -109,7 +109,7 @@ func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *
 		SET
 			name = COALESCE($1, name),
 			description = COALESCE($2, description),
-			updated_at = CURRENT_TIMESTAMP
+			updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
 		WHERE id = $3
 		RETURNING id, owner_id, name, description, created_at, updated_at`
 
