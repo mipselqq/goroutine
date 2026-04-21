@@ -25,7 +25,7 @@ func TestUserRepository_Insert(t *testing.T) {
 	hash := testutil.ValidPasswordHash()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		err := r.Insert(ctx, email, hash)
 		if err != nil {
@@ -43,7 +43,7 @@ func TestUserRepository_Insert(t *testing.T) {
 	})
 
 	t.Run("Duplicate email", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		InsertUser(t, pool, testutil.ValidUserID(), email, hash)
 		err := r.Insert(ctx, email, hash)
@@ -68,7 +68,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	userID := testutil.ValidUserID()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		InsertUser(t, pool, userID, email, hash)
 
@@ -85,7 +85,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	})
 
 	t.Run("User not found", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		unknownEmail, _ := domain.NewEmail("unknown@example.com")
 		_, _, err := r.GetByEmail(ctx, unknownEmail)

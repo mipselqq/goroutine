@@ -22,9 +22,7 @@ func TestColumnRepository_Create(t *testing.T) {
 	r := repository.NewPgColumn(pool)
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-create@example.com")
 
@@ -78,9 +76,7 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 
 	r := repository.NewPgColumn(pool)
 
-	testutil.TruncateTable(t, pool, "columns")
-	testutil.TruncateTable(t, pool, "boards")
-	testutil.TruncateTable(t, pool, "users")
+	testutil.TruncateAllTables(t, pool)
 
 	board := insertFixedUserAndBoard(t, pool, "column-max@example.com")
 
@@ -110,9 +106,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 	r := repository.NewPgColumn(pool)
 
 	t.Run("Success empty", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-list-empty@example.com")
 
@@ -126,9 +120,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 	})
 
 	t.Run("Success ordered and filtered by board", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		userID := testutil.ValidUserID()
 		CreateUser(t, pool, userID, "column-list-ordered@example.com")
@@ -166,9 +158,7 @@ func TestColumnRepository_GetByID(t *testing.T) {
 	r := repository.NewPgColumn(pool)
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-getbyid@example.com")
 
@@ -185,7 +175,7 @@ func TestColumnRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("Not found", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateAllTables(t, pool)
 
 		_, err := r.GetByID(context.Background(), domain.NewColumnID())
 		assertErrRowNotFound(t, err)
@@ -231,9 +221,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-update@example.com")
 
@@ -254,9 +242,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-update-missing-col@example.com")
 
@@ -266,9 +252,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Not found by board id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-update-missing-board@example.com")
 
@@ -288,9 +272,7 @@ func TestColumnRepository_Move(t *testing.T) {
 	r := repository.NewPgColumn(pool)
 
 	t.Run("Success move down", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-move-down@example.com")
 
@@ -322,9 +304,7 @@ func TestColumnRepository_Move(t *testing.T) {
 	})
 
 	t.Run("Success move up", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-move-up@example.com")
 
@@ -356,9 +336,7 @@ func TestColumnRepository_Move(t *testing.T) {
 	})
 
 	t.Run("Success no-op", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-move-noop@example.com")
 
@@ -387,9 +365,7 @@ func TestColumnRepository_Move(t *testing.T) {
 	})
 
 	t.Run("Index out of bounds", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-move-oob@example.com")
 
@@ -418,9 +394,7 @@ func TestColumnRepository_Move(t *testing.T) {
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-move-missing-col@example.com")
 
@@ -431,9 +405,7 @@ func TestColumnRepository_Move(t *testing.T) {
 	})
 
 	t.Run("Not found by board id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-move-missing-board@example.com")
 
@@ -454,9 +426,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 	r := repository.NewPgColumn(pool)
 
 	t.Run("Success shift positions", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-delete-shift@example.com")
 
@@ -488,9 +458,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-delete-missing-col@example.com")
 
@@ -499,9 +467,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("Not found by board id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "column-delete-missing-board@example.com")
 

@@ -3,6 +3,7 @@ package testutil
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,5 +38,25 @@ func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
 	_, err := pool.Exec(ctx, query)
 	if err != nil {
 		t.Fatalf("TRUNCATE TABLE %q error = %v", name, err)
+	}
+}
+
+// TruncateAllTables clears application tables in dependency order (FK-safe).
+func TruncateAllTables(t *testing.T, pool *pgxpool.Pool) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	names := []string{"columns", "boards", "users"}
+	parts := make([]string, len(names))
+	for i, name := range names {
+		parts[i] = pgx.Identifier{name}.Sanitize()
+	}
+	query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", strings.Join(parts, ", "))
+
+	_, err := pool.Exec(ctx, query)
+	if err != nil {
+		t.Fatalf("TRUNCATE ALL application tables error = %v", err)
 	}
 }

@@ -24,8 +24,7 @@ func TestBoardRepository_Create(t *testing.T) {
 	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "test@example.com")
 
@@ -101,8 +100,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "getbyid@example.com")
 
@@ -142,7 +140,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("Not found", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateAllTables(t, pool)
 
 		_, err := r.GetByID(context.Background(), domain.NewBoardID())
 		assertErrRowNotFound(t, err)
@@ -159,8 +157,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success empty", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "getmany-empty@example.com")
 
@@ -174,8 +171,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	})
 
 	t.Run("Success returns boards in created order", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "getmany-order@example.com")
 
@@ -270,8 +266,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "updatebyid@example.com")
 		InsertBoard(t, pool, &validBoard)
@@ -284,8 +279,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Success partial name only", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "updatebyid-partial-name@example.com")
 		InsertBoard(t, pool, &validBoard)
@@ -298,8 +292,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Success partial description only", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "updatebyid-partial-description@example.com")
 		InsertBoard(t, pool, &validBoard)
@@ -312,8 +305,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Not found when missing", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
 
@@ -330,8 +322,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 	userID := testutil.ValidUserID()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		board := insertFixedUserAndBoard(t, pool, "delete@example.com")
 
@@ -347,8 +338,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("Not found when missing", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		CreateUser(t, pool, userID, "delete-missing@example.com")
 
