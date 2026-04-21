@@ -7,20 +7,19 @@ import (
 	"time"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/repository"
+	"goroutine/internal/testutil"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email string) {
+func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
-	domainEmail, err := domain.NewEmail(email)
-	if err != nil {
-		t.Fatalf("create user email: %v", err)
-	}
-
-	InsertUser(t, pool, id, domainEmail, "hash")
+	id := testutil.ValidUserID()
+	domainEmail := testutil.ValidEmail()
+	InsertUser(t, pool, id, domainEmail, testutil.ValidPasswordHash())
 }
 
 func InsertUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain.Email, hash string) {
@@ -181,6 +180,46 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	}
 
 	return columns
+}
+
+func insertFixedUserAndBoard(t *testing.T, pool *pgxpool.Pool) domain.Board {
+	t.Helper()
+
+	CreateFixedUser(t, pool)
+	board := testutil.ValidBoard()
+	InsertBoard(t, pool, &board)
+
+	return board
+}
+
+func mustColumnPosition(t *testing.T, n int64) domain.ColumnPosition {
+	t.Helper()
+
+	p, err := domain.NewColumnPosition(n)
+	if err != nil {
+		t.Fatalf("NewColumnPosition(%d): %v", n, err)
+	}
+
+	return p
+}
+
+func assertColumnIDAndPosition(t *testing.T, col *domain.Column, wantID domain.ColumnID, wantPos int64) {
+	t.Helper()
+
+	if col.ID != wantID {
+		t.Errorf("got id %q, want %q", col.ID, wantID)
+	}
+	if col.Position.Int64() != wantPos {
+		t.Errorf("got position %d, want %d", col.Position.Int64(), wantPos)
+	}
+}
+
+func assertErrRowNotFound(t *testing.T, err error) {
+	t.Helper()
+
+	if !errors.Is(err, repository.ErrRowNotFound) {
+		t.Errorf("got error %v, want ErrRowNotFound", err)
+	}
 }
 
 func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tableName string, columnNames ...string) {

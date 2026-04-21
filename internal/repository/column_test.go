@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -16,21 +17,12 @@ import (
 )
 
 func TestColumnRepository_Create(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-create@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		validColumn := testutil.ValidColumn(board.ID)
 
@@ -77,20 +69,11 @@ func TestColumnRepository_Create(t *testing.T) {
 }
 
 func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := columnRepoPrelude(t)
 
-	r := repository.NewPgColumn(pool)
+	testutil.TruncateAllTables(t, pool)
 
-	testutil.TruncateTable(t, pool, "columns")
-	testutil.TruncateTable(t, pool, "boards")
-	testutil.TruncateTable(t, pool, "users")
-
-	userID := testutil.ValidUserID()
-	CreateUser(t, pool, userID, "column-max@example.com")
-
-	board := testutil.ValidBoard()
-	InsertBoard(t, pool, &board)
+	board := insertFixedUserAndBoard(t, pool)
 
 	existing := testutil.ValidColumn(board.ID)
 	InsertColumn(t, pool, &existing)
@@ -112,21 +95,12 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 }
 
 func TestColumnRepository_ListByBoardID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success empty", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-list-empty@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		columns, err := r.ListByBoardID(context.Background(), board.ID)
 		if err != nil {
@@ -138,12 +112,9 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 	})
 
 	t.Run("Success ordered and filtered by board", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-list-ordered@example.com")
+		CreateFixedUser(t, pool)
 
 		boardA := testutil.ValidBoard()
 		InsertBoard(t, pool, &boardA)
@@ -172,21 +143,12 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 }
 
 func TestColumnRepository_GetByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-getbyid@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
 		InsertColumn(t, pool, &created)
@@ -201,20 +163,15 @@ func TestColumnRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("Not found", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
+		testutil.TruncateAllTables(t, pool)
 
 		_, err := r.GetByID(context.Background(), domain.NewColumnID())
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("GetByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
 
 func TestColumnRepository_UpdateByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	assertUpdatedColumn := func(t *testing.T, got domain.Column, want domain.Column) {
 		t.Helper()
@@ -249,15 +206,9 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-update@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
 		createdAtBeforeUpdate := time.Now().UTC()
@@ -276,61 +227,36 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-update-missing-col@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		updatedName, _ := domain.NewColumnName("Renamed")
 		_, err := r.UpdateByID(context.Background(), board.ID, domain.NewColumnID(), &updatedName)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 
 	t.Run("Not found by board id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-update-missing-board@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
 		InsertColumn(t, pool, &created)
 
 		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
 		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
 
 func TestColumnRepository_Move(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success move down", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-move-down@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
@@ -340,10 +266,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		InsertColumn(t, pool, &second)
 		InsertColumn(t, pool, &third)
 
-		targetPosition, err := domain.NewColumnPosition(3)
-		if err != nil {
-			t.Fatalf("NewColumnPosition() error = %v", err)
-		}
+		targetPosition := mustColumnPosition(t, 3)
 
 		gotPosition, err := r.Move(context.Background(), board.ID, first.ID, targetPosition)
 		if err != nil {
@@ -357,27 +280,15 @@ func TestColumnRepository_Move(t *testing.T) {
 		if len(got) != 3 {
 			t.Fatalf("got %d columns after move, want 3", len(got))
 		}
-		if got[0].ID != second.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), second.ID, 1)
-		}
-		if got[1].ID != third.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), third.ID, 2)
-		}
-		if got[2].ID != first.ID || got[2].Position.Int64() != 3 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[2].ID, got[2].Position.Int64(), first.ID, 3)
-		}
+		assertColumnIDAndPosition(t, &got[0], second.ID, 1)
+		assertColumnIDAndPosition(t, &got[1], third.ID, 2)
+		assertColumnIDAndPosition(t, &got[2], first.ID, 3)
 	})
 
 	t.Run("Success move up", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-move-up@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
@@ -387,10 +298,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		InsertColumn(t, pool, &second)
 		InsertColumn(t, pool, &third)
 
-		targetPosition, err := domain.NewColumnPosition(1)
-		if err != nil {
-			t.Fatalf("NewColumnPosition() error = %v", err)
-		}
+		targetPosition := mustColumnPosition(t, 1)
 
 		gotPosition, err := r.Move(context.Background(), board.ID, third.ID, targetPosition)
 		if err != nil {
@@ -404,27 +312,15 @@ func TestColumnRepository_Move(t *testing.T) {
 		if len(got) != 3 {
 			t.Fatalf("got %d columns after move, want 3", len(got))
 		}
-		if got[0].ID != third.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), third.ID, 1)
-		}
-		if got[1].ID != first.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), first.ID, 2)
-		}
-		if got[2].ID != second.ID || got[2].Position.Int64() != 3 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[2].ID, got[2].Position.Int64(), second.ID, 3)
-		}
+		assertColumnIDAndPosition(t, &got[0], third.ID, 1)
+		assertColumnIDAndPosition(t, &got[1], first.ID, 2)
+		assertColumnIDAndPosition(t, &got[2], second.ID, 3)
 	})
 
 	t.Run("Success no-op", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-move-noop@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
@@ -432,10 +328,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
 
-		targetPosition, err := domain.NewColumnPosition(2)
-		if err != nil {
-			t.Fatalf("NewColumnPosition() error = %v", err)
-		}
+		targetPosition := mustColumnPosition(t, 2)
 
 		gotPosition, err := r.Move(context.Background(), board.ID, second.ID, targetPosition)
 		if err != nil {
@@ -449,24 +342,14 @@ func TestColumnRepository_Move(t *testing.T) {
 		if len(got) != 2 {
 			t.Fatalf("got %d columns after no-op move, want 2", len(got))
 		}
-		if got[0].ID != first.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), first.ID, 1)
-		}
-		if got[1].ID != second.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), second.ID, 2)
-		}
+		assertColumnIDAndPosition(t, &got[0], first.ID, 1)
+		assertColumnIDAndPosition(t, &got[1], second.ID, 2)
 	})
 
 	t.Run("Index out of bounds", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-move-oob@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
@@ -476,12 +359,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		InsertColumn(t, pool, &second)
 		InsertColumn(t, pool, &third)
 
-		targetPosition, err := domain.NewColumnPosition(4)
-		if err != nil {
-			t.Fatalf("NewColumnPosition() error = %v", err)
-		}
+		targetPosition := mustColumnPosition(t, 4)
 
-		_, err = r.Move(context.Background(), board.ID, second.ID, targetPosition)
+		_, err := r.Move(context.Background(), board.ID, second.ID, targetPosition)
 		if !errors.Is(err, repository.ErrIndexOutOfBounds) {
 			t.Fatalf("Move() error = %v, want ErrIndexOutOfBounds", err)
 		}
@@ -490,81 +370,44 @@ func TestColumnRepository_Move(t *testing.T) {
 		if len(got) != 3 {
 			t.Fatalf("got %d columns after failed move, want 3", len(got))
 		}
-		if got[0].ID != first.ID || got[0].Position.Int64() != 1 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[0].ID, got[0].Position.Int64(), first.ID, 1)
-		}
-		if got[1].ID != second.ID || got[1].Position.Int64() != 2 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[1].ID, got[1].Position.Int64(), second.ID, 2)
-		}
-		if got[2].ID != third.ID || got[2].Position.Int64() != 3 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", got[2].ID, got[2].Position.Int64(), third.ID, 3)
-		}
+		assertColumnIDAndPosition(t, &got[0], first.ID, 1)
+		assertColumnIDAndPosition(t, &got[1], second.ID, 2)
+		assertColumnIDAndPosition(t, &got[2], third.ID, 3)
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-move-missing-col@example.com")
+		board := insertFixedUserAndBoard(t, pool)
 
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		targetPosition := mustColumnPosition(t, 1)
 
-		targetPosition, err := domain.NewColumnPosition(1)
-		if err != nil {
-			t.Fatalf("NewColumnPosition() error = %v", err)
-		}
-
-		_, err = r.Move(context.Background(), board.ID, domain.NewColumnID(), targetPosition)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Move() error = %v, want ErrRowNotFound", err)
-		}
+		_, err := r.Move(context.Background(), board.ID, domain.NewColumnID(), targetPosition)
+		assertErrRowNotFound(t, err)
 	})
 
 	t.Run("Not found by board id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-move-missing-board@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
 		InsertColumn(t, pool, &created)
 
-		targetPosition, err := domain.NewColumnPosition(1)
-		if err != nil {
-			t.Fatalf("NewColumnPosition() error = %v", err)
-		}
+		targetPosition := mustColumnPosition(t, 1)
 
-		_, err = r.Move(context.Background(), domain.NewBoardID(), created.ID, targetPosition)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Move() error = %v, want ErrRowNotFound", err)
-		}
+		_, err := r.Move(context.Background(), domain.NewBoardID(), created.ID, targetPosition)
+		assertErrRowNotFound(t, err)
 	})
 }
 
 func TestColumnRepository_Delete(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgColumn(pool)
+	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success shift positions", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-delete-shift@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
@@ -584,18 +427,8 @@ func TestColumnRepository_Delete(t *testing.T) {
 		if len(got) != 2 {
 			t.Fatalf("got %d columns after delete, want 2", len(got))
 		}
-		if got[0].ID != first.ID {
-			t.Errorf("got first column id %q, want %q", got[0].ID, first.ID)
-		}
-		if got[0].Position.Int64() != 1 {
-			t.Errorf("got first position %d, want 1", got[0].Position.Int64())
-		}
-		if got[1].ID != third.ID {
-			t.Errorf("got second column id %q, want %q", got[1].ID, third.ID)
-		}
-		if got[1].Position.Int64() != 2 {
-			t.Errorf("got second position %d after shift, want 2", got[1].Position.Int64())
-		}
+		assertColumnIDAndPosition(t, &got[0], first.ID, 1)
+		assertColumnIDAndPosition(t, &got[1], third.ID, 2)
 
 		_, ok := FindColumnByID(t, pool, second.ID)
 		if ok {
@@ -604,39 +437,32 @@ func TestColumnRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-delete-missing-col@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		err := r.Delete(context.Background(), board.ID, domain.NewColumnID())
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 
 	t.Run("Not found by board id", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		userID := testutil.ValidUserID()
-		CreateUser(t, pool, userID, "column-delete-missing-board@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
 		InsertColumn(t, pool, &created)
 
 		err := r.Delete(context.Background(), domain.NewBoardID(), created.ID)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
+}
+
+func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgColumn) {
+	t.Helper()
+
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	t.Cleanup(func() { pool.Close() })
+
+	return pool, repository.NewPgColumn(pool)
 }

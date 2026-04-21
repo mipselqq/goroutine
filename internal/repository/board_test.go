@@ -4,11 +4,11 @@ package repository_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -16,19 +16,16 @@ import (
 )
 
 func TestBoardRepository_Create(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 	boardName := testutil.ValidBoardName()
 	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "test@example.com")
+		CreateFixedUser(t, pool)
 
 		board, err := r.Create(context.Background(), userID, boardName, boardDescription)
 		if err != nil {
@@ -57,55 +54,39 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		const query = `
-		SELECT owner_id, name, description, created_at, updated_at 
-		FROM boards 
-		WHERE id = $1`
-
-		var (
-			dbOwnerID     domain.UserID
-			dbName        domain.BoardName
-			dbDescription domain.BoardDescription
-			dbCreatedAt   time.Time
-			dbUpdatedAt   time.Time
-		)
-		err = pool.QueryRow(context.Background(), query, board.ID).
-			Scan(&dbOwnerID, &dbName, &dbDescription, &dbCreatedAt, &dbUpdatedAt)
-		if err != nil {
-			t.Fatalf("Board row Scan() error = %v", err)
+		stored, ok := FindBoardByID(t, pool, board.ID)
+		if !ok {
+			t.Fatalf("created board %q not found in DB", board.ID)
 		}
-		if dbOwnerID != userID {
-			t.Errorf("DB: got owner ID %q, want %q", dbOwnerID, userID)
+		if stored.OwnerID != userID {
+			t.Errorf("DB: got owner ID %q, want %q", stored.OwnerID, userID)
 		}
-		if dbName != boardName {
-			t.Errorf("DB: got name %q, want %q", dbName, boardName)
+		if stored.Name != boardName {
+			t.Errorf("DB: got name %q, want %q", stored.Name, boardName)
 		}
-		if dbDescription != boardDescription {
-			t.Errorf("DB: got description %q, want %q", dbDescription, boardDescription)
+		if stored.Description != boardDescription {
+			t.Errorf("DB: got description %q, want %q", stored.Description, boardDescription)
 		}
-		if !dbCreatedAt.Equal(board.CreatedAt) {
-			t.Errorf("DB: got created_at %v, want %v", dbCreatedAt, board.CreatedAt)
+		if !stored.CreatedAt.Equal(board.CreatedAt) {
+			t.Errorf("DB: got created_at %v, want %v", stored.CreatedAt, board.CreatedAt)
 		}
-		if !dbUpdatedAt.Equal(board.UpdatedAt) {
-			t.Errorf("DB: got updated_at %v, want %v", dbUpdatedAt, board.UpdatedAt)
+		if !stored.UpdatedAt.Equal(board.UpdatedAt) {
+			t.Errorf("DB: got updated_at %v, want %v", stored.UpdatedAt, board.UpdatedAt)
 		}
 	})
 }
 
 func TestBoardRepository_GetByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 	boardName := testutil.ValidBoardName()
 	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "getbyid@example.com")
+		CreateFixedUser(t, pool)
 
 		now := time.Now().UTC()
 		want := domain.Board{
@@ -143,29 +124,24 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("Not found", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateAllTables(t, pool)
 
 		_, err := r.GetByID(context.Background(), domain.NewBoardID())
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("GetByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
 
 func TestBoardRepository_GetMany(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
+	pool, r := boardRepoPrelude(t)
 
-	r := repository.NewPgBoard(pool)
 	userID := testutil.ValidUserID()
 	boardName := testutil.ValidBoardName()
 	boardDescription := testutil.ValidBoardDescription()
 
 	t.Run("Success empty", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "getmany-empty@example.com")
+		CreateFixedUser(t, pool)
 
 		got, err := r.GetMany(context.Background(), userID)
 		if err != nil {
@@ -177,10 +153,9 @@ func TestBoardRepository_GetMany(t *testing.T) {
 	})
 
 	t.Run("Success returns boards in created order", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "getmany-order@example.com")
+		CreateFixedUser(t, pool)
 
 		otherName, err := domain.NewBoardName(boardName.String() + "-2")
 		if err != nil {
@@ -221,11 +196,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 }
 
 func TestBoardRepository_UpdateByID(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgBoard(pool)
-	userID := testutil.ValidUserID()
+	pool, r := boardRepoPrelude(t)
 
 	validBoard := testutil.ValidBoard()
 	createdAtBeforeUpdate := time.Now().UTC()
@@ -273,10 +244,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid@example.com")
+		CreateFixedUser(t, pool)
 		InsertBoard(t, pool, &validBoard)
 
 		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
@@ -287,10 +257,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Success partial name only", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid-partial-name@example.com")
+		CreateFixedUser(t, pool)
 		InsertBoard(t, pool, &validBoard)
 
 		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
@@ -301,10 +270,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Success partial description only", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid-partial-description@example.com")
+		CreateFixedUser(t, pool)
 		InsertBoard(t, pool, &validBoard)
 
 		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
@@ -315,33 +283,22 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 	})
 
 	t.Run("Not found when missing", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "updatebyid-missing@example.com")
+		CreateFixedUser(t, pool)
 
 		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("UpdateByID() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
 }
 
 func TestBoardRepository_Delete(t *testing.T) {
-	pool := testutil.SetupTestDB(t, "../../migrations")
-	defer pool.Close()
-
-	r := repository.NewPgBoard(pool)
-	userID := testutil.ValidUserID()
+	pool, r := boardRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "delete@example.com")
-
-		board := testutil.ValidBoard()
-		InsertBoard(t, pool, &board)
+		board := insertFixedUserAndBoard(t, pool)
 
 		err := r.Delete(context.Background(), board.ID)
 		if err != nil {
@@ -355,14 +312,20 @@ func TestBoardRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("Not found when missing", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
-		CreateUser(t, pool, userID, "delete-missing@example.com")
+		CreateFixedUser(t, pool)
 
 		err := r.Delete(context.Background(), domain.NewBoardID())
-		if !errors.Is(err, repository.ErrRowNotFound) {
-			t.Errorf("Delete() error = %v, want ErrRowNotFound", err)
-		}
+		assertErrRowNotFound(t, err)
 	})
+}
+
+func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgBoard) {
+	t.Helper()
+
+	pool := testutil.SetupTestDB(t, "../../migrations")
+	t.Cleanup(func() { pool.Close() })
+
+	return pool, repository.NewPgBoard(pool)
 }

@@ -31,9 +31,7 @@ func TestColumn_HappyPath(t *testing.T) {
 	httpClient, ts, pool := Prelude(t)
 
 	t.Run("Full column flow", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "columns")
-		testutil.TruncateTable(t, pool, "boards")
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		// 1. Register (already done via ac client)
 		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)

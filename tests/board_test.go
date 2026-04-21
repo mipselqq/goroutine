@@ -29,8 +29,7 @@ func TestBoard_HappyPath(t *testing.T) {
 	httpClient, ts, pool := Prelude(t)
 
 	t.Run("Full board flow", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "users")
-		testutil.TruncateTable(t, pool, "boards")
+		testutil.TruncateAllTables(t, pool)
 
 		// 1. Register (already done via ac client)
 		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)

@@ -17,7 +17,7 @@ func TestAuth_HappyPath(t *testing.T) {
 	httpClient, ts, pool := Prelude(t)
 
 	t.Run("Full auth flow: register then login", func(t *testing.T) {
-		testutil.TruncateTable(t, pool, "users")
+		testutil.TruncateAllTables(t, pool)
 
 		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
 
