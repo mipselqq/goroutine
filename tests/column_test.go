@@ -136,8 +136,14 @@ func TestColumn_HappyPath(t *testing.T) {
 			t.Errorf("got updated name %q, want %q", updatedNameColumn.Name, updatedName)
 		}
 
-		updatedAtAfterUpdate, _ := time.Parse(timeFormat, updatedNameColumn.UpdatedAt)
-		updatedAtBeforeUpdate, _ := time.Parse(timeFormat, createdColumn.UpdatedAt)
+		updatedAtAfterUpdate, err := time.Parse(timeFormat, updatedNameColumn.UpdatedAt)
+		if err != nil {
+			t.Fatalf("time.Parse(%q) error = %v", updatedNameColumn.UpdatedAt, err)
+		}
+		updatedAtBeforeUpdate, err := time.Parse(timeFormat, createdColumn.UpdatedAt)
+		if err != nil {
+			t.Fatalf("time.Parse(%q) error = %v", createdColumn.UpdatedAt, err)
+		}
 		if !updatedAtAfterUpdate.After(updatedAtBeforeUpdate) {
 			t.Errorf("updatedAt must advance after Update by id; got %v, previous %v", updatedAtAfterUpdate, updatedAtBeforeUpdate)
 		}
