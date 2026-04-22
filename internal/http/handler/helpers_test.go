@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/service"
 	"goroutine/internal/testutil"
 )
 
@@ -30,11 +31,12 @@ func (m *MockAuthService) Login(ctx context.Context, email domain.Email, passwor
 }
 
 type MockBoardService struct {
-	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	GetFunc        func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
-	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByIDFunc func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
-	DeleteFunc     func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
+	CreateFunc       func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetFunc          func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
+	GetAggregateFunc func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
+	GetManyFunc      func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateByIDFunc   func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	DeleteFunc       func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
 type MockColumnService struct {
@@ -56,6 +58,11 @@ type MockTaskService struct {
 func (m *MockBoardService) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
+}
+
+func (m *MockBoardService) GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
+	AssertFuncNotNil("BoardsService.GetAggregateFunc", m.GetAggregateFunc)
+	return m.GetAggregateFunc(ctx, ownerID, boardID)
 }
 
 func (m *MockBoardService) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {

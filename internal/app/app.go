@@ -36,8 +36,9 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	boardsService := service.NewBoard(service.BoardRepository(boardsRepo))
+	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
 	columnsService := service.NewColumn(service.ColumnRepository(columnsRepo), service.ColumnBoardRepository(boardsRepo))
+
 	tasksService := service.NewTask(
 		service.TaskRepository(tasksRepo),
 		service.TaskBoardRepository(boardsRepo),

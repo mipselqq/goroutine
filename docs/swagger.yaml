@@ -413,6 +413,47 @@ paths:
       summary: UpdateByID a board by id
       tags:
       - boards
+  /v1/boards/{boardId}/aggregate:
+    get:
+      consumes:
+      - application/json
+      description: Get a board with nested columns and tasks for the current user
+        (owner only)
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: BOARD_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Get a board aggregate by id
+      tags:
+      - boards
   /v1/boards/{boardId}/columns:
     get:
       description: Get all columns belonging to the specified board, ordered by position

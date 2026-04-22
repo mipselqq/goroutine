@@ -162,6 +162,10 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 	return result, nil
 }
 
+func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+	panic("List by board id not implemented")
+}
+
 func (r *PgTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 	const query = `
 		SELECT id, column_id, name, description, position, created_at, updated_at

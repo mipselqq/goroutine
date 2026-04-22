@@ -69,7 +69,7 @@ func TestBoard_Create(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, nil, nil)
 
 			got, err := s.Create(context.Background(), validBoard.OwnerID, validBoard.Name, validBoard.Description)
 
@@ -135,7 +135,7 @@ func TestBoard_GetMany(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, nil, nil)
 
 			got, err := s.GetMany(context.Background(), validBoard.OwnerID)
 
@@ -228,7 +228,7 @@ func TestBoard_Get(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, nil, nil)
 
 			got, err := s.Get(context.Background(), tt.callerID, validBoard.ID)
 
@@ -238,6 +238,176 @@ func TestBoard_Get(t *testing.T) {
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantBoard, got, testutil.CmpAllowUnexported()); diff != "" {
 					t.Errorf("Get() board mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestBoard_GetAggregate(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	firstColumn := testutil.ValidColumn(validBoard.ID)
+	secondColumn := testutil.NewValidColumn(t, validBoard.ID, "Done", 2)
+	firstTask := testutil.ValidTask(firstColumn.ID)
+	secondTask := testutil.NewValidTask(t, firstColumn.ID, "Second task", "Second description", 2)
+	doneTask := testutil.ValidTask(secondColumn.ID)
+	otherOwner := domain.NewUserID()
+
+	wantAggregate := service.AggregateBoard{
+		Board: validBoard,
+		Columns: []service.AggregateColumn{
+			{Column: firstColumn, Tasks: []domain.Task{firstTask, secondTask}},
+			{Column: secondColumn, Tasks: []domain.Task{doneTask}},
+		},
+	}
+
+	tests := []struct {
+		name            string
+		callerID        domain.UserID
+		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
+		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
+		setupTaskRepo   func(t *testing.T, r *MockTaskRepository)
+		wantErr         error
+		wantAggregate   service.AggregateBoard
+	}{
+		{
+			name:     "Success",
+			callerID: validBoard.OwnerID,
+			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					if id != validBoard.ID {
+						t.Errorf("got board id %v, want %v", id, validBoard.ID)
+					}
+					return validBoard, nil
+				}
+			},
+			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+					if boardID != validBoard.ID {
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
+					}
+					return []domain.Column{firstColumn, secondColumn}, nil
+				}
+			},
+			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+					if boardID != validBoard.ID {
+						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
+					}
+					return []domain.Task{firstTask, secondTask, doneTask}, nil
+				}
+			},
+			wantAggregate: wantAggregate,
+		},
+		{
+			name:     "Not found when not owner",
+			callerID: otherOwner,
+			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+					t.Fatalf("got call, want no call")
+					return nil, nil
+				}
+			},
+			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+					t.Fatalf("got call, want no call")
+					return nil, nil
+				}
+			},
+			wantErr: service.ErrBoardNotFound,
+		},
+		{
+			name:     "Not found when row missing",
+			callerID: validBoard.OwnerID,
+			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return domain.Board{}, repository.ErrRowNotFound
+				}
+			},
+			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+					t.Fatalf("got call, want no call")
+					return nil, nil
+				}
+			},
+			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+					t.Fatalf("got call, want no call")
+					return nil, nil
+				}
+			},
+			wantErr: service.ErrBoardNotFound,
+		},
+		{
+			name:     "Internal error from column repository",
+			callerID: validBoard.OwnerID,
+			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+					return nil, repository.ErrInternal
+				}
+			},
+			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+					t.Fatalf("got call, want no call")
+					return nil, nil
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+		{
+			name:     "Internal error from task repository",
+			callerID: validBoard.OwnerID,
+			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+					return []domain.Column{firstColumn, secondColumn}, nil
+				}
+			},
+			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+					return nil, repository.ErrInternal
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			boardRepo := &MockBoardRepository{}
+			columnRepo := &MockColumnRepository{}
+			taskRepo := &MockTaskRepository{}
+			tt.setupBoardRepo(t, boardRepo)
+			tt.setupColumnRepo(t, columnRepo)
+			tt.setupTaskRepo(t, taskRepo)
+
+			s := service.NewBoard(boardRepo, columnRepo, taskRepo)
+			got, err := s.GetAggregate(context.Background(), tt.callerID, validBoard.ID)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
+			}
+			if tt.wantErr == nil {
+				if diff := cmp.Diff(tt.wantAggregate, got, testutil.CmpAllowUnexported()); diff != "" {
+					t.Errorf("GetAggregate() mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
@@ -415,7 +585,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, nil, nil)
 
 			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, tt.inputName, tt.inputDescription)
 
@@ -536,7 +706,7 @@ func TestBoard_Delete(t *testing.T) {
 
 			r := &MockBoardRepository{}
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r)
+			s := service.NewBoard(r, nil, nil)
 
 			err := s.Delete(context.Background(), tt.callerID, validBoard.ID)
 

@@ -15,6 +15,7 @@ import (
 type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
+	GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
 	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 	UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
@@ -145,6 +146,24 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewBoardResponse(&board))
+}
+
+// GetAggregate godoc
+// @Summary Get a board aggregate by id
+// @Description Get a board with nested columns and tasks for the current user (owner only)
+// @Tags boards
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param boardId path string true "Board ID"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
+// @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
+// @Failure 500 {object} httpschema.Error "Internal server error"
+// @Router /v1/boards/{boardId}/aggregate [get]
+func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
+	panic("Aggregate handler not implemented")
 }
 
 // GetMany godoc

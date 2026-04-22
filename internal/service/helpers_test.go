@@ -116,6 +116,7 @@ func (m *MockColumnRepository) Delete(ctx context.Context, boardID domain.BoardI
 
 type MockTaskRepository struct {
 	CreateFunc         func(ctx context.Context, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
+	ListByBoardIDFunc  func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error)
 	ListByColumnIDFunc func(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error)
 	GetByIDFunc        func(ctx context.Context, taskID domain.TaskID) (domain.Task, error)
 	UpdateByIDFunc     func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
@@ -131,6 +132,11 @@ func (m *MockTaskRepository) Create(
 ) (domain.Task, error) {
 	AssertFuncNotNil("TaskRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, columnID, name, description)
+}
+
+func (m *MockTaskRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+	AssertFuncNotNil("TaskRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
+	return m.ListByBoardIDFunc(ctx, boardID)
 }
 
 func (m *MockTaskRepository) ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error) {
