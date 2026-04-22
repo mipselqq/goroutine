@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -23,10 +22,10 @@ func FixedTime5mFromNowStr() string {
 
 func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
 
-func must[T any](fn func(string) (T, error), s string) T {
-	v, err := fn(s)
+func must[A any, T any](fn func(A) (T, error), arg A) T {
+	v, err := fn(arg)
 	if err != nil {
-		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
+		panic(err)
 	}
 	return v
 }
@@ -64,12 +63,7 @@ func ValidColumnName() domain.ColumnName {
 }
 
 func ValidColumnPosition() domain.ColumnPosition {
-	position, err := domain.NewColumnPosition(1)
-	if err != nil {
-		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
-	}
-
-	return position
+	return must(domain.NewColumnPosition, 1)
 }
 
 func ValidTaskName() domain.TaskName {
@@ -81,12 +75,7 @@ func ValidTaskDescription() domain.TaskDescription {
 }
 
 func ValidTaskPosition() domain.TaskPosition {
-	position, err := domain.NewTaskPosition(1)
-	if err != nil {
-		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
-	}
-
-	return position
+	return must(domain.NewTaskPosition, 1)
 }
 
 func ValidJWTSecret() secrecy.SecretString {
