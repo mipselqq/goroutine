@@ -19,6 +19,65 @@ func NewPgTask(pool *pgxpool.Pool) *PgTask {
 	return &PgTask{pool: pool}
 }
 
+func lockTaskColumns(
+	ctx context.Context,
+	tx pgx.Tx,
+	boardID domain.BoardID, // To ensure columns are locked in the same board
+	columnIDs ...domain.ColumnID,
+) error {
+	if len(columnIDs) == 0 {
+		return errors.New("BUG: lockTaskColumns called with no columns. Isn't column ID forgotten?")
+	}
+
+	seen := make(map[domain.ColumnID]struct{}, len(columnIDs))
+	for _, columnID := range columnIDs {
+		if _, ok := seen[columnID]; ok {
+			return errors.New("BUG: lockTaskColumns called so it locks the same column multiple times")
+		}
+		seen[columnID] = struct{}{}
+	}
+
+	// Deadlock protection in case same ids are passed in a different order:
+	// if T1 locks A and then waits for B, while T2 already locked B and waits for A,
+	// PostgreSQL will detect a deadlock and abort one transaction. Ordering makes all
+	// callers acquire row locks in the same order.
+	const lockColumnsQuery = `
+		SELECT id
+		FROM columns
+		WHERE board_id = @board_id
+		  AND id = ANY(@column_ids)
+		ORDER BY id
+		FOR UPDATE`
+
+	rows, err := tx.Query(ctx, lockColumnsQuery, pgx.NamedArgs{
+		"board_id":   boardID,
+		"column_ids": columnIDs,
+	})
+	if err != nil {
+		return fmt.Errorf("lock task columns: %w", err)
+	}
+	defer rows.Close()
+
+	locked := 0
+	for rows.Next() {
+		var columnID domain.ColumnID
+		if err = rows.Scan(&columnID); err != nil {
+			return fmt.Errorf("failed to scan locked column row: %w", err)
+		}
+		locked++
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return fmt.Errorf("lock task columns rows final error: %w", err)
+	}
+	if locked != len(columnIDs) {
+		return ErrRowNotFound
+	}
+
+	return nil
+}
+
 func (r *PgTask) Create(
 	ctx context.Context,
 	columnID domain.ColumnID,
@@ -174,16 +233,7 @@ func (r *PgTask) Move(
 	targetPosition domain.TaskPosition,
 ) (domain.ColumnID, domain.TaskPosition, error) {
 	const (
-		// SET position order is not guaranteed, so we disable uniqueness constraint for this transaction.
-
-		// 1. Lock the board row so no concurrent operation can reorder tasks in any of its columns.
-		lockBoardQuery = `
-		SELECT 1
-		FROM boards
-		WHERE id = @board_id
-		FOR UPDATE`
-
-		// 2. Defer the unique constraint until COMMIT for this transaction only.
+		// 2. SET position order is not guaranteed, so we disable uniqueness constraint for this transaction.
 		deferPositionConstraintQuery = `
 		SET CONSTRAINTS tasks_column_id_position_key DEFERRED`
 
@@ -256,15 +306,19 @@ func (r *PgTask) Move(
 		_ = tx.Rollback(ctx)
 	}()
 
-	var locked int
-	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
-		"board_id": boardID,
-	}).Scan(&locked)
+	sameColumn := currentColumnID == targetColumnID
+
+	// 1. Lock affected columns so concurrent operations can't interrupt the move.
+	if sameColumn {
+		err = lockTaskColumns(ctx, tx, boardID, currentColumnID)
+	} else {
+		err = lockTaskColumns(ctx, tx, boardID, currentColumnID, targetColumnID)
+	}
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, ErrRowNotFound) {
 			return domain.ColumnID{}, domain.TaskPosition{}, ErrRowNotFound
 		}
-		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task repo: move lock board: %v: %w", err, ErrInternal)
+		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task repo: move lock columns: %v: %w", err, ErrInternal)
 	}
 
 	_, err = tx.Exec(ctx, deferPositionConstraintQuery)
@@ -285,7 +339,6 @@ func (r *PgTask) Move(
 	}
 
 	targetPositionInt := targetPosition.Int64()
-	sameColumn := currentColumnID == targetColumnID
 
 	var targetTasksCount int64
 	err = tx.QueryRow(ctx, countTargetTasksQuery, pgx.NamedArgs{
@@ -377,13 +430,6 @@ func (r *PgTask) Delete(
 	taskID domain.TaskID,
 ) error {
 	const (
-		// 1. Lock the board row so no concurrent operation can reorder tasks in the same column.
-		lockBoardQuery = `
-		SELECT 1
-		FROM boards
-		WHERE id = @board_id
-		FOR UPDATE`
-
 		// 2. Defer the unique constraint until COMMIT for this transaction only.
 		deferPositionConstraintQuery = `
 		SET CONSTRAINTS tasks_column_id_position_key DEFERRED`
@@ -411,15 +457,13 @@ func (r *PgTask) Delete(
 		_ = tx.Rollback(ctx)
 	}()
 
-	var locked int
-	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
-		"board_id": boardID,
-	}).Scan(&locked)
+	// 1. Lock affected columns so concurrent operations can't interrupt the delete.
+	err = lockTaskColumns(ctx, tx, boardID, columnID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, ErrRowNotFound) {
 			return ErrRowNotFound
 		}
-		return fmt.Errorf("task repo: delete lock board: %v: %w", err, ErrInternal)
+		return fmt.Errorf("task repo: delete lock column: %v: %w", err, ErrInternal)
 	}
 
 	_, err = tx.Exec(ctx, deferPositionConstraintQuery)
