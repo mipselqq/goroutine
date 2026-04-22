@@ -400,7 +400,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundErrorBody(),
+			wantBody: columnNotFoundByFieldError("columnId"),
 		},
 		{
 			name:      "Internal error",
@@ -563,7 +563,7 @@ func TestColumns_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundErrorBody(),
+			wantBody: columnNotFoundByFieldError("columnId"),
 		},
 		{
 			name:      "Internal error",
@@ -684,7 +684,7 @@ func TestColumns_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundErrorBody(),
+			wantBody: columnNotFoundByFieldError("columnId"),
 		},
 		{
 			name: "Internal error",

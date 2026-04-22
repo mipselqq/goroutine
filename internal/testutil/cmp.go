@@ -15,5 +15,9 @@ func CmpAllowUnexported() cmp.Option {
 		domain.ColumnID{},
 		domain.ColumnName{},
 		domain.ColumnPosition{},
+		domain.TaskID{},
+		domain.TaskName{},
+		domain.TaskDescription{},
+		domain.TaskPosition{},
 	)
 }

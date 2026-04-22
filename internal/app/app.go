@@ -29,6 +29,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	userRepo := repository.NewPgUser(pool)
 	boardsRepo := repository.NewPgBoard(pool)
 	columnsRepo := repository.NewPgColumn(pool)
+	tasksRepo := repository.NewPgTask(pool)
 
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
@@ -37,6 +38,11 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	})
 	boardsService := service.NewBoard(service.BoardRepository(boardsRepo))
 	columnsService := service.NewColumn(service.ColumnRepository(columnsRepo), service.ColumnBoardRepository(boardsRepo))
+	tasksService := service.NewTask(
+		service.TaskRepository(tasksRepo),
+		service.TaskBoardRepository(boardsRepo),
+		service.TaskColumnRepository(columnsRepo),
+	)
 
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 
@@ -44,6 +50,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	healthHandler := handler.NewHealth(logger)
 	boardsHandler := handler.NewBoards(logger, boardsService, responder)
 	columnsHandler := handler.NewColumns(logger, columnsService, responder)
+	tasksHandler := handler.NewTasks(logger, tasksService, responder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
@@ -52,7 +59,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 
-	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler, Columns: columnsHandler}
+	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler, Columns: columnsHandler, Tasks: tasksHandler}
 	middlewares := &middleware.Middlewares{
 		Metrics:   metricsMiddleware,
 		CORS:      corsMiddleware,

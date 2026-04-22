@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -23,24 +22,24 @@ func FixedTime5mFromNowStr() string {
 
 func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
 
-func must[T any](fn func(string) (T, error), s string) T {
-	v, err := fn(s)
+func Must[A any, T any](fn func(A) (T, error), arg A) T {
+	v, err := fn(arg)
 	if err != nil {
-		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
+		panic(err)
 	}
 	return v
 }
 
 func ValidUserID() domain.UserID {
-	return must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
+	return Must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
 }
 
 func ValidEmail() domain.Email {
-	return must(domain.NewEmail, "test@example.com")
+	return Must(domain.NewEmail, "test@example.com")
 }
 
 func ValidPassword() domain.UserPassword {
-	return must(domain.NewUserPassword, "qwerty")
+	return Must(domain.NewUserPassword, "qwerty")
 }
 
 func ValidPasswordHash() string {
@@ -52,24 +51,35 @@ func AnotherValidPasswordHash() string {
 }
 
 func ValidBoardName() domain.BoardName {
-	return must(domain.NewBoardName, "Test Board")
+	return Must(domain.NewBoardName, "Test Board")
 }
 
 func ValidBoardDescription() domain.BoardDescription {
-	return must(domain.NewBoardDescription, "Test Board Description")
+	return Must(domain.NewBoardDescription, "Test Board Description")
 }
 
 func ValidColumnName() domain.ColumnName {
-	return must(domain.NewColumnName, "To Do")
+	return Must(domain.NewColumnName, "To Do")
 }
 
 func ValidColumnPosition() domain.ColumnPosition {
-	position, err := domain.NewColumnPosition(1)
-	if err != nil {
-		panic(fmt.Errorf("testutil: BUG: value is no longer valid: %w", err))
-	}
+	return Must(domain.NewColumnPosition, 1)
+}
 
-	return position
+func ValidTaskName() domain.TaskName {
+	return Must(domain.NewTaskName, "Write tests")
+}
+
+func ValidTaskDescription() domain.TaskDescription {
+	return Must(domain.NewTaskDescription, "Cover the new endpoint with tests")
+}
+
+func ValidTaskPosition() domain.TaskPosition {
+	return Must(domain.NewTaskPosition, 1)
+}
+
+func MustTaskPosition(t *testing.T, n int64) domain.TaskPosition {
+	return Must(domain.NewTaskPosition, n)
 }
 
 func ValidJWTSecret() secrecy.SecretString {
@@ -175,5 +185,73 @@ func UpdateValidColumn(t *testing.T, base *domain.Column, name string, updatedAt
 		Position:  base.Position,
 		CreatedAt: base.CreatedAt,
 		UpdatedAt: updatedAt,
+	}
+}
+
+func ValidTask(columnID domain.ColumnID) domain.Task {
+	name := ValidTaskName()
+	description := ValidTaskDescription()
+	position := ValidTaskPosition()
+	pseudoNow := FixedTimeNow()
+
+	return domain.Task{
+		ID:          domain.NewTaskID(),
+		ColumnID:    columnID,
+		Name:        name,
+		Description: description,
+		Position:    position,
+		CreatedAt:   pseudoNow,
+		UpdatedAt:   pseudoNow,
+	}
+}
+
+func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description string, position int64) domain.Task {
+	t.Helper()
+
+	task := ValidTask(columnID)
+
+	domainName, err := domain.NewTaskName(name)
+	if err != nil {
+		t.Fatalf("NewTaskName() error = %v", err)
+	}
+
+	domainDescription, err := domain.NewTaskDescription(description)
+	if err != nil {
+		t.Fatalf("NewTaskDescription() error = %v", err)
+	}
+
+	domainPosition, err := domain.NewTaskPosition(position)
+	if err != nil {
+		t.Fatalf("NewTaskPosition() error = %v", err)
+	}
+
+	task.Name = domainName
+	task.Description = domainDescription
+	task.Position = domainPosition
+
+	return task
+}
+
+func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, updatedAt time.Time) domain.Task {
+	t.Helper()
+
+	domainName, err := domain.NewTaskName(name)
+	if err != nil {
+		t.Fatalf("NewTaskName() error = %v", err)
+	}
+
+	domainDescription, err := domain.NewTaskDescription(description)
+	if err != nil {
+		t.Fatalf("NewTaskDescription() error = %v", err)
+	}
+
+	return domain.Task{
+		ID:          base.ID,
+		ColumnID:    base.ColumnID,
+		Name:        domainName,
+		Description: domainDescription,
+		Position:    base.Position,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   updatedAt,
 	}
 }
