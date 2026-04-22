@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -132,15 +131,6 @@ func NewTaskPosition(position int64) (TaskPosition, error) {
 	}
 
 	return TaskPosition{value: int32(position)}, nil
-}
-
-func ParseTaskPosition(position string) (TaskPosition, error) {
-	v, err := strconv.ParseInt(position, 10, 64)
-	if err != nil {
-		return TaskPosition{}, &ErrValidation{Issues: []string{ErrTaskPositionValue}}
-	}
-
-	return NewTaskPosition(v)
 }
 
 func (p TaskPosition) Int64() int64 {

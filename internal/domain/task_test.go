@@ -101,37 +101,6 @@ func TestTaskDescription(t *testing.T) {
 	}
 }
 
-func TestParseTaskPosition(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-	}{
-		{name: "Valid", input: "1"},
-		{name: "Zero", input: "0", wantErr: true},
-		{name: "Negative", input: "-1", wantErr: true},
-		{name: "Greater than int32", input: "2147483648", wantErr: true},
-		{name: "Greater than int64", input: "9223372036854775808", wantErr: true},
-		{name: "Not a number", input: "abc", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			_, err := domain.ParseTaskPosition(tt.input)
-			if tt.wantErr && err == nil {
-				t.Error("got nil error, want non-nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("got error %v, want nil", err)
-			}
-		})
-	}
-}
-
 func TestTaskPosition(t *testing.T) {
 	t.Parallel()
 
