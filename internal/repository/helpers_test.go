@@ -311,17 +311,6 @@ func mustColumnPosition(t *testing.T, n int64) domain.ColumnPosition {
 	return p
 }
 
-func mustTaskPosition(t *testing.T, n int64) domain.TaskPosition {
-	t.Helper()
-
-	p, err := domain.NewTaskPosition(n)
-	if err != nil {
-		t.Fatalf("NewTaskPosition(%d): %v", n, err)
-	}
-
-	return p
-}
-
 func assertColumnIDAndPosition(t *testing.T, col *domain.Column, wantID domain.ColumnID, wantPos int64) {
 	t.Helper()
 

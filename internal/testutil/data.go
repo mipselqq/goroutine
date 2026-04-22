@@ -22,7 +22,7 @@ func FixedTime5mFromNowStr() string {
 
 func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
 
-func must[A any, T any](fn func(A) (T, error), arg A) T {
+func Must[A any, T any](fn func(A) (T, error), arg A) T {
 	v, err := fn(arg)
 	if err != nil {
 		panic(err)
@@ -31,15 +31,15 @@ func must[A any, T any](fn func(A) (T, error), arg A) T {
 }
 
 func ValidUserID() domain.UserID {
-	return must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
+	return Must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
 }
 
 func ValidEmail() domain.Email {
-	return must(domain.NewEmail, "test@example.com")
+	return Must(domain.NewEmail, "test@example.com")
 }
 
 func ValidPassword() domain.UserPassword {
-	return must(domain.NewUserPassword, "qwerty")
+	return Must(domain.NewUserPassword, "qwerty")
 }
 
 func ValidPasswordHash() string {
@@ -51,31 +51,35 @@ func AnotherValidPasswordHash() string {
 }
 
 func ValidBoardName() domain.BoardName {
-	return must(domain.NewBoardName, "Test Board")
+	return Must(domain.NewBoardName, "Test Board")
 }
 
 func ValidBoardDescription() domain.BoardDescription {
-	return must(domain.NewBoardDescription, "Test Board Description")
+	return Must(domain.NewBoardDescription, "Test Board Description")
 }
 
 func ValidColumnName() domain.ColumnName {
-	return must(domain.NewColumnName, "To Do")
+	return Must(domain.NewColumnName, "To Do")
 }
 
 func ValidColumnPosition() domain.ColumnPosition {
-	return must(domain.NewColumnPosition, 1)
+	return Must(domain.NewColumnPosition, 1)
 }
 
 func ValidTaskName() domain.TaskName {
-	return must(domain.NewTaskName, "Write tests")
+	return Must(domain.NewTaskName, "Write tests")
 }
 
 func ValidTaskDescription() domain.TaskDescription {
-	return must(domain.NewTaskDescription, "Cover the new endpoint with tests")
+	return Must(domain.NewTaskDescription, "Cover the new endpoint with tests")
 }
 
 func ValidTaskPosition() domain.TaskPosition {
-	return must(domain.NewTaskPosition, 1)
+	return Must(domain.NewTaskPosition, 1)
+}
+
+func MustTaskPosition(t *testing.T, n int64) domain.TaskPosition {
+	return Must(domain.NewTaskPosition, n)
 }
 
 func ValidJWTSecret() secrecy.SecretString {

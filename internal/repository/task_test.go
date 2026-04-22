@@ -269,7 +269,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &second)
 		InsertTask(t, pool, &third)
 
-		targetPosition := mustTaskPosition(t, 3)
+		targetPosition := testutil.MustTaskPosition(t, 3)
 
 		gotColumn, gotPosition, err := r.Move(context.Background(), board.ID, column.ID, first.ID, column.ID, targetPosition)
 		if err != nil {
@@ -304,7 +304,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &second)
 		InsertTask(t, pool, &third)
 
-		targetPosition := mustTaskPosition(t, 1)
+		targetPosition := testutil.MustTaskPosition(t, 1)
 
 		gotColumn, gotPosition, err := r.Move(context.Background(), board.ID, column.ID, third.ID, column.ID, targetPosition)
 		if err != nil {
@@ -337,7 +337,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
 
-		targetPosition := mustTaskPosition(t, 2)
+		targetPosition := testutil.MustTaskPosition(t, 2)
 
 		gotColumn, gotPosition, err := r.Move(context.Background(), board.ID, column.ID, second.ID, column.ID, targetPosition)
 		if err != nil {
@@ -371,7 +371,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &second)
 		InsertTask(t, pool, &third)
 
-		targetPosition := mustTaskPosition(t, 4)
+		targetPosition := testutil.MustTaskPosition(t, 4)
 
 		_, _, err := r.Move(context.Background(), board.ID, column.ID, second.ID, column.ID, targetPosition)
 		if !errors.Is(err, repository.ErrIndexOutOfBounds) {
@@ -407,7 +407,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &b1)
 		InsertTask(t, pool, &b2)
 
-		targetPosition := mustTaskPosition(t, 2)
+		targetPosition := testutil.MustTaskPosition(t, 2)
 
 		gotColumn, gotPosition, err := r.Move(context.Background(), board.ID, columnA.ID, a2.ID, columnB.ID, targetPosition)
 		if err != nil {
@@ -457,7 +457,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &a1)
 		InsertTask(t, pool, &b1)
 
-		targetPosition := mustTaskPosition(t, 2)
+		targetPosition := testutil.MustTaskPosition(t, 2)
 
 		gotColumn, gotPosition, err := r.Move(context.Background(), board.ID, columnA.ID, a1.ID, columnB.ID, targetPosition)
 		if err != nil {
@@ -496,7 +496,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		InsertTask(t, pool, &a1)
 		InsertTask(t, pool, &b1)
 
-		targetPosition := mustTaskPosition(t, 3)
+		targetPosition := testutil.MustTaskPosition(t, 3)
 
 		_, _, err := r.Move(context.Background(), board.ID, columnA.ID, a1.ID, columnB.ID, targetPosition)
 		if !errors.Is(err, repository.ErrIndexOutOfBounds) {
@@ -521,7 +521,7 @@ func TestTaskRepository_Move(t *testing.T) {
 
 		board, column := insertFixedUserBoardAndColumn(t, pool)
 
-		targetPosition := mustTaskPosition(t, 1)
+		targetPosition := testutil.MustTaskPosition(t, 1)
 
 		_, _, err := r.Move(context.Background(), board.ID, column.ID, domain.NewTaskID(), column.ID, targetPosition)
 		assertErrRowNotFound(t, err)
@@ -535,7 +535,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		created := testutil.ValidTask(column.ID)
 		InsertTask(t, pool, &created)
 
-		targetPosition := mustTaskPosition(t, 1)
+		targetPosition := testutil.MustTaskPosition(t, 1)
 
 		_, _, err := r.Move(context.Background(), domain.NewBoardID(), column.ID, created.ID, column.ID, targetPosition)
 		assertErrRowNotFound(t, err)

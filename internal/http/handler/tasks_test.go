@@ -181,7 +181,7 @@ func TestTasks_List(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	first := testutil.ValidTask(validColumn.ID)
 	second := testutil.ValidTask(validColumn.ID)
-	second.Position, _ = domain.NewTaskPosition(first.Position.Int64() + 1)
+	second.Position = testutil.MustTaskPosition(t, first.Position.Int64()+1)
 
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String() + "/tasks"
 
@@ -503,10 +503,7 @@ func TestTasks_Move(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	validTask := testutil.ValidTask(validColumn.ID)
 	targetColumn := testutil.NewValidColumn(t, validBoard.ID, "Done", 2)
-	targetPosition, err := domain.NewTaskPosition(2)
-	if err != nil {
-		t.Fatalf("NewTaskPosition() error = %v", err)
-	}
+	targetPosition := testutil.MustTaskPosition(t, 2)
 
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String() + "/tasks/" + validTask.ID.String() + "/position"
 
