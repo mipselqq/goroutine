@@ -392,18 +392,9 @@ func TestTask_UpdateByID(t *testing.T) {
 	validBoard := testutil.ValidBoard()
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	validTask := testutil.ValidTask(validColumn.ID)
-	updatedName, err := domain.NewTaskName("Renamed")
-	if err != nil {
-		t.Fatalf("NewTaskName() error = %v", err)
-	}
-	updatedDescription, err := domain.NewTaskDescription("Renamed description")
-	if err != nil {
-		t.Fatalf("NewTaskDescription() error = %v", err)
-	}
-	updatedTask := validTask
-	updatedTask.Name = updatedName
-	updatedTask.Description = updatedDescription
-	updatedTask.UpdatedAt = testutil.FixedTimeNow()
+	updatedTask := testutil.UpdateValidTask(t, &validTask, "Renamed", "Renamed description", testutil.FixedTimeNow())
+	updatedName := updatedTask.Name
+	updatedDescription := updatedTask.Description
 
 	tests := []struct {
 		name             string
