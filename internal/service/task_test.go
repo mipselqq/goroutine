@@ -18,17 +18,9 @@ func TestTask_Create(t *testing.T) {
 
 	validBoard := testutil.ValidBoard()
 	validColumn := testutil.ValidColumn(validBoard.ID)
-	validName, err := domain.NewTaskName("Write tests")
-	if err != nil {
-		t.Fatalf("NewTaskName() error = %v", err)
-	}
-	validDescription, err := domain.NewTaskDescription("Cover the new endpoint")
-	if err != nil {
-		t.Fatalf("NewTaskDescription() error = %v", err)
-	}
 	validTask := testutil.ValidTask(validColumn.ID)
-	validTask.Name = validName
-	validTask.Description = validDescription
+	validName := validTask.Name
+	validDescription := validTask.Description
 
 	tests := []struct {
 		name            string
