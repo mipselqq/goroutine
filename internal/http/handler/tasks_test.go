@@ -117,7 +117,7 @@ func TestTasks_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundErrorBody(),
+			wantBody: columnNotFoundByFieldError("columnId"),
 		},
 		{
 			name:      "Internal error",
@@ -260,7 +260,7 @@ func TestTasks_List(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundErrorBody(),
+			wantBody: columnNotFoundByFieldError("columnId"),
 		},
 		{
 			name: "Internal error",
@@ -636,7 +636,7 @@ func TestTasks_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundErrorBodyField("targetColumnId"),
+			wantBody: columnNotFoundByFieldError("targetColumnId"),
 		},
 		{
 			name:      "Internal error",

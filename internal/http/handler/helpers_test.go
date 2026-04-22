@@ -128,18 +128,7 @@ func (m *MockTaskService) Delete(ctx context.Context, callerID domain.UserID, bo
 	return m.DeleteFunc(ctx, callerID, boardID, columnID, taskID)
 }
 
-func columnNotFoundErrorBody() map[string]any {
-	return map[string]any{
-		"code":      "COLUMN_NOT_FOUND",
-		"message":   "Column not found",
-		"timestamp": testutil.FixedTimeNowStr(),
-		"details": []any{
-			map[string]any{"field": "columnId", "issues": []string{"Column not found"}},
-		},
-	}
-}
-
-func columnNotFoundErrorBodyField(field string) map[string]any {
+func columnNotFoundByFieldError(field string) map[string]any {
 	return map[string]any{
 		"code":      "COLUMN_NOT_FOUND",
 		"message":   "Column not found",
