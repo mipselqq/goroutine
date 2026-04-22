@@ -5,10 +5,13 @@ package repository_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"goroutine/internal/domain"
@@ -597,6 +600,86 @@ func TestTaskRepository_Delete(t *testing.T) {
 		err := r.Delete(context.Background(), domain.NewBoardID(), column.ID, created.ID)
 		assertErrRowNotFound(t, err)
 	})
+}
+
+func TestLockTaskColumns_BlocksSecondTransaction(t *testing.T) {
+	pool, _ := taskRepoPrelude(t)
+	testutil.TruncateAllTables(t, pool)
+
+	board, column := insertFixedUserBoardAndColumn(t, pool)
+
+	beginTx := func(id string) pgx.Tx {
+		tx, err := pool.Begin(context.Background())
+		if err != nil {
+			t.Fatalf("pool.Begin() tx%s error = %v", id, err)
+		}
+		return tx
+	}
+
+	setLockTimeoutMs := func(tx pgx.Tx, id string, ms int) {
+		_, err := tx.Exec(context.Background(), fmt.Sprintf(`SET LOCAL lock_timeout = '%dms'`, ms))
+		if err != nil {
+			t.Fatalf("tx%s SET LOCAL lock_timeout error = %v", id, err)
+		}
+	}
+
+	rollbackTx := func(tx pgx.Tx, id string) {
+		err := tx.Rollback(context.Background())
+		if err != nil {
+			t.Fatalf("tx%s Rollback() error = %v", id, err)
+		}
+	}
+
+	lockTaskColumns := func(tx pgx.Tx) error {
+		return repository.LockTaskColumns(context.Background(), tx, board.ID, column.ID)
+	}
+
+	tx1 := beginTx("1")
+
+	// 1. LockTaskColumns runs SELECT ... FOR UPDATE on the columns row for this board/column;
+	//    that row lock blocks any other transaction from locking the same row until tx1 ends.
+	err := lockTaskColumns(tx1)
+	if err != nil {
+		t.Fatalf("LockTaskColumns() tx1 error = %v", err)
+	}
+
+	tx2 := beginTx("2")
+
+	// 2. tx2: the next LockTaskColumns will try the same FOR UPDATE on the same row. While tx1
+	//    still holds the lock, PostgreSQL would wait forever; SET LOCAL lock_timeout limits that
+	//    wait to ~100ms, then the statement fails with a lock timeout instead of hanging the test.
+	setLockTimeoutMs(tx2, "2", 100)
+
+	// 3. tx2 must fail to acquire the same lock while tx1 still holds it.
+	err = lockTaskColumns(tx2)
+	if err == nil {
+		t.Fatal("second LockTaskColumns() unexpectedly succeeded while tx1 still held the lock")
+	}
+
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) {
+		t.Fatalf("second LockTaskColumns: want wrapped *pgconn.PgError, got %T: %v", err, err)
+	}
+	if pgErr.Code != "55P03" {
+		t.Fatalf("second LockTaskColumns: want SQLSTATE 55P03 (lock_not_available because of lock timeout), got %v", err)
+	}
+
+	// 4. Roll back tx2 after the lock wait timeout.
+	rollbackTx(tx2, "2")
+	// 5. Roll back tx1 to release the original lock.
+	rollbackTx(tx1, "1")
+
+	// 6. Start tx3 after the lock has been released.
+	tx3 := beginTx("3")
+
+	// 7. tx3 should now acquire the same lock successfully.
+	err = lockTaskColumns(tx3)
+	if err != nil {
+		t.Fatalf("third LockTaskColumns() after release error = %v", err)
+	}
+
+	// 8. Clean up tx3.
+	rollbackTx(tx3, "3")
 }
 
 func taskRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgTask) {

@@ -19,20 +19,21 @@ func NewPgTask(pool *pgxpool.Pool) *PgTask {
 	return &PgTask{pool: pool}
 }
 
-func lockTaskColumns(
+// LockTaskColumns acquires FOR UPDATE row locks on the given columns for boardID.
+func LockTaskColumns(
 	ctx context.Context,
 	tx pgx.Tx,
-	boardID domain.BoardID, // To ensure columns are locked in the same board
+	boardID domain.BoardID, // To ensure columns are locked in the same board.
 	columnIDs ...domain.ColumnID,
 ) error {
 	if len(columnIDs) == 0 {
-		return errors.New("BUG: lockTaskColumns called with no columns. Isn't column ID forgotten?")
+		return errors.New("BUG: LockTaskColumns called with no columns. Isn't column ID forgotten?")
 	}
 
 	seen := make(map[domain.ColumnID]struct{}, len(columnIDs))
 	for _, columnID := range columnIDs {
 		if _, ok := seen[columnID]; ok {
-			return errors.New("BUG: lockTaskColumns called so it locks the same column multiple times")
+			return errors.New("BUG: LockTaskColumns called so it locks the same column multiple times")
 		}
 		seen[columnID] = struct{}{}
 	}
@@ -310,9 +311,9 @@ func (r *PgTask) Move(
 
 	// 1. Lock affected columns so concurrent operations can't interrupt the move.
 	if sameColumn {
-		err = lockTaskColumns(ctx, tx, boardID, currentColumnID)
+		err = LockTaskColumns(ctx, tx, boardID, currentColumnID)
 	} else {
-		err = lockTaskColumns(ctx, tx, boardID, currentColumnID, targetColumnID)
+		err = LockTaskColumns(ctx, tx, boardID, currentColumnID, targetColumnID)
 	}
 	if err != nil {
 		if errors.Is(err, ErrRowNotFound) {
@@ -458,7 +459,7 @@ func (r *PgTask) Delete(
 	}()
 
 	// 1. Lock affected columns so concurrent operations can't interrupt the delete.
-	err = lockTaskColumns(ctx, tx, boardID, columnID)
+	err = LockTaskColumns(ctx, tx, boardID, columnID)
 	if err != nil {
 		if errors.Is(err, ErrRowNotFound) {
 			return ErrRowNotFound
