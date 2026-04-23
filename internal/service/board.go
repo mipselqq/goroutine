@@ -27,11 +27,11 @@ type BoardTaskRepository interface {
 
 type Board struct {
 	boardRepository  BoardRepository
-	columnRepository ColumnRepository
+	columnRepository BoardColumnRepository
 	taskRepository   BoardTaskRepository
 }
 
-func NewBoard(boardRepo BoardRepository, columnRepo ColumnRepository, taskRepo BoardTaskRepository) *Board {
+func NewBoard(boardRepo BoardRepository, columnRepo BoardColumnRepository, taskRepo BoardTaskRepository) *Board {
 	return &Board{boardRepository: boardRepo, columnRepository: columnRepo, taskRepository: taskRepo}
 }
 
