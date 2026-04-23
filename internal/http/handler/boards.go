@@ -152,7 +152,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} boardResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
-// @Failure 404 {object} httpschema.DetailedError "NOT_FOUND"
+// @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [get]
 func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
@@ -171,7 +171,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 	board, err := h.service.Get(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
-			h.responder.NotFound(w, []httpschema.Detail{})
+			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
 			return
 		}
 		h.responder.InternalError(w, r, err)
@@ -265,7 +265,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} boardResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
-// @Failure 404 {object} httpschema.DetailedError "NOT_FOUND"
+// @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [patch]
 func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
@@ -309,7 +309,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	board, err := h.service.UpdateByID(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
-			h.responder.NotFound(w, []httpschema.Detail{})
+			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
 			return
 		}
 		h.responder.InternalError(w, r, err)
@@ -330,7 +330,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 // @Success 204 "No Content"
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
-// @Failure 404 {object} httpschema.DetailedError "NOT_FOUND"
+// @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [delete]
 func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
@@ -349,7 +349,7 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Delete(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
-			h.responder.NotFound(w, []httpschema.Detail{})
+			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
 			return
 		}
 		h.responder.InternalError(w, r, err)

@@ -166,7 +166,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "NOT_FOUND",
+                        "description": "BOARD_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -222,7 +222,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "NOT_FOUND",
+                        "description": "BOARD_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -290,7 +290,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "NOT_FOUND",
+                        "description": "BOARD_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }

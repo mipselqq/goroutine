@@ -25,10 +25,6 @@ func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request,
 	r.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 }
 
-func (r *ErrorResponder) NotFound(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusNotFound, "NOT_FOUND", details)
-}
-
 func (r *ErrorResponder) BoardNotFound(w http.ResponseWriter, details []Detail) {
 	r.DetailedError(w, http.StatusNotFound, "BOARD_NOT_FOUND", details)
 }
