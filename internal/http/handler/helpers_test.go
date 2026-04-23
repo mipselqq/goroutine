@@ -176,15 +176,6 @@ func internalErrorBody() map[string]any {
 	}
 }
 
-func notFoundErrorBody() map[string]any {
-	return map[string]any{
-		"code":      "NOT_FOUND",
-		"message":   "Resource not found",
-		"timestamp": testutil.FixedTimeNowStr(),
-		"details":   []any{},
-	}
-}
-
 func boardNotFoundErrorBody() map[string]any {
 	return map[string]any{
 		"code":      "BOARD_NOT_FOUND",

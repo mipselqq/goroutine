@@ -368,7 +368,7 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
-          description: NOT_FOUND
+          description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -406,7 +406,7 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
-          description: NOT_FOUND
+          description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -451,7 +451,7 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
-          description: NOT_FOUND
+          description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
