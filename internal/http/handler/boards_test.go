@@ -385,12 +385,13 @@ func TestBoards_GetAggregate(t *testing.T) {
 				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
 				"columns": []map[string]any{
 					{
-						"id":        firstColumn.ID.String(),
-						"boardId":   firstColumn.BoardID.String(),
-						"name":      firstColumn.Name.String(),
-						"position":  firstColumn.Position.Int64(),
-						"createdAt": firstColumn.CreatedAt.Format(timeFormat),
-						"updatedAt": firstColumn.UpdatedAt.Format(timeFormat),
+						"id":          firstColumn.ID.String(),
+						"boardId":     firstColumn.BoardID.String(),
+						"name":        firstColumn.Name.String(),
+						"description": firstColumn.Description.String(),
+						"position":    firstColumn.Position.Int64(),
+						"createdAt":   firstColumn.CreatedAt.Format(timeFormat),
+						"updatedAt":   firstColumn.UpdatedAt.Format(timeFormat),
 						"tasks": []map[string]any{
 							{
 								"id":          firstTask.ID.String(),
@@ -413,12 +414,13 @@ func TestBoards_GetAggregate(t *testing.T) {
 						},
 					},
 					{
-						"id":        secondColumn.ID.String(),
-						"boardId":   secondColumn.BoardID.String(),
-						"name":      secondColumn.Name.String(),
-						"position":  secondColumn.Position.Int64(),
-						"createdAt": secondColumn.CreatedAt.Format(timeFormat),
-						"updatedAt": secondColumn.UpdatedAt.Format(timeFormat),
+						"id":          secondColumn.ID.String(),
+						"boardId":     secondColumn.BoardID.String(),
+						"name":        secondColumn.Name.String(),
+						"description": secondColumn.Description.String(),
+						"position":    secondColumn.Position.Int64(),
+						"createdAt":   secondColumn.CreatedAt.Format(timeFormat),
+						"updatedAt":   secondColumn.UpdatedAt.Format(timeFormat),
 						"tasks": []map[string]any{
 							{
 								"id":          doneTask.ID.String(),

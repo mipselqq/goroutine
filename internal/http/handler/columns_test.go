@@ -33,9 +33,9 @@ func TestColumns_Create(t *testing.T) {
 		{
 			name:      "Success",
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
-			inputBody: map[string]string{"name": validColumn.Name.String()},
+			inputBody: map[string]string{"name": validColumn.Name.String(), "description": validColumn.Description.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -45,17 +45,21 @@ func TestColumns_Create(t *testing.T) {
 					if name != validColumn.Name {
 						t.Errorf("got name %v, want %v", name, validColumn.Name)
 					}
+					if description != validColumn.Description {
+						t.Errorf("got description %v, want %v", description, validColumn.Description)
+					}
 					return validColumn, nil
 				}
 			},
 			wantCode: http.StatusCreated,
 			wantBody: map[string]any{
-				"id":        validColumn.ID.String(),
-				"boardId":   validColumn.BoardID.String(),
-				"name":      validColumn.Name.String(),
-				"position":  validColumn.Position.Int64(),
-				"createdAt": validColumn.CreatedAt.Format(timeFormat),
-				"updatedAt": validColumn.UpdatedAt.Format(timeFormat),
+				"id":          validColumn.ID.String(),
+				"boardId":     validColumn.BoardID.String(),
+				"name":        validColumn.Name.String(),
+				"description": validColumn.Description.String(),
+				"position":    validColumn.Position.Int64(),
+				"createdAt":   validColumn.CreatedAt.Format(timeFormat),
+				"updatedAt":   validColumn.UpdatedAt.Format(timeFormat),
 			},
 		},
 		{
@@ -75,9 +79,16 @@ func TestColumns_Create(t *testing.T) {
 		{
 			name:      "Invalid name",
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
-			inputBody: map[string]string{"name": "   "},
+			inputBody: map[string]string{"name": "   ", "description": validColumn.Description.String()},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+		},
+		{
+			name:      "Description too long",
+			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			inputBody: map[string]string{"name": validColumn.Name.String(), "description": strings.Repeat("a", 1025)},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Missing context user",
@@ -92,7 +103,7 @@ func TestColumns_Create(t *testing.T) {
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": "To Do"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, service.ErrBoardNotFound
 				}
 			},
@@ -104,7 +115,7 @@ func TestColumns_Create(t *testing.T) {
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": "To Do"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, service.ErrInternal
 				}
 			},
@@ -116,7 +127,7 @@ func TestColumns_Create(t *testing.T) {
 			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
 			inputBody: map[string]string{"name": "To Do"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, errors.New("db exploded")
 				}
 			},
@@ -194,20 +205,22 @@ func TestColumns_List(t *testing.T) {
 			wantCode: http.StatusOK,
 			wantBody: []map[string]any{
 				{
-					"id":        first.ID.String(),
-					"boardId":   first.BoardID.String(),
-					"name":      first.Name.String(),
-					"position":  first.Position.Int64(),
-					"createdAt": first.CreatedAt.Format(timeFormat),
-					"updatedAt": first.UpdatedAt.Format(timeFormat),
+					"id":          first.ID.String(),
+					"boardId":     first.BoardID.String(),
+					"name":        first.Name.String(),
+					"description": first.Description.String(),
+					"position":    first.Position.Int64(),
+					"createdAt":   first.CreatedAt.Format(timeFormat),
+					"updatedAt":   first.UpdatedAt.Format(timeFormat),
 				},
 				{
-					"id":        second.ID.String(),
-					"boardId":   second.BoardID.String(),
-					"name":      second.Name.String(),
-					"position":  second.Position.Int64(),
-					"createdAt": second.CreatedAt.Format(timeFormat),
-					"updatedAt": second.UpdatedAt.Format(timeFormat),
+					"id":          second.ID.String(),
+					"boardId":     second.BoardID.String(),
+					"name":        second.Name.String(),
+					"description": second.Description.String(),
+					"position":    second.Position.Int64(),
+					"createdAt":   second.CreatedAt.Format(timeFormat),
+					"updatedAt":   second.UpdatedAt.Format(timeFormat),
 				},
 			},
 		},
@@ -290,6 +303,23 @@ func TestColumns_UpdateByID(t *testing.T) {
 	updatedColumn.Name = updatedName
 	updatedColumn.UpdatedAt = testutil.FixedTime5mFromNow()
 
+	updatedDescOnly, err := domain.NewColumnDescription("Updated description only")
+	if err != nil {
+		t.Fatalf("NewColumnDescription() error = %v", err)
+	}
+	updatedDescriptionOnlyColumn := validColumn
+	updatedDescriptionOnlyColumn.Description = updatedDescOnly
+	updatedDescriptionOnlyColumn.UpdatedAt = testutil.FixedTime5mFromNow()
+
+	emptyDescriptionColumn := validColumn
+	emptyDescriptionColumn.Name = updatedName
+	emptyDesc, errEmpty := domain.NewColumnDescription("")
+	if errEmpty != nil {
+		t.Fatalf("NewColumnDescription() error = %v", errEmpty)
+	}
+	emptyDescriptionColumn.Description = emptyDesc
+	emptyDescriptionColumn.UpdatedAt = testutil.FixedTime5mFromNow()
+
 	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String()
 
 	tests := []struct {
@@ -306,7 +336,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			path:      okPath,
 			inputBody: map[string]string{"name": updatedName.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -319,17 +349,47 @@ func TestColumns_UpdateByID(t *testing.T) {
 					if name == nil || *name != updatedName {
 						t.Errorf("got name %v, want %v", name, updatedName)
 					}
+					if description != nil {
+						t.Errorf("got description %+v, want nil", description)
+					}
 					return updatedColumn, nil
 				}
 			},
 			wantCode: http.StatusOK,
 			wantBody: map[string]any{
-				"id":        updatedColumn.ID.String(),
-				"boardId":   updatedColumn.BoardID.String(),
-				"name":      updatedColumn.Name.String(),
-				"position":  updatedColumn.Position.Int64(),
-				"createdAt": updatedColumn.CreatedAt.Format(timeFormat),
-				"updatedAt": updatedColumn.UpdatedAt.Format(timeFormat),
+				"id":          updatedColumn.ID.String(),
+				"boardId":     updatedColumn.BoardID.String(),
+				"name":        updatedColumn.Name.String(),
+				"description": updatedColumn.Description.String(),
+				"position":    updatedColumn.Position.Int64(),
+				"createdAt":   updatedColumn.CreatedAt.Format(timeFormat),
+				"updatedAt":   updatedColumn.UpdatedAt.Format(timeFormat),
+			},
+		},
+		{
+			name:      "Success (description only)",
+			path:      okPath,
+			inputBody: map[string]string{"description": updatedDescOnly.String()},
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
+				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+					if name != nil {
+						t.Errorf("got name %+v, want nil", name)
+					}
+					if description == nil || *description != updatedDescOnly {
+						t.Errorf("got description %v, want %v", description, updatedDescOnly)
+					}
+					return updatedDescriptionOnlyColumn, nil
+				}
+			},
+			wantCode: http.StatusOK,
+			wantBody: map[string]any{
+				"id":          updatedDescriptionOnlyColumn.ID.String(),
+				"boardId":     updatedDescriptionOnlyColumn.BoardID.String(),
+				"name":        updatedDescriptionOnlyColumn.Name.String(),
+				"description": updatedDescriptionOnlyColumn.Description.String(),
+				"position":    updatedDescriptionOnlyColumn.Position.Int64(),
+				"createdAt":   updatedDescriptionOnlyColumn.CreatedAt.Format(timeFormat),
+				"updatedAt":   updatedDescriptionOnlyColumn.UpdatedAt.Format(timeFormat),
 			},
 		},
 		{
@@ -337,21 +397,48 @@ func TestColumns_UpdateByID(t *testing.T) {
 			path:      okPath,
 			inputBody: map[string]any{},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
+					}
+					if description != nil {
+						t.Errorf("got description %+v, want nil", description)
 					}
 					return validColumn, nil
 				}
 			},
 			wantCode: http.StatusOK,
 			wantBody: map[string]any{
-				"id":        validColumn.ID.String(),
-				"boardId":   validColumn.BoardID.String(),
-				"name":      validColumn.Name.String(),
-				"position":  validColumn.Position.Int64(),
-				"createdAt": validColumn.CreatedAt.Format(timeFormat),
-				"updatedAt": validColumn.UpdatedAt.Format(timeFormat),
+				"id":          validColumn.ID.String(),
+				"boardId":     validColumn.BoardID.String(),
+				"name":        validColumn.Name.String(),
+				"description": validColumn.Description.String(),
+				"position":    validColumn.Position.Int64(),
+				"createdAt":   validColumn.CreatedAt.Format(timeFormat),
+				"updatedAt":   validColumn.UpdatedAt.Format(timeFormat),
+			},
+		},
+		{
+			name:      "Empty description",
+			path:      okPath,
+			inputBody: map[string]string{"name": updatedName.String(), "description": ""},
+			setupColumnService: func(t *testing.T, s *MockColumnService) {
+				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+					if name == nil || description == nil {
+						t.Errorf("got name %+v, description %+v, want non-nil, non-nil", name, description)
+					}
+					return emptyDescriptionColumn, nil
+				}
+			},
+			wantCode: http.StatusOK,
+			wantBody: map[string]any{
+				"id":          emptyDescriptionColumn.ID.String(),
+				"boardId":     emptyDescriptionColumn.BoardID.String(),
+				"name":        emptyDescriptionColumn.Name.String(),
+				"description": emptyDescriptionColumn.Description.String(),
+				"position":    emptyDescriptionColumn.Position.Int64(),
+				"createdAt":   emptyDescriptionColumn.CreatedAt.Format(timeFormat),
+				"updatedAt":   emptyDescriptionColumn.UpdatedAt.Format(timeFormat),
 			},
 		},
 		{
@@ -378,9 +465,16 @@ func TestColumns_UpdateByID(t *testing.T) {
 		{
 			name:      "Invalid name",
 			path:      okPath,
-			inputBody: map[string]string{"name": "   "},
+			inputBody: map[string]string{"name": "   ", "description": validColumn.Description.String()},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+		},
+		{
+			name:      "Invalid description",
+			path:      okPath,
+			inputBody: map[string]string{"name": validColumn.Name.String(), "description": strings.Repeat("a", 1025)},
+			wantCode:  http.StatusBadRequest,
+			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Missing context user",
@@ -395,7 +489,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			path:      okPath,
 			inputBody: map[string]string{"name": "Renamed"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, service.ErrColumnNotFound
 				}
 			},
@@ -407,7 +501,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			path:      okPath,
 			inputBody: map[string]string{"name": "Renamed"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, service.ErrInternal
 				}
 			},

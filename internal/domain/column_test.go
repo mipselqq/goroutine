@@ -164,6 +164,136 @@ func TestColumnName_Scan(t *testing.T) {
 	}
 }
 
+func TestColumnDescription(t *testing.T) {
+	t.Parallel()
+
+	borderlineLongDescription := strings.Repeat("a", 1024)
+
+	descriptionTests := []struct {
+		name       string
+		input      string
+		wantIssues []string
+		wantValue  string
+	}{
+		{
+			name:       "Valid description",
+			input:      "My Column Description",
+			wantValue:  "My Column Description",
+			wantIssues: nil,
+		},
+		{
+			name:       "Long valid description",
+			input:      borderlineLongDescription,
+			wantValue:  borderlineLongDescription,
+			wantIssues: nil,
+		},
+		{
+			name:       "Too long but valid when trimmed",
+			input:      "      " + borderlineLongDescription + "     ",
+			wantValue:  borderlineLongDescription,
+			wantIssues: nil,
+		},
+		{
+			name:       "Too long description",
+			input:      borderlineLongDescription + "a",
+			wantIssues: []string{domain.ErrDescriptionTooLong},
+			wantValue:  "",
+		},
+		{
+			name:       "Empty description",
+			input:      "",
+			wantIssues: nil,
+			wantValue:  "",
+		},
+		{
+			name:       "Whitespace description",
+			input:      "    ",
+			wantIssues: nil,
+			wantValue:  "",
+		},
+	}
+
+	for _, tt := range descriptionTests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			description, err := domain.NewColumnDescription(tt.input)
+
+			var gotIssues []string
+			if err != nil {
+				var ve *domain.ErrValidation
+				if errors.As(err, &ve) {
+					gotIssues = ve.Issues
+				} else {
+					gotIssues = []string{err.Error()}
+				}
+			}
+
+			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
+				t.Errorf("got issues mismatch (-want +got):\n%s", diff)
+			}
+			if description.String() != tt.wantValue {
+				t.Errorf("got value %q, want %q", description, tt.wantValue)
+			}
+			if description.IsEmpty() != (tt.wantValue == "") {
+				t.Errorf("got is empty %t, want %t", description.IsEmpty(), tt.wantValue == "")
+			}
+		})
+	}
+}
+
+func TestColumnDescription_Scan(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   any
+		wantErr bool
+		errIs   error
+	}{
+		{
+			name:    "Valid description",
+			input:   "Valid description",
+			wantErr: false,
+		},
+		{
+			name:    "Too long description",
+			input:   strings.Repeat("a", 1025),
+			wantErr: true,
+			errIs:   domain.ErrDataCorrupted,
+		},
+		{
+			name:    "Null value",
+			input:   nil,
+			wantErr: false,
+		},
+		{
+			name:    "Invalid type",
+			input:   123,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var d domain.ColumnDescription
+			err := d.Scan(tt.input)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Error("got nil error, want non-nil")
+				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
+					t.Errorf("got error %v, want %v", err, tt.errIs)
+				}
+			} else if err != nil {
+				t.Errorf("got error %v, want nil", err)
+			}
+		})
+	}
+}
+
 func TestColumnPosition_Scan(t *testing.T) {
 	t.Parallel()
 

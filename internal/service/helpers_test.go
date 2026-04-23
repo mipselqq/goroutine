@@ -37,10 +37,10 @@ type MockBoardRepository struct {
 }
 
 type MockColumnRepository struct {
-	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
+	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
 	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetByIDFunc       func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
-	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
+	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	MoveFunc          func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	DeleteFunc        func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
@@ -74,9 +74,10 @@ func (m *MockColumnRepository) Create(
 	ctx context.Context,
 	boardID domain.BoardID,
 	name domain.ColumnName,
+	description domain.ColumnDescription,
 ) (domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.CreateFunc", m.CreateFunc)
-	return m.CreateFunc(ctx, boardID, name)
+	return m.CreateFunc(ctx, boardID, name, description)
 }
 
 func (m *MockColumnRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
@@ -94,9 +95,10 @@ func (m *MockColumnRepository) UpdateByID(
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
 	name *domain.ColumnName,
+	description *domain.ColumnDescription,
 ) (domain.Column, error) {
 	AssertFuncNotNil("ColumnRepository.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, boardID, columnID, name)
+	return m.UpdateByIDFunc(ctx, boardID, columnID, name, description)
 }
 
 func (m *MockColumnRepository) Move(

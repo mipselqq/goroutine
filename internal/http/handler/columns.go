@@ -13,9 +13,9 @@ import (
 )
 
 type ColumnsService interface {
-	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error)
+	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
 	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
-	UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error)
+	UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
@@ -31,11 +31,13 @@ func NewColumns(logger *slog.Logger, svc ColumnsService, responder *httpschema.E
 }
 
 type createColumnBody struct {
-	Name string `json:"name" example:"To Do"`
+	Name        string `json:"name" example:"To Do"`
+	Description string `json:"description" example:"My Column Description"`
 }
 
 type updateColumnBody struct {
-	Name *string `json:"name" example:"In Progress"`
+	Name        *string `json:"name" example:"In Progress"`
+	Description *string `json:"description" example:"My Column Description"`
 }
 
 type moveColumnBody struct {
@@ -43,12 +45,13 @@ type moveColumnBody struct {
 }
 
 type columnResponse struct {
-	ID        string `json:"id" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
-	BoardID   string `json:"boardId" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a1"`
-	Name      string `json:"name" example:"In Progress"`
-	Position  int64  `json:"position" example:"1"`
-	CreatedAt string `json:"createdAt" example:"2026-03-07T20:56:50.000+03:00"`
-	UpdatedAt string `json:"updatedAt" example:"2026-03-07T20:56:50.000+03:00"`
+	ID          string `json:"id" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a2"`
+	BoardID     string `json:"boardId" example:"019cc971-e5be-7df9-ae8a-c6e3f29c86a1"`
+	Name        string `json:"name" example:"In Progress"`
+	Description string `json:"description" example:"My Column Description"`
+	Position    int64  `json:"position" example:"1"`
+	CreatedAt   string `json:"createdAt" example:"2026-03-07T20:56:50.000+03:00"`
+	UpdatedAt   string `json:"updatedAt" example:"2026-03-07T20:56:50.000+03:00"`
 }
 
 type columnPositionResponse struct {
@@ -57,12 +60,13 @@ type columnPositionResponse struct {
 
 func newColumnResponse(column *domain.Column) columnResponse {
 	return columnResponse{
-		ID:        column.ID.String(),
-		BoardID:   column.BoardID.String(),
-		Name:      column.Name.String(),
-		Position:  column.Position.Int64(),
-		CreatedAt: service.FormatRFC3339Millis(column.CreatedAt),
-		UpdatedAt: service.FormatRFC3339Millis(column.UpdatedAt),
+		ID:          column.ID.String(),
+		BoardID:     column.BoardID.String(),
+		Name:        column.Name.String(),
+		Description: column.Description.String(),
+		Position:    column.Position.Int64(),
+		CreatedAt:   service.FormatRFC3339Millis(column.CreatedAt),
+		UpdatedAt:   service.FormatRFC3339Millis(column.UpdatedAt),
 	}
 }
 
@@ -97,6 +101,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 
 	details := []httpschema.Detail{}
 	name := httpschema.ValidateField("name", body.Name, domain.NewColumnName, &details)
+	description := httpschema.ValidateField("description", body.Description, domain.NewColumnDescription, &details)
 	if len(details) > 0 {
 		h.responder.ValidationError(w, details)
 		return
@@ -107,7 +112,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	column, err := h.service.Create(r.Context(), userID, boardID, name)
+	column, err := h.service.Create(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -207,6 +212,12 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		value := httpschema.ValidateField("name", *body.Name, domain.NewColumnName, &details)
 		name = &value
 	}
+
+	var description *domain.ColumnDescription
+	if body.Description != nil {
+		value := httpschema.ValidateField("description", *body.Description, domain.NewColumnDescription, &details)
+		description = &value
+	}
 	if len(details) > 0 {
 		h.responder.ValidationError(w, details)
 		return
@@ -217,7 +228,7 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	column, err := h.service.UpdateByID(r.Context(), userID, boardID, columnID, name)
+	column, err := h.service.UpdateByID(r.Context(), userID, boardID, columnID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})

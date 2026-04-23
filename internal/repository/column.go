@@ -23,6 +23,7 @@ func (r *PgColumn) Create(
 	ctx context.Context,
 	boardID domain.BoardID,
 	name domain.ColumnName,
+	description domain.ColumnDescription,
 ) (domain.Column, error) {
 	const query = `
 		WITH board_lock AS (
@@ -35,19 +36,20 @@ func (r *PgColumn) Create(
 			FROM columns
 			WHERE board_id = $1
 		), inserted AS (
-			INSERT INTO columns (board_id, name, position)
-			SELECT $1, $2, next_pos.position
+			INSERT INTO columns (board_id, name, description, position)
+			SELECT $1, $2, $3, next_pos.position
 			FROM board_lock, next_pos
-			RETURNING id, board_id, name, position, created_at, updated_at
+			RETURNING id, board_id, name, description, position, created_at, updated_at
 		)
-		SELECT id, board_id, name, position, created_at, updated_at
+		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM inserted`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, boardID, name).Scan(
+	err := r.pool.QueryRow(ctx, query, boardID, name, description).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
+		&column.Description,
 		&column.Position,
 		&column.CreatedAt,
 		&column.UpdatedAt,
@@ -64,7 +66,7 @@ func (r *PgColumn) Create(
 
 func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 	const query = `
-		SELECT id, board_id, name, position, created_at, updated_at
+		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
 		WHERE board_id = $1
 		ORDER BY position ASC`
@@ -82,6 +84,7 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 			&col.ID,
 			&col.BoardID,
 			&col.Name,
+			&col.Description,
 			&col.Position,
 			&col.CreatedAt,
 			&col.UpdatedAt,
@@ -101,7 +104,7 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 
 func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 	const query = `
-		SELECT id, board_id, name, position, created_at, updated_at
+		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
 		WHERE id = $1`
 
@@ -110,6 +113,7 @@ func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domai
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
+		&column.Description,
 		&column.Position,
 		&column.CreatedAt,
 		&column.UpdatedAt,
@@ -129,21 +133,24 @@ func (r *PgColumn) UpdateByID(
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
 	name *domain.ColumnName,
+	description *domain.ColumnDescription,
 ) (domain.Column, error) {
 	const query = `
 		UPDATE columns
 		SET
-			name = COALESCE($3, name),
+			name = COALESCE($1, name),
+			description = COALESCE($2, description),
 			updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
-		WHERE board_id = $1
-		  AND id = $2
-		RETURNING id, board_id, name, position, created_at, updated_at`
+		WHERE board_id = $3
+		  AND id = $4
+		RETURNING id, board_id, name, description, position, created_at, updated_at`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, boardID, columnID, name).Scan(
+	err := r.pool.QueryRow(ctx, query, name, description, boardID, columnID).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
+		&column.Description,
 		&column.Position,
 		&column.CreatedAt,
 		&column.UpdatedAt,
