@@ -1301,6 +1301,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2026-03-07T20:56:50.000+03:00"
                 },
+                "description": {
+                    "type": "string",
+                    "example": "My Column Description"
+                },
                 "id": {
                     "type": "string",
                     "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
@@ -1374,6 +1378,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2026-03-07T20:56:50.000+03:00"
                 },
+                "description": {
+                    "type": "string",
+                    "example": "My Column Description"
+                },
                 "id": {
                     "type": "string",
                     "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
@@ -1408,6 +1416,10 @@ const docTemplate = `{
         "handler.createColumnBody": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "My Column Description"
+                },
                 "name": {
                     "type": "string",
                     "example": "To Do"
@@ -1546,6 +1558,10 @@ const docTemplate = `{
         "handler.updateColumnBody": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "My Column Description"
+                },
                 "name": {
                     "type": "string",
                     "example": "In Progress"

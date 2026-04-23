@@ -66,6 +66,10 @@ func ValidColumnPosition() domain.ColumnPosition {
 	return Must(domain.NewColumnPosition, 1)
 }
 
+func ValidColumnDescription() domain.ColumnDescription {
+	return Must(domain.NewColumnDescription, "Test Column Description")
+}
+
 func ValidTaskName() domain.TaskName {
 	return Must(domain.NewTaskName, "Write tests")
 }
@@ -136,16 +140,18 @@ func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string
 
 func ValidColumn(boardID domain.BoardID) domain.Column {
 	name := ValidColumnName()
+	description := ValidColumnDescription()
 	position := ValidColumnPosition()
 	pseudoNow := FixedTimeNow()
 
 	return domain.Column{
-		ID:        domain.NewColumnID(),
-		BoardID:   boardID,
-		Name:      name,
-		Position:  position,
-		CreatedAt: pseudoNow,
-		UpdatedAt: pseudoNow,
+		ID:          domain.NewColumnID(),
+		BoardID:     boardID,
+		Name:        name,
+		Description: description,
+		Position:    position,
+		CreatedAt:   pseudoNow,
+		UpdatedAt:   pseudoNow,
 	}
 }
 
@@ -170,7 +176,7 @@ func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position 
 	return column
 }
 
-func UpdateValidColumn(t *testing.T, base *domain.Column, name string, updatedAt time.Time) domain.Column {
+func UpdateValidColumn(t *testing.T, base *domain.Column, name, description string, updatedAt time.Time) domain.Column {
 	t.Helper()
 
 	domainName, err := domain.NewColumnName(name)
@@ -178,13 +184,19 @@ func UpdateValidColumn(t *testing.T, base *domain.Column, name string, updatedAt
 		t.Fatalf("NewColumnName() error = %v", err)
 	}
 
+	domainDescription, err := domain.NewColumnDescription(description)
+	if err != nil {
+		t.Fatalf("NewColumnDescription() error = %v", err)
+	}
+
 	return domain.Column{
-		ID:        base.ID,
-		BoardID:   base.BoardID,
-		Name:      domainName,
-		Position:  base.Position,
-		CreatedAt: base.CreatedAt,
-		UpdatedAt: updatedAt,
+		ID:          base.ID,
+		BoardID:     base.BoardID,
+		Name:        domainName,
+		Description: domainDescription,
+		Position:    base.Position,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   updatedAt,
 	}
 }
 

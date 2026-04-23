@@ -16,12 +16,13 @@ const (
 )
 
 type Column struct {
-	ID        ColumnID
-	BoardID   BoardID
-	Name      ColumnName
-	Position  ColumnPosition
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          ColumnID
+	BoardID     BoardID
+	Name        ColumnName
+	Description ColumnDescription
+	Position    ColumnPosition
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type ColumnName struct {
@@ -70,6 +71,53 @@ func (n *ColumnName) Scan(value any) error {
 		return fmt.Errorf("column name: %w: %v", ErrDataCorrupted, err)
 	}
 	*n = cn
+	return nil
+}
+
+type ColumnDescription struct {
+	value string
+}
+
+func NewColumnDescription(description string) (ColumnDescription, error) {
+	trimmedDescription := strings.TrimSpace(description)
+	var issues []string
+	if len(trimmedDescription) > 1024 {
+		issues = append(issues, ErrDescriptionTooLong)
+	}
+
+	if len(issues) > 0 {
+		return ColumnDescription{}, &ErrValidation{Issues: issues}
+	}
+
+	return ColumnDescription{value: trimmedDescription}, nil
+}
+
+func (d ColumnDescription) String() string {
+	return d.value
+}
+
+func (d ColumnDescription) IsEmpty() bool {
+	return d.value == ""
+}
+
+func (d ColumnDescription) Value() (driver.Value, error) {
+	return d.value, nil
+}
+
+func (d *ColumnDescription) Scan(value any) error {
+	if value == nil {
+		d.value = ""
+		return nil
+	}
+	s, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("unexpected type for ColumnDescription: %T", value)
+	}
+	cd, err := NewColumnDescription(s)
+	if err != nil {
+		return fmt.Errorf("column description: %w: %v", ErrDataCorrupted, err)
+	}
+	*d = cd
 	return nil
 }
 
@@ -125,10 +173,11 @@ func (p *ColumnPosition) Scan(value any) error {
 
 func (c Column) String() string {
 	return fmt.Sprintf(
-		"id:        %s\nboardId:   %s\nname:      %q\nposition:  %d\ncreatedAt: %s\nupdatedAt: %s",
+		"id:          %s\nboardId:     %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
 		c.ID.String(),
 		c.BoardID.String(),
 		c.Name.String(),
+		c.Description.String(),
 		c.Position.Int64(),
 		c.CreatedAt.UTC().Format(time.RFC3339Nano),
 		c.UpdatedAt.UTC().Format(time.RFC3339Nano),

@@ -30,6 +30,7 @@ func TestColumnRepository_Create(t *testing.T) {
 			context.Background(),
 			board.ID,
 			validColumn.Name,
+			validColumn.Description,
 		)
 		if err != nil {
 			t.Fatalf("Create() error = %v", err)
@@ -43,6 +44,9 @@ func TestColumnRepository_Create(t *testing.T) {
 		}
 		if column.Name != validColumn.Name {
 			t.Errorf("got name %q, want %q", column.Name, validColumn.Name)
+		}
+		if column.Description != validColumn.Description {
+			t.Errorf("got description %q, want %q", column.Description, validColumn.Description)
 		}
 		if column.Position.Int64() != 1 {
 			t.Errorf("got position %d, want 1", column.Position.Int64())
@@ -79,12 +83,13 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 	InsertColumn(t, pool, &existing)
 
 	toCreate := testutil.ValidColumn(board.ID)
-	toCreate = testutil.UpdateValidColumn(t, &toCreate, "Done", toCreate.UpdatedAt)
+	toCreate = testutil.UpdateValidColumn(t, &toCreate, "Done", toCreate.Description.String(), toCreate.UpdatedAt)
 
 	second, err := r.Create(
 		context.Background(),
 		board.ID,
 		toCreate.Name,
+		toCreate.Description,
 	)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -185,6 +190,9 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		if got.Name != want.Name {
 			t.Errorf("got name %q, want %q", got.Name, want.Name)
 		}
+		if got.Description != want.Description {
+			t.Errorf("got description %q, want %q", got.Description, want.Description)
+		}
 		if got.Position != want.Position {
 			t.Errorf("got position %d, want %d", got.Position.Int64(), want.Position.Int64())
 		}
@@ -217,13 +225,48 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		created.UpdatedAt = updatedAtBeforeUpdate
 		InsertColumn(t, pool, &created)
 
-		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
-		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &want.Name)
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.FixedTime5mFromNow())
+		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &want.Name, nil)
 		if err != nil {
 			t.Fatalf("UpdateByID() error = %v", err)
 		}
 
 		assertUpdatedColumn(t, updated, want)
+	})
+
+	t.Run("Success description only", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		board := insertFixedUserAndBoard(t, pool)
+
+		created := testutil.ValidColumn(board.ID)
+		createdAtBeforeUpdate := time.Now().UTC()
+		created.CreatedAt = createdAtBeforeUpdate
+		created.UpdatedAt = createdAtBeforeUpdate
+		InsertColumn(t, pool, &created)
+
+		newDesc, err := domain.NewColumnDescription("Updated column body")
+		if err != nil {
+			t.Fatalf("NewColumnDescription() error = %v", err)
+		}
+		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, nil, &newDesc)
+		if err != nil {
+			t.Fatalf("UpdateByID() error = %v", err)
+		}
+
+		if updated.Name != created.Name {
+			t.Errorf("got name %q, want %q", updated.Name, created.Name)
+		}
+		if updated.Description != newDesc {
+			t.Errorf("got description %q, want %q", updated.Description, newDesc)
+		}
+		stored, ok := FindColumnByID(t, pool, created.ID)
+		if !ok {
+			t.Fatalf("column not found after update")
+		}
+		if stored.Description != newDesc {
+			t.Errorf("stored description %q, want %q", stored.Description, newDesc)
+		}
 	})
 
 	t.Run("Not found by column id", func(t *testing.T) {
@@ -232,7 +275,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		board := insertFixedUserAndBoard(t, pool)
 
 		updatedName, _ := domain.NewColumnName("Renamed")
-		_, err := r.UpdateByID(context.Background(), board.ID, domain.NewColumnID(), &updatedName)
+		_, err := r.UpdateByID(context.Background(), board.ID, domain.NewColumnID(), &updatedName, nil)
 		assertErrRowNotFound(t, err)
 	})
 
@@ -244,8 +287,8 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		created := testutil.ValidColumn(board.ID)
 		InsertColumn(t, pool, &created)
 
-		want := testutil.UpdateValidColumn(t, &created, "Renamed", testutil.FixedTime5mFromNow())
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name)
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.FixedTime5mFromNow())
+		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name, nil)
 		assertErrRowNotFound(t, err)
 	})
 }

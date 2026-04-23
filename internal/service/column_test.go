@@ -17,22 +17,7 @@ func TestColumn_Create(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
-	validName, err := domain.NewColumnName("In Progress")
-	if err != nil {
-		t.Fatalf("NewColumnName() error = %v", err)
-	}
-	validPosition, err := domain.NewColumnPosition(3)
-	if err != nil {
-		t.Fatalf("NewColumnPosition() error = %v", err)
-	}
-	validColumn := domain.Column{
-		ID:        domain.NewColumnID(),
-		BoardID:   validBoard.ID,
-		Name:      validName,
-		Position:  validPosition,
-		CreatedAt: testutil.FixedTimeNow(),
-		UpdatedAt: testutil.FixedTimeNow(),
-	}
+	validColumn := testutil.ValidColumn(validBoard.ID)
 
 	tests := []struct {
 		name            string
@@ -54,12 +39,15 @@ func TestColumn_Create(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					if boardID != validBoard.ID {
 						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
-					if name != validName {
-						t.Errorf("got name %v, want %v", name, validName)
+					if name != validColumn.Name {
+						t.Errorf("got name %v, want %v", name, validColumn.Name)
+					}
+					if description != validColumn.Description {
+						t.Errorf("got description %v, want %v", description, validColumn.Description)
 					}
 					return validColumn, nil
 				}
@@ -75,7 +63,7 @@ func TestColumn_Create(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -91,7 +79,7 @@ func TestColumn_Create(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -107,7 +95,7 @@ func TestColumn_Create(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName) (domain.Column, error) {
+				r.CreateFunc = func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, errors.New("insert failed")
 				}
 			},
@@ -125,7 +113,7 @@ func TestColumn_Create(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 
 			s := service.NewColumn(columnRepo, boardRepo)
-			got, err := s.Create(context.Background(), tt.callerID, validBoard.ID, validName)
+			got, err := s.Create(context.Background(), tt.callerID, validBoard.ID, validColumn.Name, validColumn.Description)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
@@ -259,15 +247,24 @@ func TestColumn_UpdateByID(t *testing.T) {
 	updatedColumn.Name = updatedName
 	updatedColumn.UpdatedAt = testutil.FixedTimeNow()
 
+	updatedDesc, errDesc := domain.NewColumnDescription("Patched column description")
+	if errDesc != nil {
+		t.Fatalf("NewColumnDescription() error = %v", errDesc)
+	}
+	updatedColumnDescOnly := validColumn
+	updatedColumnDescOnly.Description = updatedDesc
+	updatedColumnDescOnly.UpdatedAt = testutil.FixedTimeNow()
+
 	tests := []struct {
-		name            string
-		callerID        domain.UserID
-		columnID        domain.ColumnID
-		patchName       *domain.ColumnName
-		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
-		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
-		wantErr         error
-		wantColumn      domain.Column
+		name             string
+		callerID         domain.UserID
+		columnID         domain.ColumnID
+		patchName        *domain.ColumnName
+		patchDescription *domain.ColumnDescription
+		setupBoardRepo   func(t *testing.T, r *MockBoardRepository)
+		setupColumnRepo  func(t *testing.T, r *MockColumnRepository)
+		wantErr          error
+		wantColumn       domain.Column
 	}{
 		{
 			name:      "Success",
@@ -286,7 +283,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 					}
 					return validColumn, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if boardID != validBoard.ID {
 						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
@@ -296,10 +293,39 @@ func TestColumn_UpdateByID(t *testing.T) {
 					if name == nil || *name != updatedName {
 						t.Errorf("got name %v, want %v", name, updatedName)
 					}
+					if description != nil {
+						t.Errorf("got description %+v, want nil", description)
+					}
 					return updatedColumn, nil
 				}
 			},
 			wantColumn: updatedColumn,
+		},
+		{
+			name:             "Success description only",
+			callerID:         validBoard.OwnerID,
+			columnID:         validColumn.ID,
+			patchDescription: &updatedDesc,
+			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
+				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+					return validBoard, nil
+				}
+			},
+			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
+				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+					return validColumn, nil
+				}
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+					if name != nil {
+						t.Errorf("got name %+v, want nil", name)
+					}
+					if description == nil || *description != updatedDesc {
+						t.Errorf("got description %v, want %v", description, updatedDesc)
+					}
+					return updatedColumnDescOnly, nil
+				}
+			},
+			wantColumn: updatedColumnDescOnly,
 		},
 		{
 			name:     "Success no-op patch",
@@ -314,7 +340,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -335,7 +361,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -356,7 +382,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -378,7 +404,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 					otherBoardColumn.BoardID = domain.NewBoardID()
 					return otherBoardColumn, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -398,7 +424,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return domain.Column{}, repository.ErrRowNotFound
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -419,7 +445,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName) (domain.Column, error) {
+				r.UpdateByIDFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, errors.New("update failed")
 				}
 			},
@@ -437,7 +463,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 
 			s := service.NewColumn(columnRepo, boardRepo)
-			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, tt.columnID, tt.patchName)
+			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, tt.columnID, tt.patchName, tt.patchDescription)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
