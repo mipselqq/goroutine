@@ -395,7 +395,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 							{
 								"id":          firstTask.ID.String(),
 								"columnId":    firstTask.ColumnID.String(),
-								"title":       firstTask.Name.String(),
+								"name":        firstTask.Name.String(),
 								"description": firstTask.Description.String(),
 								"position":    firstTask.Position.Int64(),
 								"createdAt":   firstTask.CreatedAt.Format(timeFormat),
@@ -404,7 +404,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 							{
 								"id":          secondTask.ID.String(),
 								"columnId":    secondTask.ColumnID.String(),
-								"title":       secondTask.Name.String(),
+								"name":        secondTask.Name.String(),
 								"description": secondTask.Description.String(),
 								"position":    secondTask.Position.Int64(),
 								"createdAt":   secondTask.CreatedAt.Format(timeFormat),
@@ -423,7 +423,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 							{
 								"id":          doneTask.ID.String(),
 								"columnId":    doneTask.ColumnID.String(),
-								"title":       doneTask.Name.String(),
+								"name":        doneTask.Name.String(),
 								"description": doneTask.Description.String(),
 								"position":    doneTask.Position.Int64(),
 								"createdAt":   doneTask.CreatedAt.Format(timeFormat),

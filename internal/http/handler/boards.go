@@ -50,7 +50,7 @@ type boardResponse struct {
 	UpdatedAt   string `json:"updatedAt" example:"2026-03-07T20:56:50.000+03:00"`
 }
 
-func NewBoardResponse(board *domain.Board) boardResponse {
+func newBoardResponse(board *domain.Board) boardResponse {
 	return boardResponse{
 		ID:          board.ID.String(),
 		OwnerID:     board.OwnerID.String(),
@@ -59,6 +59,39 @@ func NewBoardResponse(board *domain.Board) boardResponse {
 
 		CreatedAt: service.FormatRFC3339Millis(board.CreatedAt),
 		UpdatedAt: service.FormatRFC3339Millis(board.UpdatedAt),
+	}
+}
+
+type aggregateBoardResponse struct {
+	boardResponse
+	Columns []aggregateColumnResponse `json:"columns"`
+}
+
+type aggregateColumnResponse struct {
+	columnResponse
+	Tasks []taskResponse `json:"tasks"`
+}
+
+func newBoardAggregateResponse(aggregateBoard *service.AggregateBoard) aggregateBoardResponse {
+	columnResps := make([]aggregateColumnResponse, len(aggregateBoard.Columns))
+
+	for i := range aggregateBoard.Columns {
+		column := &aggregateBoard.Columns[i]
+
+		taskResps := make([]taskResponse, len(column.Tasks))
+		for j := range column.Tasks {
+			taskResps[j] = newTaskResponse(&column.Tasks[j])
+		}
+
+		columnResps[i] = aggregateColumnResponse{
+			columnResponse: newColumnResponse(&column.Column),
+			Tasks:          taskResps,
+		}
+	}
+
+	return aggregateBoardResponse{
+		boardResponse: newBoardResponse(&aggregateBoard.Board),
+		Columns:       columnResps,
 	}
 }
 
@@ -105,7 +138,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusCreated, NewBoardResponse(&board))
+	httpschema.RespondJSON(w, h.logger, http.StatusCreated, newBoardResponse(&board))
 }
 
 // Get godoc
@@ -145,7 +178,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewBoardResponse(&board))
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, newBoardResponse(&board))
 }
 
 // GetAggregate godoc
@@ -156,14 +189,36 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Security BearerAuth
 // @Param boardId path string true "Board ID"
-// @Success 200 {object} map[string]any
+// @Success 200 {object} aggregateBoardResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/aggregate [get]
 func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
-	panic("Aggregate handler not implemented")
+	rawID := r.PathValue("boardId")
+	boardID, err := domain.ParseBoardID(rawID)
+	if err != nil {
+		h.responder.ValidationError(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Invalid board id"}}})
+		return
+	}
+
+	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
+	if !ok {
+		return
+	}
+
+	aggregate, err := h.service.GetAggregate(r.Context(), userID, boardID)
+	if err != nil {
+		if errors.Is(err, service.ErrBoardNotFound) {
+			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
+			return
+		}
+		h.responder.InternalError(w, r, err)
+		return
+	}
+
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, newBoardAggregateResponse(&aggregate))
 }
 
 // GetMany godoc
@@ -192,7 +247,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 
 	response := make(getManyBoardsResponse, len(boards))
 	for i := range boards {
-		response[i] = NewBoardResponse(&boards[i])
+		response[i] = newBoardResponse(&boards[i])
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
@@ -261,7 +316,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewBoardResponse(&board))
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, newBoardResponse(&board))
 }
 
 // Delete godoc

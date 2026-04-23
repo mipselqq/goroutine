@@ -335,8 +335,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handler.aggregateBoardResponse"
                         }
                     },
                     "400": {
@@ -1256,6 +1255,76 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handler.aggregateBoardResponse": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.aggregateColumnResponse"
+                    }
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "My Todo Description"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Todo Name"
+                },
+                "ownerId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                }
+            }
+        },
+        "handler.aggregateColumnResponse": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a1"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "In Progress"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.taskResponse"
+                    }
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                }
+            }
+        },
         "handler.boardResponse": {
             "type": "object",
             "properties": {

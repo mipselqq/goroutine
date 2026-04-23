@@ -60,7 +60,7 @@ type taskPositionResponse struct {
 	Position int64  `json:"position" example:"2"`
 }
 
-func NewTaskResponse(task *domain.Task) taskResponse {
+func newTaskResponse(task *domain.Task) taskResponse {
 	return taskResponse{
 		ID:          task.ID.String(),
 		ColumnID:    task.ColumnID.String(),
@@ -123,7 +123,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusCreated, NewTaskResponse(&task))
+	httpschema.RespondJSON(w, h.logger, http.StatusCreated, newTaskResponse(&task))
 }
 
 // List godoc
@@ -163,7 +163,7 @@ func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
 
 	response := make([]taskResponse, 0, len(tasks))
 	for i := range tasks {
-		response = append(response, NewTaskResponse(&tasks[i]))
+		response = append(response, newTaskResponse(&tasks[i]))
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
@@ -229,7 +229,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewTaskResponse(&task))
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, newTaskResponse(&task))
 }
 
 // Move godoc
