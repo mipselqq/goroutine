@@ -194,8 +194,7 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 		result = append(result, task)
 	}
 
-	if err := rows.Err();
-	err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("task repo: list: rows final error: %v: %w", err, ErrInternal)
 	}
 

@@ -25,16 +25,6 @@ type BoardTaskRepository interface {
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error)
 }
 
-type AggregateBoard struct {
-	Board   domain.Board
-	Columns []AggregateColumn
-}
-
-type AggregateColumn struct {
-	Column domain.Column
-	Tasks  []domain.Task
-}
-
 type Board struct {
 	boardRepository  BoardRepository
 	columnRepository ColumnRepository
@@ -43,6 +33,16 @@ type Board struct {
 
 func NewBoard(boardRepo BoardRepository, columnRepo ColumnRepository, taskRepo BoardTaskRepository) *Board {
 	return &Board{boardRepository: boardRepo, columnRepository: columnRepo, taskRepository: taskRepo}
+}
+
+type AggregateBoard struct {
+	Board   domain.Board
+	Columns []AggregateColumn
+}
+
+type AggregateColumn struct {
+	Column domain.Column
+	Tasks  []domain.Task
 }
 
 func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -79,7 +79,48 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 }
 
 func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (AggregateBoard, error) {
-	panic("Get aggregate not implemented")
+	board, err := s.boardRepository.GetByID(ctx, boardID)
+	if err != nil {
+		if errors.Is(err, repository.ErrRowNotFound) {
+			return AggregateBoard{}, ErrBoardNotFound
+		}
+		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: get board by id: %v: %w", err, ErrInternal)
+	}
+	if board.OwnerID != callerID {
+		return AggregateBoard{}, ErrBoardNotFound
+	}
+	columns, err := s.columnRepository.ListByBoardID(ctx, boardID)
+	if err != nil {
+		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: list columns by board id: %v: %w", err, ErrInternal)
+	}
+
+	tasks, err := s.taskRepository.ListByBoardID(ctx, boardID)
+	if err != nil {
+		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: list tasks by board id: %v: %w", err, ErrInternal)
+	}
+
+	aggregate := AggregateBoard{
+		Board:   board,
+		Columns: []AggregateColumn{},
+	}
+
+	columnIDToTaskMap := make(map[domain.ColumnID][]domain.Task, len(columns))
+	for _, t := range tasks {
+		columnIDToTaskMap[t.ColumnID] = append(columnIDToTaskMap[t.ColumnID], t)
+	}
+
+	for _, column := range columns {
+		colTasks := columnIDToTaskMap[column.ID]
+		if colTasks == nil {
+			colTasks = []domain.Task{}
+		}
+		aggregate.Columns = append(aggregate.Columns, AggregateColumn{
+			Column: column,
+			Tasks:  colTasks,
+		})
+	}
+
+	return aggregate, nil
 }
 
 func (s *Board) UpdateByID(
