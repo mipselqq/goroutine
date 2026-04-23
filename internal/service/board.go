@@ -101,7 +101,7 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 
 	aggregate := AggregateBoard{
 		Board:   board,
-		Columns: []AggregateColumn{},
+		Columns: make([]AggregateColumn, len(columns)),
 	}
 
 	columnIDToTaskMap := make(map[domain.ColumnID][]domain.Task, len(columns))
@@ -109,15 +109,15 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 		columnIDToTaskMap[t.ColumnID] = append(columnIDToTaskMap[t.ColumnID], t)
 	}
 
-	for _, column := range columns {
+	for i, column := range columns {
 		colTasks := columnIDToTaskMap[column.ID]
 		if colTasks == nil {
 			colTasks = []domain.Task{}
 		}
-		aggregate.Columns = append(aggregate.Columns, AggregateColumn{
+		aggregate.Columns[i] = AggregateColumn{
 			Column: column,
 			Tasks:  colTasks,
-		})
+		}
 	}
 
 	return aggregate, nil
