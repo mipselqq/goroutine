@@ -272,7 +272,7 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: notFoundErrorBody(),
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
@@ -689,7 +689,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: notFoundErrorBody(),
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
@@ -801,7 +801,7 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: notFoundErrorBody(),
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
