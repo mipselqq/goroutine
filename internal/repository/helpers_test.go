@@ -94,12 +94,13 @@ func InsertColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	defer cancel()
 
 	const q = `
-		INSERT INTO columns (id, board_id, name, position, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)`
+		INSERT INTO columns (id, board_id, name, description, position, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(ctx, q,
 		column.ID,
 		column.BoardID,
 		column.Name,
+		column.Description,
 		column.Position,
 		column.CreatedAt,
 		column.UpdatedAt,
@@ -116,7 +117,7 @@ func FindColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) 
 	defer cancel()
 
 	const q = `
-		SELECT id, board_id, name, position, created_at, updated_at
+		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
 		WHERE id = $1`
 
@@ -125,6 +126,7 @@ func FindColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) 
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
+		&column.Description,
 		&column.Position,
 		&column.CreatedAt,
 		&column.UpdatedAt,
@@ -146,7 +148,7 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	defer cancel()
 
 	const q = `
-		SELECT id, board_id, name, position, created_at, updated_at
+		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
 		WHERE board_id = $1
 		ORDER BY position ASC`
@@ -164,6 +166,7 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 			&column.ID,
 			&column.BoardID,
 			&column.Name,
+			&column.Description,
 			&column.Position,
 			&column.CreatedAt,
 			&column.UpdatedAt,

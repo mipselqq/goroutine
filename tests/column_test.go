@@ -15,12 +15,13 @@ import (
 )
 
 type ColumnJSON struct {
-	ID        string `json:"id"`
-	BoardID   string `json:"boardId"`
-	Name      string `json:"name"`
-	Position  int64  `json:"position"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID          string `json:"id"`
+	BoardID     string `json:"boardId"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Position    int64  `json:"position"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
 }
 
 type ColumnPositionJSON struct {
@@ -53,10 +54,12 @@ func TestColumn_HappyPath(t *testing.T) {
 		board := parseBoard(t, createBoardResp)
 
 		name := "To Do"
+		columnDescription := testutil.ValidColumnDescription().String()
 
 		// 2. Create a column, store response in createdColumn, and validate response fields
 		createResp := ac.Do(t, http.MethodPost, "/v1/boards/"+board.ID+"/columns", map[string]string{
-			"name": name,
+			"name":        name,
+			"description": columnDescription,
 		})
 		defer func() {
 			_ = createResp.Body.Close()
@@ -78,6 +81,9 @@ func TestColumn_HappyPath(t *testing.T) {
 		}
 		if createdColumn.Name != name {
 			t.Errorf("got name %q, want %q", createdColumn.Name, name)
+		}
+		if createdColumn.Description != columnDescription {
+			t.Errorf("got description %q, want %q", createdColumn.Description, columnDescription)
 		}
 		if createdColumn.Position != 1 {
 			t.Errorf("got position %d, want %d", createdColumn.Position, 1)
@@ -133,8 +139,30 @@ func TestColumn_HappyPath(t *testing.T) {
 		if updatedNameColumn.Name != updatedName {
 			t.Errorf("got updated name %q, want %q", updatedNameColumn.Name, updatedName)
 		}
+		if updatedNameColumn.Description != createdColumn.Description {
+			t.Errorf("got description %q after name-only update, want %q", updatedNameColumn.Description, createdColumn.Description)
+		}
 
-		updatedAtAfterUpdate, err := time.Parse(timeFormat, updatedNameColumn.UpdatedAt)
+		updatedDesc := "Updated column description body"
+		WaitForTimestampTicker(t)
+		updateDescResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+board.ID+"/columns/"+createdColumn.ID, map[string]string{
+			"description": updatedDesc,
+		})
+		defer func() {
+			_ = updateDescResp.Body.Close()
+		}()
+		if updateDescResp.StatusCode != http.StatusOK {
+			t.Fatalf("got Update description status %d, want %d", updateDescResp.StatusCode, http.StatusOK)
+		}
+		updatedDescColumn := parseColumn(t, updateDescResp)
+		if updatedDescColumn.Description != updatedDesc {
+			t.Errorf("got description %q, want %q", updatedDescColumn.Description, updatedDesc)
+		}
+		if updatedDescColumn.Name != updatedName {
+			t.Errorf("got name %q after description update, want %q", updatedDescColumn.Name, updatedName)
+		}
+
+		updatedAtAfterName, err := time.Parse(timeFormat, updatedNameColumn.UpdatedAt)
 		if err != nil {
 			t.Fatalf("time.Parse(%q) error = %v", updatedNameColumn.UpdatedAt, err)
 		}
@@ -142,11 +170,19 @@ func TestColumn_HappyPath(t *testing.T) {
 		if err != nil {
 			t.Fatalf("time.Parse(%q) error = %v", createdColumn.UpdatedAt, err)
 		}
-		if !updatedAtAfterUpdate.After(updatedAtBeforeUpdate) {
-			t.Errorf("updatedAt must advance after Update by id; got %v, previous %v", updatedAtAfterUpdate, updatedAtBeforeUpdate)
+		if !updatedAtAfterName.After(updatedAtBeforeUpdate) {
+			t.Errorf("updatedAt must advance after name-only update; got %v, previous %v", updatedAtAfterName, updatedAtBeforeUpdate)
 		}
 
-		// 5. List columns again, get the first column, and perform deep comparison with updatedNameColumn
+		updatedAtAfterDesc, err := time.Parse(timeFormat, updatedDescColumn.UpdatedAt)
+		if err != nil {
+			t.Fatalf("time.Parse(%q) error = %v", updatedDescColumn.UpdatedAt, err)
+		}
+		if !updatedAtAfterDesc.After(updatedAtAfterName) {
+			t.Errorf("updatedAt must advance after description update; got %v, previous %v", updatedAtAfterDesc, updatedAtAfterName)
+		}
+
+		// 5. List columns again, get the first column, and perform deep comparison with updatedDescColumn
 		listAfterUpdateResp := ac.Do(t, http.MethodGet, "/v1/boards/"+board.ID+"/columns", nil)
 		defer func() {
 			_ = listAfterUpdateResp.Body.Close()
@@ -159,7 +195,7 @@ func TestColumn_HappyPath(t *testing.T) {
 		if len(listedAfterUpdate) != 1 {
 			t.Fatalf("got %d columns after update, want 1", len(listedAfterUpdate))
 		}
-		if diff := cmp.Diff(updatedNameColumn, listedAfterUpdate[0]); diff != "" {
+		if diff := cmp.Diff(updatedDescColumn, listedAfterUpdate[0]); diff != "" {
 			t.Errorf("List item after update mismatch (-want +got):\n%s", diff)
 		}
 
@@ -217,8 +253,8 @@ func TestColumn_HappyPath(t *testing.T) {
 		if len(listedAfterDelete) != 2 {
 			t.Fatalf("got %d columns after delete, want 2", len(listedAfterDelete))
 		}
-		if listedAfterDelete[0].ID != updatedNameColumn.ID || listedAfterDelete[0].Name != updatedNameColumn.Name || listedAfterDelete[0].Position != 1 {
-			t.Errorf("got id=%s name=%q position=%d, want id=%s name=%q position=%d", listedAfterDelete[0].ID, listedAfterDelete[0].Name, listedAfterDelete[0].Position, updatedNameColumn.ID, updatedNameColumn.Name, 1)
+		if listedAfterDelete[0].ID != updatedDescColumn.ID || listedAfterDelete[0].Name != updatedDescColumn.Name || listedAfterDelete[0].Position != 1 {
+			t.Errorf("got id=%s name=%q position=%d, want id=%s name=%q position=%d", listedAfterDelete[0].ID, listedAfterDelete[0].Name, listedAfterDelete[0].Position, updatedDescColumn.ID, updatedDescColumn.Name, 1)
 		}
 		if listedAfterDelete[1].ID != thirdColumn.ID || listedAfterDelete[1].Position != 2 {
 			t.Errorf("got id=%s position=%d, want id=%s position=%d", listedAfterDelete[1].ID, listedAfterDelete[1].Position, thirdColumn.ID, 2)
@@ -256,8 +292,8 @@ func TestColumn_HappyPath(t *testing.T) {
 		if listedAfterMove[0].ID != thirdColumn.ID || listedAfterMove[0].Position != 1 {
 			t.Errorf("got id=%s position=%d, want id=%s position=%d", listedAfterMove[0].ID, listedAfterMove[0].Position, thirdColumn.ID, 1)
 		}
-		if listedAfterMove[1].ID != updatedNameColumn.ID || listedAfterMove[1].Position != 2 {
-			t.Errorf("got id=%s position=%d, want id=%s position=%d", listedAfterMove[1].ID, listedAfterMove[1].Position, updatedNameColumn.ID, 2)
+		if listedAfterMove[1].ID != updatedDescColumn.ID || listedAfterMove[1].Position != 2 {
+			t.Errorf("got id=%s position=%d, want id=%s position=%d", listedAfterMove[1].ID, listedAfterMove[1].Position, updatedDescColumn.ID, 2)
 		}
 	})
 }
