@@ -25,27 +25,56 @@ func (r *PgColumn) Create(
 	name domain.ColumnName,
 	description domain.ColumnDescription,
 ) (domain.Column, error) {
-	const query = `
-		WITH board_lock AS (
-			SELECT id
-			FROM boards
-			WHERE id = $1
-			FOR UPDATE
-		), next_pos AS (
-			SELECT COALESCE(MAX(position), 0) + 1 AS position
-			FROM columns
-			WHERE board_id = $1
-		), inserted AS (
-			INSERT INTO columns (board_id, name, description, position)
-			SELECT $1, $2, $3, next_pos.position
-			FROM board_lock, next_pos
-			RETURNING id, board_id, name, description, position, created_at, updated_at
-		)
-		SELECT id, board_id, name, description, position, created_at, updated_at
-		FROM inserted`
+	const (
+		lockBoardQuery = `
+		SELECT 1
+		FROM boards
+		WHERE id = @board_id
+		FOR UPDATE`
+		nextPositionQuery = `
+		SELECT COALESCE(MAX(position), 0) + 1
+		FROM columns
+		WHERE board_id = @board_id`
+		insertColumnQuery = `
+		INSERT INTO columns (board_id, name, description, position)
+		VALUES (@board_id, @name, @description, @position)
+		RETURNING id, board_id, name, description, position, created_at, updated_at`
+	)
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("column repo: create begin tx: %v: %w", err, ErrInternal)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	var locked int
+	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&locked)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Column{}, ErrRowNotFound
+		}
+		return domain.Column{}, fmt.Errorf("column repo: create lock board: %v: %w", err, ErrInternal)
+	}
+
+	var nextPosition int64
+	err = tx.QueryRow(ctx, nextPositionQuery, pgx.NamedArgs{
+		"board_id": boardID,
+	}).Scan(&nextPosition)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("column repo: create next position: %v: %w", err, ErrInternal)
+	}
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, boardID, name, description).Scan(
+	err = tx.QueryRow(ctx, insertColumnQuery, pgx.NamedArgs{
+		"board_id":    boardID,
+		"name":        name,
+		"description": description,
+		"position":    nextPosition,
+	}).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
@@ -55,10 +84,12 @@ func (r *PgColumn) Create(
 		&column.UpdatedAt,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Column{}, ErrRowNotFound
-		}
-		return domain.Column{}, fmt.Errorf("column repo: create: %v: %w", err, ErrInternal)
+		return domain.Column{}, fmt.Errorf("column repo: create insert: %v: %w", err, ErrInternal)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("column repo: create commit: %v: %w", err, ErrInternal)
 	}
 
 	return column, nil
