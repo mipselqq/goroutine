@@ -124,16 +124,17 @@ func (r *PgTask) Create(
 	return task, nil
 }
 
-func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error) {
+func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
 	const query = `
-		SELECT id, column_id, name, description, position, created_at, updated_at
-		FROM tasks
-		WHERE column_id = $1
-		ORDER BY position ASC`
+	SELECT t.id, t.column_id, t.name, t.description, t.position, t.created_at, t.updated_at
+	FROM tasks t JOIN columns c ON t.column_id = c.id
+	WHERE c.board_id = $1
+	ORDER BY c.position ASC, t.position ASC
+	`
 
-	rows, err := r.pool.Query(ctx, query, columnID)
+	rows, err := r.pool.Query(ctx, query, boardID)
 	if err != nil {
-		return nil, fmt.Errorf("task repo: list: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("task repo: list by board id: %v: %w", err, ErrInternal)
 	}
 	defer rows.Close()
 
@@ -150,20 +151,55 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 			&task.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("task repo: list: scan: %v: %w", err, ErrInternal)
+			return nil, fmt.Errorf("task repo: list by board id: scan: %v: %w", err, ErrInternal)
 		}
 		result = append(result, task)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("task repo: list: rows final error: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("task repo: list by board id: rows final error: %v: %w", err, ErrInternal)
 	}
 
 	return result, nil
 }
 
-func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
-	panic("List by board id not implemented")
+func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error) {
+	const query = `
+		SELECT id, column_id, name, description, position, created_at, updated_at
+		FROM tasks
+		WHERE column_id = $1
+		ORDER BY position ASC`
+
+	rows, err := r.pool.Query(ctx, query, columnID)
+	if err != nil {
+		return nil, fmt.Errorf("task repo: list by column id: %v: %w", err, ErrInternal)
+	}
+	defer rows.Close()
+
+	var result []domain.Task
+	for rows.Next() {
+		var task domain.Task
+		err := rows.Scan(
+			&task.ID,
+			&task.ColumnID,
+			&task.Name,
+			&task.Description,
+			&task.Position,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("task repo: list by column id: scan: %v: %w", err, ErrInternal)
+		}
+		result = append(result, task)
+	}
+
+	if err := rows.Err();
+	err != nil {
+		return nil, fmt.Errorf("task repo: list: rows final error: %v: %w", err, ErrInternal)
+	}
+
+	return result, nil
 }
 
 func (r *PgTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
