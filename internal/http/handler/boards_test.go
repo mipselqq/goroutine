@@ -272,7 +272,7 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: notFoundErrorBody(),
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
@@ -327,6 +327,184 @@ func TestBoards_GetByID(t *testing.T) {
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Get(rr, req)
+
+			testutil.AssertStatusCode(t, rr, tt.wantCode)
+			testutil.AssertContentType(t, rr, "application/json")
+			testutil.AssertResponseBody(t, rr, tt.wantBody)
+		})
+	}
+}
+
+func TestBoards_GetAggregate(t *testing.T) {
+	t.Parallel()
+
+	validBoard := testutil.ValidBoard()
+	firstColumn := testutil.ValidColumn(validBoard.ID)
+	secondColumn := testutil.NewValidColumn(t, validBoard.ID, "Done", 2)
+	firstTask := testutil.ValidTask(firstColumn.ID)
+	secondTask := testutil.NewValidTask(t, firstColumn.ID, "Second task", "Second description", 2)
+	doneTask := testutil.ValidTask(secondColumn.ID)
+	okPath := "/v1/boards/" + validBoard.ID.String() + "/aggregate"
+
+	aggregate := service.AggregateBoard{
+		Board: validBoard,
+		Columns: []service.AggregateColumn{
+			{
+				Column: firstColumn,
+				Tasks:  []domain.Task{firstTask, secondTask},
+			},
+			{
+				Column: secondColumn,
+				Tasks:  []domain.Task{doneTask},
+			},
+		},
+	}
+
+	tests := []boardsTestCase{
+		{
+			name: "Success",
+			path: okPath,
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
+				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
+					if ownerID != validBoard.OwnerID {
+						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
+					}
+					if boardID != validBoard.ID {
+						t.Errorf("got boardID %v, want %v", boardID, validBoard.ID)
+					}
+					return aggregate, nil
+				}
+			},
+			wantCode: http.StatusOK,
+			wantBody: map[string]any{
+				"id":          validBoard.ID.String(),
+				"ownerId":     validBoard.OwnerID.String(),
+				"name":        validBoard.Name.String(),
+				"description": validBoard.Description.String(),
+				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
+				"columns": []map[string]any{
+					{
+						"id":        firstColumn.ID.String(),
+						"boardId":   firstColumn.BoardID.String(),
+						"name":      firstColumn.Name.String(),
+						"position":  firstColumn.Position.Int64(),
+						"createdAt": firstColumn.CreatedAt.Format(timeFormat),
+						"updatedAt": firstColumn.UpdatedAt.Format(timeFormat),
+						"tasks": []map[string]any{
+							{
+								"id":          firstTask.ID.String(),
+								"columnId":    firstTask.ColumnID.String(),
+								"name":        firstTask.Name.String(),
+								"description": firstTask.Description.String(),
+								"position":    firstTask.Position.Int64(),
+								"createdAt":   firstTask.CreatedAt.Format(timeFormat),
+								"updatedAt":   firstTask.UpdatedAt.Format(timeFormat),
+							},
+							{
+								"id":          secondTask.ID.String(),
+								"columnId":    secondTask.ColumnID.String(),
+								"name":        secondTask.Name.String(),
+								"description": secondTask.Description.String(),
+								"position":    secondTask.Position.Int64(),
+								"createdAt":   secondTask.CreatedAt.Format(timeFormat),
+								"updatedAt":   secondTask.UpdatedAt.Format(timeFormat),
+							},
+						},
+					},
+					{
+						"id":        secondColumn.ID.String(),
+						"boardId":   secondColumn.BoardID.String(),
+						"name":      secondColumn.Name.String(),
+						"position":  secondColumn.Position.Int64(),
+						"createdAt": secondColumn.CreatedAt.Format(timeFormat),
+						"updatedAt": secondColumn.UpdatedAt.Format(timeFormat),
+						"tasks": []map[string]any{
+							{
+								"id":          doneTask.ID.String(),
+								"columnId":    doneTask.ColumnID.String(),
+								"name":        doneTask.Name.String(),
+								"description": doneTask.Description.String(),
+								"position":    doneTask.Position.Int64(),
+								"createdAt":   doneTask.CreatedAt.Format(timeFormat),
+								"updatedAt":   doneTask.UpdatedAt.Format(timeFormat),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "Invalid board id",
+			path:     "/v1/boards/not-a-uuid/aggregate",
+			wantCode: http.StatusBadRequest,
+			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+		},
+		{
+			name: "Board not found",
+			path: okPath,
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
+				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
+					return service.AggregateBoard{}, service.ErrBoardNotFound
+				}
+			},
+			wantCode: http.StatusNotFound,
+			wantBody: boardNotFoundErrorBody(),
+		},
+		{
+			name: "Internal error",
+			path: okPath,
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
+				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
+					return service.AggregateBoard{}, service.ErrInternal
+				}
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
+		},
+		{
+			name: "Unknown error",
+			path: okPath,
+			setupBoardService: func(t *testing.T, s *MockBoardService) {
+				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
+					return service.AggregateBoard{}, errors.New("unknown")
+				}
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: internalErrorBody(),
+		},
+		{
+			name:     "No context user ID",
+			path:     okPath,
+			context:  context.Background(),
+			wantCode: http.StatusUnauthorized,
+			wantBody: unauthorizedTokenBody(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(http.MethodGet, tt.path, http.NoBody)
+			if tt.context != nil {
+				// TODO: factor out this pattern
+				req = req.WithContext(tt.context)
+			} else {
+				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			}
+			req.SetPathValue("boardId", strings.TrimSuffix(strings.TrimPrefix(tt.path, "/v1/boards/"), "/aggregate"))
+
+			rr := httptest.NewRecorder()
+
+			s := &MockBoardService{}
+			if tt.setupBoardService != nil {
+				tt.setupBoardService(t, s)
+			}
+
+			logger := testutil.NewTestLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h.GetAggregate(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -511,7 +689,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: notFoundErrorBody(),
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",
@@ -623,7 +801,7 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: notFoundErrorBody(),
+			wantBody: boardNotFoundErrorBody(),
 		},
 		{
 			name: "Internal error",

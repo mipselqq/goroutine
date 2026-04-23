@@ -16,13 +16,23 @@ import (
 
 const timeFormat = "2006-01-02T15:04:05.000Z07:00"
 
-type boardJSON struct {
+type BoardJSON struct {
 	ID          string `json:"id"`
 	OwnerID     string `json:"ownerId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	CreatedAt   string `json:"createdAt"`
 	UpdatedAt   string `json:"updatedAt"`
+}
+
+type AggregateColumnJSON struct {
+	ColumnJSON
+	Tasks []TaskJSON `json:"tasks"`
+}
+
+type BoardAggregateJSON struct {
+	BoardJSON
+	Columns []AggregateColumnJSON `json:"columns"`
 }
 
 func TestBoard_HappyPath(t *testing.T) {
@@ -152,7 +162,42 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Errorf("Get by id after update mismatch (-want +got):\n%s", diff)
 		}
 
-		// 7. Delete by id and verify StatusNoContent
+		// 7. One column and one task: GET /aggregate must match the created board, column, and task from their POST responses.
+		colResp := ac.Do(t, http.MethodPost, "/v1/boards/"+createdBoard.ID+"/columns", map[string]string{"name": "To Do"})
+		defer func() { _ = colResp.Body.Close() }()
+		if colResp.StatusCode != http.StatusCreated {
+			t.Fatalf("got create column status %d, want %d", colResp.StatusCode, http.StatusCreated)
+		}
+		col := parseColumn(t, colResp)
+
+		taskResp := ac.Do(t, http.MethodPost, "/v1/boards/"+createdBoard.ID+"/columns/"+col.ID+"/tasks", map[string]string{
+			"name":        "One task",
+			"description": "E2E aggregate",
+		})
+		defer func() { _ = taskResp.Body.Close() }()
+		if taskResp.StatusCode != http.StatusCreated {
+			t.Fatalf("got create task status %d, want %d", taskResp.StatusCode, http.StatusCreated)
+		}
+		task := parseTask(t, taskResp)
+
+		aggResp := ac.Do(t, http.MethodGet, "/v1/boards/"+createdBoard.ID+"/aggregate", nil)
+		defer func() { _ = aggResp.Body.Close() }()
+		if aggResp.StatusCode != http.StatusOK {
+			t.Fatalf("got aggregate status %d, want %d", aggResp.StatusCode, http.StatusOK)
+		}
+		gotAgg := parseBoardAggregate(t, aggResp)
+
+		wantAgg := BoardAggregateJSON{
+			BoardJSON: getByIDBoardAfterUpdate,
+			Columns: []AggregateColumnJSON{
+				{ColumnJSON: col, Tasks: []TaskJSON{task}},
+			},
+		}
+		if diff := cmp.Diff(wantAgg, gotAgg); diff != "" {
+			t.Errorf("aggregate vs POST responses (-want +got):\n%s", diff)
+		}
+
+		// 8. Delete by id and verify StatusNoContent
 		delResp := ac.Do(t, http.MethodDelete, "/v1/boards/"+createdBoard.ID, nil)
 		defer func() {
 			_ = delResp.Body.Close()
@@ -161,7 +206,7 @@ func TestBoard_HappyPath(t *testing.T) {
 			t.Fatalf("got Delete by id status %d, want %d", delResp.StatusCode, http.StatusNoContent)
 		}
 
-		// 8. List boards and ensure an empty list is returned
+		// 9. List boards and ensure an empty list is returned
 		listAfterDelResp := ac.Do(t, http.MethodGet, "/v1/boards", nil)
 		defer func() {
 			_ = listAfterDelResp.Body.Close()
@@ -177,20 +222,29 @@ func TestBoard_HappyPath(t *testing.T) {
 	})
 }
 
-func parseBoard(t *testing.T, resp *http.Response) boardJSON {
+func parseBoard(t *testing.T, resp *http.Response) BoardJSON {
 	t.Helper()
-	var b boardJSON
+	var b BoardJSON
 	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
 		t.Fatalf("Board Decode() error = %v", err)
 	}
 	return b
 }
 
-func parseBoardsList(t *testing.T, resp *http.Response) []boardJSON {
+func parseBoardsList(t *testing.T, resp *http.Response) []BoardJSON {
 	t.Helper()
-	var b []boardJSON
+	var b []BoardJSON
 	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
 		t.Fatalf("Boards list Decode() error = %v", err)
+	}
+	return b
+}
+
+func parseBoardAggregate(t *testing.T, resp *http.Response) BoardAggregateJSON {
+	t.Helper()
+	var b BoardAggregateJSON
+	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
+		t.Fatalf("Board aggregate Decode() error = %v", err)
 	}
 	return b
 }

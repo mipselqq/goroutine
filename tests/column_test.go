@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type columnJSON struct {
+type ColumnJSON struct {
 	ID        string `json:"id"`
 	BoardID   string `json:"boardId"`
 	Name      string `json:"name"`
@@ -23,7 +23,7 @@ type columnJSON struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
-type columnPositionJSON struct {
+type ColumnPositionJSON struct {
 	Position int64 `json:"position"`
 }
 
@@ -262,27 +262,27 @@ func TestColumn_HappyPath(t *testing.T) {
 	})
 }
 
-func parseColumn(t *testing.T, resp *http.Response) columnJSON {
+func parseColumn(t *testing.T, resp *http.Response) ColumnJSON {
 	t.Helper()
-	var c columnJSON
+	var c ColumnJSON
 	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
 		t.Fatalf("Column Decode() error = %v", err)
 	}
 	return c
 }
 
-func parseColumnsList(t *testing.T, resp *http.Response) []columnJSON {
+func parseColumnsList(t *testing.T, resp *http.Response) []ColumnJSON {
 	t.Helper()
-	var c []columnJSON
+	var c []ColumnJSON
 	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
 		t.Fatalf("Columns list Decode() error = %v", err)
 	}
 	return c
 }
 
-func parseColumnPosition(t *testing.T, resp *http.Response) columnPositionJSON {
+func parseColumnPosition(t *testing.T, resp *http.Response) ColumnPositionJSON {
 	t.Helper()
-	var p columnPositionJSON
+	var p ColumnPositionJSON
 	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
 		t.Fatalf("Column position Decode() error = %v", err)
 	}

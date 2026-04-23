@@ -1,5 +1,55 @@
 basePath: /
 definitions:
+  handler.aggregateBoardResponse:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/handler.aggregateColumnResponse'
+        type: array
+      createdAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+      description:
+        example: My Todo Description
+        type: string
+      id:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      name:
+        example: My Todo Name
+        type: string
+      ownerId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      updatedAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+    type: object
+  handler.aggregateColumnResponse:
+    properties:
+      boardId:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a1
+        type: string
+      createdAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+      id:
+        example: 019cc971-e5be-7df9-ae8a-c6e3f29c86a2
+        type: string
+      name:
+        example: In Progress
+        type: string
+      position:
+        example: 1
+        type: integer
+      tasks:
+        items:
+          $ref: '#/definitions/handler.taskResponse'
+        type: array
+      updatedAt:
+        example: "2026-03-07T20:56:50.000+03:00"
+        type: string
+    type: object
   handler.boardResponse:
     properties:
       createdAt:
@@ -318,7 +368,7 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
-          description: NOT_FOUND
+          description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -356,7 +406,7 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
-          description: NOT_FOUND
+          description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -401,7 +451,7 @@ paths:
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
-          description: NOT_FOUND
+          description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -411,6 +461,46 @@ paths:
       security:
       - BearerAuth: []
       summary: UpdateByID a board by id
+      tags:
+      - boards
+  /v1/boards/{boardId}/aggregate:
+    get:
+      consumes:
+      - application/json
+      description: Get a board with nested columns and tasks for the current user
+        (owner only)
+      parameters:
+      - description: Board ID
+        in: path
+        name: boardId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.aggregateBoardResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "404":
+          description: BOARD_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Get a board aggregate by id
       tags:
       - boards
   /v1/boards/{boardId}/columns:

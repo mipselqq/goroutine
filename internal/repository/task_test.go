@@ -145,6 +145,43 @@ func TestTaskRepository_ListByColumnID(t *testing.T) {
 	})
 }
 
+func TestTaskRepository_ListByBoardID(t *testing.T) {
+	pool, r := taskRepoPrelude(t)
+
+	t.Run("Success ordered by column position and task position", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		board, firstColumn := insertFixedUserBoardAndColumn(t, pool)
+		secondColumn := testutil.NewValidColumn(t, board.ID, "Done", 2)
+		InsertColumn(t, pool, &secondColumn)
+
+		otherBoard := testutil.ValidBoard()
+		InsertBoard(t, pool, &otherBoard)
+		otherBoardColumn := testutil.ValidColumn(otherBoard.ID)
+		InsertColumn(t, pool, &otherBoardColumn)
+
+		firstTask := testutil.ValidTask(firstColumn.ID)
+		secondTask := testutil.NewValidTask(t, firstColumn.ID, "Second", "second", 2)
+		thirdTask := testutil.ValidTask(secondColumn.ID)
+		otherBoardTask := testutil.ValidTask(otherBoardColumn.ID)
+
+		InsertTask(t, pool, &firstTask)
+		InsertTask(t, pool, &secondTask)
+		InsertTask(t, pool, &thirdTask)
+		InsertTask(t, pool, &otherBoardTask)
+
+		got, err := r.ListByBoardID(context.Background(), board.ID)
+		if err != nil {
+			t.Fatalf("ListByBoardID() error = %v", err)
+		}
+
+		want := []domain.Task{firstTask, secondTask, thirdTask}
+		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
+			t.Errorf("ListByBoardID() mismatch (-want +got):\n%s", diff)
+		}
+	})
+}
+
 func TestTaskRepository_GetByID(t *testing.T) {
 	pool, r := taskRepoPrelude(t)
 

@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type taskJSON struct {
+type TaskJSON struct {
 	ID          string `json:"id"`
 	ColumnID    string `json:"columnId"`
 	Name        string `json:"name"`
@@ -24,7 +24,7 @@ type taskJSON struct {
 	UpdatedAt   string `json:"updatedAt"`
 }
 
-type taskPositionJSON struct {
+type TaskPositionJSON struct {
 	ColumnID string `json:"columnId"`
 	Position int64  `json:"position"`
 }
@@ -341,27 +341,27 @@ func TestTask_HappyPath(t *testing.T) {
 	})
 }
 
-func parseTask(t *testing.T, resp *http.Response) taskJSON {
+func parseTask(t *testing.T, resp *http.Response) TaskJSON {
 	t.Helper()
-	var tk taskJSON
+	var tk TaskJSON
 	if err := json.NewDecoder(resp.Body).Decode(&tk); err != nil {
 		t.Fatalf("Task Decode() error = %v", err)
 	}
 	return tk
 }
 
-func parseTasksList(t *testing.T, resp *http.Response) []taskJSON {
+func parseTasksList(t *testing.T, resp *http.Response) []TaskJSON {
 	t.Helper()
-	var tasks []taskJSON
+	var tasks []TaskJSON
 	if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
 		t.Fatalf("Tasks list Decode() error = %v", err)
 	}
 	return tasks
 }
 
-func parseTaskPosition(t *testing.T, resp *http.Response) taskPositionJSON {
+func parseTaskPosition(t *testing.T, resp *http.Response) TaskPositionJSON {
 	t.Helper()
-	var p taskPositionJSON
+	var p TaskPositionJSON
 	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
 		t.Fatalf("Task position Decode() error = %v", err)
 	}
