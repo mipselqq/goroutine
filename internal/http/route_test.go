@@ -72,6 +72,10 @@ func TestNewRouter_Full(t *testing.T) {
 			metrics: true, cors: true, requestID: true,
 		},
 		{
+			entry:   entry{"Board aggregate by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/aggregate"},
+			metrics: true, cors: true, requestID: true,
+		},
+		{
 			entry:   entry{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7()},
 			metrics: true, cors: true, requestID: true,
 		},

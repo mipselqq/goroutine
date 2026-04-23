@@ -304,6 +304,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/boards/{boardId}/aggregate": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a board with nested columns and tasks for the current user (owner only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "boards"
+                ],
+                "summary": "Get a board aggregate by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Board ID",
+                        "name": "boardId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.aggregateBoardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "404": {
+                        "description": "BOARD_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/boards/{boardId}/columns": {
             "get": {
                 "security": [
@@ -1194,6 +1255,76 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handler.aggregateBoardResponse": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.aggregateColumnResponse"
+                    }
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "My Todo Description"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Todo Name"
+                },
+                "ownerId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                }
+            }
+        },
+        "handler.aggregateColumnResponse": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a1"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "019cc971-e5be-7df9-ae8a-c6e3f29c86a2"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "In Progress"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.taskResponse"
+                    }
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-07T20:56:50.000+03:00"
+                }
+            }
+        },
         "handler.boardResponse": {
             "type": "object",
             "properties": {

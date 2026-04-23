@@ -235,6 +235,7 @@ func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description stri
 func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, updatedAt time.Time) domain.Task {
 	t.Helper()
 
+	// TODO: use Must
 	domainName, err := domain.NewTaskName(name)
 	if err != nil {
 		t.Fatalf("NewTaskName() error = %v", err)

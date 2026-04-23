@@ -55,7 +55,7 @@ type columnPositionResponse struct {
 	Position int64 `json:"position" example:"2"`
 }
 
-func NewColumnResponse(column *domain.Column) columnResponse {
+func newColumnResponse(column *domain.Column) columnResponse {
 	return columnResponse{
 		ID:        column.ID.String(),
 		BoardID:   column.BoardID.String(),
@@ -117,7 +117,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusCreated, NewColumnResponse(&column))
+	httpschema.RespondJSON(w, h.logger, http.StatusCreated, newColumnResponse(&column))
 }
 
 // List godoc
@@ -158,7 +158,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 
 	response := make([]columnResponse, 0, len(columns))
 	for i := range columns {
-		response = append(response, NewColumnResponse(&columns[i]))
+		response = append(response, newColumnResponse(&columns[i]))
 	}
 
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
@@ -227,7 +227,7 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpschema.RespondJSON(w, h.logger, http.StatusOK, NewColumnResponse(&column))
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, newColumnResponse(&column))
 }
 
 // Move godoc
