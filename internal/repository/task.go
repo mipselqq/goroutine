@@ -85,27 +85,56 @@ func (r *PgTask) Create(
 	name domain.TaskName,
 	description domain.TaskDescription,
 ) (domain.Task, error) {
-	const query = `
-		WITH column_lock AS (
-			SELECT id
-			FROM columns
-			WHERE id = $1
-			FOR UPDATE
-		), next_pos AS (
-			SELECT COALESCE(MAX(position), 0) + 1 AS position
-			FROM tasks
-			WHERE column_id = $1
-		), inserted AS (
-			INSERT INTO tasks (column_id, name, description, position)
-			SELECT $1, $2, $3, next_pos.position
-			FROM column_lock, next_pos
-			RETURNING id, column_id, name, description, position, created_at, updated_at
-		)
-		SELECT id, column_id, name, description, position, created_at, updated_at
-		FROM inserted`
+	const (
+		lockColumnQuery = `
+		SELECT 1
+		FROM columns
+		WHERE id = @column_id
+		FOR UPDATE`
+		nextPositionQuery = `
+		SELECT COALESCE(MAX(position), 0) + 1
+		FROM tasks
+		WHERE column_id = @column_id`
+		insertTaskQuery = `
+		INSERT INTO tasks (column_id, name, description, position)
+		VALUES (@column_id, @name, @description, @position)
+		RETURNING id, column_id, name, description, position, created_at, updated_at`
+	)
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("task repo: create begin tx: %v: %w", err, ErrInternal)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	var locked int
+	err = tx.QueryRow(ctx, lockColumnQuery, pgx.NamedArgs{
+		"column_id": columnID,
+	}).Scan(&locked)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Task{}, ErrRowNotFound
+		}
+		return domain.Task{}, fmt.Errorf("task repo: create lock column: %v: %w", err, ErrInternal)
+	}
+
+	var nextPosition int64
+	err = tx.QueryRow(ctx, nextPositionQuery, pgx.NamedArgs{
+		"column_id": columnID,
+	}).Scan(&nextPosition)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("task repo: create next position: %v: %w", err, ErrInternal)
+	}
 
 	var task domain.Task
-	err := r.pool.QueryRow(ctx, query, columnID, name, description).Scan(
+	err = tx.QueryRow(ctx, insertTaskQuery, pgx.NamedArgs{
+		"column_id":   columnID,
+		"name":        name,
+		"description": description,
+		"position":    nextPosition,
+	}).Scan(
 		&task.ID,
 		&task.ColumnID,
 		&task.Name,
@@ -115,10 +144,12 @@ func (r *PgTask) Create(
 		&task.UpdatedAt,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Task{}, ErrRowNotFound
-		}
-		return domain.Task{}, fmt.Errorf("task repo: create: %v: %w", err, ErrInternal)
+		return domain.Task{}, fmt.Errorf("task repo: create insert: %v: %w", err, ErrInternal)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("task repo: create commit: %v: %w", err, ErrInternal)
 	}
 
 	return task, nil
