@@ -26,15 +26,15 @@ export function createColumnRequest(boardId: string, authHeader: AuthHeader) {
     return {
         method: 'POST',
         url: `${API_BASE}/v1/boards/${boardId}/columns`,
-        headers: { ...JSON_HEADER, ...authHeader },
+        params: { headers: { ...JSON_HEADER, ...authHeader } },
         body: JSON.stringify({ name: 'Test column', description: '' }),
     };
 }
 
 export function createColumn(boardId: string, authHeader: AuthHeader): string {
-    const { method, url, body, headers } = createColumnRequest(boardId, authHeader);
+    const req = createColumnRequest(boardId, authHeader);
 
-    const columnResp = http.request(method, url, body, { headers });
+    const columnResp = http.request(req.method, req.url, req.body, req.params);
     if (columnResp.status !== 201) {
         throw new Error(`create column failed: ${columnResp.status} ${columnResp.body}`);
     }
@@ -51,6 +51,24 @@ export function deleteBoard(boardId: string, authHeader: AuthHeader): void {
     if (deleteResp.status !== 204) {
         throw new Error(`delete board failed: ${deleteResp.status} ${deleteResp.body}`);
     }
+}
+
+export function createTaskRequest(boardId: string, columnId: string, authHeader: AuthHeader) {
+    return {
+        method: 'POST',
+        url: `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks`,
+        params: { headers: { ...JSON_HEADER, ...authHeader } },
+        body: JSON.stringify({ name: 'Test task', description: '' }),
+    };
+}
+export function createTask(boardId: string, columnId: string, authHeader: AuthHeader): string {
+    const req = createTaskRequest(boardId, columnId, authHeader);
+
+    const taskResp = http.request(req.method, req.url, req.body, req.params);
+    if (taskResp.status !== 201) {
+        throw new Error(`create task failed: ${taskResp.status} ${taskResp.body}`);
+    }
+    return taskResp.json('id') as string;
 }
 
 export function defaultRegisterAndLogin(): AuthHeader {

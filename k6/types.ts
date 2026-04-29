@@ -8,6 +8,12 @@ export interface ColumnsRaceSetup {
   boardId: string;
 }
 
+export interface TasksRaceSetup {
+  authHeader: AuthHeader;
+  boardId: string;
+  columnId: string;
+}
+
 export interface K6Response {
   status: number;
   body: string;
