@@ -1,6 +1,6 @@
 import { check } from 'k6';
 import http from 'k6/http';
-import { defaultRegisterAndLogin, createBoard, deleteBoard, API_BASE, JSON_HEADER } from './prelude.ts';
+import { defaultRegisterAndLogin, createBoard, createColumnRequest, deleteBoard } from './prelude.ts';
 import type { ColumnsRaceSetup } from './types.ts';
 
 export function setup(): ColumnsRaceSetup {
@@ -26,17 +26,9 @@ export const options = {
 };
 
 export default function columnsRace({ authHeader, boardId }: ColumnsRaceSetup): void {
-    const batch = http.batch(Array.from({ length: 10 }, () => ({
-        method: 'POST',
-        url: `${API_BASE}/v1/boards/${boardId}/columns`,
-        body: JSON.stringify({ name: `t-${Date.now()}`, description: '' }),
-        params: {
-            headers: {
-                ...authHeader,
-                ...JSON_HEADER,
-            },
-        },
-    })));
+    const batch = http.batch(
+        Array.from({ length: 10 }, () => createColumnRequest(boardId, authHeader)),
+    );
 
     for (const response of batch) {
         check(response, { '201': (x) => x.status === 201 });

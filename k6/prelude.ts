@@ -1,4 +1,4 @@
-import http from 'k6/http';
+import http, { RefinedResponse } from 'k6/http';
 import type { AuthHeader, K6Response } from './types.ts';
 
 export const API_BASE = __ENV.K6_ROOT || 'http://localhost:8080';
@@ -18,7 +18,28 @@ export function createBoard(authHeader: AuthHeader): string {
     if (boardResp.status !== 201) {
         throw new Error(`create board failed: ${boardResp.status} ${boardResp.body}`);
     }
+
     return boardResp.json('id') as string;
+}
+
+export function createColumnRequest(boardId: string, authHeader: AuthHeader) {
+    return {
+        method: 'POST',
+        url: `${API_BASE}/v1/boards/${boardId}/columns`,
+        headers: { ...JSON_HEADER, ...authHeader },
+        body: JSON.stringify({ name: 'Test column', description: '' }),
+    };
+}
+
+export function createColumn(boardId: string, authHeader: AuthHeader): string {
+    const { method, url, body, headers } = createColumnRequest(boardId, authHeader);
+
+    const columnResp = http.request(method, url, body, { headers });
+    if (columnResp.status !== 201) {
+        throw new Error(`create column failed: ${columnResp.status} ${columnResp.body}`);
+    }
+
+    return columnResp.json('id') as string;
 }
 
 export function deleteBoard(boardId: string, authHeader: AuthHeader): void {
@@ -27,7 +48,6 @@ export function deleteBoard(boardId: string, authHeader: AuthHeader): void {
         null,
         { headers: authHeader },
     );
-
     if (deleteResp.status !== 204) {
         throw new Error(`delete board failed: ${deleteResp.status} ${deleteResp.body}`);
     }
