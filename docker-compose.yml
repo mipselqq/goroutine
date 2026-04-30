@@ -45,7 +45,10 @@ services:
     command:
       - |
         sed "s/\$${ADMIN_PORT}/$$ADMIN_PORT/g" /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml && \
-        /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=15d
+        /bin/prometheus \
+          --config.file=/etc/prometheus/prometheus.yml \
+          --storage.tsdb.retention.time=15d \
+          --web.enable-remote-write-receiver
 
   grafana:
     image: grafana/grafana:12.3.2

@@ -1,4 +1,4 @@
-.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down migrate-status migrate-create tools try-fetch-tags vuln
+.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down migrate-status migrate-create tools try-fetch-tags vuln happy-load
 
 VERSION := $(shell git describe --tags --always --dirty || "")
 
@@ -66,3 +66,19 @@ tools:
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install go.k6.io/k6@latest
+
+K6_ROOT ?= http://goroutine.duckdns.org:8080
+K6_PROMETHEUS_RW_SERVER_URL ?= http://localhost:9090/api/v1/write
+K6_PROMETHEUS_RW_TREND_STATS ?= p(90),p(95),p(99),min,max,avg,med,count,sum
+K6_TESTID ?= $(shell date +%s)
+K6_EXTRA_ARGS ?= --tag testid=$(K6_TESTID)
+
+happy-load:
+	K6_ROOT='$(K6_ROOT)' \
+	K6_VUS_STEP='$(K6_VUS_STEP)' \
+	K6_VUS_PLATEU_DURATION='$(K6_VUS_PLATEU_DURATION)' \
+	K6_RAMP_DURATION='$(K6_RAMP_DURATION)' \
+	K6_MAX_STAGES='$(K6_MAX_STAGES)' \
+	K6_PROMETHEUS_RW_SERVER_URL='$(K6_PROMETHEUS_RW_SERVER_URL)' \
+	K6_PROMETHEUS_RW_TREND_STATS='$(K6_PROMETHEUS_RW_TREND_STATS)' \
+	k6 run -o experimental-prometheus-rw $(K6_EXTRA_ARGS) ./k6/realistic-happy-path-load.ts
