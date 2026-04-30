@@ -75,6 +75,7 @@ tools:
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install go.k6.io/k6@latest
+	npm install -D @types/k6
 
 K6_PROMETHEUS_RW_SERVER_URL ?= http://localhost:9090/api/v1/write
 K6_PROMETHEUS_RW_TREND_STATS ?= p(90),p(95),p(99),min,max,avg,med,count,sum
