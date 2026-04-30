@@ -1,5 +1,5 @@
 import http, { RefinedResponse } from 'k6/http';
-import type { AuthHeader, K6Response, Column } from './types.ts';
+import type { AuthHeader, K6Response, Column, Task } from './types.ts';
 
 export const API_BASE = __ENV.K6_ROOT || 'http://localhost:8080';
 export const PWD = 'testPassword$123';
@@ -93,6 +93,30 @@ export function createTask(boardId: string, columnId: string, authHeader: AuthHe
         throw new Error(`create task failed: ${taskResp.status} ${taskResp.body}`);
     }
     return taskResp.json('id') as string;
+}
+
+export function deleteTaskRequest(boardId: string, columnId: string, taskId: string, authHeader: AuthHeader) {
+    return {
+        method: 'DELETE',
+        url: `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
+        params: { headers: { ...JSON_HEADER, ...authHeader } },
+    };
+}
+
+export function getTask(boardId: string, columnId: string, taskId: string, authHeader: AuthHeader): Task {
+    const listResp = http.get(
+        `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks`,
+        { headers: authHeader },
+    );
+    if (listResp.status !== 200) {
+        throw new Error(`list tasks failed: ${listResp.status} ${listResp.body}`);
+    }
+
+    const task = (listResp.json() as unknown as Task[]).find((t) => t.id === taskId);
+    if (!task) {
+        throw new Error(`task ${taskId} not found in list`);
+    }
+    return task;
 }
 
 export function defaultRegisterAndLogin(): AuthHeader {

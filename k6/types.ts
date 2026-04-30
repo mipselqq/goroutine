@@ -26,6 +26,19 @@ export interface Column {
   position: number;
 }
 
+export interface Task {
+  id: string;
+  position: number;
+}
+
+export interface TasksDeleteCompactionSetup {
+  authHeader: AuthHeader;
+  boardId: string;
+  columnId: string;
+  testTaskIds: string[];
+  lastTaskId: string;
+}
+
 export interface K6Response {
   status: number;
   body: string;
