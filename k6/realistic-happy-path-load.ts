@@ -13,7 +13,7 @@ const L3_WAIT = 2;
 const L4_WAIT = 4;
 
 const VUS_STEP = parseInt(__ENV.K6_VUS_STEP || '500');
-const VUS_PLATEU_DURATION = __ENV.K6_VUS_PLATEU_DURATION || '60s';
+const VUS_PLATEAU_DURATION = __ENV.K6_VUS_PLATEAU_DURATION || '60s';
 const RAMP_DURATION = __ENV.K6_RAMP_DURATION || '5s';
 const AFTER_FAIL_DURATION = __ENV.K6_AFTER_FAIL_DURATION || '30s';
 const DELAY_ABORT_EVAL = __ENV.K6_DELAY_ABORT_EVAL || '30s';
@@ -65,7 +65,7 @@ export const options = {
                 { length: MAX_STAGES },
                 (_, i) => [
                     { duration: RAMP_DURATION, target: VUS_STEP * (i + 1) },
-                    { duration: VUS_PLATEU_DURATION, target: VUS_STEP * (i + 1) },
+                    { duration: VUS_PLATEAU_DURATION, target: VUS_STEP * (i + 1) },
                 ]
             ).flat(),
         },
