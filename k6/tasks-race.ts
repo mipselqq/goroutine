@@ -23,6 +23,7 @@ export const options = {
     },
 };
 
+// Attempting go catch 500 Internal Error because of Unique Violation
 export default function tasksRace({ authHeader, boardId, columnId }: TasksRaceSetup): void {
     const batch = http.batch(
         Array.from({ length: 10 }, () => createTaskRequest(boardId, columnId, authHeader)),

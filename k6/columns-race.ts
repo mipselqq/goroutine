@@ -25,7 +25,7 @@ export const options = {
     },
 };
 
-// 500 Internal Error returns on unique violation
+// Attempting go catch 500 Internal Error because of Unique Violation
 export default function columnsRace({ authHeader, boardId }: ColumnsRaceSetup): void {
     const batch = http.batch(
         Array.from({ length: 10 }, () => createColumnRequest(boardId, authHeader)),
