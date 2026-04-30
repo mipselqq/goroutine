@@ -1,6 +1,6 @@
 import http from "k6/http";
 import { createBoard, createColumn, createTaskRequest, defaultRegisterAndLogin, deleteBoard } from "./prelude.ts";
-import type { TasksRaceSetup } from "./types";
+import type { TasksRaceSetup } from "./types.ts";
 import { check } from "k6";
 
 export function setup(): TasksRaceSetup {
