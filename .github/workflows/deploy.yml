@@ -115,7 +115,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     environment: staging
-    timeout-minutes: 1
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: grafana/setup-k6-action@v1

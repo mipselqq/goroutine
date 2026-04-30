@@ -1,7 +1,6 @@
 .PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down \
 migrate-status migrate-create tools try-fetch-tags vuln happy-load \
-test-race test-integration-race test-k6-race test-some-race \
-build-bin test-k6-race
+test-race test-integration-race test-k6-race test-some-race
 
 VERSION := $(shell git describe --tags --always --dirty || "")
 
