@@ -14,7 +14,7 @@ export function createBoard(authHeader: AuthHeader): string {
     const boardResp = http.post(
         `${API_BASE}/v1/boards`,
         JSON.stringify({ name: 'Test board', description: '' }),
-        { headers: authHeader, tags: { name: 'createBoard' } },
+        { headers: { ...JSON_HEADER, ...authHeader }, tags: { name: 'createBoard' } },
     );
     check(boardResp, { 'createBoard status is 201': (r) => r.status === 201 });
     if (boardResp.status !== 201) {
