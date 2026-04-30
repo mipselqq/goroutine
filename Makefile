@@ -76,7 +76,6 @@ tools:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install go.k6.io/k6@latest
 
-K6_ROOT ?= http://goroutine.duckdns.org:8080
 K6_PROMETHEUS_RW_SERVER_URL ?= http://localhost:9090/api/v1/write
 K6_PROMETHEUS_RW_TREND_STATS ?= p(90),p(95),p(99),min,max,avg,med,count,sum
 K6_TESTID ?= $(shell date +%s)
