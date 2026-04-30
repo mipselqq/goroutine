@@ -6,3 +6,7 @@ server
 *.exe
 *.test
 *.prof
+
+node_modules
+*.js
+package*.json

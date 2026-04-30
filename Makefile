@@ -1,4 +1,6 @@
-.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down migrate-status migrate-create tools try-fetch-tags vuln
+.PHONY: dev test test-integration build-bin lint fmt swag migrate-up migrate-down \
+migrate-status migrate-create tools try-fetch-tags vuln happy-load \
+test-race test-integration-race test-k6-race test-some-race
 
 VERSION := $(shell git describe --tags --always --dirty || "")
 
@@ -25,6 +27,12 @@ test-race:
 	go test -race ./...
 test-integration-race: prepare-test-env
 	go test -race -tags=integration ./internal/repository/...
+test-k6-race:
+	k6 run ./k6/columns-create-race.ts
+	k6 run ./k6/columns-delete-compaction-race.ts
+	k6 run ./k6/tasks-create-race.ts
+	k6 run ./k6/tasks-delete-compaction-race.ts
+
 test-some-race: test-race test-integration-race
 
 build-bin: try-fetch-tags
@@ -65,3 +73,20 @@ tools:
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
+	go install go.k6.io/k6@latest
+	npm install -D @types/k6
+
+K6_PROMETHEUS_RW_SERVER_URL ?= http://localhost:9090/api/v1/write
+K6_PROMETHEUS_RW_TREND_STATS ?= p(90),p(95),p(99),min,max,avg,med,count,sum
+K6_TESTID ?= $(shell date +%s)
+K6_EXTRA_ARGS ?= --tag testid=$(K6_TESTID)
+
+happy-load:
+	K6_ROOT='$(K6_ROOT)' \
+	K6_VUS_STEP='$(K6_VUS_STEP)' \
+	K6_VUS_PLATEAU_DURATION='$(K6_VUS_PLATEAU_DURATION)' \
+	K6_RAMP_DURATION='$(K6_RAMP_DURATION)' \
+	K6_MAX_STAGES='$(K6_MAX_STAGES)' \
+	K6_PROMETHEUS_RW_SERVER_URL='$(K6_PROMETHEUS_RW_SERVER_URL)' \
+	K6_PROMETHEUS_RW_TREND_STATS='$(K6_PROMETHEUS_RW_TREND_STATS)' \
+	k6 run -o experimental-prometheus-rw $(K6_EXTRA_ARGS) ./k6/realistic-happy-path-load.ts
