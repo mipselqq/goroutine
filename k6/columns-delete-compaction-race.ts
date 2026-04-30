@@ -1,4 +1,5 @@
 import { check } from "k6";
+import type { Options } from "k6/options";
 import http from "k6/http";
 import { defaultRegisterAndLogin, createBoard, createColumnRequest, deleteBoard, deleteColumnRequest, getColumn } from "./prelude.ts";
 import type { ColumnsDeleteCompactionSetup } from "./types.ts";
@@ -20,7 +21,7 @@ export function setup(): ColumnsDeleteCompactionSetup {
     return { authHeader, boardId, testColumnIds, lastColumnId };
 }
 
-export const options = {
+export const options: Options = {
     scenarios: {
         columnsDeleteCompactionRace: {
             executor: "per-vu-iterations",

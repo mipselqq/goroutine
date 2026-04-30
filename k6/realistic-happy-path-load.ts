@@ -1,4 +1,5 @@
 import { sleep } from "k6";
+import type { Options } from "k6/options";
 import {
     defaultRegisterAndLogin, createBoard, createColumn, createTask,
     getAggregate, getBoard, listTasks,
@@ -18,7 +19,7 @@ const AFTER_FAIL_DURATION = __ENV.K6_AFTER_FAIL_DURATION || "30s";
 const DELAY_ABORT_EVAL = __ENV.K6_DELAY_ABORT_EVAL || "30s";
 const MAX_STAGES = parseInt(__ENV.K6_MAX_STAGES || "50");
 
-export const options = {
+export const options: Options = {
     thresholds: {
         http_req_failed: [
             { threshold: "rate < 0.01", abortOnFail: true, delayAbortEval: DELAY_ABORT_EVAL },

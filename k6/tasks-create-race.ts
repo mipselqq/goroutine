@@ -1,4 +1,5 @@
 import http from "k6/http";
+import type { Options } from "k6/options";
 import { createBoard, createColumn, createTaskRequest, defaultRegisterAndLogin, deleteBoard } from "./prelude.ts";
 import type { TasksCreateRaceSetup } from "./types.ts";
 import { check } from "k6";
@@ -10,7 +11,7 @@ export function setup(): TasksCreateRaceSetup {
     return { authHeader, boardId, columnId };
 }
 
-export const options = {
+export const options: Options = {
     scenarios: {
         tasksRace: {
             executor: "per-vu-iterations",

@@ -1,4 +1,5 @@
 import { check } from "k6";
+import type { Options } from "k6/options";
 import http from "k6/http";
 import { defaultRegisterAndLogin, createBoard, createColumnRequest, deleteBoard } from "./prelude.ts";
 import type { ColumnsCreateRaceSetup } from "./types.ts";
@@ -9,7 +10,7 @@ export function setup(): ColumnsCreateRaceSetup {
     return { authHeader, boardId };
 }
 
-export const options = {
+export const options: Options = {
     scenarios: {
         columnsRace: {
             // Very easy to reproduce the race condition

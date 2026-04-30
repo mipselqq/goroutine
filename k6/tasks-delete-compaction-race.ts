@@ -1,4 +1,5 @@
 import { check } from "k6";
+import type { Options } from "k6/options";
 import http from "k6/http";
 import { defaultRegisterAndLogin, createBoard, createColumn, createTaskRequest, deleteBoard, deleteTaskRequest, getTask } from "./prelude.ts";
 import type { TasksDeleteCompactionSetup } from "./types.ts";
@@ -21,7 +22,7 @@ export function setup(): TasksDeleteCompactionSetup {
     return { authHeader, boardId, columnId, testTaskIds, lastTaskId };
 }
 
-export const options = {
+export const options: Options = {
     scenarios: {
         tasksDeleteCompactionRace: {
             executor: "per-vu-iterations",
