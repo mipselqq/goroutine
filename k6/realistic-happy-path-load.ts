@@ -41,8 +41,9 @@ function measure(metric: { d: Trend; e: Rate }, fn: () => void): void {
     } catch (error) {
         metric.e.add(1);
         throw new Error('measure() fn threw an error', { cause: error });
+    } finally {
+        metric.d.add(Date.now() - start);
     }
-    metric.d.add(Date.now() - start);
 }
 
 export const options = {
