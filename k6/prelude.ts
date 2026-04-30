@@ -26,7 +26,7 @@ export function createColumnRequest(boardId: string, authHeader: AuthHeader) {
     return {
         method: 'POST',
         url: `${API_BASE}/v1/boards/${boardId}/columns`,
-        params: { headers: { ...JSON_HEADER, ...authHeader } },
+        params: { headers: { ...JSON_HEADER, ...authHeader }, tags: { name: 'createColumn' } },
         body: JSON.stringify({ name: 'Test column', description: '' }),
     };
 }
