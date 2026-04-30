@@ -1,6 +1,6 @@
 import { check } from 'k6';
 import http from 'k6/http';
-import { defaultRegisterAndLogin, createBoard, createColumnRequest, deleteBoard, createColumn, deleteColumnRequest, getColumn } from './prelude.ts';
+import { defaultRegisterAndLogin, createBoard, createColumnRequest, deleteBoard, deleteColumnRequest, getColumn } from './prelude.ts';
 import type { ColumnsDeleteCompactionSetup } from './types.ts';
 
 const NUM_COLUMNS = 20 + 1;
