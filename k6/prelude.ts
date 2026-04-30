@@ -1,5 +1,5 @@
 import http, { RefinedResponse } from 'k6/http';
-import type { AuthHeader, K6Response } from './types.ts';
+import type { AuthHeader, K6Response, Column } from './types.ts';
 
 export const API_BASE = __ENV.K6_ROOT || 'http://localhost:8080';
 export const PWD = 'testPassword$123';
@@ -40,6 +40,30 @@ export function createColumn(boardId: string, authHeader: AuthHeader): string {
     }
 
     return columnResp.json('id') as string;
+}
+
+export function deleteColumnRequest(boardId: string, columnId: string, authHeader: AuthHeader) {
+    return {
+        method: 'DELETE',
+        url: `${API_BASE}/v1/boards/${boardId}/columns/${columnId}`,
+        params: { headers: { ...JSON_HEADER, ...authHeader } },
+    };
+}
+
+export function getColumn(boardId: string, columnId: string, authHeader: AuthHeader): Column {
+    const listResp = http.get(
+        `${API_BASE}/v1/boards/${boardId}/columns`,
+        { headers: authHeader },
+    );
+    if (listResp.status !== 200) {
+        throw new Error(`list columns failed: ${listResp.status} ${listResp.body}`);
+    }
+
+    const column = (listResp.json() as unknown as Column[]).find((c) => c.id === columnId);
+    if (!column) {
+        throw new Error(`column ${columnId} not found in list`);
+    }
+    return column;
 }
 
 export function deleteBoard(boardId: string, authHeader: AuthHeader): void {

@@ -3,15 +3,27 @@ export interface AuthHeader {
   Authorization: string;
 }
 
-export interface ColumnsRaceSetup {
+export interface ColumnsCreateRaceSetup {
   authHeader: AuthHeader;
   boardId: string;
 }
 
-export interface TasksRaceSetup {
+export interface TasksCreateRaceSetup {
   authHeader: AuthHeader;
   boardId: string;
   columnId: string;
+}
+
+export interface ColumnsDeleteCompactionSetup {
+  authHeader: AuthHeader;
+  boardId: string,
+  testColumnIds: string[];
+  lastColumnId: string;
+}
+
+export interface Column {
+  id: string;
+  position: number;
 }
 
 export interface K6Response {

@@ -1,9 +1,9 @@
 import { check } from 'k6';
 import http from 'k6/http';
 import { defaultRegisterAndLogin, createBoard, createColumnRequest, deleteBoard } from './prelude.ts';
-import type { ColumnsRaceSetup } from './types.ts';
+import type { ColumnsCreateRaceSetup } from './types.ts';
 
-export function setup(): ColumnsRaceSetup {
+export function setup(): ColumnsCreateRaceSetup {
     const authHeader = defaultRegisterAndLogin();
     const boardId = createBoard(authHeader);
     return { authHeader, boardId };
@@ -26,7 +26,7 @@ export const options = {
 };
 
 // Attempting go catch 500 Internal Error because of Unique Violation
-export default function columnsRace({ authHeader, boardId }: ColumnsRaceSetup): void {
+export default function columnsRace({ authHeader, boardId }: ColumnsCreateRaceSetup): void {
     const batch = http.batch(
         Array.from({ length: 10 }, () => createColumnRequest(boardId, authHeader)),
     );
@@ -36,6 +36,6 @@ export default function columnsRace({ authHeader, boardId }: ColumnsRaceSetup): 
     }
 }
 
-export function teardown({ authHeader, boardId }: ColumnsRaceSetup): void {
+export function teardown({ authHeader, boardId }: ColumnsCreateRaceSetup): void {
     deleteBoard(boardId, authHeader);
 }
