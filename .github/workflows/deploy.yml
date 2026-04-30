@@ -110,7 +110,7 @@ jobs:
             "http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}/v1/health"
 
   k6-staging-race:
-    name: k6 race scenarios (staging)
+    name: K6 Race Checks on Staging
     needs: ping-staging-health
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
