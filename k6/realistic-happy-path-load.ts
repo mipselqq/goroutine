@@ -38,8 +38,9 @@ function measure(metric: { d: Trend; e: Rate }, fn: () => void): void {
     try {
         fn();
         metric.e.add(0);
-    } catch {
+    } catch (error) {
         metric.e.add(1);
+        throw new Error('measure() fn threw an error', { cause: error });
     }
     metric.d.add(Date.now() - start);
 }
