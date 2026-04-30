@@ -10,7 +10,10 @@ export function setup(): ColumnsDeleteCompactionSetup {
     const boardId = createBoard(authHeader);
     const testColumnIds = http.batch(
         Array.from({ length: NUM_COLUMNS }, () => createColumnRequest(boardId, authHeader)),
-    ).map((response) => response.json('id') as string);
+    ).map((response) => (
+        check(response, { 'create column batch is all 201': (x) => x.status === 201 }),
+        response.json('id') as string
+    ));
 
     const lastColumnId = testColumnIds.pop() as string;
 

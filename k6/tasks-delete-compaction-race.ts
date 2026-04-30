@@ -11,7 +11,10 @@ export function setup(): TasksDeleteCompactionSetup {
     const columnId = createColumn(boardId, authHeader);
     const testTaskIds = http.batch(
         Array.from({ length: NUM_TASKS }, () => createTaskRequest(boardId, columnId, authHeader)),
-    ).map((response) => response.json('id') as string);
+    ).map((response) => (
+        check(response, { 'create task batch is all 201': (x) => x.status === 201 }),
+        response.json('id') as string
+    ));
 
     const lastTaskId = testTaskIds.pop() as string;
 
