@@ -13,13 +13,13 @@ export function setup(): TasksCreateRaceSetup {
 export const options = {
     scenarios: {
         tasksRace: {
-            executor: 'per-vu-iterations',
+            executor: "per-vu-iterations",
             vus: 1,
             iterations: 1,
         },
     },
     thresholds: {
-        checks: ['rate == 1'],
+        checks: ["rate == 1"],
     },
 };
 
@@ -30,7 +30,7 @@ export default function tasksRace({ authHeader, boardId, columnId }: TasksCreate
     );
 
     for (const response of batch) {
-        check(response, { '201': (x) => x.status === 201 });
+        check(response, { "201": (x) => x.status === 201 });
     }
 }
 
