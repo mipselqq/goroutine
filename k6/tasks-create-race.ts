@@ -1,9 +1,9 @@
 import http from "k6/http";
 import { createBoard, createColumn, createTaskRequest, defaultRegisterAndLogin, deleteBoard } from "./prelude.ts";
-import type { TasksRaceSetup } from "./types.ts";
+import type { TasksCreateRaceSetup } from "./types.ts";
 import { check } from "k6";
 
-export function setup(): TasksRaceSetup {
+export function setup(): TasksCreateRaceSetup {
     const authHeader = defaultRegisterAndLogin();
     const boardId = createBoard(authHeader);
     const columnId = createColumn(boardId, authHeader);
@@ -24,7 +24,7 @@ export const options = {
 };
 
 // Attempting go catch 500 Internal Error because of Unique Violation
-export default function tasksRace({ authHeader, boardId, columnId }: TasksRaceSetup): void {
+export default function tasksRace({ authHeader, boardId, columnId }: TasksCreateRaceSetup): void {
     const batch = http.batch(
         Array.from({ length: 10 }, () => createTaskRequest(boardId, columnId, authHeader)),
     );
@@ -34,6 +34,6 @@ export default function tasksRace({ authHeader, boardId, columnId }: TasksRaceSe
     }
 }
 
-export function teardown({ authHeader, boardId }: TasksRaceSetup): void {
+export function teardown({ authHeader, boardId }: TasksCreateRaceSetup): void {
     deleteBoard(boardId, authHeader);
 }

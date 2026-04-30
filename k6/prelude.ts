@@ -5,8 +5,8 @@ export const API_BASE = __ENV.K6_ROOT || 'http://localhost:8080';
 export const PWD = 'testPassword$123';
 export const JSON_HEADER = { 'Content-Type': 'application/json' };
 
-export function generateTimedEmail(): string {
-    return `${Date.now()}@t.t`;
+export function generateUniqueEmail(): string {
+    return `vu${__VU}-${Date.now()}@t.t`;
 }
 
 export function createBoard(authHeader: AuthHeader): string {
@@ -42,12 +42,54 @@ export function createColumn(boardId: string, authHeader: AuthHeader): string {
     return columnResp.json('id') as string;
 }
 
+export function listColumns(boardId: string, authHeader: AuthHeader): Column[] {
+    const listResp = http.get(
+        `${API_BASE}/v1/boards/${boardId}/columns`,
+        { headers: authHeader },
+    );
+    if (listResp.status !== 200) {
+        throw new Error(`list columns failed: ${listResp.status} ${listResp.body}`);
+    }
+    return listResp.json() as unknown as Column[];
+}
+
+export function deleteColumn(boardId: string, columnId: string, authHeader: AuthHeader): void {
+    const delResp = http.del(
+        `${API_BASE}/v1/boards/${boardId}/columns/${columnId}`,
+        null,
+        { headers: authHeader },
+    );
+    if (delResp.status !== 204) {
+        throw new Error(`delete column failed: ${delResp.status} ${delResp.body}`);
+    }
+}
+
 export function deleteColumnRequest(boardId: string, columnId: string, authHeader: AuthHeader) {
     return {
         method: 'DELETE',
         url: `${API_BASE}/v1/boards/${boardId}/columns/${columnId}`,
         params: { headers: { ...JSON_HEADER, ...authHeader } },
     };
+}
+
+export function getBoard(boardId: string, authHeader: AuthHeader): void {
+    const boardResp = http.get(
+        `${API_BASE}/v1/boards/${boardId}`,
+        { headers: authHeader },
+    );
+    if (boardResp.status !== 200) {
+        throw new Error(`get board failed: ${boardResp.status} ${boardResp.body}`);
+    }
+}
+
+export function listBoards(authHeader: AuthHeader): void {
+    const listResp = http.get(
+        `${API_BASE}/v1/boards`,
+        { headers: authHeader },
+    );
+    if (listResp.status !== 200) {
+        throw new Error(`list boards failed: ${listResp.status} ${listResp.body}`);
+    }
 }
 
 export function getColumn(boardId: string, columnId: string, authHeader: AuthHeader): Column {
@@ -74,6 +116,74 @@ export function deleteBoard(boardId: string, authHeader: AuthHeader): void {
     );
     if (deleteResp.status !== 204) {
         throw new Error(`delete board failed: ${deleteResp.status} ${deleteResp.body}`);
+    }
+}
+
+export function listTasks(boardId: string, columnId: string, authHeader: AuthHeader): Task[] {
+    const listResp = http.get(
+        `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks`,
+        { headers: authHeader },
+    );
+    if (listResp.status !== 200) {
+        throw new Error(`list tasks failed: ${listResp.status} ${listResp.body}`);
+    }
+    return listResp.json() as unknown as Task[];
+}
+
+export function moveTask(
+    boardId: string,
+    columnId: string,
+    taskId: string,
+    targetColumnId: string,
+    targetPosition: number,
+    authHeader: AuthHeader,
+): void {
+    const moveResp = http.put(
+        `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks/${taskId}/position`,
+        JSON.stringify({ targetColumnId, targetPosition }),
+        { headers: { ...JSON_HEADER, ...authHeader } },
+    );
+    if (moveResp.status !== 200) {
+        throw new Error(`move task failed: ${moveResp.status} ${moveResp.body}`);
+    }
+}
+
+export function deleteTask(boardId: string, columnId: string, taskId: string, authHeader: AuthHeader): void {
+    const delResp = http.del(
+        `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
+        null,
+        { headers: authHeader },
+    );
+    if (delResp.status !== 204) {
+        throw new Error(`delete task failed: ${delResp.status} ${delResp.body}`);
+    }
+}
+
+export function getAggregate(boardId: string, authHeader: AuthHeader): void {
+    const aggResp = http.get(
+        `${API_BASE}/v1/boards/${boardId}/aggregate`,
+        { headers: authHeader },
+    );
+    if (aggResp.status !== 200) {
+        throw new Error(`get aggregate failed: ${aggResp.status} ${aggResp.body}`);
+    }
+}
+
+export function updateTask(
+    boardId: string,
+    columnId: string,
+    taskId: string,
+    name: string,
+    description: string,
+    authHeader: AuthHeader,
+): void {
+    const patchResp = http.patch(
+        `${API_BASE}/v1/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
+        JSON.stringify({ name, description }),
+        { headers: { ...JSON_HEADER, ...authHeader } },
+    );
+    if (patchResp.status !== 200) {
+        throw new Error(`update task failed: ${patchResp.status} ${patchResp.body}`);
     }
 }
 
@@ -120,7 +230,7 @@ export function getTask(boardId: string, columnId: string, taskId: string, authH
 }
 
 export function defaultRegisterAndLogin(): AuthHeader {
-    const email = generateTimedEmail();
+    const email = generateUniqueEmail();
     const password = PWD;
 
     const registerResp = http.post(
