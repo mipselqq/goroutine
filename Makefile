@@ -25,6 +25,12 @@ test-race:
 	go test -race ./...
 test-integration-race: prepare-test-env
 	go test -race -tags=integration ./internal/repository/...
+test-k6-race:
+	k6 run ./k6/columns-create-race.ts
+	k6 run ./k6/columns-delete-compaction-race.ts
+	k6 run ./k6/tasks-create-race.ts
+	k6 run ./k6/tasks-delete-compaction-race.ts
+
 test-some-race: test-race test-integration-race
 
 build-bin: try-fetch-tags

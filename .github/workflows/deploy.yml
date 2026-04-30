@@ -109,6 +109,21 @@ jobs:
             --retry-all-errors \
             "http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}/v1/health"
 
+  k6-staging-race:
+    name: k6 race scenarios (staging)
+    needs: ping-staging-health
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - name: Run k6 race scenarios against staging
+        env:
+          K6_ROOT: http://${{ vars.DEPLOY_HOST }}:${{ vars.PORT }}
+        run: make test-k6-race
+
   ping-prod-health:
     name: Ping Production Health
     needs: deploy-prod
