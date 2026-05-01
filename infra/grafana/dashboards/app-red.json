@@ -460,7 +460,7 @@
                 "value": 200
               },
               {
-                "color": "red",
+                "color": "dark-red",
                 "value": 500
               }
             ]
@@ -550,19 +550,28 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "area"
             }
           },
           "mappings": [],
           "thresholds": {
-            "mode": "absolute",
+            "mode": "percentage",
             "steps": [
               {
                 "color": "green",
                 "value": 0
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 3
               }
             ]
-          }
+          },
+          "unit": "percentunit"
         },
         "overrides": []
       },
@@ -1201,7 +1210,7 @@
                 "value": 0
               },
               {
-                "color": "red",
+                "color": "dark-red",
                 "value": 50
               }
             ]
@@ -1398,7 +1407,7 @@
                 "value": 80
               },
               {
-                "color": "red",
+                "color": "dark-red",
                 "value": 90
               }
             ]
@@ -1469,5 +1478,5 @@
   "timezone": "browser",
   "title": "App dashboard",
   "uid": "adtcmjl",
-  "version": 4
+  "version": 1
 }
