@@ -571,7 +571,7 @@
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "errors/sec"
         },
         "overrides": []
       },
@@ -1069,7 +1069,7 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -1185,12 +1185,12 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "showValues": false,
             "spanNulls": false,
             "stacking": {
@@ -1244,7 +1244,7 @@
         {
           "editorMode": "code",
           "exemplar": false,
-          "expr": "rate(go_gc_duration_seconds_sum{job=\"goroutine_app\"}[$__rate_interval]) / rate(go_gc_duration_seconds_count{job=\"goroutine_app\"}[$__rate_interval])",
+          "expr": "rate(go_gc_duration_seconds_sum{job=\"goroutine_app\"}[$__rate_interval]) / rate(go_gc_duration_seconds_count{job=\"goroutine_app\"}[$__rate_interval]) * 1000",
           "legendFormat": "App",
           "range": true,
           "refId": "A"
@@ -1281,12 +1281,12 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "showValues": false,
             "spanNulls": false,
             "stacking": {
@@ -1478,5 +1478,5 @@
   "timezone": "browser",
   "title": "App dashboard",
   "uid": "adtcmjl",
-  "version": 1
+  "version": 2
 }

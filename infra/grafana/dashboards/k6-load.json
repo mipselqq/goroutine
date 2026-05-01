@@ -777,7 +777,7 @@
                             }
                         ]
                     },
-                    "unit": "percent"
+                    "unit": "errors/sec"
                 },
                 "overrides": []
             },
@@ -811,7 +811,7 @@
             "targets": [
                 {
                     "editorMode": "code",
-                    "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) by (path, method)",
+                    "expr": "sum(rate(http_requests_total{status=~\"5..\"}[$__rate_interval])) by (path, method)",
                     "legendFormat": "{{method}} {{path}}",
                     "range": true,
                     "refId": "A"
@@ -1275,7 +1275,7 @@
                         },
                         "insertNulls": false,
                         "lineInterpolation": "linear",
-                        "lineWidth": 1,
+                        "lineWidth": 2,
                         "pointSize": 5,
                         "scaleDistribution": {
                             "type": "linear"
@@ -1391,12 +1391,12 @@
                         },
                         "insertNulls": false,
                         "lineInterpolation": "linear",
-                        "lineWidth": 1,
+                        "lineWidth": 2,
                         "pointSize": 5,
                         "scaleDistribution": {
                             "type": "linear"
                         },
-                        "showPoints": "auto",
+                        "showPoints": "never",
                         "showValues": false,
                         "spanNulls": false,
                         "stacking": {
@@ -1450,7 +1450,7 @@
                 {
                     "editorMode": "code",
                     "exemplar": false,
-                    "expr": "rate(go_gc_duration_seconds_sum{job=\"goroutine_app\"}[$__rate_interval]) / rate(go_gc_duration_seconds_count{job=\"goroutine_app\"}[$__rate_interval])",
+                    "expr": "rate(go_gc_duration_seconds_sum{job=\"goroutine_app\"}[$__rate_interval]) / rate(go_gc_duration_seconds_count{job=\"goroutine_app\"}[$__rate_interval]) * 1000",
                     "legendFormat": "App",
                     "range": true,
                     "refId": "A"
@@ -1487,12 +1487,12 @@
                         },
                         "insertNulls": false,
                         "lineInterpolation": "linear",
-                        "lineWidth": 1,
+                        "lineWidth": 2,
                         "pointSize": 5,
                         "scaleDistribution": {
                             "type": "linear"
                         },
-                        "showPoints": "auto",
+                        "showPoints": "never",
                         "showValues": false,
                         "spanNulls": false,
                         "stacking": {
@@ -1710,5 +1710,5 @@
     "timezone": "browser",
     "title": "K6 Load Test",
     "uid": "adtcmjld",
-    "version": 2
+    "version": 3
 }
