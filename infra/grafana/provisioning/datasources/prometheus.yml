@@ -6,6 +6,8 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     uid: Prometheus
+    jsonData:
+      timeInterval: "5s"
   - name: Loki
     type: loki
     url: http://loki:3100
