@@ -82,7 +82,8 @@ func ValidTaskPosition() domain.TaskPosition {
 	return Must(domain.NewTaskPosition, 1)
 }
 
-func MustTaskPosition(t *testing.T, n int64) domain.TaskPosition {
+func NewValidTaskPosition(t *testing.T, n int64) domain.TaskPosition {
+	t.Helper()
 	return Must(domain.NewTaskPosition, n)
 }
 

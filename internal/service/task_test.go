@@ -686,7 +686,7 @@ func TestTask_Move(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	targetColumn := testutil.NewValidColumn(t, validBoard.ID, "Done", 2)
 	validTask := testutil.ValidTask(validColumn.ID)
-	targetPosition := testutil.MustTaskPosition(t, 2)
+	targetPosition := testutil.NewValidTaskPosition(t, 2)
 
 	tests := []struct {
 		name            string

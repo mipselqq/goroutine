@@ -191,7 +191,7 @@ func TestTasks_List(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	first := testutil.ValidTask(validColumn.ID)
 	second := testutil.ValidTask(validColumn.ID)
-	second.Position = testutil.MustTaskPosition(t, first.Position.Int64()+1)
+	second.Position = testutil.NewValidTaskPosition(t, first.Position.Int64()+1)
 
 	tests := []struct {
 		name             string
@@ -543,7 +543,7 @@ func TestTasks_Move(t *testing.T) {
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	validTask := testutil.ValidTask(validColumn.ID)
 	targetColumn := testutil.NewValidColumn(t, validBoard.ID, "Done", 2)
-	targetPosition := testutil.MustTaskPosition(t, 2)
+	targetPosition := testutil.NewValidTaskPosition(t, 2)
 
 	tests := []struct {
 		name             string
