@@ -48,7 +48,7 @@ services:
       timeout: 5s
       retries: 3
     ports:
-      - "${PORT}:${PORT}"
+      - "127.0.0.1:${PORT}:${PORT}"
 
   prometheus:
     image: prom/prometheus:v3.9.1
@@ -91,7 +91,7 @@ services:
       - PROMETHEUS_PASSWORD
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data_prod:/var/lib/grafana
       - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
@@ -127,8 +127,6 @@ services:
     cpu_shares: 256
     oom_score_adj: 300
     restart: unless-stopped
-    ports:
-      - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data_prod:/loki
