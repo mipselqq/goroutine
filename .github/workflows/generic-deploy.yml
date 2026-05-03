@@ -35,7 +35,8 @@ jobs:
 
       - name: Install Ansible Core & Collections
         if: steps.cache-ansible.outputs.cache-hit != 'true'
-        run: | # WARN: Dependabot won't update these versions, manual bump required.
+        run:
+          | # WARN: Dependabot won't update these versions, manual bump required.
           pip install --user ansible-core==2.20.2
           ansible-galaxy collection install community.general:12.3.0 ansible.posix:2.1.0 community.docker:5.0.5
 
@@ -57,6 +58,10 @@ jobs:
           POSTGRES_DB=${{ vars.POSTGRES_DB }}
           POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
           POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
+
+          PROMETHEUS_USER=${{ vars.PROMETHEUS_USER }}
+          PROMETHEUS_PASSWORD=${{ secrets.PROMETHEUS_PASSWORD }}
+          PROMETHEUS_BCRYPT_HASH=${{ secrets.PROMETHEUS_BCRYPT_HASH }}
 
           GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
           EOF

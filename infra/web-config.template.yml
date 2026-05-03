@@ -1,0 +1,4 @@
+# This file is templated by sed on container startup
+
+basic_auth_users:
+  ${PROMETHEUS_USER}: ${PROMETHEUS_BCRYPT_HASH}
