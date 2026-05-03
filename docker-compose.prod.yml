@@ -56,8 +56,8 @@ services:
     oom_score_adj: 100
     restart: unless-stopped
     volumes:
-      - ./infra/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
-      - ./infra/prometheus/web-config.yml.template:/etc/prometheus/web-config.yml.template:ro,Z
+      - ./infra/prometheus/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - ./infra/prometheus/web-config.template.yml:/etc/prometheus/web-config.yml.template:ro,Z
       - prometheus_data_prod:/prometheus
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
