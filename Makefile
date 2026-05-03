@@ -78,6 +78,8 @@ tools:
 
 K6_PROMETHEUS_RW_SERVER_URL ?= http://localhost:9090/api/v1/write
 K6_PROMETHEUS_RW_TREND_STATS ?= p(90),p(95),p(99),min,max,avg,med,count,sum
+K6_PROMETHEUS_RW_USERNAME ?=
+K6_PROMETHEUS_RW_PASSWORD ?=
 K6_TESTID ?= $(shell date +%s)
 K6_EXTRA_ARGS ?= --tag testid=$(K6_TESTID)
 
@@ -89,4 +91,6 @@ happy-load:
 	K6_MAX_STAGES='$(K6_MAX_STAGES)' \
 	K6_PROMETHEUS_RW_SERVER_URL='$(K6_PROMETHEUS_RW_SERVER_URL)' \
 	K6_PROMETHEUS_RW_TREND_STATS='$(K6_PROMETHEUS_RW_TREND_STATS)' \
+	K6_PROMETHEUS_RW_USERNAME='$(K6_PROMETHEUS_RW_USERNAME)' \
+	K6_PROMETHEUS_RW_PASSWORD='$(K6_PROMETHEUS_RW_PASSWORD)' \
 	k6 run -o experimental-prometheus-rw $(K6_EXTRA_ARGS) ./k6/realistic-happy-path-load.ts
