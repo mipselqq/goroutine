@@ -47,8 +47,9 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        PROM_HASH_ESC=$$(printf '%s' "$$PROMETHEUS_BCRYPT_HASH" | sed 's/[\/&\\]/\\&/g') && \
         sed "s/\$${ADMIN_PORT}/$$ADMIN_PORT/g" /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml && \
-        sed "s/\$${PROMETHEUS_USER}/$${PROMETHEUS_USER}/g; s/\$${PROMETHEUS_BCRYPT_HASH}/$${PROMETHEUS_BCRYPT_HASH}/g" /etc/prometheus/web-config.yml.template > /etc/prometheus/web-config.yml && \
+        sed -e "s/\$${PROMETHEUS_USER}/$$PROMETHEUS_USER/g" -e "s/\$${PROMETHEUS_BCRYPT_HASH}/$$PROM_HASH_ESC/g" /etc/prometheus/web-config.yml.template > /etc/prometheus/web-config.yml && \
         /bin/prometheus \
           --config.file=/etc/prometheus/prometheus.yml \
           --storage.tsdb.retention.time=15d \
