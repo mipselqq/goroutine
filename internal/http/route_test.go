@@ -47,85 +47,86 @@ func TestNewRouter_Full(t *testing.T) {
 
 	tests := []struct {
 		entry     entry
+		auth      bool
 		metrics   bool
 		cors      bool
 		requestID bool
 	}{
 		{
-			entry:   entry{"Register endpoint", http.MethodPost, "/v1/register"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Register endpoint", http.MethodPost, "/v1/register"},
+			auth:  false, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Login endpoint", http.MethodPost, "/v1/login"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Login endpoint", http.MethodPost, "/v1/login"},
+			auth:  false, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Health endpoint", http.MethodGet, "/v1/health"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Health endpoint", http.MethodGet, "/v1/health"},
+			auth:  false, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Boards list endpoint", http.MethodGet, "/v1/boards"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Boards list endpoint", http.MethodGet, "/v1/boards"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Board by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Board by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Board aggregate by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/aggregate"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Board aggregate by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/aggregate"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Delete board endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Delete board endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Create column endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Create column endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"List columns endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"List columns endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"UpdateByID column endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"UpdateByID column endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Move column endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/position"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Move column endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/position"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Delete column endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Delete column endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Create task endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Create task endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"List tasks endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"List tasks endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"UpdateByID task endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"UpdateByID task endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Move task endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7() + "/position"},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Move task endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7() + "/position"},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Delete task endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
-			metrics: true, cors: true, requestID: true,
+			entry: entry{"Delete task endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
+			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry:   entry{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html"},
-			metrics: false, cors: true, requestID: true,
+			entry: entry{"Swagger endpoint", http.MethodGet, "/v1/swagger/index.html"},
+			auth:  false, metrics: false, cors: true, requestID: true,
 		},
 	}
 
@@ -138,6 +139,11 @@ func TestNewRouter_Full(t *testing.T) {
 
 			if rr.Code == http.StatusNotFound {
 				t.Errorf("got 404 for %s %q, want registered route", tt.entry.method, tt.entry.path)
+			}
+
+			hasAuth := rr.Header().Get("X-Auth-Tracked") == "true"
+			if hasAuth != tt.auth {
+				t.Errorf("got auth middleware=%v for %q, want %v", hasAuth, tt.entry.path, tt.auth)
 			}
 
 			hasMetrics := rr.Header().Get("X-Metrics-Tracked") == "true"
