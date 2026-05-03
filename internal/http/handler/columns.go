@@ -127,7 +127,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 
 // List godoc
 // @Summary List all columns in a board
-// @Description Get all columns belonging to the specified board, ordered by position ASC.
+// @Description Get all columns belonging to the specified board. Results are returned in increasing position order.
 // @Tags columns
 // @Produce json
 // @Security BearerAuth

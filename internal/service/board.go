@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -104,9 +105,19 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 		Columns: make([]AggregateColumn, len(columns)),
 	}
 
+	sort.Slice(columns, func(i, j int) bool {
+		return columns[i].Position.Int64() < columns[j].Position.Int64()
+	})
+
 	columnIDToTaskMap := make(map[domain.ColumnID][]domain.Task, len(columns))
 	for _, t := range tasks {
 		columnIDToTaskMap[t.ColumnID] = append(columnIDToTaskMap[t.ColumnID], t)
+	}
+	for columnID, colTasks := range columnIDToTaskMap {
+		sort.Slice(colTasks, func(i, j int) bool {
+			return colTasks[i].Position.Int64() < colTasks[j].Position.Int64()
+		})
+		columnIDToTaskMap[columnID] = colTasks
 	}
 
 	for i, column := range columns {

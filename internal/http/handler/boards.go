@@ -183,7 +183,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 
 // GetAggregate godoc
 // @Summary Get a board aggregate by id
-// @Description Get a board with nested columns and tasks for the current user (owner only)
+// @Description Get a board with nested columns and tasks for the current user (owner only). Columns are returned in increasing position order, and tasks inside each column are returned in increasing position order.
 // @Tags boards
 // @Accept json
 // @Produce json
@@ -223,7 +223,7 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 
 // GetMany godoc
 // @Summary Get many boards
-// @Description Get many boards for the current user
+// @Description Get many boards for the current user. Results are returned in increasing creation time order.
 // @Tags boards
 // @Accept json
 // @Produce json

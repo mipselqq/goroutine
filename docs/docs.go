@@ -22,7 +22,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get many boards for the current user",
+                "description": "Get many boards for the current user. Results are returned in increasing creation time order.",
                 "consumes": [
                     "application/json"
                 ],
@@ -311,7 +311,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get a board with nested columns and tasks for the current user (owner only)",
+                "description": "Get a board with nested columns and tasks for the current user (owner only). Columns are returned in increasing position order, and tasks inside each column are returned in increasing position order.",
                 "consumes": [
                     "application/json"
                 ],
@@ -372,7 +372,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all columns belonging to the specified board, ordered by position ASC.",
+                "description": "Get all columns belonging to the specified board. Results are returned in increasing position order.",
                 "produces": [
                     "application/json"
                 ],
@@ -718,7 +718,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all tasks belonging to the specified column, ordered by position ASC.",
+                "description": "Get all tasks belonging to the specified column. Results are returned in increasing position order.",
                 "produces": [
                     "application/json"
                 ],

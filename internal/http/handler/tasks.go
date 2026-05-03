@@ -128,7 +128,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 
 // List godoc
 // @Summary List all tasks in a column
-// @Description Get all tasks belonging to the specified column, ordered by position ASC.
+// @Description Get all tasks belonging to the specified column. Results are returned in increasing position order.
 // @Tags tasks
 // @Produce json
 // @Security BearerAuth
