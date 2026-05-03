@@ -24,7 +24,7 @@ func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.ErrorResponder) *Aut
 	return &Auth{logger: l, verifier: v, responder: r}
 }
 
-func (m *Auth) Wrap(next http.Handler) http.HandlerFunc {
+func (m *Auth) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 

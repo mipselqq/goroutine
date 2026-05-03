@@ -23,7 +23,7 @@ func NewCORS(logger *slog.Logger, allowedOrigins map[string]struct{}) *CORS {
 	return &CORS{allowedOrigins: allowedOrigins}
 }
 
-func (m *CORS) Wrap(next http.Handler) http.HandlerFunc {
+func (m *CORS) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "Origin")
 
