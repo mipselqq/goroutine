@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 5,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -380,7 +380,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(k6_vus{testid=\"$testid\"})",
+          "expr": "sum(k6_vus{testid=~\"$testid\"})",
           "legendFormat": "Virtual Users",
           "range": true,
           "refId": "A"
@@ -1677,5 +1677,5 @@
   "timezone": "browser",
   "title": "K6 Load Test",
   "uid": "adtcmjld",
-  "version": 1
+  "version": 2
 }
