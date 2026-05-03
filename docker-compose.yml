@@ -41,6 +41,8 @@ services:
       - "9090:9090"
     environment:
       - ADMIN_PORT
+      - PROMETHEUS_USER
+      - PROMETHEUS_BCRYPT_HASH
     user: root
     entrypoint: ["/bin/sh", "-c"]
     command:
