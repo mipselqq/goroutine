@@ -10,8 +10,8 @@
   pre_tasks:
     - name: "Gather minimal facts"
       setup:
-        filter: 'ansible_distribution_release'
-        gather_subset: '!all,min'
+        filter: "ansible_distribution_release"
+        gather_subset: "!all,min"
 
   tasks:
     - name: Update apt cache
@@ -23,14 +23,14 @@
       file:
         path: /etc/apt/keyrings
         state: directory
-        mode: '0755'
+        mode: "0755"
 
     - name: Add Docker GPG key
       get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/keyrings/docker.asc
-        mode: '0644'
-    
+        mode: "0644"
+
     - name: Add Docker Repository
       apt_repository:
         repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
@@ -55,7 +55,7 @@
 
     - name: Configure unattended-upgrades (Daily Schedule)
       copy:
-        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        dest: /etc/apt/apt.conf.d/20auto-upgrade
         content: |
           APT::Periodic::Update-Package-Lists "1";
           APT::Periodic::Download-Upgradeable-Packages "1";
@@ -67,7 +67,7 @@
         name: unattended-upgrades
         state: started
         enabled: yes
-   
+
     - name: Configure Fail2Ban (Strict Rules)
       copy:
         dest: /etc/fail2ban/jail.local
@@ -95,7 +95,7 @@
               "max-file": "3"
             }
           }
-        mode: '0644'
+        mode: "0644"
       notify: Restart Docker
 
     - name: Ensure Docker is running
@@ -125,9 +125,18 @@
         line: "{{ item.line }}"
         state: present
       loop:
-        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
-        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' } # Set to no for true production use
-        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - {
+            regexp: "^#?PasswordAuthentication",
+            line: "PasswordAuthentication no",
+          }
+        - {
+            regexp: "^#?PermitRootLogin",
+            line: "PermitRootLogin prohibit-password",
+          } # Set to no for true production use
+        - {
+            regexp: "^#?PubkeyAuthentication",
+            line: "PubkeyAuthentication yes",
+          }
       notify: Restart SSH
 
     - name: Reset all ufw rules
@@ -166,14 +175,12 @@
         direction: incoming
       notify: Reload UFW
 
-    - name: Allow public ports (forwarded to Docker)
+    - name: Open HTTP/HTTPS ports
       ufw:
         rule: allow
-        port: "80,443,8080,3000"
+        port: "80,443"
         proto: tcp
-        route: yes
       notify: Reload UFW
-
 
     - name: Create a new user for deployment
       user:
@@ -196,7 +203,7 @@
         state: directory
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
-        mode: '0751'
+        mode: "0751"
 
     - name: Ensure app directory exists
       file:
@@ -204,7 +211,7 @@
         state: directory
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
-        mode: '0755'
+        mode: "0755"
 
     - name: Copy docker compose and env files
       copy:
@@ -212,7 +219,7 @@
         dest: "{{ item.dest }}"
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
-        mode: '0644'
+        mode: "0644"
       loop:
         - src: "{{ playbook_dir }}/../../docker-compose.prod.yml"
           dest: "/home/{{ target_deploy_user }}/apps/goroutine/docker-compose.prod.yml"
@@ -225,7 +232,7 @@
         dest: "/home/{{ target_deploy_user }}/apps/goroutine/"
         owner: "{{ target_deploy_user }}"
         group: "{{ target_deploy_user }}"
-        mode: '0644'
+        mode: "0644"
 
     - name: Fix permissions for Grafana
       file:
