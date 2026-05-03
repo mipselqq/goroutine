@@ -130,6 +130,8 @@ func TestNewRouter_Full(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.entry.name, func(t *testing.T) {
+			t.Parallel()
+
 			req := httptest.NewRequest(tt.entry.method, tt.entry.path, http.NoBody)
 			rr := httptest.NewRecorder()
 
@@ -162,6 +164,8 @@ func TestNewRouter_Full(t *testing.T) {
 	}
 
 	t.Run("Non-existing endpoint", func(t *testing.T) {
+		t.Parallel()
+
 		req := httptest.NewRequest(http.MethodGet, "/v1/non-existing", http.NoBody)
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
