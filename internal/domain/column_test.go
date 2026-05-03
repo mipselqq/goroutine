@@ -36,12 +36,7 @@ func TestColumnName(t *testing.T) {
 			name, err := domain.NewColumnName(tt.input)
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
@@ -108,12 +103,7 @@ func TestColumnPosition(t *testing.T) {
 			position, err := domain.NewColumnPosition(tt.input)
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
@@ -221,12 +211,7 @@ func TestColumnDescription(t *testing.T) {
 
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
