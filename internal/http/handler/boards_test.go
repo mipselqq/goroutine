@@ -19,12 +19,12 @@ import (
 
 type boardsTestCase struct {
 	name              string
+	boardID           string
 	inputBody         any
 	context           context.Context
 	setupBoardService func(t *testing.T, s *MockBoardService)
 	wantCode          int
 	wantBody          any
-	path              string
 }
 
 const timeFormat = "2006-01-02T15:04:05.000Z07:00"
@@ -230,12 +230,11 @@ func TestBoards_GetByID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
-	okPath := "/v1/boards/" + validBoard.ID.String()
 
 	tests := []boardsTestCase{
 		{
-			name: "Success",
-			path: okPath,
+			name:    "Success",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
@@ -259,13 +258,13 @@ func TestBoards_GetByID(t *testing.T) {
 		},
 		{
 			name:     "Invalid board id",
-			path:     "/v1/boards/not-a-uuid",
+			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name: "Not found",
-			path: okPath,
+			name:    "Not found",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
@@ -275,8 +274,8 @@ func TestBoards_GetByID(t *testing.T) {
 			wantBody: boardNotFoundErrorBody(),
 		},
 		{
-			name: "Internal error",
-			path: okPath,
+			name:    "Internal error",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
@@ -286,8 +285,8 @@ func TestBoards_GetByID(t *testing.T) {
 			wantBody: internalErrorBody(),
 		},
 		{
-			name: "Unknown error",
-			path: okPath,
+			name:    "Unknown error",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
@@ -298,7 +297,7 @@ func TestBoards_GetByID(t *testing.T) {
 		},
 		{
 			name:     "No context user ID",
-			path:     okPath,
+			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
 			wantBody: unauthorizedTokenBody(),
@@ -309,13 +308,14 @@ func TestBoards_GetByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodGet, tt.path, http.NoBody)
+			path := "/v1/boards/" + tt.boardID
+			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
 			if tt.context != nil {
 				req = req.WithContext(tt.context)
 			} else {
 				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
-			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
+			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
 
@@ -344,7 +344,6 @@ func TestBoards_GetAggregate(t *testing.T) {
 	firstTask := testutil.ValidTask(firstColumn.ID)
 	secondTask := testutil.NewValidTask(t, firstColumn.ID, "Second task", "Second description", 2)
 	doneTask := testutil.ValidTask(secondColumn.ID)
-	okPath := "/v1/boards/" + validBoard.ID.String() + "/aggregate"
 
 	aggregate := service.AggregateBoard{
 		Board: validBoard,
@@ -362,8 +361,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 
 	tests := []boardsTestCase{
 		{
-			name: "Success",
-			path: okPath,
+			name:    "Success",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
 					if ownerID != validBoard.OwnerID {
@@ -436,15 +435,16 @@ func TestBoards_GetAggregate(t *testing.T) {
 				},
 			},
 		},
+
 		{
 			name:     "Invalid board id",
-			path:     "/v1/boards/not-a-uuid/aggregate",
+			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name: "Board not found",
-			path: okPath,
+			name:    "Board not found",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
 					return service.AggregateBoard{}, service.ErrBoardNotFound
@@ -454,8 +454,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 			wantBody: boardNotFoundErrorBody(),
 		},
 		{
-			name: "Internal error",
-			path: okPath,
+			name:    "Internal error",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
 					return service.AggregateBoard{}, service.ErrInternal
@@ -465,8 +465,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 			wantBody: internalErrorBody(),
 		},
 		{
-			name: "Unknown error",
-			path: okPath,
+			name:    "Unknown error",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.GetAggregateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
 					return service.AggregateBoard{}, errors.New("unknown")
@@ -477,7 +477,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 		},
 		{
 			name:     "No context user ID",
-			path:     okPath,
+			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
 			wantBody: unauthorizedTokenBody(),
@@ -488,14 +488,15 @@ func TestBoards_GetAggregate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodGet, tt.path, http.NoBody)
+			path := "/v1/boards/" + tt.boardID + "/aggregate"
+			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
 			if tt.context != nil {
 				// TODO: factor out this pattern
 				req = req.WithContext(tt.context)
 			} else {
 				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
-			req.SetPathValue("boardId", strings.TrimSuffix(strings.TrimPrefix(tt.path, "/v1/boards/"), "/aggregate"))
+			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
 
@@ -524,12 +525,10 @@ func TestBoards_UpdateByID(t *testing.T) {
 	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.FixedTime5mFromNow())
 	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "", testutil.FixedTime5mFromNow())
 
-	okPath := "/v1/boards/" + validBoard.ID.String()
-
 	tests := []boardsTestCase{
 		{
-			name: "Success (full update)",
-			path: okPath,
+			name:    "Success (full update)",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        updatedValidBoard.Name.String(),
 				"description": updatedValidBoard.Description.String(),
@@ -562,8 +561,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantCode: http.StatusOK,
 		},
 		{
-			name: "Empty name",
-			path: okPath,
+			name:    "Empty name",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        "",
 				"description": validBoard.Description.String(),
@@ -572,8 +571,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantBody: validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
-			name: "Success (name only)",
-			path: okPath,
+			name:    "Success (name only)",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name": updatedNameOnlyBoard.Name.String(),
 			},
@@ -599,8 +598,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantCode: http.StatusOK,
 		},
 		{
-			name: "Success (description only)",
-			path: okPath,
+			name:    "Success (description only)",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"description": updatedDescriptionOnlyBoard.Description.String(),
 			},
@@ -627,7 +626,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Success (null fields mean skip)",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]any{"name": nil, "description": nil},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
@@ -648,8 +647,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantCode: http.StatusOK,
 		},
 		{
-			name: "Empty description",
-			path: okPath,
+			name:    "Empty description",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        emptyDescriptionBoard.Name.String(),
 				"description": "",
@@ -674,13 +673,13 @@ func TestBoards_UpdateByID(t *testing.T) {
 		},
 		{
 			name:     "Invalid board id",
-			path:     "/v1/boards/not-a-uuid",
+			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name: "Not found",
-			path: okPath,
+			name:    "Not found",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
@@ -694,8 +693,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantBody: boardNotFoundErrorBody(),
 		},
 		{
-			name: "Internal error",
-			path: okPath,
+			name:    "Internal error",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
@@ -709,8 +708,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantBody: internalErrorBody(),
 		},
 		{
-			name: "Unknown error",
-			path: okPath,
+			name:    "Unknown error",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
@@ -724,8 +723,8 @@ func TestBoards_UpdateByID(t *testing.T) {
 			wantBody: internalErrorBody(),
 		},
 		{
-			name: "No context user ID",
-			path: okPath,
+			name:    "No context user ID",
+			boardID: validBoard.ID.String(),
 			inputBody: map[string]string{
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
@@ -740,13 +739,14 @@ func TestBoards_UpdateByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, tt.path, tt.inputBody)
+			path := "/v1/boards/" + tt.boardID
+			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, path, tt.inputBody)
 			if tt.context != nil {
 				req = req.WithContext(tt.context)
 			} else {
 				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
-			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
+			req.SetPathValue("boardId", tt.boardID)
 
 			s := &MockBoardService{}
 			if tt.setupBoardService != nil {
@@ -768,12 +768,11 @@ func TestBoards_Delete(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
-	okPath := "/v1/boards/" + validBoard.ID.String()
 
 	tests := []boardsTestCase{
 		{
-			name: "Success",
-			path: okPath,
+			name:    "Success",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					if ownerID != validBoard.OwnerID {
@@ -790,13 +789,13 @@ func TestBoards_Delete(t *testing.T) {
 		},
 		{
 			name:     "Invalid board id",
-			path:     "/v1/boards/not-a-uuid",
+			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
-			name: "Not found",
-			path: okPath,
+			name:    "Not found",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					return service.ErrBoardNotFound
@@ -806,8 +805,8 @@ func TestBoards_Delete(t *testing.T) {
 			wantBody: boardNotFoundErrorBody(),
 		},
 		{
-			name: "Internal error",
-			path: okPath,
+			name:    "Internal error",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					return service.ErrInternal
@@ -817,8 +816,8 @@ func TestBoards_Delete(t *testing.T) {
 			wantBody: internalErrorBody(),
 		},
 		{
-			name: "Unknown error",
-			path: okPath,
+			name:    "Unknown error",
+			boardID: validBoard.ID.String(),
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
 				s.DeleteFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
 					return errors.New("unknown")
@@ -829,7 +828,7 @@ func TestBoards_Delete(t *testing.T) {
 		},
 		{
 			name:     "No context user ID",
-			path:     okPath,
+			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
 			wantBody: unauthorizedTokenBody(),
@@ -840,13 +839,14 @@ func TestBoards_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodDelete, tt.path, http.NoBody)
+			path := "/v1/boards/" + tt.boardID
+			req := httptest.NewRequest(http.MethodDelete, path, http.NoBody)
 			if tt.context != nil {
 				req = req.WithContext(tt.context)
 			} else {
 				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
 			}
-			req.SetPathValue("boardId", strings.TrimPrefix(tt.path, "/v1/boards/"))
+			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
 
