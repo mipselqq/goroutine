@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:18-alpine
+    container_name: goro-postgres-prod
     cpu_shares: 1024
     oom_score_adj: -800
     restart: unless-stopped
@@ -20,6 +21,7 @@ services:
 
   app:
     image: ghcr.io/mipselqq/goroutine:latest
+    container_name: goro-goroutine-prod
     cpu_shares: 1024
     oom_score_adj: -900
     restart: unless-stopped
@@ -52,6 +54,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.9.1
+    container_name: goro-prometheus-prod
     cpu_shares: 512
     oom_score_adj: 100
     restart: unless-stopped
@@ -83,6 +86,7 @@ services:
 
   grafana:
     image: grafana/grafana:12.3.2
+    container_name: goro-grafana-prod
     cpu_shares: 256
     oom_score_adj: 200
     environment:
@@ -105,6 +109,7 @@ services:
 
   node_exporter:
     image: prom/node-exporter:v1.10.2
+    container_name: goro-node-exporter-prod
     cpu_shares: 128
     oom_score_adj: 500
     restart: unless-stopped
@@ -124,6 +129,7 @@ services:
 
   loki:
     image: grafana/loki:3.3.2
+    container_name: goro-loki-prod
     cpu_shares: 256
     oom_score_adj: 300
     restart: unless-stopped
@@ -138,6 +144,7 @@ services:
 
   alloy:
     image: grafana/alloy:v1.6.1
+    container_name: goro-alloy-prod
     cpu_shares: 128
     oom_score_adj: 400
     restart: unless-stopped
