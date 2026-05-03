@@ -131,8 +131,8 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		second := testutil.NewValidColumn(t, boardA.ID, "In Progress", 2)
 		otherBoardColumn := testutil.NewValidColumn(t, boardB.ID, "Done", 1)
 
-		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &otherBoardColumn)
 
 		got, err := r.ListByBoardID(context.Background(), boardA.ID)
@@ -305,9 +305,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
+		InsertColumn(t, pool, &third)
 		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
-		InsertColumn(t, pool, &third)
 
 		targetPosition := mustColumnPosition(t, 3)
 
@@ -337,9 +337,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
-		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
 		InsertColumn(t, pool, &third)
+		InsertColumn(t, pool, &first)
 
 		targetPosition := mustColumnPosition(t, 1)
 
@@ -368,8 +368,8 @@ func TestColumnRepository_Move(t *testing.T) {
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 
-		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
+		InsertColumn(t, pool, &first)
 
 		targetPosition := mustColumnPosition(t, 2)
 
@@ -398,9 +398,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
-		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
 		InsertColumn(t, pool, &third)
+		InsertColumn(t, pool, &first)
 
 		targetPosition := mustColumnPosition(t, 4)
 
@@ -456,9 +456,9 @@ func TestColumnRepository_Delete(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
+		InsertColumn(t, pool, &third)
 		InsertColumn(t, pool, &first)
 		InsertColumn(t, pool, &second)
-		InsertColumn(t, pool, &third)
 
 		err := r.Delete(context.Background(), board.ID, second.ID)
 		if err != nil {
