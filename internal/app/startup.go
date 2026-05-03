@@ -32,21 +32,24 @@ func SetupDatabaseFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 		return nil, err
 	}
 
-	if err := pool.Ping(ctx); err != nil {
+	err = pool.Ping(ctx)
+	if err != nil {
 		logger.Error("Failed to ping database", slog.String("err", err.Error()))
 		return nil, err
 	}
 
 	goose.SetLogger(&logging.GooseLogger{Logger: logger})
 
-	if err := goose.SetDialect("postgres"); err != nil {
+	err = goose.SetDialect("postgres")
+	if err != nil {
 		logger.Error("Failed to set goose dialect", slog.String("err", err.Error()))
 		return nil, err
 	}
 
 	db := stdlib.OpenDBFromPool(pool)
 
-	if err := goose.Up(db, migrationsDir); err != nil {
+	err = goose.Up(db, migrationsDir)
+	if err != nil {
 		logger.Error("Failed to run migrations", slog.String("err", err.Error()))
 		return nil, err
 	}
@@ -62,7 +65,8 @@ func RunBackgroundServer(logger *slog.Logger, name, addr string, handler http.Ha
 
 	go func() {
 		logger.Info("Starting " + name + " on http://" + addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		err := srv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
 			logger.Error(name+" failed", slog.String("err", err.Error()))
 			os.Exit(1)
 		}

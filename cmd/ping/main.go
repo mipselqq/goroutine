@@ -18,7 +18,8 @@ func main() {
 		host = "127.0.0.1"
 	}
 
-	if err := run(host, port, 5*time.Second); err != nil {
+	err := run(host, port, 5*time.Second)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "healthcheck failed: %v\n", err)
 		os.Exit(1)
 	}

@@ -162,7 +162,7 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	var columns []domain.Column
 	for rows.Next() {
 		var column domain.Column
-		err := rows.Scan(
+		err = rows.Scan(
 			&column.ID,
 			&column.BoardID,
 			&column.Name,
@@ -178,7 +178,8 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 		columns = append(columns, column)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		t.Fatalf("rows.Err() error = %v", err)
 	}
 
@@ -260,7 +261,7 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 	var tasks []domain.Task
 	for rows.Next() {
 		var task domain.Task
-		err := rows.Scan(
+		err = rows.Scan(
 			&task.ID,
 			&task.ColumnID,
 			&task.Name,
@@ -276,7 +277,8 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 		tasks = append(tasks, task)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		t.Fatalf("rows.Err() error = %v", err)
 	}
 

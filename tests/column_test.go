@@ -70,10 +70,12 @@ func TestColumn_HappyPath(t *testing.T) {
 
 		createdColumn := parseColumn(t, createResp)
 
-		if _, err := uuid.Parse(createdColumn.ID); err != nil {
+		_, err := uuid.Parse(createdColumn.ID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdColumn.ID, err)
 		}
-		if _, err := uuid.Parse(createdColumn.BoardID); err != nil {
+		_, err = uuid.Parse(createdColumn.BoardID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdColumn.BoardID, err)
 		}
 		if createdColumn.BoardID != board.ID {
@@ -88,10 +90,12 @@ func TestColumn_HappyPath(t *testing.T) {
 		if createdColumn.Position != 1 {
 			t.Errorf("got position %d, want %d", createdColumn.Position, 1)
 		}
-		if _, err := time.Parse(timeFormat, createdColumn.CreatedAt); err != nil {
+		_, err = time.Parse(timeFormat, createdColumn.CreatedAt)
+		if err != nil {
 			t.Errorf("time.Parse(%q) error = %v, want nil", createdColumn.CreatedAt, err)
 		}
-		if _, err := time.Parse(timeFormat, createdColumn.UpdatedAt); err != nil {
+		_, err = time.Parse(timeFormat, createdColumn.UpdatedAt)
+		if err != nil {
 			t.Errorf("time.Parse(%q) error = %v, want nil", createdColumn.UpdatedAt, err)
 		}
 
@@ -301,7 +305,8 @@ func TestColumn_HappyPath(t *testing.T) {
 func parseColumn(t *testing.T, resp *http.Response) ColumnJSON {
 	t.Helper()
 	var c ColumnJSON
-	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&c)
+	if err != nil {
 		t.Fatalf("Column Decode() error = %v", err)
 	}
 	return c
@@ -310,7 +315,8 @@ func parseColumn(t *testing.T, resp *http.Response) ColumnJSON {
 func parseColumnsList(t *testing.T, resp *http.Response) []ColumnJSON {
 	t.Helper()
 	var c []ColumnJSON
-	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&c)
+	if err != nil {
 		t.Fatalf("Columns list Decode() error = %v", err)
 	}
 	return c
@@ -319,7 +325,8 @@ func parseColumnsList(t *testing.T, resp *http.Response) []ColumnJSON {
 func parseColumnPosition(t *testing.T, resp *http.Response) ColumnPositionJSON {
 	t.Helper()
 	var p ColumnPositionJSON
-	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&p)
+	if err != nil {
 		t.Fatalf("Column position Decode() error = %v", err)
 	}
 	return p
