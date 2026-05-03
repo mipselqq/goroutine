@@ -159,11 +159,11 @@ func TestTasks_Create(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks"
 			req := buildTaskRequest(t, http.MethodPost, path, tt.inputBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
 
@@ -296,11 +296,11 @@ func TestTasks_List(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks"
 			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
 
@@ -510,11 +510,11 @@ func TestTasks_UpdateByID(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks/" + tt.taskID
 			req := buildTaskRequest(t, http.MethodPatch, path, tt.inputBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
 			req.SetPathValue("taskId", tt.taskID)
@@ -722,11 +722,11 @@ func TestTasks_Move(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks/" + tt.taskID + "/position"
 			req := buildTaskRequest(t, http.MethodPut, path, tt.inputBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
 			req.SetPathValue("taskId", tt.taskID)
@@ -857,11 +857,11 @@ func TestTasks_Delete(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks/" + tt.taskID
 			req := httptest.NewRequest(http.MethodDelete, path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
 			req.SetPathValue("taskId", tt.taskID)

@@ -149,11 +149,11 @@ func TestColumns_Create(t *testing.T) {
 				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPost, path, tt.inputBody)
 			}
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
@@ -268,11 +268,11 @@ func TestColumns_List(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns"
 			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
@@ -536,11 +536,11 @@ func TestColumns_UpdateByID(t *testing.T) {
 				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, path, tt.inputBody)
 			}
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
@@ -704,11 +704,11 @@ func TestColumns_Move(t *testing.T) {
 				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPut, path, tt.inputBody)
 			}
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)
@@ -820,11 +820,11 @@ func TestColumns_Delete(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID
 			req := httptest.NewRequest(http.MethodDelete, path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
 			req.SetPathValue("boardId", tt.boardID)
 			req.SetPathValue("columnId", tt.columnID)

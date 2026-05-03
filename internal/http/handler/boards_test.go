@@ -111,11 +111,11 @@ func TestBoards_Create(t *testing.T) {
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/v1/boards", tt.inputBody)
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
 			s := &MockBoardService{}
 
@@ -202,11 +202,11 @@ func TestBoards_Get(t *testing.T) {
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/v1/boards", tt.inputBody)
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
 			s := &MockBoardService{}
 
@@ -310,11 +310,11 @@ func TestBoards_GetByID(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID
 			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
@@ -490,12 +490,11 @@ func TestBoards_GetAggregate(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID + "/aggregate"
 			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
-			if tt.context != nil {
-				// TODO: factor out this pattern
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
@@ -741,11 +740,11 @@ func TestBoards_UpdateByID(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, path, tt.inputBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
 			s := &MockBoardService{}
@@ -841,11 +840,11 @@ func TestBoards_Delete(t *testing.T) {
 
 			path := "/v1/boards/" + tt.boardID
 			req := httptest.NewRequest(http.MethodDelete, path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
