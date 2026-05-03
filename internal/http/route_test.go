@@ -13,6 +13,8 @@ import (
 	"goroutine/internal/testutil"
 )
 
+const UUIDv7 = "018e1000-0000-7000-8000-000000000001"
+
 func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
@@ -41,10 +43,6 @@ func TestNewRouter_Full(t *testing.T) {
 		path   string
 	}
 
-	UUIDv7 := func() string {
-		return "018e1000-0000-7000-8000-000000000001"
-	}
-
 	tests := []struct {
 		entry     entry
 		auth      bool
@@ -69,59 +67,59 @@ func TestNewRouter_Full(t *testing.T) {
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Board by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7()},
+			entry: entry{"Board by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Board aggregate by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/aggregate"},
+			entry: entry{"Board aggregate by id endpoint", http.MethodGet, "/v1/boards/" + UUIDv7 + "/aggregate"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7()},
+			entry: entry{"UpdateByID board endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Delete board endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7()},
+			entry: entry{"Delete board endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Create column endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns"},
+			entry: entry{"Create column endpoint", http.MethodPost, "/v1/boards/" + UUIDv7 + "/columns"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"List columns endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns"},
+			entry: entry{"List columns endpoint", http.MethodGet, "/v1/boards/" + UUIDv7 + "/columns"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"UpdateByID column endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
+			entry: entry{"UpdateByID column endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Move column endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/position"},
+			entry: entry{"Move column endpoint", http.MethodPut, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/position"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Delete column endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7()},
+			entry: entry{"Delete column endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Create task endpoint", http.MethodPost, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
+			entry: entry{"Create task endpoint", http.MethodPost, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"List tasks endpoint", http.MethodGet, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks"},
+			entry: entry{"List tasks endpoint", http.MethodGet, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"UpdateByID task endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
+			entry: entry{"UpdateByID task endpoint", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Move task endpoint", http.MethodPut, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7() + "/position"},
+			entry: entry{"Move task endpoint", http.MethodPut, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7 + "/position"},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Delete task endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7() + "/columns/" + UUIDv7() + "/tasks/" + UUIDv7()},
+			entry: entry{"Delete task endpoint", http.MethodDelete, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
