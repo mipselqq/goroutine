@@ -56,7 +56,8 @@ services:
     oom_score_adj: 100
     restart: unless-stopped
     volumes:
-      - ./infra/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - ./infra/prometheus/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - ./infra/prometheus/web-config.template.yml:/etc/prometheus/web-config.yml.template:ro,Z
       - prometheus_data_prod:/prometheus
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
@@ -65,12 +66,20 @@ services:
       retries: 3
     environment:
       - ADMIN_PORT
+      - PROMETHEUS_USER
+      - PROMETHEUS_BCRYPT_HASH
     user: root
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        PROM_HASH_ESC=$$(printf '%s' "$$PROMETHEUS_BCRYPT_HASH" | sed 's/[\/&\\]/\\&/g') && \
         sed "s/\$${ADMIN_PORT}/$$ADMIN_PORT/g" /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml && \
-        /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=15d
+        sed -e "s/\$${PROMETHEUS_USER}/$$PROMETHEUS_USER/g" -e "s/\$${PROMETHEUS_BCRYPT_HASH}/$$PROM_HASH_ESC/g" /etc/prometheus/web-config.yml.template > /etc/prometheus/web-config.yml && \
+        /bin/prometheus \
+          --config.file=/etc/prometheus/prometheus.yml \
+          --storage.tsdb.retention.time=15d \
+          --web.enable-remote-write-receiver \
+          --web.config.file=/etc/prometheus/web-config.yml
 
   grafana:
     image: grafana/grafana:12.3.2
@@ -78,6 +87,8 @@ services:
     oom_score_adj: 200
     environment:
       - GF_SECURITY_ADMIN_PASSWORD
+      - PROMETHEUS_USER
+      - PROMETHEUS_PASSWORD
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -102,9 +113,9 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9100/"]
       interval: 10s

@@ -4,8 +4,14 @@ datasources:
   - name: Prometheus
     type: prometheus
     url: http://prometheus:9090
+    basicAuth: true
+    basicAuthUser: ${PROMETHEUS_USER}
     isDefault: true
     uid: Prometheus
+    jsonData:
+      timeInterval: "5s"
+    secureJsonData:
+      basicAuthPassword: ${PROMETHEUS_PASSWORD}
   - name: Loki
     type: loki
     url: http://loki:3100

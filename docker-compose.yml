@@ -29,7 +29,8 @@ services:
     extra_hosts:
       - "app:host-gateway"
     volumes:
-      - ./infra/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - ./infra/prometheus/prometheus.template.yml:/etc/prometheus/prometheus.template.yml:ro,Z
+      - ./infra/prometheus/web-config.template.yml:/etc/prometheus/web-config.yml.template:ro,Z
       - prometheus_data_dev:/prometheus
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
@@ -40,15 +41,20 @@ services:
       - "9090:9090"
     environment:
       - ADMIN_PORT
+      - PROMETHEUS_USER
+      - PROMETHEUS_BCRYPT_HASH
     user: root
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        PROM_HASH_ESC=$$(printf '%s' "$$PROMETHEUS_BCRYPT_HASH" | sed 's/[\/&\\]/\\&/g') && \
         sed "s/\$${ADMIN_PORT}/$$ADMIN_PORT/g" /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml && \
+        sed -e "s/\$${PROMETHEUS_USER}/$$PROMETHEUS_USER/g" -e "s/\$${PROMETHEUS_BCRYPT_HASH}/$$PROM_HASH_ESC/g" /etc/prometheus/web-config.yml.template > /etc/prometheus/web-config.yml && \
         /bin/prometheus \
           --config.file=/etc/prometheus/prometheus.yml \
           --storage.tsdb.retention.time=15d \
-          --web.enable-remote-write-receiver
+          --web.enable-remote-write-receiver \
+          --web.config.file=/etc/prometheus/web-config.yml
 
   grafana:
     image: grafana/grafana:12.3.2
@@ -57,6 +63,8 @@ services:
     restart: unless-stopped
     environment:
       - GF_SECURITY_ADMIN_PASSWORD
+      - PROMETHEUS_USER
+      - PROMETHEUS_PASSWORD
     ports:
       - "3000:3000"
     depends_on:

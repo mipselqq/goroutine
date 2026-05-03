@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 1,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -75,9 +75,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -135,9 +133,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "max"
-          ],
+          "calcs": ["max"],
           "fields": "",
           "values": false
         },
@@ -203,9 +199,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -248,10 +242,11 @@
               },
               {
                 "color": "red",
-                "value": 500
+                "value": 1000
               }
             ]
-          }
+          },
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -269,9 +264,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "max"
-          ],
+          "calcs": ["max"],
           "fields": "",
           "values": false
         },
@@ -299,6 +292,212 @@
         "w": 24,
         "x": 0,
         "y": 6
+      },
+      "id": 100,
+      "panels": [],
+      "title": "K6 specifics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 101,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.2",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(k6_vus{testid=~\"$testid\"})",
+          "legendFormat": "Virtual Users",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "VUS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds",
+            "seriesBy": "last"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 27,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 98,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 99
+              },
+              {
+                "color": "green",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 104,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.2",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "avg(k6_checks_rate{testid=~\"$testid\"}) by (testid) * 100",
+          "legendFormat": "Success Rate",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Checks Success Rate",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
       },
       "id": 11,
       "panels": [],
@@ -367,17 +566,12 @@
         "h": 13,
         "w": 9,
         "x": 0,
-        "y": 7
+        "y": 15
       },
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [
-            "min",
-            "max",
-            "mean",
-            "lastNotNull"
-          ],
+          "calcs": ["min", "max", "mean", "lastNotNull"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": false,
@@ -461,7 +655,7 @@
               },
               {
                 "color": "dark-red",
-                "value": 500
+                "value": 1000
               }
             ]
           },
@@ -473,17 +667,12 @@
         "h": 13,
         "w": 10,
         "x": 9,
-        "y": 7
+        "y": 15
       },
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [
-            "min",
-            "max",
-            "mean",
-            "lastNotNull"
-          ],
+          "calcs": ["min", "max", "mean", "lastNotNull"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": false,
@@ -555,19 +744,19 @@
           },
           "mappings": [],
           "thresholds": {
-            "mode": "percentage",
+            "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": 0
               },
               {
-                "color": "#EAB839",
-                "value": 1
+                "color": "dark-green",
+                "value": 0.000001
               },
               {
                 "color": "dark-red",
-                "value": 3
+                "value": 1
               }
             ]
           },
@@ -579,16 +768,12 @@
         "h": 13,
         "w": 5,
         "x": 19,
-        "y": 7
+        "y": 15
       },
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [
-            "min",
-            "max",
-            "mean"
-          ],
+          "calcs": ["min", "max", "mean"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": false,
@@ -605,7 +790,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) by (path, method)",
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[$__rate_interval])) by (path, method)",
           "legendFormat": "{{method}} {{path}}",
           "range": true,
           "refId": "A"
@@ -696,16 +881,12 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 20
+        "y": 28
       },
       "id": 12,
       "options": {
         "legend": {
-          "calcs": [
-            "min",
-            "mean",
-            "max"
-          ],
+          "calcs": ["min", "mean", "max"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": false
@@ -811,7 +992,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 20
+        "y": 28
       },
       "id": 2,
       "options": {
@@ -901,7 +1082,7 @@
         "h": 8,
         "w": 5,
         "x": 12,
-        "y": 20
+        "y": 28
       },
       "id": 3,
       "options": {
@@ -1005,7 +1186,7 @@
         "h": 8,
         "w": 7,
         "x": 17,
-        "y": 20
+        "y": 28
       },
       "id": 1,
       "options": {
@@ -1121,16 +1302,12 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 28
+        "y": 36
       },
       "id": 13,
       "options": {
         "legend": {
-          "calcs": [
-            "min",
-            "mean",
-            "max"
-          ],
+          "calcs": ["min", "mean", "max"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": false
@@ -1223,7 +1400,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 28
+        "y": 36
       },
       "id": 15,
       "options": {
@@ -1319,7 +1496,7 @@
         "h": 8,
         "w": 5,
         "x": 12,
-        "y": 28
+        "y": 36
       },
       "id": 16,
       "options": {
@@ -1420,7 +1597,7 @@
         "h": 8,
         "w": 7,
         "x": 17,
-        "y": 28
+        "y": 36
       },
       "id": 14,
       "options": {
@@ -1468,7 +1645,29 @@
   "schemaVersion": 42,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "definition": "label_values(k6_vus,testid)",
+        "description": "",
+        "includeAll": true,
+        "label": "Test ID",
+        "multi": true,
+        "name": "testid",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(k6_vus,testid)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-12h",
@@ -1476,7 +1675,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "App dashboard",
-  "uid": "adtcmjl",
+  "title": "K6 Load Test",
+  "uid": "adtcmjld",
   "version": 2
 }
