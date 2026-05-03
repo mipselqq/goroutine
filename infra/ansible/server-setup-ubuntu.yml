@@ -55,7 +55,7 @@
 
     - name: Configure unattended-upgrades (Daily Schedule)
       copy:
-        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        dest: /etc/apt/apt.conf.d/20auto-upgrade
         content: |
           APT::Periodic::Update-Package-Lists "1";
           APT::Periodic::Download-Upgradeable-Packages "1";
@@ -175,12 +175,11 @@
         direction: incoming
       notify: Reload UFW
 
-    - name: Allow public ports (forwarded to Docker)
+    - name: Open HTTP/HTTPS ports
       ufw:
         rule: allow
-        port: "80,443,8080,3000"
+        port: "80,443"
         proto: tcp
-        route: yes
       notify: Reload UFW
 
     - name: Create a new user for deployment
