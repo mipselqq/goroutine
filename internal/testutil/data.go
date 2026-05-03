@@ -120,14 +120,8 @@ func ValidBoard() domain.Board {
 
 func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string, updatedAt time.Time) domain.Board {
 	t.Helper()
-	domainName, err := domain.NewBoardName(name)
-	if err != nil {
-		t.Fatalf("NewBoardName() error = %v", err)
-	}
-	domainDescription, err := domain.NewBoardDescription(description)
-	if err != nil {
-		t.Fatalf("NewBoardDescription() error = %v", err)
-	}
+	domainName := Must(domain.NewBoardName, name)
+	domainDescription := Must(domain.NewBoardDescription, description)
 
 	return domain.Board{
 		ID:          base.ID,
@@ -161,15 +155,8 @@ func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position 
 
 	column := ValidColumn(boardID)
 
-	domainName, err := domain.NewColumnName(name)
-	if err != nil {
-		t.Fatalf("NewColumnName() error = %v", err)
-	}
-
-	domainPosition, err := domain.NewColumnPosition(position)
-	if err != nil {
-		t.Fatalf("NewColumnPosition() error = %v", err)
-	}
+	domainName := Must(domain.NewColumnName, name)
+	domainPosition := Must(domain.NewColumnPosition, position)
 
 	column.Name = domainName
 	column.Position = domainPosition
@@ -180,15 +167,8 @@ func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position 
 func UpdateValidColumn(t *testing.T, base *domain.Column, name, description string, updatedAt time.Time) domain.Column {
 	t.Helper()
 
-	domainName, err := domain.NewColumnName(name)
-	if err != nil {
-		t.Fatalf("NewColumnName() error = %v", err)
-	}
-
-	domainDescription, err := domain.NewColumnDescription(description)
-	if err != nil {
-		t.Fatalf("NewColumnDescription() error = %v", err)
-	}
+	domainName := Must(domain.NewColumnName, name)
+	domainDescription := Must(domain.NewColumnDescription, description)
 
 	return domain.Column{
 		ID:          base.ID,
@@ -223,20 +203,9 @@ func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description stri
 
 	task := ValidTask(columnID)
 
-	domainName, err := domain.NewTaskName(name)
-	if err != nil {
-		t.Fatalf("NewTaskName() error = %v", err)
-	}
-
-	domainDescription, err := domain.NewTaskDescription(description)
-	if err != nil {
-		t.Fatalf("NewTaskDescription() error = %v", err)
-	}
-
-	domainPosition, err := domain.NewTaskPosition(position)
-	if err != nil {
-		t.Fatalf("NewTaskPosition() error = %v", err)
-	}
+	domainName := Must(domain.NewTaskName, name)
+	domainDescription := Must(domain.NewTaskDescription, description)
+	domainPosition := Must(domain.NewTaskPosition, position)
 
 	task.Name = domainName
 	task.Description = domainDescription
@@ -248,16 +217,8 @@ func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description stri
 func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, updatedAt time.Time) domain.Task {
 	t.Helper()
 
-	// TODO: use Must
-	domainName, err := domain.NewTaskName(name)
-	if err != nil {
-		t.Fatalf("NewTaskName() error = %v", err)
-	}
-
-	domainDescription, err := domain.NewTaskDescription(description)
-	if err != nil {
-		t.Fatalf("NewTaskDescription() error = %v", err)
-	}
+	domainName := Must(domain.NewTaskName, name)
+	domainDescription := Must(domain.NewTaskDescription, description)
 
 	return domain.Task{
 		ID:          base.ID,
