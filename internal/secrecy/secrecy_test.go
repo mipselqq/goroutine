@@ -8,6 +8,8 @@ import (
 )
 
 func TestSecretString(t *testing.T) {
+	t.Parallel()
+
 	s := "verysecret$ string123"
 
 	ss := secrecy.SecretString(s)

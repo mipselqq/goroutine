@@ -315,6 +315,8 @@ func TestAuth_Login(t *testing.T) {
 }
 
 func TestAuth_WhoAmI(t *testing.T) {
+	t.Parallel()
+
 	testUserID := testutil.ValidUserID()
 
 	tests := []struct {
