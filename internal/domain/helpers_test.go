@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -33,5 +34,15 @@ func assertSecretHidden(t *testing.T, raw string, secret secretValue) {
 	got = secret.LogValue().String()
 	if strings.Contains(strings.ToLower(got), rawLower) {
 		t.Fatalf("LogValue().String() leaked raw secret: got %q, raw %q", got, raw)
+	}
+
+	marshaled, err := json.Marshal(secret)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	got = string(marshaled)
+	if strings.Contains(strings.ToLower(got), rawLower) {
+		t.Fatalf("json.Marshal() leaked raw secret: got %q, raw %q", got, raw)
 	}
 }

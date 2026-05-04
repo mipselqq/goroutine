@@ -21,3 +21,7 @@ func (s SecretString) String() string {
 func (s SecretString) LogValue() slog.Value {
 	return slog.StringValue(s.String())
 }
+
+func (s SecretString) MarshalJSON() ([]byte, error) {
+	return fmt.Appendf(nil, "%q", s.String()), nil
+}

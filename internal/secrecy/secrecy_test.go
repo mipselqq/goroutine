@@ -1,6 +1,8 @@
 package secrecy_test
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"goroutine/internal/secrecy"
@@ -13,13 +15,25 @@ func TestSecretString(t *testing.T) {
 
 	secret := secrecy.SecretString(raw)
 
-	if got := secret.RevealSecret(); got != raw {
+	got := secret.RevealSecret()
+	if got != raw {
 		t.Fatalf("RevealSecret() = %q, want %q", got, raw)
 	}
-	if got := secret.String(); got == raw {
+	if got = secret.String(); got == raw {
 		t.Fatalf("String() leaked secret: %q", got)
 	}
-	if got := secret.LogValue().String(); got != secret.String() {
+	got = secret.LogValue().String()
+	if got != secret.String() {
 		t.Fatalf("LogValue().String() = %q, want %q", got, secret.String())
+	}
+
+	marshaled, err := json.Marshal(secret)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	got = string(marshaled)
+	if strings.Contains(got, raw) {
+		t.Fatalf("json.Marshal() leaked secret: %q", got)
 	}
 }
