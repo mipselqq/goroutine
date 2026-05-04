@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
 )
@@ -155,7 +156,7 @@ func TestUserPassword(t *testing.T) {
 				t.Errorf("got error %v, want nil", err)
 			}
 			if !tt.wantErr {
-				assertSecretHidden(t, tt.input, password)
+				testutil.AssertSecretHidden(t, tt.input, password)
 			}
 		})
 	}
@@ -213,7 +214,7 @@ func TestNewJWTString(t *testing.T) {
 				t.Errorf("got error %v, want nil", err)
 			}
 			if !tt.wantErr {
-				assertSecretHidden(t, tt.input, token)
+				testutil.AssertSecretHidden(t, tt.input, token)
 				if token.RevealSecret() != tt.input {
 					t.Errorf("got revealed token %q, want %q", token.RevealSecret(), tt.input)
 				}

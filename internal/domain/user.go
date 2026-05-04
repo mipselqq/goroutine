@@ -2,6 +2,7 @@ package domain
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -60,6 +61,10 @@ func (p UserPassword) GoString() string {
 	return p.String()
 }
 
+func (p UserPassword) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.String())
+}
+
 // Domain knows about a little about storage, but this is pragmatic solution
 func (p UserPassword) Value() (driver.Value, error) {
 	return p.RevealSecret(), nil
@@ -114,4 +119,8 @@ func (t AuthToken) LogValue() slog.Value {
 
 func (t AuthToken) GoString() string {
 	return t.String()
+}
+
+func (t AuthToken) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
 }

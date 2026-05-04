@@ -86,9 +86,14 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 func TestPgConfig_BuildDSN(t *testing.T) {
 	want := "postgres://user:password@127.0.0.1:5432/todo_db"
-	if got := defaultPgConfig.BuildDSN(); got != want {
+
+	dsn := defaultPgConfig.BuildDSN()
+	got := dsn.RevealSecret()
+	if got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
+
+	testutil.AssertSecretHidden(t, want, dsn)
 }
 
 func TestPgConfig_LogValue(t *testing.T) {
