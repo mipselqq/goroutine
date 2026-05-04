@@ -30,7 +30,7 @@ func TestAuth_Register(t *testing.T) {
 			wantErr: nil,
 			setupUserRepo: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
-					if hash == testutil.ValidPassword().String() {
+					if hash == testutil.ValidPassword().RevealSecret() {
 						return errors.New("service saved plaintext password!")
 					}
 					return nil

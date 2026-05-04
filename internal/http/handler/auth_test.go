@@ -31,14 +31,14 @@ func TestAuth_Register(t *testing.T) {
 	tests := []authTestCase{
 		{
 			name:      "Success",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
 				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) error {
 					if e != email {
 						t.Errorf("got email %q, want %q", e, email)
 					}
-					if p != password {
-						t.Errorf("got password %q, want %q", p, password)
+					if p.RevealSecret() != password.RevealSecret() {
+						t.Errorf("got password %q, want %q", p.RevealSecret(), password.RevealSecret())
 					}
 					return nil
 				}
@@ -160,14 +160,14 @@ func TestAuth_Login(t *testing.T) {
 	tests := []authTestCase{
 		{
 			name:      "Success",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
 				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) (string, error) {
 					if e != email {
 						t.Errorf("got email %q, want %q", e, email)
 					}
-					if p != password {
-						t.Errorf("got password %q, want %q", p, password)
+					if p.RevealSecret() != password.RevealSecret() {
+						t.Errorf("got password %q, want %q", p.RevealSecret(), password.RevealSecret())
 					}
 					return "jwt_token", nil
 				}

@@ -3,7 +3,10 @@ package domain
 import (
 	"database/sql/driver"
 	"fmt"
+	"log/slog"
 	"strings"
+
+	"goroutine/internal/secrecy"
 )
 
 type (
@@ -24,7 +27,7 @@ const (
 )
 
 type UserPassword struct {
-	value string
+	value secrecy.SecretString
 }
 
 func NewUserPassword(password string) (UserPassword, error) {
@@ -32,16 +35,24 @@ func NewUserPassword(password string) (UserPassword, error) {
 		return UserPassword{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
 	}
 
-	return UserPassword{value: password}, nil
+	return UserPassword{value: secrecy.SecretString(password)}, nil
+}
+
+func (p UserPassword) RevealSecret() string {
+	return p.value.RevealSecret()
 }
 
 func (p UserPassword) String() string {
-	return p.value
+	return p.value.String()
+}
+
+func (p UserPassword) LogValue() slog.Value {
+	return p.value.LogValue()
 }
 
 // Domain knows about a little about storage, but this is pragmatic solution
 func (p UserPassword) Value() (driver.Value, error) {
-	return p.value, nil
+	return p.RevealSecret(), nil
 }
 
 func (p *UserPassword) Scan(value any) error {

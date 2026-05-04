@@ -35,7 +35,7 @@ func NewAuth(r UserRepository, opts JWTOptions) *Auth {
 }
 
 func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
-	hash, err := argon2id.CreateHash(password.String(), argon2id.DefaultParams)
+	hash, err := argon2id.CreateHash(password.RevealSecret(), argon2id.DefaultParams)
 	if err != nil {
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
@@ -60,7 +60,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Us
 		return "", fmt.Errorf("auth service: login: hash by email: %v: %w", err, ErrInternal)
 	}
 
-	isMatch, err := argon2id.ComparePasswordAndHash(password.String(), hash)
+	isMatch, err := argon2id.ComparePasswordAndHash(password.RevealSecret(), hash)
 	if err != nil {
 		return "", fmt.Errorf("auth service: login: compare password and hash: %v: %w", err, ErrInternal)
 	}
