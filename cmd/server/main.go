@@ -10,7 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"goroutine/docs"
+	"goroutine/docs/openapi"
 	"goroutine/internal/app"
 	"goroutine/internal/config"
 	"goroutine/internal/http/httpschema"
@@ -35,7 +35,7 @@ func main() {
 
 	bootLogger := logging.NewLogger("dev", "info")
 	appCfg := config.NewAppConfigFromEnv(bootLogger)
-	docs.SwaggerInfo.Host = appCfg.SwaggerHost
+	openapi.SwaggerInfo.Host = appCfg.SwaggerHost
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel, httpschema.AllExtractors()...)
 
 	logger.Info("Running", slog.String("version", version))
