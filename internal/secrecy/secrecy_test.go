@@ -1,7 +1,6 @@
 package secrecy_test
 
 import (
-	"strings"
 	"testing"
 
 	"goroutine/internal/secrecy"
@@ -10,30 +9,17 @@ import (
 func TestSecretString(t *testing.T) {
 	t.Parallel()
 
-	s := "verysecret$ string123"
+	const raw = "verysecret$ string123"
 
-	ss := secrecy.SecretString(s)
-	ssRevealed := ss.RevealSecret()
+	secret := secrecy.SecretString(raw)
 
-	if ss.RevealSecret() != s {
-		t.Fatalf("got %q after reveal, want %q", ssRevealed, s)
+	if got := secret.RevealSecret(); got != raw {
+		t.Fatalf("RevealSecret() = %q, want %q", got, raw)
 	}
-
-	ssHiddenRepr := ss.String()
-	ssLogged := ss.LogValue().String()
-
-	if ssLogged != ssHiddenRepr {
-		t.Fatalf("LogValue().String() = %q, want String() = %q", ssLogged, ssHiddenRepr)
+	if got := secret.String(); got == raw {
+		t.Fatalf("String() leaked secret: %q", got)
 	}
-
-	sLower := strings.ToLower(s)
-	ssLower := strings.ToLower(ssHiddenRepr)
-
-	mid := len(sLower) / 2
-	left := sLower[mid:]
-	right := sLower[:mid]
-
-	if strings.Contains(ssLower, left) || strings.Contains(ssLower, right) {
-		t.Fatalf("Secret representation %q contains half of original %q", ss, s)
+	if got := secret.LogValue().String(); got != secret.String() {
+		t.Fatalf("LogValue().String() = %q, want %q", got, secret.String())
 	}
 }

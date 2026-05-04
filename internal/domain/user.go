@@ -56,6 +56,10 @@ func (p UserPassword) LogValue() slog.Value {
 	return p.value.LogValue()
 }
 
+func (p UserPassword) GoString() string {
+	return p.String()
+}
+
 // Domain knows about a little about storage, but this is pragmatic solution
 func (p UserPassword) Value() (driver.Value, error) {
 	return p.RevealSecret(), nil
@@ -106,4 +110,8 @@ func (t AuthToken) String() string {
 
 func (t AuthToken) LogValue() slog.Value {
 	return t.value.LogValue()
+}
+
+func (t AuthToken) GoString() string {
+	return t.String()
 }

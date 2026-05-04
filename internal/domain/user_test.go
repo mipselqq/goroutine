@@ -147,12 +147,76 @@ func TestUserPassword(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := domain.NewUserPassword(tt.input)
+			password, err := domain.NewUserPassword(tt.input)
 			if tt.wantErr && err == nil {
 				t.Error("got nil error, want non-nil")
 			}
 			if !tt.wantErr && err != nil {
 				t.Errorf("got error %v, want nil", err)
+			}
+			if !tt.wantErr {
+				assertSecretHidden(t, tt.input, password)
+			}
+		})
+	}
+}
+
+func TestNewJWTString(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		{
+			name:    "Valid JWT",
+			input:   "header.payload.signature",
+			wantErr: false,
+		},
+		{
+			name:    "Empty string",
+			input:   "",
+			wantErr: true,
+		},
+		{
+			name:    "Whitespace string",
+			input:   "   ",
+			wantErr: true,
+		},
+		{
+			name:    "Too few parts",
+			input:   "header.payload",
+			wantErr: true,
+		},
+		{
+			name:    "Too many parts",
+			input:   "header.payload.signature.extra",
+			wantErr: true,
+		},
+		{
+			name:    "Empty middle part",
+			input:   "header..signature",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			token, err := domain.NewJWTString(tt.input)
+			if tt.wantErr && err == nil {
+				t.Error("got nil error, want non-nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("got error %v, want nil", err)
+			}
+			if !tt.wantErr {
+				assertSecretHidden(t, tt.input, token)
+				if token.RevealSecret() != tt.input {
+					t.Errorf("got revealed token %q, want %q", token.RevealSecret(), tt.input)
+				}
 			}
 		})
 	}
