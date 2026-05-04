@@ -43,7 +43,8 @@ func (id *UUID[T]) Scan(src any) error {
 		return nil
 	}
 
-	if err := id.value.Scan(src); err != nil {
+	err := id.value.Scan(src)
+	if err != nil {
 		return fmt.Errorf("id %s: %w: %v", reflect.TypeFor[T](), ErrDataCorrupted, err)
 	}
 

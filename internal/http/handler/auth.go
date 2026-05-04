@@ -15,7 +15,7 @@ import (
 
 type AuthService interface {
 	Register(ctx context.Context, email domain.Email, password domain.UserPassword) error
-	Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error)
+	Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
 }
 
 type Auth struct {
@@ -134,7 +134,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.InfoContext(r.Context(), "Successfully logged in user", slog.String("email", body.Email))
-	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token})
+	httpschema.RespondJSON(w, h.logger, http.StatusOK, loginResponse{Token: token.RevealSecret()})
 }
 
 type whoAmIResponse struct {

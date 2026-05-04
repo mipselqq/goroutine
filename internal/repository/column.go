@@ -111,7 +111,7 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 	var result []domain.Column
 	for rows.Next() {
 		var col domain.Column
-		err := rows.Scan(
+		err = rows.Scan(
 			&col.ID,
 			&col.BoardID,
 			&col.Name,
@@ -126,7 +126,8 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 		result = append(result, col)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, fmt.Errorf("column repo: list: rows final error: %v: %w", err, ErrInternal)
 	}
 

@@ -38,11 +38,13 @@ func TestAuth_HappyPath(t *testing.T) {
 		var whoamiData struct {
 			UID string `json:"uid"`
 		}
-		if err := json.NewDecoder(whoamiResp.Body).Decode(&whoamiData); err != nil {
+		err := json.NewDecoder(whoamiResp.Body).Decode(&whoamiData)
+		if err != nil {
 			t.Fatalf("Whoami response Decode() error = %v", err)
 		}
 
-		if _, err := uuid.Parse(whoamiData.UID); err != nil {
+		_, err = uuid.Parse(whoamiData.UID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", whoamiData.UID, err)
 		}
 	})

@@ -31,14 +31,14 @@ func TestAuth_Register(t *testing.T) {
 	tests := []authTestCase{
 		{
 			name:      "Success",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
 				s.RegisterFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) error {
 					if e != email {
 						t.Errorf("got email %q, want %q", e, email)
 					}
-					if p != password {
-						t.Errorf("got password %q, want %q", p, password)
+					if p.RevealSecret() != password.RevealSecret() {
+						t.Errorf("got password %q, want %q", p.RevealSecret(), password.RevealSecret())
 					}
 					return nil
 				}
@@ -48,7 +48,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:      "Internal error",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(_ *testing.T, s *MockAuthService) {
 				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 					return service.ErrInternal
@@ -63,7 +63,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:      "Invalid email format",
-			inputBody: map[string]string{"email": "invalid-email", "password": password.String()},
+			inputBody: map[string]string{"email": "invalid-email", "password": password.RevealSecret()},
 			wantCode:  http.StatusBadRequest,
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
@@ -102,7 +102,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:      "User already exists",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(_ *testing.T, s *MockAuthService) {
 				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 					return service.ErrUserAlreadyExists
@@ -113,7 +113,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:      "Unknown error",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(_ *testing.T, s *MockAuthService) {
 				s.RegisterFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 					return errors.New("unknown error")
@@ -160,27 +160,27 @@ func TestAuth_Login(t *testing.T) {
 	tests := []authTestCase{
 		{
 			name:      "Success",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
-				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) (string, error) {
+				s.LoginFunc = func(ctx context.Context, e domain.Email, p domain.UserPassword) (domain.AuthToken, error) {
 					if e != email {
 						t.Errorf("got email %q, want %q", e, email)
 					}
-					if p != password {
-						t.Errorf("got password %q, want %q", p, password)
+					if p.RevealSecret() != password.RevealSecret() {
+						t.Errorf("got password %q, want %q", p.RevealSecret(), password.RevealSecret())
 					}
-					return "jwt_token", nil
+					return domain.NewJWTString("header.payload.signature")
 				}
 			},
 			wantCode: http.StatusOK,
-			wantBody: map[string]string{"token": "jwt_token"},
+			wantBody: map[string]string{"token": "header.payload.signature"},
 		},
 		{
 			name:      "Invalid credentials",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(_ *testing.T, s *MockAuthService) {
-				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
-					return "", service.ErrInvalidCredentials
+				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
+					return domain.AuthToken{}, service.ErrInvalidCredentials
 				}
 			},
 			wantCode: http.StatusUnauthorized,
@@ -195,10 +195,10 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "User not found",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(_ *testing.T, s *MockAuthService) {
-				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
-					return "", service.ErrUserNotFound // Enumeration and timing attacks are known, this is fine
+				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
+					return domain.AuthToken{}, service.ErrUserNotFound // Enumeration and timing attacks are known, this is fine
 				}
 			},
 			wantCode: http.StatusUnauthorized,
@@ -211,10 +211,10 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "Internal error",
-			inputBody: map[string]string{"email": email.String(), "password": password.String()},
+			inputBody: map[string]string{"email": email.String(), "password": password.RevealSecret()},
 			setupAuthService: func(_ *testing.T, s *MockAuthService) {
-				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
-					return "", service.ErrInternal
+				s.LoginFunc = func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
+					return domain.AuthToken{}, service.ErrInternal
 				}
 			},
 			wantCode: http.StatusInternalServerError,
@@ -226,7 +226,7 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "Empty email",
-			inputBody: map[string]string{"email": "", "password": password.String()},
+			inputBody: map[string]string{"email": "", "password": password.RevealSecret()},
 			wantCode:  http.StatusBadRequest,
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
@@ -239,7 +239,7 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "Invalid email format",
-			inputBody: map[string]string{"email": "invalid-email", "password": password.String()},
+			inputBody: map[string]string{"email": "invalid-email", "password": password.RevealSecret()},
 			wantCode:  http.StatusBadRequest,
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
@@ -315,6 +315,8 @@ func TestAuth_Login(t *testing.T) {
 }
 
 func TestAuth_WhoAmI(t *testing.T) {
+	t.Parallel()
+
 	testUserID := testutil.ValidUserID()
 
 	tests := []struct {

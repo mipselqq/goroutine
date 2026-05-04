@@ -11,7 +11,7 @@ import (
 
 type MockAuthService struct {
 	RegisterFunc func(ctx context.Context, email domain.Email, password domain.UserPassword) error
-	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error)
+	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
 }
 
 func AssertFuncNotNil(funcName string, fn any) {
@@ -25,7 +25,7 @@ func (m *MockAuthService) Register(ctx context.Context, email domain.Email, pass
 	return m.RegisterFunc(ctx, email, password)
 }
 
-func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
+func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
 	AssertFuncNotNil("AuthService.LoginFunc", m.LoginFunc)
 	return m.LoginFunc(ctx, email, password)
 }
@@ -146,13 +146,13 @@ func columnNotFoundByFieldError(field string) map[string]any {
 	}
 }
 
-func taskNotFoundErrorBody() map[string]any {
+func taskNotFoundByFieldError(field string) map[string]any {
 	return map[string]any{
 		"code":      "TASK_NOT_FOUND",
 		"message":   "Task not found",
 		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
-			map[string]any{"field": "taskId", "issues": []string{"Task not found"}},
+			map[string]any{"field": field, "issues": []string{"Task not found"}},
 		},
 	}
 }

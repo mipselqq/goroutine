@@ -44,7 +44,8 @@ func InsertBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	const q = `
 		INSERT INTO boards (id, owner_id, name, description, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := pool.Exec(ctx, q,
+	_, err := pool.Exec(
+		ctx, q,
 		board.ID,
 		board.OwnerID,
 		board.Name,
@@ -96,7 +97,8 @@ func InsertColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	const q = `
 		INSERT INTO columns (id, board_id, name, description, position, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err := pool.Exec(ctx, q,
+	_, err := pool.Exec(
+		ctx, q,
 		column.ID,
 		column.BoardID,
 		column.Name,
@@ -162,7 +164,7 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	var columns []domain.Column
 	for rows.Next() {
 		var column domain.Column
-		err := rows.Scan(
+		err = rows.Scan(
 			&column.ID,
 			&column.BoardID,
 			&column.Name,
@@ -178,7 +180,8 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 		columns = append(columns, column)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		t.Fatalf("rows.Err() error = %v", err)
 	}
 
@@ -194,7 +197,8 @@ func InsertTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	const q = `
 		INSERT INTO tasks (id, column_id, name, description, position, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err := pool.Exec(ctx, q,
+	_, err := pool.Exec(
+		ctx, q,
 		task.ID,
 		task.ColumnID,
 		task.Name,
@@ -260,7 +264,7 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 	var tasks []domain.Task
 	for rows.Next() {
 		var task domain.Task
-		err := rows.Scan(
+		err = rows.Scan(
 			&task.ID,
 			&task.ColumnID,
 			&task.Name,
@@ -276,7 +280,8 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 		tasks = append(tasks, task)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		t.Fatalf("rows.Err() error = %v", err)
 	}
 

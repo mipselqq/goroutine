@@ -27,12 +27,12 @@ func NewPGConfigFromEnv(logger *slog.Logger) PgConfig {
 	}
 }
 
-func (c *PgConfig) BuildDSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.User, c.Password.RevealSecret(), c.Host, c.Port, c.DB)
+func (c *PgConfig) BuildDSN() secrecy.SecretString {
+	return secrecy.SecretString(fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.User, c.Password.RevealSecret(), c.Host, c.Port, c.DB))
 }
 
 func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
-	config, err := pgxpool.ParseConfig(c.BuildDSN())
+	config, err := pgxpool.ParseConfig(c.BuildDSN().RevealSecret())
 	if err != nil {
 		return nil, err
 	}

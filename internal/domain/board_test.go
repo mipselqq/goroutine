@@ -73,12 +73,7 @@ func TestName(t *testing.T) {
 
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
@@ -151,12 +146,7 @@ func TestDescription(t *testing.T) {
 
 			var gotIssues []string
 			if err != nil {
-				var validationError *domain.ErrValidation
-				if errors.As(err, &validationError) {
-					gotIssues = validationError.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {

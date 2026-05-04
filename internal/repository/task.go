@@ -172,7 +172,7 @@ func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]d
 	var result []domain.Task
 	for rows.Next() {
 		var task domain.Task
-		err := rows.Scan(
+		err = rows.Scan(
 			&task.ID,
 			&task.ColumnID,
 			&task.Name,
@@ -187,7 +187,8 @@ func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]d
 		result = append(result, task)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, fmt.Errorf("task repo: list by board id: rows final error: %v: %w", err, ErrInternal)
 	}
 
@@ -210,7 +211,7 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 	var result []domain.Task
 	for rows.Next() {
 		var task domain.Task
-		err := rows.Scan(
+		err = rows.Scan(
 			&task.ID,
 			&task.ColumnID,
 			&task.Name,
@@ -225,7 +226,8 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 		result = append(result, task)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, fmt.Errorf("task repo: list: rows final error: %v: %w", err, ErrInternal)
 	}
 

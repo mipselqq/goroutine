@@ -94,10 +94,12 @@ func TestTask_HappyPath(t *testing.T) {
 
 		createdTask := parseTask(t, createResp)
 
-		if _, err := uuid.Parse(createdTask.ID); err != nil {
+		_, err := uuid.Parse(createdTask.ID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdTask.ID, err)
 		}
-		if _, err := uuid.Parse(createdTask.ColumnID); err != nil {
+		_, err = uuid.Parse(createdTask.ColumnID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdTask.ColumnID, err)
 		}
 		if createdTask.ColumnID != columnA.ID {
@@ -112,10 +114,12 @@ func TestTask_HappyPath(t *testing.T) {
 		if createdTask.Position != 1 {
 			t.Errorf("got position %d, want %d", createdTask.Position, 1)
 		}
-		if _, err := time.Parse(timeFormat, createdTask.CreatedAt); err != nil {
+		_, err = time.Parse(timeFormat, createdTask.CreatedAt)
+		if err != nil {
 			t.Errorf("time.Parse(%q) error = %v, want nil", createdTask.CreatedAt, err)
 		}
-		if _, err := time.Parse(timeFormat, createdTask.UpdatedAt); err != nil {
+		_, err = time.Parse(timeFormat, createdTask.UpdatedAt)
+		if err != nil {
 			t.Errorf("time.Parse(%q) error = %v, want nil", createdTask.UpdatedAt, err)
 		}
 
@@ -344,7 +348,8 @@ func TestTask_HappyPath(t *testing.T) {
 func parseTask(t *testing.T, resp *http.Response) TaskJSON {
 	t.Helper()
 	var tk TaskJSON
-	if err := json.NewDecoder(resp.Body).Decode(&tk); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&tk)
+	if err != nil {
 		t.Fatalf("Task Decode() error = %v", err)
 	}
 	return tk
@@ -353,7 +358,8 @@ func parseTask(t *testing.T, resp *http.Response) TaskJSON {
 func parseTasksList(t *testing.T, resp *http.Response) []TaskJSON {
 	t.Helper()
 	var tasks []TaskJSON
-	if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&tasks)
+	if err != nil {
 		t.Fatalf("Tasks list Decode() error = %v", err)
 	}
 	return tasks
@@ -362,7 +368,8 @@ func parseTasksList(t *testing.T, resp *http.Response) []TaskJSON {
 func parseTaskPosition(t *testing.T, resp *http.Response) TaskPositionJSON {
 	t.Helper()
 	var p TaskPositionJSON
-	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&p)
+	if err != nil {
 		t.Fatalf("Task position Decode() error = %v", err)
 	}
 	return p

@@ -37,25 +37,19 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
-	columnsService := service.NewColumn(service.ColumnRepository(columnsRepo), service.ColumnBoardRepository(boardsRepo))
+	columnsService := service.NewColumn(columnsRepo, boardsRepo)
+	tasksService := service.NewTask(tasksRepo, boardsRepo, columnsRepo)
 
-	tasksService := service.NewTask(
-		service.TaskRepository(tasksRepo),
-		service.TaskBoardRepository(boardsRepo),
-		service.TaskColumnRepository(columnsRepo),
-	)
-
-	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
-
-	authHandler := handler.NewAuth(logger, authService, responder)
+	errorResponder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
+	authHandler := handler.NewAuth(logger, authService, errorResponder)
 	healthHandler := handler.NewHealth(logger)
-	boardsHandler := handler.NewBoards(logger, boardsService, responder)
-	columnsHandler := handler.NewColumns(logger, columnsService, responder)
-	tasksHandler := handler.NewTasks(logger, tasksService, responder)
+	boardsHandler := handler.NewBoards(logger, boardsService, errorResponder)
+	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
+	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
-	authMiddleware := middleware.NewAuth(logger, authService, responder)
+	authMiddleware := middleware.NewAuth(logger, authService, errorResponder)
 	reqIDMiddleware := middleware.MustNewRequestID(logger, func() string {
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})

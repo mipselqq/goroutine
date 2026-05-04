@@ -23,7 +23,7 @@ func TestColumns_Create(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		path               string
+		boardID            string
 		inputBody          any
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
@@ -32,7 +32,7 @@ func TestColumns_Create(t *testing.T) {
 	}{
 		{
 			name:      "Success",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": validColumn.Name.String(), "description": validColumn.Description.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
@@ -64,35 +64,35 @@ func TestColumns_Create(t *testing.T) {
 		},
 		{
 			name:      "Invalid board id",
-			path:      "/v1/boards/not-a-uuid/columns",
+			boardID:   "not-a-uuid",
 			inputBody: map[string]string{"name": "To Do"},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid JSON",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
 			wantBody:  invalidJsonBody(),
 		},
 		{
 			name:      "Invalid name",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": "   ", "description": validColumn.Description.String()},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Description too long",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": validColumn.Name.String(), "description": strings.Repeat("a", 1025)},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Missing context user",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": "To Do"},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
@@ -100,7 +100,7 @@ func TestColumns_Create(t *testing.T) {
 		},
 		{
 			name:      "Board not found",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": "To Do"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
@@ -112,7 +112,7 @@ func TestColumns_Create(t *testing.T) {
 		},
 		{
 			name:      "Internal error",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": "To Do"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
@@ -124,7 +124,7 @@ func TestColumns_Create(t *testing.T) {
 		},
 		{
 			name:      "Unexpected error",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": "To Do"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.CreateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
@@ -140,20 +140,21 @@ func TestColumns_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
+			path := "/v1/boards/" + tt.boardID + "/columns"
 			var req *http.Request
 			if raw, ok := tt.inputBody.(string); ok {
-				req = httptest.NewRequest(http.MethodPost, tt.path, strings.NewReader(raw))
+				req = httptest.NewRequest(http.MethodPost, path, strings.NewReader(raw))
 				req.Header.Set("Content-Type", "application/json")
 			} else {
-				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPost, tt.path, tt.inputBody)
+				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPost, path, tt.inputBody)
 			}
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
-			req.SetPathValue("boardId", strings.TrimPrefix(strings.TrimSuffix(tt.path, "/columns"), "/v1/boards/"))
+			req = req.WithContext(ctx)
+			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
 			mockColumns := &MockColumnService{}
@@ -182,15 +183,15 @@ func TestColumns_List(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		path               string
+		boardID            string
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
 		wantCode           int
 		wantBody           any
 	}{
 		{
-			name: "Success",
-			path: "/v1/boards/" + validBoard.ID.String() + "/columns",
+			name:    "Success",
+			boardID: validBoard.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					if callerID != validBoard.OwnerID {
@@ -226,20 +227,20 @@ func TestColumns_List(t *testing.T) {
 		},
 		{
 			name:     "Invalid board id",
-			path:     "/v1/boards/not-a-uuid/columns",
+			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:     "Missing context user",
-			path:     "/v1/boards/" + validBoard.ID.String() + "/columns",
+			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
 			wantBody: unauthorizedTokenBody(),
 		},
 		{
-			name: "Board not found",
-			path: "/v1/boards/" + validBoard.ID.String() + "/columns",
+			name:    "Board not found",
+			boardID: validBoard.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, service.ErrBoardNotFound
@@ -249,8 +250,8 @@ func TestColumns_List(t *testing.T) {
 			wantBody: boardNotFoundErrorBody(),
 		},
 		{
-			name: "Internal error",
-			path: "/v1/boards/" + validBoard.ID.String() + "/columns",
+			name:    "Internal error",
+			boardID: validBoard.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, service.ErrInternal
@@ -265,13 +266,14 @@ func TestColumns_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodGet, tt.path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			path := "/v1/boards/" + tt.boardID + "/columns"
+			req := httptest.NewRequest(http.MethodGet, path, http.NoBody)
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
-			req.SetPathValue("boardId", strings.TrimPrefix(strings.TrimSuffix(tt.path, "/columns"), "/v1/boards/"))
+			req = req.WithContext(ctx)
+			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
 			mockColumns := &MockColumnService{}
@@ -320,11 +322,10 @@ func TestColumns_UpdateByID(t *testing.T) {
 	emptyDescriptionColumn.Description = emptyDesc
 	emptyDescriptionColumn.UpdatedAt = testutil.FixedTime5mFromNow()
 
-	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String()
-
 	tests := []struct {
 		name               string
-		path               string
+		boardID            string
+		columnID           string
 		inputBody          any
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
@@ -333,7 +334,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 	}{
 		{
 			name:      "Success (name update)",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": updatedName.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
@@ -368,7 +370,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Success (description only)",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"description": updatedDescOnly.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
@@ -394,7 +397,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Success (empty body no-op)",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]any{},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
@@ -420,7 +424,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Empty description",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": updatedName.String(), "description": ""},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
@@ -443,42 +448,48 @@ func TestColumns_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Invalid board id",
-			path:      "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
+			boardID:   "not-a-uuid",
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
+			boardID:   validBoard.ID.String(),
+			columnID:  "not-a-uuid",
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid JSON",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
 			wantBody:  invalidJsonBody(),
 		},
 		{
 			name:      "Invalid name",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "   ", "description": validColumn.Description.String()},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Invalid description",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": validColumn.Name.String(), "description": strings.Repeat("a", 1025)},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Missing context user",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
@@ -486,7 +497,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Column not found",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
@@ -498,7 +510,8 @@ func TestColumns_UpdateByID(t *testing.T) {
 		},
 		{
 			name:      "Internal error",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
@@ -514,26 +527,23 @@ func TestColumns_UpdateByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
+			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID
 			var req *http.Request
 			if raw, ok := tt.inputBody.(string); ok {
-				req = httptest.NewRequest(http.MethodPatch, tt.path, strings.NewReader(raw))
+				req = httptest.NewRequest(http.MethodPatch, path, strings.NewReader(raw))
 				req.Header.Set("Content-Type", "application/json")
 			} else {
-				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, tt.path, tt.inputBody)
+				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPatch, path, tt.inputBody)
 			}
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
-			boardAndColumn := strings.TrimPrefix(tt.path, "/v1/boards/")
-			parts := strings.Split(boardAndColumn, "/columns/")
-			if len(parts) == 2 {
-				req.SetPathValue("boardId", parts[0])
-				req.SetPathValue("columnId", parts[1])
-			}
+			req.SetPathValue("boardId", tt.boardID)
+			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
 			mockColumns := &MockColumnService{}
@@ -562,11 +572,10 @@ func TestColumns_Move(t *testing.T) {
 		t.Fatalf("NewColumnPosition() error = %v", err)
 	}
 
-	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String() + "/position"
-
 	tests := []struct {
 		name               string
-		path               string
+		boardID            string
+		columnID           string
 		inputBody          any
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
@@ -575,7 +584,8 @@ func TestColumns_Move(t *testing.T) {
 	}{
 		{
 			name:      "Success",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": targetPosition.Int64()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, gotTargetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
@@ -601,35 +611,40 @@ func TestColumns_Move(t *testing.T) {
 		},
 		{
 			name:      "Invalid board id",
-			path:      "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String() + "/position",
+			boardID:   "not-a-uuid",
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
-			path:      "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid/position",
+			boardID:   validBoard.ID.String(),
+			columnID:  "not-a-uuid",
 			inputBody: map[string]int64{"targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid JSON",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: "{\"targetPosition\":",
 			wantCode:  http.StatusBadRequest,
 			wantBody:  invalidJsonBody(),
 		},
 		{
 			name:      "Invalid target position",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 0},
 			wantCode:  http.StatusBadRequest,
 			wantBody:  validationErrorBody("targetPosition", []string{"Position is invalid"}),
 		},
 		{
 			name:      "Missing context user",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 1},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
@@ -637,7 +652,8 @@ func TestColumns_Move(t *testing.T) {
 		},
 		{
 			name:      "Index out of bounds",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 10},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
@@ -649,7 +665,8 @@ func TestColumns_Move(t *testing.T) {
 		},
 		{
 			name:      "Column not found",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 1},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
@@ -661,7 +678,8 @@ func TestColumns_Move(t *testing.T) {
 		},
 		{
 			name:      "Internal error",
-			path:      okPath,
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 1},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.MoveFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
@@ -677,26 +695,23 @@ func TestColumns_Move(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
+			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/position"
 			var req *http.Request
 			if raw, ok := tt.inputBody.(string); ok {
-				req = httptest.NewRequest(http.MethodPut, tt.path, strings.NewReader(raw))
+				req = httptest.NewRequest(http.MethodPut, path, strings.NewReader(raw))
 				req.Header.Set("Content-Type", "application/json")
 			} else {
-				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPut, tt.path, tt.inputBody)
+				req, _ = testutil.NewJSONRequestAndRecorder(t, http.MethodPut, path, tt.inputBody)
 			}
 
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
-			boardAndColumn := strings.TrimPrefix(tt.path, "/v1/boards/")
-			parts := strings.Split(boardAndColumn, "/columns/")
-			if len(parts) == 2 {
-				req.SetPathValue("boardId", parts[0])
-				req.SetPathValue("columnId", strings.TrimSuffix(parts[1], "/position"))
-			}
+			req.SetPathValue("boardId", tt.boardID)
+			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
 			mockColumns := &MockColumnService{}
@@ -720,19 +735,20 @@ func TestColumns_Delete(t *testing.T) {
 
 	validBoard := testutil.ValidBoard()
 	validColumn := testutil.ValidColumn(validBoard.ID)
-	okPath := "/v1/boards/" + validBoard.ID.String() + "/columns/" + validColumn.ID.String()
 
 	tests := []struct {
 		name               string
-		path               string
+		boardID            string
+		columnID           string
 		context            context.Context
 		setupColumnService func(t *testing.T, s *MockColumnService)
 		wantCode           int
 		wantBody           any
 	}{
 		{
-			name: "Success",
-			path: okPath,
+			name:     "Success",
+			boardID:  validBoard.ID.String(),
+			columnID: validColumn.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					if callerID != validBoard.OwnerID {
@@ -752,26 +768,30 @@ func TestColumns_Delete(t *testing.T) {
 		},
 		{
 			name:     "Invalid board id",
-			path:     "/v1/boards/not-a-uuid/columns/" + validColumn.ID.String(),
+			boardID:  "not-a-uuid",
+			columnID: validColumn.ID.String(),
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:     "Invalid column id",
-			path:     "/v1/boards/" + validBoard.ID.String() + "/columns/not-a-uuid",
+			boardID:  validBoard.ID.String(),
+			columnID: "not-a-uuid",
 			wantCode: http.StatusBadRequest,
 			wantBody: validationErrorBody("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:     "Missing context user",
-			path:     okPath,
+			boardID:  validBoard.ID.String(),
+			columnID: validColumn.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
 			wantBody: unauthorizedTokenBody(),
 		},
 		{
-			name: "Column not found",
-			path: okPath,
+			name:     "Column not found",
+			boardID:  validBoard.ID.String(),
+			columnID: validColumn.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					return service.ErrColumnNotFound
@@ -781,8 +801,9 @@ func TestColumns_Delete(t *testing.T) {
 			wantBody: columnNotFoundByFieldError("columnId"),
 		},
 		{
-			name: "Internal error",
-			path: okPath,
+			name:     "Internal error",
+			boardID:  validBoard.ID.String(),
+			columnID: validColumn.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
 				s.DeleteFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
 					return service.ErrInternal
@@ -797,19 +818,16 @@ func TestColumns_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := httptest.NewRequest(http.MethodDelete, tt.path, http.NoBody)
-			if tt.context != nil {
-				req = req.WithContext(tt.context)
-			} else {
-				req = req.WithContext(context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID))
+			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID
+			req := httptest.NewRequest(http.MethodDelete, path, http.NoBody)
+			ctx := tt.context
+			if ctx == nil {
+				ctx = context.WithValue(req.Context(), httpschema.ContextKeyUserID, validBoard.OwnerID)
 			}
+			req = req.WithContext(ctx)
 
-			boardAndColumn := strings.TrimPrefix(tt.path, "/v1/boards/")
-			parts := strings.Split(boardAndColumn, "/columns/")
-			if len(parts) == 2 {
-				req.SetPathValue("boardId", parts[0])
-				req.SetPathValue("columnId", parts[1])
-			}
+			req.SetPathValue("boardId", tt.boardID)
+			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
 			mockColumns := &MockColumnService{}

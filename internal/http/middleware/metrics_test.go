@@ -100,7 +100,8 @@ func TestMetrics_Collection(t *testing.T) {
 			}))
 
 			if requestCount != 1 {
-				t.Errorf("http_requests_total for path=%q method=%q status=%q: got %f, want 1",
+				t.Errorf(
+					"http_requests_total for path=%q method=%q status=%q: got %f, want 1",
 					tt.abstractPath,
 					tt.method,
 					handlerStatusStr,

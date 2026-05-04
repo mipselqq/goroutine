@@ -105,7 +105,8 @@ func Login(t *testing.T, c *http.Client, baseURL, email, password string) string
 	var out struct {
 		Token string `json:"token"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+	err = json.NewDecoder(resp.Body).Decode(&out)
+	if err != nil {
 		t.Fatalf("Login response Decode() error = %v", err)
 	}
 	if out.Token == "" {

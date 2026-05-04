@@ -36,12 +36,7 @@ func TestTaskName(t *testing.T) {
 			name, err := domain.NewTaskName(tt.input)
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
@@ -80,12 +75,7 @@ func TestTaskDescription(t *testing.T) {
 			description, err := domain.NewTaskDescription(tt.input)
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
@@ -124,12 +114,7 @@ func TestTaskPosition(t *testing.T) {
 			position, err := domain.NewTaskPosition(tt.input)
 			var gotIssues []string
 			if err != nil {
-				var ve *domain.ErrValidation
-				if errors.As(err, &ve) {
-					gotIssues = ve.Issues
-				} else {
-					gotIssues = []string{err.Error()}
-				}
+				gotIssues = domain.ExtractValidationIssues(err)
 			}
 
 			if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {

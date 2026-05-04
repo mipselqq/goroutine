@@ -81,7 +81,7 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 	var boards []domain.Board
 	for rows.Next() {
 		var board domain.Board
-		err := rows.Scan(
+		err = rows.Scan(
 			&board.ID,
 			&board.OwnerID,
 			&board.Name,
@@ -96,7 +96,8 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 		boards = append(boards, board)
 	}
 
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, fmt.Errorf("board repo: get many rows: %v: %w", err, ErrInternal)
 	}
 

@@ -2,8 +2,13 @@ package domain
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
+	"log/slog"
+	"slices"
 	"strings"
+
+	"goroutine/internal/secrecy"
 )
 
 type (
@@ -21,10 +26,15 @@ func ParseUserID(s string) (UserID, error) {
 
 const (
 	ErrPasswordTooShort string = "Password is too short"
+	ErrInvalidJWTToken  string = "Invalid JWT token"
 )
 
 type UserPassword struct {
-	value string
+	value secrecy.SecretString
+}
+
+type AuthToken struct {
+	value secrecy.SecretString
 }
 
 func NewUserPassword(password string) (UserPassword, error) {
@@ -32,16 +42,32 @@ func NewUserPassword(password string) (UserPassword, error) {
 		return UserPassword{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
 	}
 
-	return UserPassword{value: password}, nil
+	return UserPassword{value: secrecy.SecretString(password)}, nil
+}
+
+func (p UserPassword) RevealSecret() string {
+	return p.value.RevealSecret()
 }
 
 func (p UserPassword) String() string {
-	return p.value
+	return p.value.String()
+}
+
+func (p UserPassword) LogValue() slog.Value {
+	return p.value.LogValue()
+}
+
+func (p UserPassword) GoString() string {
+	return p.String()
+}
+
+func (p UserPassword) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.String())
 }
 
 // Domain knows about a little about storage, but this is pragmatic solution
 func (p UserPassword) Value() (driver.Value, error) {
-	return p.value, nil
+	return p.RevealSecret(), nil
 }
 
 func (p *UserPassword) Scan(value any) error {
@@ -59,4 +85,42 @@ func (p *UserPassword) Scan(value any) error {
 	}
 	*p = password
 	return nil
+}
+
+func NewJWTString(token string) (AuthToken, error) {
+	trimmed := strings.TrimSpace(token)
+	if trimmed == "" {
+		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
+	}
+
+	parts := strings.Split(trimmed, ".")
+	if len(parts) != 3 {
+		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
+	}
+
+	if slices.Contains(parts, "") {
+		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
+	}
+
+	return AuthToken{value: secrecy.SecretString(trimmed)}, nil
+}
+
+func (t AuthToken) RevealSecret() string {
+	return t.value.RevealSecret()
+}
+
+func (t AuthToken) String() string {
+	return t.value.String()
+}
+
+func (t AuthToken) LogValue() slog.Value {
+	return t.value.LogValue()
+}
+
+func (t AuthToken) GoString() string {
+	return t.String()
+}
+
+func (t AuthToken) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
 }

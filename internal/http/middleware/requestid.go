@@ -24,7 +24,7 @@ func MustNewRequestID(l *slog.Logger, g GenerateRequestIDFn) *RequestID {
 	return &RequestID{logger: l, generateRequestIDFn: g}
 }
 
-func (m *RequestID) Wrap(next http.Handler) http.HandlerFunc {
+func (m *RequestID) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID := strings.TrimSpace(r.Header.Get("X-Request-Id"))
 		if reqID == "" {

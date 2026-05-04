@@ -30,7 +30,7 @@ func TestAuth_Register(t *testing.T) {
 			wantErr: nil,
 			setupUserRepo: func(r *MockUserRepository) {
 				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
-					if hash == testutil.ValidPassword().String() {
+					if hash == testutil.ValidPassword().RevealSecret() {
 						return errors.New("service saved plaintext password!")
 					}
 					return nil
@@ -150,7 +150,7 @@ func TestAuth_Login(t *testing.T) {
 			}
 
 			if tt.wantErr == nil {
-				parts := strings.Split(token, ".")
+				parts := strings.Split(token.RevealSecret(), ".")
 				if len(parts) != 3 {
 					t.Errorf("got %d JWT segments, want 3", len(parts))
 				}
@@ -167,13 +167,13 @@ func TestAuth_VerifyToken(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		tokenFunc  func() (string, error)
+		tokenFunc  func() (domain.AuthToken, error)
 		wantUserID domain.UserID
 		wantErr    error
 	}{
 		{
 			name: "Valid token",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				return s.CreateToken(testutil.ValidUserID(), jwtOpts.Exp)
 			},
 			wantUserID: testutil.ValidUserID(),
@@ -181,79 +181,99 @@ func TestAuth_VerifyToken(t *testing.T) {
 		},
 		{
 			name: "Invalid token",
-			tokenFunc: func() (string, error) {
-				return "invalid.token.here", nil
+			tokenFunc: func() (domain.AuthToken, error) {
+				return domain.NewJWTString("invalid.token.here")
 			},
 			wantErr: service.ErrInvalidToken,
 		},
 		{
 			name: "Different secret",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				claims := jwt.MapClaims{
 					"sub": testutil.ValidUserID().String(),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte("wrong_secret"))
+				tokenString, err := token.SignedString([]byte("wrong_secret"))
+				if err != nil {
+					return domain.AuthToken{}, err
+				}
+				return domain.NewJWTString(tokenString)
 			},
 			wantErr: service.ErrInvalidToken,
 		},
 		{
 			name: "Expired token",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				return s.CreateToken(testutil.ValidUserID(), -time.Hour)
 			},
 			wantErr: service.ErrTokenExpired,
 		},
 		{
 			name: "Different signing method",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				claims := jwt.MapClaims{
 					"sub": testutil.ValidUserID().String(),
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
-				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				tokenString, err := token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				if err != nil {
+					return domain.AuthToken{}, err
+				}
+				return domain.NewJWTString(tokenString)
 			},
 			wantErr: service.ErrInvalidSigningMethod,
 		},
 		{
 			name: "Missing sub claim",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				claims := jwt.MapClaims{
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				tokenString, err := token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				if err != nil {
+					return domain.AuthToken{}, err
+				}
+				return domain.NewJWTString(tokenString)
 			},
 			wantErr: service.ErrInvalidToken,
 		},
 		{
 			name: "Sub claim not a string",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				claims := jwt.MapClaims{
 					"sub": 12345,
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				tokenString, err := token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				if err != nil {
+					return domain.AuthToken{}, err
+				}
+				return domain.NewJWTString(tokenString)
 			},
 			wantErr: service.ErrInvalidToken,
 		},
 		{
 			name: "Invalid ID in sub",
-			tokenFunc: func() (string, error) {
+			tokenFunc: func() (domain.AuthToken, error) {
 				claims := jwt.MapClaims{
 					"sub": "not-an-id",
 					"exp": time.Now().Add(jwtOpts.Exp).Unix(),
 					"iat": time.Now().Unix(),
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				return token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				tokenString, err := token.SignedString([]byte(testutil.ValidJWTSecret().RevealSecret()))
+				if err != nil {
+					return domain.AuthToken{}, err
+				}
+				return domain.NewJWTString(tokenString)
 			},
 			wantErr: service.ErrInvalidToken,
 		},
@@ -293,7 +313,7 @@ func TestAuth_CreateToken(t *testing.T) {
 		t.Fatalf("CreateToken() error = %v", err)
 	}
 
-	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.Parse(token.RevealSecret(), func(token *jwt.Token) (interface{}, error) {
 		return []byte(testutil.ValidJWTSecret().RevealSecret()), nil
 	})
 	if err != nil {

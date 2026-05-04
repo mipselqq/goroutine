@@ -48,7 +48,7 @@ func (w *StatusSpyWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func (m *Metrics) Wrap(next http.Handler) http.HandlerFunc {
+func (m *Metrics) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		abstractPath := AbstractMetricPath(r.URL.Path)
 

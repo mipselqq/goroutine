@@ -22,3 +22,11 @@ func NewValidationError(issues ...string) error {
 	}
 	return &ErrValidation{Issues: issues}
 }
+
+func ExtractValidationIssues(err error) []string {
+	var ve *ErrValidation
+	if errors.As(err, &ve) {
+		return ve.Issues
+	}
+	return []string{err.Error()}
+}

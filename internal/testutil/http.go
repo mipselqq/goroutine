@@ -83,10 +83,12 @@ func AssertResponseBody(t *testing.T, rr *httptest.ResponseRecorder, want any) {
 	gotBody := rr.Body.Bytes()
 
 	var gotDecoded, wantDecoded any
-	if err := json.Unmarshal(gotBody, &gotDecoded); err != nil {
+	err = json.Unmarshal(gotBody, &gotDecoded)
+	if err != nil {
 		t.Fatalf("json.Unmarshal(response body) error = %v\nBody: %q", err, string(gotBody))
 	}
-	if err := json.Unmarshal(wantJSON, &wantDecoded); err != nil {
+	err = json.Unmarshal(wantJSON, &wantDecoded)
+	if err != nil {
 		t.Fatalf("json.Unmarshal(want JSON) error = %v\nWant JSON: %q", err, string(wantJSON))
 	}
 

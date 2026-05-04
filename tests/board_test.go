@@ -62,10 +62,12 @@ func TestBoard_HappyPath(t *testing.T) {
 
 		createdBoard := parseBoard(t, createResp)
 
-		if _, err := uuid.Parse(createdBoard.ID); err != nil {
+		_, err := uuid.Parse(createdBoard.ID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdBoard.ID, err)
 		}
-		if _, err := uuid.Parse(createdBoard.OwnerID); err != nil {
+		_, err = uuid.Parse(createdBoard.OwnerID)
+		if err != nil {
 			t.Errorf("uuid.Parse(%q) error = %v, want nil", createdBoard.OwnerID, err)
 		}
 		if createdBoard.Name != name {
@@ -74,10 +76,12 @@ func TestBoard_HappyPath(t *testing.T) {
 		if createdBoard.Description != description {
 			t.Errorf("got description %q, want %q", createdBoard.Description, description)
 		}
-		if _, err := time.Parse(timeFormat, createdBoard.CreatedAt); err != nil {
+		_, err = time.Parse(timeFormat, createdBoard.CreatedAt)
+		if err != nil {
 			t.Errorf("time.Parse(%q) error = %v, want nil", createdBoard.CreatedAt, err)
 		}
-		if _, err := time.Parse(timeFormat, createdBoard.UpdatedAt); err != nil {
+		_, err = time.Parse(timeFormat, createdBoard.UpdatedAt)
+		if err != nil {
 			t.Errorf("time.Parse(%q) error = %v, want nil", createdBoard.UpdatedAt, err)
 		}
 
@@ -225,7 +229,8 @@ func TestBoard_HappyPath(t *testing.T) {
 func parseBoard(t *testing.T, resp *http.Response) BoardJSON {
 	t.Helper()
 	var b BoardJSON
-	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&b)
+	if err != nil {
 		t.Fatalf("Board Decode() error = %v", err)
 	}
 	return b
@@ -234,7 +239,8 @@ func parseBoard(t *testing.T, resp *http.Response) BoardJSON {
 func parseBoardsList(t *testing.T, resp *http.Response) []BoardJSON {
 	t.Helper()
 	var b []BoardJSON
-	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&b)
+	if err != nil {
 		t.Fatalf("Boards list Decode() error = %v", err)
 	}
 	return b
@@ -243,7 +249,8 @@ func parseBoardsList(t *testing.T, resp *http.Response) []BoardJSON {
 func parseBoardAggregate(t *testing.T, resp *http.Response) BoardAggregateJSON {
 	t.Helper()
 	var b BoardAggregateJSON
-	if err := json.NewDecoder(resp.Body).Decode(&b); err != nil {
+	err := json.NewDecoder(resp.Body).Decode(&b)
+	if err != nil {
 		t.Fatalf("Board aggregate Decode() error = %v", err)
 	}
 	return b

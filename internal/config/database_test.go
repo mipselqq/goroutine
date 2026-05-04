@@ -86,8 +86,24 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 
 func TestPgConfig_BuildDSN(t *testing.T) {
 	want := "postgres://user:password@127.0.0.1:5432/todo_db"
-	if got := defaultPgConfig.BuildDSN(); got != want {
+
+	dsn := defaultPgConfig.BuildDSN()
+	got := dsn.RevealSecret()
+	if got != want {
 		t.Errorf("got %q, want %q", got, want)
+	}
+
+	testutil.AssertSecretHidden(t, want, dsn)
+}
+
+func TestPgConfig_ParsePGXpoolConfig(t *testing.T) {
+	cfg, err := defaultPgConfig.ParsePGXpoolConfig()
+	if err != nil {
+		t.Fatalf("ParsePGXpoolConfig() error = %v", err)
+	}
+
+	if got := cfg.ConnConfig.RuntimeParams["timezone"]; got != "UTC" {
+		t.Errorf("ConnConfig.RuntimeParams[timezone] = %q, want %q", got, "UTC")
 	}
 }
 

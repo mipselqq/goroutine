@@ -16,16 +16,6 @@ type Handlers struct {
 	Tasks   *Tasks
 }
 
-func NewHandlers(auth *Auth, health *Health, boards *Boards, columns *Columns, tasks *Tasks) *Handlers {
-	return &Handlers{
-		Auth:    auth,
-		Health:  health,
-		Boards:  boards,
-		Columns: columns,
-		Tasks:   tasks,
-	}
-}
-
 func extractUserIDOrHandleMissing(
 	w http.ResponseWriter,
 	r *http.Request,

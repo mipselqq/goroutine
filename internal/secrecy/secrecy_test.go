@@ -1,6 +1,7 @@
 package secrecy_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -8,30 +9,31 @@ import (
 )
 
 func TestSecretString(t *testing.T) {
-	s := "verysecret$ string123"
+	t.Parallel()
 
-	ss := secrecy.SecretString(s)
-	ssRevealed := ss.RevealSecret()
+	const raw = "verysecret$ string123"
 
-	if ss.RevealSecret() != s {
-		t.Fatalf("got %q after reveal, want %q", ssRevealed, s)
+	secret := secrecy.SecretString(raw)
+
+	got := secret.RevealSecret()
+	if got != raw {
+		t.Fatalf("RevealSecret() = %q, want %q", got, raw)
+	}
+	if got = secret.String(); got == raw {
+		t.Fatalf("String() leaked secret: %q", got)
+	}
+	got = secret.LogValue().String()
+	if got != secret.String() {
+		t.Fatalf("LogValue().String() = %q, want %q", got, secret.String())
 	}
 
-	ssHiddenRepr := ss.String()
-	ssLogged := ss.LogValue().String()
-
-	if ssLogged != ssHiddenRepr {
-		t.Fatalf("LogValue().String() = %q, want String() = %q", ssLogged, ssHiddenRepr)
+	marshaled, err := json.Marshal(secret)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
 	}
 
-	sLower := strings.ToLower(s)
-	ssLower := strings.ToLower(ssHiddenRepr)
-
-	mid := len(sLower) / 2
-	left := sLower[mid:]
-	right := sLower[:mid]
-
-	if strings.Contains(ssLower, left) || strings.Contains(ssLower, right) {
-		t.Fatalf("Secret representation %q contains half of original %q", ss, s)
+	got = string(marshaled)
+	if strings.Contains(got, raw) {
+		t.Fatalf("json.Marshal() leaked secret: %q", got)
 	}
 }
