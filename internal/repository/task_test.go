@@ -129,8 +129,8 @@ func TestTaskRepository_ListByColumnID(t *testing.T) {
 		second := testutil.NewValidTask(t, columnA.ID, "Second", "second", 2)
 		otherColumnTask := testutil.NewValidTask(t, columnB.ID, "Other", "other", 1)
 
-		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
+		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &otherColumnTask)
 
 		got, err := r.ListByColumnID(context.Background(), columnA.ID)
@@ -165,8 +165,8 @@ func TestTaskRepository_ListByBoardID(t *testing.T) {
 		thirdTask := testutil.ValidTask(secondColumn.ID)
 		otherBoardTask := testutil.ValidTask(otherBoardColumn.ID)
 
-		InsertTask(t, pool, &firstTask)
 		InsertTask(t, pool, &secondTask)
+		InsertTask(t, pool, &firstTask)
 		InsertTask(t, pool, &thirdTask)
 		InsertTask(t, pool, &otherBoardTask)
 
@@ -305,9 +305,9 @@ func TestTaskRepository_Move(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
+		InsertTask(t, pool, &third)
 		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
-		InsertTask(t, pool, &third)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 3)
 
@@ -340,9 +340,9 @@ func TestTaskRepository_Move(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
-		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
 		InsertTask(t, pool, &third)
+		InsertTask(t, pool, &first)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 1)
 
@@ -374,8 +374,8 @@ func TestTaskRepository_Move(t *testing.T) {
 		first := testutil.ValidTask(column.ID)
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 
-		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
+		InsertTask(t, pool, &first)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 2)
 
@@ -407,9 +407,9 @@ func TestTaskRepository_Move(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
-		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
 		InsertTask(t, pool, &third)
+		InsertTask(t, pool, &first)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 4)
 
@@ -441,11 +441,11 @@ func TestTaskRepository_Move(t *testing.T) {
 		b1 := testutil.NewValidTask(t, columnB.ID, "B1", "b1", 1)
 		b2 := testutil.NewValidTask(t, columnB.ID, "B2", "b2", 2)
 
+		InsertTask(t, pool, &a3)
 		InsertTask(t, pool, &a1)
 		InsertTask(t, pool, &a2)
-		InsertTask(t, pool, &a3)
-		InsertTask(t, pool, &b1)
 		InsertTask(t, pool, &b2)
+		InsertTask(t, pool, &b1)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 2)
 
@@ -494,8 +494,8 @@ func TestTaskRepository_Move(t *testing.T) {
 		a1 := testutil.ValidTask(columnA.ID)
 		b1 := testutil.NewValidTask(t, columnB.ID, "B1", "b1", 1)
 
-		InsertTask(t, pool, &a1)
 		InsertTask(t, pool, &b1)
+		InsertTask(t, pool, &a1)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 2)
 
@@ -533,8 +533,8 @@ func TestTaskRepository_Move(t *testing.T) {
 		a1 := testutil.ValidTask(columnA.ID)
 		b1 := testutil.NewValidTask(t, columnB.ID, "B1", "b1", 1)
 
-		InsertTask(t, pool, &a1)
 		InsertTask(t, pool, &b1)
+		InsertTask(t, pool, &a1)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 3)
 
@@ -594,9 +594,9 @@ func TestTaskRepository_Delete(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
+		InsertTask(t, pool, &third)
 		InsertTask(t, pool, &first)
 		InsertTask(t, pool, &second)
-		InsertTask(t, pool, &third)
 
 		err := r.Delete(context.Background(), board.ID, column.ID, second.ID)
 		if err != nil {

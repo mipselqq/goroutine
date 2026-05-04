@@ -273,7 +273,7 @@ func TestBoard_GetAggregate(t *testing.T) {
 		wantAggregate   service.AggregateBoard
 	}{
 		{
-			name:     "Success",
+			name:     "Success sorts aggregate by positions",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
@@ -288,7 +288,7 @@ func TestBoard_GetAggregate(t *testing.T) {
 					if boardID != validBoard.ID {
 						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
-					return []domain.Column{firstColumn, secondColumn}, nil
+					return []domain.Column{secondColumn, firstColumn}, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
@@ -296,7 +296,7 @@ func TestBoard_GetAggregate(t *testing.T) {
 					if boardID != validBoard.ID {
 						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
-					return []domain.Task{firstTask, secondTask, doneTask}, nil
+					return []domain.Task{secondTask, doneTask, firstTask}, nil
 				}
 			},
 			wantAggregate: wantAggregate,

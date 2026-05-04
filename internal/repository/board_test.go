@@ -178,8 +178,8 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			UpdatedAt:   testutil.FixedTime5mFromNow(),
 		}
 
-		InsertBoard(t, pool, &first)
 		InsertBoard(t, pool, &second)
+		InsertBoard(t, pool, &first)
 
 		got, err := r.GetMany(context.Background(), userID)
 		if err != nil {
