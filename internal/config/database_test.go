@@ -96,6 +96,17 @@ func TestPgConfig_BuildDSN(t *testing.T) {
 	testutil.AssertSecretHidden(t, want, dsn)
 }
 
+func TestPgConfig_ParsePGXpoolConfig(t *testing.T) {
+	cfg, err := defaultPgConfig.ParsePGXpoolConfig()
+	if err != nil {
+		t.Fatalf("ParsePGXpoolConfig() error = %v", err)
+	}
+
+	if got := cfg.ConnConfig.RuntimeParams["timezone"]; got != "UTC" {
+		t.Errorf("ConnConfig.RuntimeParams[timezone] = %q, want %q", got, "UTC")
+	}
+}
+
 func TestPgConfig_LogValue(t *testing.T) {
 	v := defaultPgConfig.LogValue()
 	if v.Kind() != slog.KindGroup {
