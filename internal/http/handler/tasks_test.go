@@ -486,7 +486,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: taskNotFoundErrorBody(),
+			wantBody: taskNotFoundByFieldError("taskId"),
 		},
 		{
 			name:      "Internal error",
@@ -684,7 +684,7 @@ func TestTasks_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: taskNotFoundErrorBody(),
+			wantBody: taskNotFoundByFieldError("taskId"),
 		},
 		{
 			name:      "Target column not found",
@@ -834,7 +834,7 @@ func TestTasks_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: taskNotFoundErrorBody(),
+			wantBody: taskNotFoundByFieldError("taskId"),
 		},
 		{
 			name:     "Internal error",

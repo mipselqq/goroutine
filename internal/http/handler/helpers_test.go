@@ -146,13 +146,13 @@ func columnNotFoundByFieldError(field string) map[string]any {
 	}
 }
 
-func taskNotFoundErrorBody() map[string]any {
+func taskNotFoundByFieldError(field string) map[string]any {
 	return map[string]any{
 		"code":      "TASK_NOT_FOUND",
 		"message":   "Task not found",
 		"timestamp": testutil.FixedTimeNowStr(),
 		"details": []any{
-			map[string]any{"field": "taskId", "issues": []string{"Task not found"}},
+			map[string]any{"field": field, "issues": []string{"Task not found"}},
 		},
 	}
 }
