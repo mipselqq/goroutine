@@ -56,7 +56,7 @@ vuln:
 fmt:
 	gofumpt	-l -w .
 swag:
-	swag init -g cmd/server/main.go
+	swag init -g cmd/server/main.go -o docs/openapi
 
 migrate-create:
 	@if [ -z "$(name)" ]; then echo "Error: migration name is required. Use: make migrate-create name=migration_name"; exit 1; fi
