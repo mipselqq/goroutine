@@ -8,7 +8,7 @@ import (
 )
 
 type MockAuthService struct {
-	VerifyTokenFunc func(ctx context.Context, token string) (domain.UserID, error)
+	VerifyTokenFunc func(ctx context.Context, token domain.AuthToken) (domain.UserID, error)
 }
 
 func AssertFuncNotNil(funcName string, fn any) {
@@ -17,7 +17,7 @@ func AssertFuncNotNil(funcName string, fn any) {
 	}
 }
 
-func (m *MockAuthService) VerifyToken(ctx context.Context, token string) (domain.UserID, error) {
+func (m *MockAuthService) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 	AssertFuncNotNil("AuthService.VerifyTokenFunc", m.VerifyTokenFunc)
 	return m.VerifyTokenFunc(ctx, token)
 }

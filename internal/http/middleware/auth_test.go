@@ -34,7 +34,7 @@ func TestAuth(t *testing.T) {
 			wantStatus:  mockStatusCode,
 			wantUserID:  userID,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return userID, nil
 				}
 			},
@@ -45,7 +45,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Bearer invalid.token.here",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrInvalidToken
 				}
 			},
@@ -64,7 +64,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Bearer expired.token.here",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrTokenExpired
 				}
 			},
@@ -83,7 +83,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Bearer invalid.signing.method.token.here",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, service.ErrInvalidSigningMethod
 				}
 			},
@@ -102,7 +102,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
@@ -121,7 +121,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Bearer",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
@@ -140,7 +140,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Bearer ",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
@@ -159,7 +159,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Bearer token extra-part",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},
@@ -179,7 +179,7 @@ func TestAuth(t *testing.T) {
 			wantStatus:  mockStatusCode,
 			wantUserID:  userID,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return userID, nil
 				}
 			},
@@ -191,7 +191,7 @@ func TestAuth(t *testing.T) {
 			wantStatus:  mockStatusCode,
 			wantUserID:  userID,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return userID, nil
 				}
 			},
@@ -202,7 +202,7 @@ func TestAuth(t *testing.T) {
 			headerValue: "Basic some-token",
 			wantStatus:  http.StatusUnauthorized,
 			setupAuthService: func(r *MockAuthService) {
-				r.VerifyTokenFunc = func(ctx context.Context, token string) (domain.UserID, error) {
+				r.VerifyTokenFunc = func(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 					return domain.UserID{}, nil
 				}
 			},

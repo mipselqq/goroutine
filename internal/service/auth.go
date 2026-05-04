@@ -51,31 +51,31 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 	return nil
 }
 
-func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (string, error) {
+func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
 	id, hash, err := s.repository.GetByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
-		return "", fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
+		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
 	}
 	if err != nil {
-		return "", fmt.Errorf("auth service: login: hash by email: %v: %w", err, ErrInternal)
+		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %v: %w", err, ErrInternal)
 	}
 
 	isMatch, err := argon2id.ComparePasswordAndHash(password.RevealSecret(), hash)
 	if err != nil {
-		return "", fmt.Errorf("auth service: login: compare password and hash: %v: %w", err, ErrInternal)
+		return domain.AuthToken{}, fmt.Errorf("auth service: login: compare password and hash: %v: %w", err, ErrInternal)
 	}
 	if !isMatch {
-		return "", ErrInvalidCredentials
+		return domain.AuthToken{}, ErrInvalidCredentials
 	}
 
 	token, err := s.CreateToken(id, s.jwtOptions.Exp)
 	if err != nil {
-		return "", fmt.Errorf("auth service: login: create token: %v: %w", err, ErrInternal)
+		return domain.AuthToken{}, fmt.Errorf("auth service: login: create token: %v: %w", err, ErrInternal)
 	}
 	return token, nil
 }
 
-func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (string, error) {
+func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (domain.AuthToken, error) {
 	claims := jwt.MapClaims{
 		"sub": userID.String(),
 		"exp": time.Now().Add(exp).Unix(),
@@ -84,11 +84,22 @@ func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (string, err
 
 	token := jwt.NewWithClaims(s.jwtOptions.SigningMethod, claims)
 
-	return token.SignedString([]byte(s.jwtOptions.JWTSecret.RevealSecret()))
+	tokenString, err := token.SignedString([]byte(s.jwtOptions.JWTSecret.RevealSecret()))
+	if err != nil {
+		return domain.AuthToken{}, err
+	}
+
+	jwtToken, err := domain.NewJWTString(tokenString)
+	if err != nil {
+		return domain.AuthToken{}, err
+	}
+
+	return jwtToken, nil
 }
 
-func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (domain.UserID, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func (s *Auth) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
+	tokenString := token.RevealSecret()
+	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if token.Method.Alg() != s.jwtOptions.SigningMethod.Alg() {
 			return nil, ErrInvalidSigningMethod
 		}
@@ -104,7 +115,7 @@ func (s *Auth) VerifyToken(ctx context.Context, tokenString string) (domain.User
 		return domain.UserID{}, fmt.Errorf("auth service: verify token: %v: %w", err, ErrInvalidToken)
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
 		idStr, ok := claims["sub"].(string)
 		if !ok {
 			return domain.UserID{}, fmt.Errorf("auth service: verify token: sub claim not found: %w", ErrInvalidToken)

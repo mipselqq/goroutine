@@ -11,7 +11,7 @@ import (
 )
 
 type TokenVerifier interface {
-	VerifyToken(ctx context.Context, token string) (domain.UserID, error)
+	VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error)
 }
 
 type Auth struct {
@@ -52,7 +52,14 @@ func (m *Auth) Wrap(next http.Handler) http.Handler {
 			return
 		}
 
-		token := parts[1]
+		token, err := domain.NewJWTString(parts[1])
+		if err != nil {
+			m.responder.InvalidToken(
+				w, []httpschema.Detail{{Field: "Authorization", Issues: []string{"Invalid token"}}},
+			)
+			return
+		}
+
 		userID, err := m.verifier.VerifyToken(r.Context(), token)
 		if err != nil {
 			m.responder.InvalidToken(
