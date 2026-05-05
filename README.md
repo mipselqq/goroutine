@@ -21,15 +21,15 @@ Want to join the project? Check the guidelines first:
 
 ## Keywords
 All technologies and methodologies used in the project:
-- **Languages:** Go
+- **Languages:** Go, TypeScript
 - **Architecture & Design:** Clean Architecture, TDD, Clean Code
 - **Database:** PostgreSQL, Goose (Migrations)
 - **Infrastructure:** Docker, Docker Compose, Ansible, Makefile, Staging & Production
 - **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
 - **Observability** Prometheus, Grafana, Loki, Node Exporter
-- **Security:** Argon2id, JWT, Secrecy (Custom package), Trivy, Hadolint
-- **Quality Assurance:** GolangCI-Lint, Gofumpt, Govulncheck, Race Detection
-- **Documentation:** Swagger
+- **Security:** Argon2id, JWT, Trivy, Hadolint, Secrecy (Custom package)
+- **Quality Assurance:** GolangCI-Lint, Gofumpt, Govulncheck, K6, Race Tests
+- **Documentation:** Swagger, Swaggo
 
 ## Quick Start
 To get started with this project, follow the steps below:
@@ -96,227 +96,208 @@ graph TD
 ```
 
 ##### This project uses clean architecture with rings as such:
-- Domain, containing critical business entities with invariants ensuring validity
-- Handler, which is responsible for parsing requests and sending responses
-- Service, implementing use cases
-- Repository, hiding database implementation details
-- Driver, managing protocols, done with external modules
+- **Domain**, containing value objects with validation invariants
+- **Handler**, establishing API contract
+- **Service**, implementing use cases
+- **Repository**, hiding database implementation details
+- **Driver**, managing protocols, done with external modules
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- Leads to decoupling of components, ensuring that every part is testable with mocks.
-- The core of the app (domain, use cases) can't break due to more of an infrustructual change, say, replacing the standard router, or migrating to another database
-- Maintainability improves significantly
-</details>
-
-<details>
-<summary>Tradeoffs</summary>
+- Leads to **decoupling** of components, ensuring high **testability** with mocks.
+- The core of the app (domain, use cases) **can't break due to more of an infrustructual change**, say, replacing the standard router, or migrating to another database
+- **Clear boundaries** allow developers to **focus** more
+- **Complexity doesn't grow exponentially** as the project evolves
 
 ##### Tradeoffs:
 - Slightly more boilerplate code
-- Increased complexity at first
+
 </details>
 
 ## Project Structure
 Annotated overview of the repository layout:
-- `cmd/` - Entry points (main.go).
-  - `ping/` - Ping progam for distroless healthcheck.
-  - `server/` - Main server entry point.
-- `docs/` - Generated Swagger UI documentation and OpenAPI specs.
-- `infra/` - Infrastructure configs (Ansible, Grafana, Loki, Prometheus).
-   - `ansible/` - Server provisioning and configuration management.
-   - `grafana/` - Grafana dashboards and provisioning configs.
-   - `prometheus.template.yml` - Prometheus config template used by Docker Compose.
+- `cmd/` - Entry points (`main.go`).
+  - `ping/` - Ping program for distroless healthcheck.
+  - `server/` - Main HTTP server entry point.
+- `docs/` - Handwritten and generated documentation (Swaggo)
+- `infra/` - Infrastructure configs.
+   - `alloy/` - Grafana Alloy pipeline (`config.alloy`).
+   - `ansible/` - Server provisioning (e.g. Ubuntu playbook).
+   - `grafana/` - Dashboard JSON under `dashboards/`; provisioning under `provisioning/`.
+   - `prometheus/` - Prometheus configs.
 - `internal/` - Private application code.
-   - `app.go`, `startup.go` - Application wiring and startup utilities.
-   - `config/` - Configuration utilities (e.g., env parsing, database setup).
-   - `domain/` - Core business entities with invariants (email, password, title).
+   - `app/` - `app.go`, `startup.go` — wiring and startup.
+   - `config/` - Configuration (env parsing, database URL, app settings).
+   - `domain/` - Core entities and invariants (boards, columns, tasks, users, email, IDs).
    - `http/` - HTTP layer.
       - `handler/` - HTTP handlers (API endpoints).
-      - `middleware/` - HTTP middlewares (metrics, auth, CORS).
-      - `httpschema/` - Uniform structured responses and keys
-      - `route.go` - Route registration.
-   - `logging/` - Logging adapters and factory.
-   - `repository/` - Persistence layer (database interactions).
+      - `middleware/` - HTTP middleware (auth, CORS, metrics, request IDs).
+      - `httpschema/` - Structured responses, error mapping, validation helpers, context keys.
+      - `route.go` - Route registration; `swagger.go` - Swagger UI route wiring.
+   - `logging/` - Logging adapters and logger factory.
+   - `repository/` - Persistence layer (database access).
    - `service/` - Use case layer (business rules).
-   - `secrecy/` - Custom package for handling sensitive data.
-   - `testutil/` - Utilities for testing (e.g., database setup, logging).
-- `migrations/` - SQL migration files managed by Goose.
-- `tests/` - End-to-end test suites.
+   - `secrecy/` - Handling of sensitive values (redaction, etc.).
+   - `testutil/` - Shared test helpers (database, HTTP, fixtures, logging).
+- `k6/` - k6 scemarios for load testing and application-level race checks.
+- `migrations/` - SQL migrations managed by Goose.
+- `tests/` - End-to-end test suite.
 
 ## API Documentation
 The API is documented using Swagger (OpenAPI 3.0).
-- **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html).
-- **Remote Swagger UI** Go to /swagger on host specified in the description of this repo.
-- **Specs:** Generated files are located in [docs/](docs/).
-To regenerate specs after changing code comments:
+- **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/v1/swagger).
+- **Remote Swagger UI** Go to /v1/swagger on host specified in the description of this repo.
+- **Specs:** Generated files are located in [docs/openapi](docs/openapi).
 
 ## Test suite
-##### Project has 3 types of tests and follows testing pyramid principle:
-- Unit tests: Cover all independent code blocks. Run with race detection
-- Integration tests: Verify interaction between repository and database. Run with race detection
-- End-to-end tests: Check happy paths to catch tricky infrastructure issues
+##### Project generally has 5 types of tests and follows testing **pyramid** principle:
+- **Unit** tests: Cover all independent code blocks. Run with race detection
+- **Integration** tests: Verify interaction between repository and database. Run with race detection
+- **End-to-end** tests: Check happy paths to catch tricky infrastructure issues
+- **Load** testing: Act as thousands of real users, stressing likely API paths
+- Application-level **race checks**: Target only previously or potentially vulnerable operations
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- Ensures no regressions and replaces manual testing
-- Automates CI process
-</details>
-
-<details>
-<summary>Tradeoffs</summary>
+- Ensures **no regressions** and reduces **manual** testing
+- Less of **human factor**
+- **Automates** CI process
 
 ##### Tradeoffs:
-- More code to maintain
-- Slightly slower development at first
+- **3x** more code to maintain, meaning **slower** iteraion speeds (TTM)
 </details>
 
 ## Linting
 ##### Linting is extensively used:
-- GolangCI-Lint: Code checks (govet, gocritic, gorevive, staticcheck, errcheck)
-- Hadolint: Static Dockerfile checks
-- Trivy: Container image analysis
-- Gofumpt: Strict style enforcement
+- **GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
+- Hadolint: **Static** Dockerfile checks
+- Trivy: Container **image analysis**
+- Gofumpt: Strict **style enforcement**
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- Finds potential problems early
-</details>
-
-
-<details>
-<summary>Tradeoffs</summary>
+- **Finds** potential problems **early**
 
 ##### Tradeoffs:
-- More configs to create
-- Checks take some time
+- Initial setup **takes time**
+- Checks **slow down** CI/CD
+
 </details>
 
 ## Security
-- **Secrecy:** Custom package to encapsulate sensitive data (tokens) and prevent accidental logging
-- **Coverage:** Edge cases covered by test suite to avoid unexpected responses
-- **Hardening:** Server automatically hardened during CD
+- Secrecy: Custom package to encapsulate credentials using SecretString container to **prevent accidental** logging or marshalling even using unpopular verbs.
+- Coverage: **Edge cases** covered by test suite to avoid unexpected responses, including internal details leakage.
+- Hardening: Project ensures it's running in a **safe environment** on any server.
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- Crucial to protect app from hacking immediately after release
-- Prevents unintended money loss
-</details>
-
-<details>
-<summary>Tradeoffs</summary>
+- Saves **reputation**
+- Prevents unintended **money loss**
 
 ##### Tradeoffs:
-- More input checks
+- Proper security requires **qualified developers** and **resources** to maintain
+
 </details>
 
 ## CI
 - Trunk-based development
 - Fully automated integration process
 
-- **Lefthook:** Basic local checks for quick response
-- **Remote checks:** Advanced checks performed after push
-- **Release Drafter:** Automatically generates changelogs from PR
-- **Docker:** Used for building the app
-- **Makefile:** Ensures build and tooling is consistent across environments
+- **Lefthook:** Basic local checks for quick response, auto code formatting and documntation regeneration.
+- **Remote checks:** Advanced jobs performed after each push and merge
+- **Release Drafter:** Automatically generates draft changelogs from PR
+- **Docker:** Used for transferring and deploying standalone build images  
+- **Makefile:** Ensures basic workflow and tooling is consistent across different developers
 
 ##### Branch protection rules (GitHub):
-- Forbid direct pushes to main
-- Forbid administrator overrides
-- Require green check jobs before merge
+- Forbid **direct pushes** to main
+- Forbid administrator **overrides**
+- Require code to be **tested**, **scanned**, **built and deployed**.
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
-##### Why:
-- Fewer conflicts
-- Faster iteration speed
-- No broken windows effect
-- No human factor
-</details>
-
-<details>
-<summary>Tradeoffs</summary>
+##### Why & Tradeoffs:
+- Fewer **conflicts**
+- Faster **iteration speed**
+- No **cutting corners**
+- No **human factor**
 
 ##### Tradeoffs:
-- Pipeline setup takes time
+- It **takes time** to setup such a pipeline
 </details>
 
 ## CD
-##### CD pipeline is almost fully automated:
+##### CD pipeline is almost **fully automated**:
 - Get VDS server, generate SSH keys, copy public key (manual)
+- Configure reverse proxy to handle HTTPS and high-level routing
 - Set up config in GitHub secrets (manual)
 - Install required packages
 - Configure unattended upgrades
 - Configure fail2ban
 - Configure log rotation
-- Start docker service
+- Start Docker service
 - Disable root login and password authentication
-- Open required ports
+- Close all ports by default, except 443 and 80
 - Create user and app directory
+- Pull app Docker image
 - Copy configs and run app
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- Secure and convenient way to get hardened server with running app
-- No human factor
-</details>
-
-<details>
-<summary>Tradeoffs</summary>
+- **Secure** and **quck** way to get hardened server with running app in a few minutes
+- No **human factor**
 
 ##### Tradeoffs:
-- Writing the pipeline takes some time
+- Writing the pipeline **takes time**
 </details>
 
 ## Observability
-Prometheus, Loki, Node-exporter, and Grafana provide clear remote observability:
-- Detailed resource usage of machine
-- Remote logs for all containers
-- **RED:** Core app metrics (RPS, error rate, duration)
+Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observability**:
+- Detailed **resource usage** of machine
+- **Remote logs** for all containers
+- RED: Core **app metrics** (RPS, error rate, duration)
 
 > [!WARNING]
-> To see metrics on local dev in Grafana, ensure your firewall allows requests from `172.16.0.0/12`.
+> Some firewalls block local Grafana, ensure `172.16.0.0/12` outbound is open in case monitoring doesn't work.
 
 ## Workflow
-Project follows issue-pull model to track issues and create solutions.
+Project follows **issue-pull** model to track issues and create solutions.
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- Allows atomic changes easily reviewed by human and machine
-- Cleaner history
-- Less human factor
+- Allows atomic changes **easily reviewed** by human and machine
+- **Cleaner** history
+- Less **human factor**
+
+##### Tradeoffs:
+- It **takes time** to setup such a workflow
 </details>
 
 ## LLM usage
-LLMs utilized as interactive documentation. Rarely used for writing configs or code under guidance.
+LLMs helped me a lot to **compensate** this big **production-ready setup**, doing repetitive tasks **under guidance** and reviewing PRs for mistakes I could **overlook doing self-reviews**. Nice **interactive** documentation. Also works great during **brainstorming**.
 
 <details>
-<summary>Why</summary>
+<summary>Why & Tradeoffs</summary>
 
 ##### Why:
-- No copy-paste can teach you something
-- No need to search the documentation
-- The responses are correct most of the time
-- Interactive learning
-- AI can't write good code without a detailed prompt (code written in spoken english with some slight details ommitted), that's why it's easier to write Go code, which is structured and unambigous
+- Reduces **wasted time**
+- Allows to focus more on **creative tasks**
+- **Interactive** learning
 </details>
 
-<details>
-<summary>Tradeoffs</summary>
-
 ##### Tradeoffs:
-- It fails to warn that some features are deprecated, luckily, most tools do that themselves
+- **Occasional incorrect** suggestions or **smelly code**.
 </details>
