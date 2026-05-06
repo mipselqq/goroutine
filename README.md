@@ -173,7 +173,7 @@ The API is documented using Swagger (OpenAPI 3.0).
 
 ## Linting
 ##### Linting is extensively used:
-- **GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
+- GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
 - Hadolint: **Static** Dockerfile checks
 - Trivy: Container **image analysis**
 - Gofumpt: Strict **style enforcement**
