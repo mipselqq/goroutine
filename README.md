@@ -146,71 +146,36 @@ Annotated overview of the repository layout:
 - `tests/` - End-to-end test suite.
 
 ## API Documentation
-The API is documented using Swagger (OpenAPI 3.0).
+To get interactive remote documentation, API is documented using Swagger (OpenAPI 3.0).
 - **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/v1/swagger).
 - **Remote Swagger UI** Go to /v1/swagger on host specified in the description of this repo.
 - **Specs:** Generated files are located in [docs/openapi](docs/openapi).
 
 ## Test suite
-##### Project generally has 5 types of tests and follows testing **pyramid** principle:
+##### Project generally has 5 types of tests and follows testing **pyramid** principle. At cost of writing and maintaining around 3x more code, robust test suite ensures no regressions, reduces human factor and manual testing.
 - **Unit** tests: Cover all independent code blocks. Run with race detection
 - **Integration** tests: Verify interaction between repository and database. Run with race detection
 - **End-to-end** tests: Check happy paths to catch tricky infrastructure issues
 - **Load** testing: Act as thousands of real users, stressing likely API paths
 - Application-level **race checks**: Target only previously or potentially vulnerable operations
 
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- Ensures **no regressions** and reduces **manual** testing
-- Less of **human factor**
-- **Automates** CI process
-
-##### Tradeoffs:
-- **3x** more code to maintain, meaning **slower** iteraion speeds (TTM)
-</details>
-
 ## Linting
-##### Linting is extensively used:
-- GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
+##### Linting is extensively used to early catch bugs, vulnerabilities, and guideline violations.
+- GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck,errcheck)
 - Hadolint: **Static** Dockerfile checks
 - Trivy: Container **image analysis**
 - Gofumpt: Strict **style enforcement**
 
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- **Finds** potential problems **early**
-
-##### Tradeoffs:
-- Initial setup **takes time**
-- Checks **slow down** CI/CD
-
-</details>
-
 ## Security
+To prevent reputation and money loss, security is seriously taken into account.
 - Secrecy: Custom package to encapsulate credentials using SecretString container to **prevent accidental** logging or marshalling even using unpopular verbs.
 - Coverage: **Edge cases** covered by test suite to avoid unexpected responses, including internal details leakage.
 - Hardening: Project ensures it's running in a **safe environment** on any server.
 
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- Saves **reputation**
-- Prevents unintended **money loss**
-
-##### Tradeoffs:
-- Proper security requires **qualified developers** and **resources** to maintain
-
-</details>
-
 ## CI
+To avoid frequent merge conflicts, integrate only qualified changes, iterate quicker, robust CI pipeline is implemented.
 - Trunk-based development
-- Fully automated integration process
-
+- **Fully automated** integration process
 - **Lefthook:** Basic local checks for quick response, auto code formatting and documntation regeneration.
 - **Remote checks:** Advanced jobs performed after each push and merge
 - **Release Drafter:** Automatically generates draft changelogs from PR
@@ -222,20 +187,8 @@ The API is documented using Swagger (OpenAPI 3.0).
 - Forbid administrator **overrides**
 - Require code to be **tested**, **scanned**, **built and deployed**.
 
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why & Tradeoffs:
-- Fewer **conflicts**
-- Faster **iteration speed**
-- No **cutting corners**
-- No **human factor**
-
-##### Tradeoffs:
-- It **takes time** to setup such a pipeline
-</details>
-
 ## CD
+- This pipline ensures **secure**, **reproducible**, and **quck** way to get hardened server with running app in a few minutes.
 ##### CD pipeline is almost **fully automated**:
 - Get VDS server, generate SSH keys, copy public key (manual)
 - Configure reverse proxy to handle HTTPS and high-level routing
@@ -251,19 +204,8 @@ The API is documented using Swagger (OpenAPI 3.0).
 - Pull app Docker image
 - Copy configs and run app
 
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- **Secure** and **quck** way to get hardened server with running app in a few minutes
-- No **human factor**
-
-##### Tradeoffs:
-- Writing the pipeline **takes time**
-</details>
-
 ## Observability
-Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observability**:
+Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observability** to investigate incidents and collect runtime data for optimizations:
 - Detailed **resource usage** of machine
 - **Remote logs** for all containers
 - RED: Core **app metrics** (RPS, error rate, duration)
@@ -272,32 +214,7 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 > Some firewalls block local Grafana, ensure `172.16.0.0/12` outbound is open in case monitoring doesn't work.
 
 ## Workflow
-Project follows **issue-pull** model to track issues and create solutions.
-
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- Allows atomic changes **easily reviewed** by human and machine
-- **Cleaner** history
-- Less **human factor**
-
-##### Tradeoffs:
-- It **takes time** to setup such a workflow
-</details>
+Project follows **issue-pull** model to get cleaner history, review changes and integrate with CI/CD pipeline.
 
 ## LLM usage
-LLMs helped me a lot to **compensate** this big **production-ready setup**, doing repetitive tasks **under guidance** and reviewing PRs for mistakes I could **overlook doing self-reviews**. Nice **interactive** documentation. Also works great during **brainstorming**.
-
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- Reduces **wasted time**
-- Allows to focus more on **creative tasks**
-- **Interactive** learning
-</details>
-
-##### Tradeoffs:
-- **Occasional incorrect** suggestions or **smelly code**.
-</details>
+LLMs helped a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes I could **overlook doing self-reviews**. It acts well as **interactive** documentation. Also works great during **brainstorming**.
