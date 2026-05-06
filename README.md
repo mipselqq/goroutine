@@ -13,6 +13,7 @@
 - [CI](#ci)
 - [CD](#cd)
 - [Observability](#observability)
+- [Performance](#performance)
 - [Workflow](#workflow)
 - [AI-assisted development](#llm-usage)
 - [Developer Guidelines](DEVELOPER_GUIDELINES.md)
@@ -207,6 +208,95 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 
 > [!WARNING]
 > Some firewalls block local Grafana, ensure `172.16.0.0/12` outbound is open in case monitoring doesn't work.
+
+## Performance
+Though performance was never goal of this project, the code is able to handle up to 1200 test users (VUs) creating objects, reading and updating them, according to the latest k6 run.
+
+Server specs: 1 vCPU 2.5 GHz, 900 MB RAM, SSD, Ubuntu
+Containers running: app, Postgres, Prometheus
+
+<details>
+<summary>Full k6 CLI output</summary>
+
+```text
+█ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(95) < 1000' p(95)=985.17ms
+
+    http_req_failed
+    ✗ 'rate < 0.01' rate=1.00%
+
+
+  █ TOTAL RESULTS
+
+    checks_total.......: 976681 239.272122/s
+    checks_succeeded...: 98.99% 966885 out of 976681
+    checks_failed......: 1.00%  9796 out of 976681
+
+    ✓ register status is 200
+    ✓ login status is 200
+    ✗ createBoard status is 201
+      ↳  98% — ✓ 21855 / ✗ 444
+    ✗ createColumn status is 201
+      ↳  98% — ✓ 82243 / ✗ 927
+    ✗ createTask status is 201
+      ↳  98% — ✓ 769597 / ✗ 8177
+    ✗ getAggregate status is 200
+      ↳  99% — ✓ 19604 / ✗ 69
+    ✗ getBoard status is 200
+      ↳  99% — ✓ 1598 / ✗ 7
+    ✗ listTasks status is 200
+      ↳  99% — ✓ 4594 / ✗ 13
+    ✗ moveTask status is 200
+      ↳  99% — ✓ 15699 / ✗ 46
+    ✗ deleteColumn status is 204
+      ↳  99% — ✓ 1544 / ✗ 3
+    ✗ deleteTask status is 204
+      ↳  99% — ✓ 29939 / ✗ 73
+    ✗ updateTask status is 200
+      ↳  99% — ✓ 14490 / ✗ 27
+    ✗ deleteBoard status is 204
+      ↳  99% — ✓ 5720 / ✗ 10
+
+    HTTP
+    http_req_duration..............: avg=1.08s    min=0s     med=118.31ms max=1m0s   p(90)=569.92ms p(95)=985.17ms
+      { expected_response:true }...: avg=494.84ms min=2.71ms med=115.64ms max=38s    p(90)=541.28ms p(95)=812.83ms
+    http_req_failed................: 1.00%  9796 out of 976681
+    http_reqs......................: 976681 239.272122/s
+
+    EXECUTION
+    iteration_duration.............: avg=4m9s     min=12.55s med=2m55s    max=14m53s p(90)=9m10s    p(95)=10m15s
+    iterations.....................: 11222  2.749221/s
+    vus............................: 1400   min=13             max=1400
+    vus_max........................: 2000   min=2000           max=2000
+
+    NETWORK
+    data_received..................: 586 MB 144 kB/s
+    data_sent......................: 122 MB 30 kB/s
+
+
+
+
+running (1h08m02.2s), 0000/2000 VUs, 11222 complete and 1400 interrupted iterations
+rampToBreak ✗ [========================>-------------] 1330/2000 VUs  1h08m01.7s/1h41m40.0s
+ERRO[4082] thresholds on metrics 'http_req_failed' were crossed; at least one has abortOnFail enabled, stopping test prematurely
+make: *** [Makefile:88: happy-load] Error 99
+```
+
+</details>
+
+#### Thresholds that cause the test to stop if crossed:
+- 95% of users must receive response in under 1 second
+- Error rate must be below 1%
+
+[Grafana screenshot]()
+
+Quick analysis of the metrics shows:
+- Server is **out of CPU** capacity, which is mostly consumed by Postgres
+- Near out of available RAM
+- There are no memory leaks
+- So the **bottleneck is database**, as expected, because of chosen columns/tasks positioning algorithm with cascade updates (for simplicity)
 
 ## Workflow
 The project follows the **issue-pull** model to get a cleaner history, review changes, and integrate with the CI/CD pipeline.
