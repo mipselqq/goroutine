@@ -104,19 +104,12 @@ graph TD
 - **Repository**, hiding database implementation details
 - **Driver**, managing protocols, done with external modules
 
-<details>
-<summary>Why & Tradeoffs</summary>
-
-##### Why:
-- Leads to **decoupling** of components, ensuring high **testability** with mocks.
-- The core of the app (domain, use cases) **can't break due to more of an infrastructural change**, say, replacing the standard router, or migrating to another database
+##### Benefits.
+At cost of more boilerplate code, we get following advantages:
+- **Decoupling** of components, ensuring high **testability** with mocks.
 - **Clear boundaries** allow developers to **focus** more
 - **Complexity doesn't grow exponentially** as the project evolves
-
-##### Tradeoffs:
-- Slightly more boilerplate code
-
-</details>
+- The core of the app (domain, use cases) **can't break due to more of an infrastructural change**, say, replacing the standard router, or migrating to another database
 
 ## Project Structure
 Annotated overview of the repository layout:
