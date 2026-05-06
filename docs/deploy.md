@@ -28,7 +28,7 @@ prometheus.goroutine.mipselqq.uk {
 ## Configuration
 Variable and secret settings are located in your repository under **Settings > Secrets and variables > Actions**.
 
-![Variables Placeholder](placeholder)
+<img width="1506" height="1431" alt="github variables page" src="https://github.com/user-attachments/assets/8e2b8e9b-d3eb-4f60-86de-0849396c0ae4" />
 
 > [!NOTE]
 > Any variable or secret can be set repository-wide for both environments, or specified per environment (e.g., `staging` or `production`).
