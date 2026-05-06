@@ -212,7 +212,7 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 Project follows **issue-pull** model to get cleaner history, review changes and integrate with CI/CD pipeline.
 
 ## AI-assisted development
-LLMs help a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes that be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
+LLMs help a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
 
 Want to join the project? Check the guidelines first:
 [Developer Guidelines](DEVELOPER_GUIDELINES.md)
