@@ -16,7 +16,7 @@
 - [Performance](#performance)
 - [Workflow](#workflow)
 - [AI-assisted development](#llm-usage)
-- [Developer Guidelines](DEVELOPER_GUIDELINES.md)
+- [Documentation](#documentation)
 
 # Summary
 Kanban-style **task tracker** API written in Go. A reference implementation
@@ -302,5 +302,7 @@ The project follows the **issue-pull** model to get a cleaner history, review ch
 
 ## AI-assisted development
 LLMs help a lot to **compensate** the overhead to create this big **production-ready setup**, doing **repetitive tasks** under guidance and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
-Want to join the project? Check the guidelines first:
-[Developer Guidelines](DEVELOPER_GUIDELINES.md)
+
+## Documentation
+Deploy guide: [docs/deploy.md](docs/deploy.md)
+Developer guidelines: [DEVELOPER_GUIDELINES.md](DEVELOPER_GUIDELINES.md)
