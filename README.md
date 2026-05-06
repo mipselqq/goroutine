@@ -4,9 +4,9 @@ Want to join the project? Check the guidelines first:
 [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 
 ## Table of Contents
-- [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 - [Keywords](#keywords)
 - [Quick Start](#quick-start)
+- [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
