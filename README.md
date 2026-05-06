@@ -14,7 +14,7 @@
 - [CD](#cd)
 - [Observability](#observability)
 - [Workflow](#workflow)
-- [LLM usage](#llm-usage)
+- [AI-assisted development](#llm-usage)
 - [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 
 # Summary
@@ -211,8 +211,8 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 ## Workflow
 Project follows **issue-pull** model to get cleaner history, review changes and integrate with CI/CD pipeline.
 
-## LLM usage
-LLMs helped a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes I could **overlook doing self-reviews**. It acts well as **interactive** documentation. Also works great during **brainstorming**.
+## AI-assisted development
+LLMs help a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes that be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
 
 Want to join the project? Check the guidelines first:
 [Developer Guidelines](DEVELOPER_GUIDELINES.md)
