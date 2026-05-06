@@ -30,7 +30,7 @@ All technologies and methodologies used in the project:
 - **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
 - **Observability**: Prometheus, Grafana, Alloy, Loki, Node Exporter, log/slog + lmittmann/tint, 
 - **Security:** Distroless, Argon2id, JWT, Trivy, Hadolint, Secrecy (Custom package)
-- **Quality Assurance:** k6 (Race and load tests), Table-Driven Unit, Integration, E2E tests, GolangCI-Lint, Gofumpt, Govulncheck
+- **Quality Assurance:** Table-Driven Unit, Integration, E2E, k6 (Race and load), tests, GolangCI-Lint, Gofumpt, Govulncheck
 - **Documentation:** OpenAPI, Swagger, Swaggo
 
 ## Quick Start
