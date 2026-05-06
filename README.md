@@ -1,12 +1,9 @@
 # Goroutine
 
-Want to join the project? Check the guidelines first:
-[Developer Guidelines](DEVELOPER_GUIDELINES.md)
-
 ## Table of Contents
+- [Summary](#summary)
 - [Keywords](#keywords)
 - [Quick Start](#quick-start)
-- [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
@@ -18,6 +15,11 @@ Want to join the project? Check the guidelines first:
 - [Observability](#observability)
 - [Workflow](#workflow)
 - [LLM usage](#llm-usage)
+- [Developer Guidelines](DEVELOPER_GUIDELINES.md)
+
+# Summary
+Kanban-style **task tracker** API written in Go. Reference implementation
+of **production-grade** backend service.
 
 ## Keywords
 All technologies and methodologies used in the project:
@@ -219,3 +221,6 @@ Project follows **issue-pull** model to get cleaner history, review changes and 
 
 ## LLM usage
 LLMs helped a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes I could **overlook doing self-reviews**. It acts well as **interactive** documentation. Also works great during **brainstorming**.
+
+Want to join the project? Check the guidelines first:
+[Developer Guidelines](DEVELOPER_GUIDELINES.md)
