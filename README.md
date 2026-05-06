@@ -21,15 +21,15 @@ Want to join the project? Check the guidelines first:
 
 ## Keywords
 All technologies and methodologies used in the project:
-- **Languages:** Go, TypeScript
-- **Architecture & Design:** Clean Architecture, TDD, Clean Code
-- **Database:** PostgreSQL, Goose (Migrations)
+- **Languages:** Go, TypeScript (k6)
+- **Architecture & Design:** Clean Architecture, TDD, Clean Code, stdlib (net/http), UUIDv7, Value Objects
+- **Database:** PostgreSQL, jackc/pgx (Driver), Goose (Migrations)
 - **Infrastructure:** Docker, Docker Compose, Ansible, Makefile, Staging & Production
 - **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
-- **Observability** Prometheus, Grafana, Loki, Node Exporter
-- **Security:** Argon2id, JWT, Trivy, Hadolint, Secrecy (Custom package)
-- **Quality Assurance:** GolangCI-Lint, Gofumpt, Govulncheck, K6, Race Tests
-- **Documentation:** Swagger, Swaggo
+- **Observability**: Prometheus, Grafana, Alloy, Loki, Node Exporter, log/slog + lmittmann/tint, 
+- **Security:** Distroless, Argon2id, JWT, Trivy, Hadolint, Secrecy (Custom package)
+- **Quality Assurance:** k6 (Race and load tests), Table-Driven Unit, Integration, E2E tests, GolangCI-Lint, Gofumpt, Govulncheck
+- **Documentation:** OpenAPI, Swagger, Swaggo
 
 ## Quick Start
 To get started with this project, follow the steps below:
@@ -205,6 +205,7 @@ To avoid frequent merge conflicts, integrate only qualified changes, iterate qui
 - Copy configs and run app
 
 ## Observability
+log/slog is used to log errors and valuable events in code.
 Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observability** to investigate incidents and collect runtime data for optimizations:
 - Detailed **resource usage** of machine
 - **Remote logs** for all containers
