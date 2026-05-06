@@ -72,14 +72,13 @@ graph TD
     linkStyle 3,4,5,6,7 stroke:#FFA500,stroke-width:2px;
 ```
 
-##### This project uses clean architecture with rings as such:
+This project uses clean architecture with rings as such:
 - **Domain**, containing value objects with validation invariants
 - **Handler**, establishing API contract
 - **Service**, implementing use cases
 - **Repository**, hiding database implementation details
 - **Driver**, managing protocols, done with external modules
 
-##### Benefits.
 At the cost of more boilerplate code, we get the following advantages:
 - **Decoupling** of components, ensuring high **testability** with mocks.
 - **Clear boundaries** allow developers to **focus** more
@@ -147,7 +146,7 @@ To get interactive remote documentation, the API is documented using Swagger (Op
 - **Specs:** Generated files are located in [docs/openapi](docs/openapi).
 
 ## Test suite
-##### The project generally has 5 types of tests and follows the testing **pyramid** principle. At the cost of writing and maintaining around 3x more code, a robust test suite ensures no regressions, reduces the human factor, and manual testing.
+The project generally has 5 types of tests and follows the testing **pyramid** principle. At the cost of writing and maintaining around 3x more code, a robust test suite ensures no regressions, reduces the human factor, and manual testing.
 - **Unit** tests: Cover all independent code blocks. Run with race detection
 - **Integration** tests: Verify the interaction between the repository and the database. Run with race detection
 - **End-to-end** tests: Check happy paths to catch tricky infrastructure issues
@@ -155,7 +154,7 @@ To get interactive remote documentation, the API is documented using Swagger (Op
 - Application-level **race checks**: Target only previously or potentially vulnerable operations
 
 ## Linting
-##### Linting is extensively used to early catch bugs, vulnerabilities, and guideline violations.
+Linting is extensively used to early catch bugs, vulnerabilities, and guideline violations.
 - GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
 - Hadolint: **Static** Dockerfile checks
 - Trivy: Container **image analysis**
@@ -168,7 +167,7 @@ Security is treated as a first-class concern.
 - Hardening: The project ensures it's running in a **safe environment** on any server.
 
 ## CI
-To avoid frequent merge conflicts, integrate only qualified changes, and iterate quicker, a robust CI pipeline is implemented.
+To avoid frequent **merge conflicts**, integrate only qualified changes, and iterate quicker, a robust CI pipeline is implemented:
 - Trunk-based development
 - **Fully automated** integration process
 - **Lefthook:** Basic local checks for quick response, auto code formatting and documentation regeneration.
@@ -177,14 +176,13 @@ To avoid frequent merge conflicts, integrate only qualified changes, and iterate
 - **Docker:** Used for transferring and deploying standalone build images  
 - **Makefile:** Ensures basic workflow and tooling is consistent across different developers
 
-##### Branch protection rules (GitHub):
+Branch protection rules (GitHub):
 - Forbid **direct pushes** to main
 - Forbid administrator **overrides**
 - Require code to be **tested**, **scanned**, **built and deployed**.
 
 ## CD
-- This pipeline ensures a **secure**, **reproducible**, and **quick** way to get a hardened server with a running app in a few minutes.
-##### The CD pipeline is almost **fully automated**:
+**Highly automated** pipeline below ensures a **secure**, **reproducible**, and **quick** way to get a hardened server with a running app in a few minutes:
 - Get VDS server, generate SSH keys, copy public key (manual)
 - Configure reverse proxy to handle HTTPS and high-level routing
 - Set up config in GitHub secrets (manual)
@@ -210,7 +208,7 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 > Some firewalls block local Grafana, ensure `172.16.0.0/12` outbound is open in case monitoring doesn't work.
 
 ## Performance
-Though performance was never goal of this project, the code is able to handle up to 1200 test users (VUs) creating objects, reading and updating them, according to the latest k6 run.
+Though high performance was never a goal of this project, the code is able to handle up to 1200 test users (VUs) creating objects, reading and updating them, according to the latest k6 run.
 
 Server specs: 1 vCPU 2.5 GHz, 900 MB RAM, SSD, Ubuntu
 
@@ -287,13 +285,13 @@ make: *** [Makefile:88: happy-load] Error 99
 
 </details>
 
-#### Thresholds that cause the test to stop if crossed:
+Thresholds that cause the test to stop if crossed:
 - 95% of users must receive response in under 1 second
 - Error rate must be below 1%
 
 <img width="2559" height="1539" alt="image" src="https://github.com/user-attachments/assets/c99e5d6d-134f-422c-a0a0-2ef839bca9e6" />
 
-#### Quick analysis of the metrics shows:
+Quick analysis of the metrics shows:
 - Server is **out of CPU** capacity, which is mostly consumed by Postgres
 - Near out of available RAM
 - There are no memory leaks
