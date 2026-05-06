@@ -213,6 +213,7 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 Though performance was never goal of this project, the code is able to handle up to 1200 test users (VUs) creating objects, reading and updating them, according to the latest k6 run.
 
 Server specs: 1 vCPU 2.5 GHz, 900 MB RAM, SSD, Ubuntu
+
 Containers running: app, Postgres, Prometheus
 
 <details>
@@ -290,9 +291,9 @@ make: *** [Makefile:88: happy-load] Error 99
 - 95% of users must receive response in under 1 second
 - Error rate must be below 1%
 
-[Grafana screenshot]()
+<img width="2559" height="1539" alt="image" src="https://github.com/user-attachments/assets/c99e5d6d-134f-422c-a0a0-2ef839bca9e6" />
 
-Quick analysis of the metrics shows:
+#### Quick analysis of the metrics shows:
 - Server is **out of CPU** capacity, which is mostly consumed by Postgres
 - Near out of available RAM
 - There are no memory leaks
