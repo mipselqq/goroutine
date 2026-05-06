@@ -3,8 +3,8 @@
 ## Table of Contents
 - [Summary](#summary)
 - [Keywords](#keywords)
-- [Quick Start](#quick-start)
 - [Architecture](#architecture)
+- [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Test suite](#test-suite)
@@ -109,7 +109,7 @@ graph TD
 
 ##### Why:
 - Leads to **decoupling** of components, ensuring high **testability** with mocks.
-- The core of the app (domain, use cases) **can't break due to more of an infrustructual change**, say, replacing the standard router, or migrating to another database
+- The core of the app (domain, use cases) **can't break due to more of an infrastructural change**, say, replacing the standard router, or migrating to another database
 - **Clear boundaries** allow developers to **focus** more
 - **Complexity doesn't grow exponentially** as the project evolves
 
@@ -143,7 +143,7 @@ Annotated overview of the repository layout:
    - `service/` - Use case layer (business rules).
    - `secrecy/` - Handling of sensitive values (redaction, etc.).
    - `testutil/` - Shared test helpers (database, HTTP, fixtures, logging).
-- `k6/` - k6 scemarios for load testing and application-level race checks.
+- `k6/` - k6 scenarios for load testing and application-level race checks.
 - `migrations/` - SQL migrations managed by Goose.
 - `tests/` - End-to-end test suite.
 
@@ -163,13 +163,13 @@ To get interactive remote documentation, API is documented using Swagger (OpenAP
 
 ## Linting
 ##### Linting is extensively used to early catch bugs, vulnerabilities, and guideline violations.
-- GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck,errcheck)
+- GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
 - Hadolint: **Static** Dockerfile checks
 - Trivy: Container **image analysis**
 - Gofumpt: Strict **style enforcement**
 
 ## Security
-To prevent reputation and money loss, security is seriously taken into account.
+Security is treated as a first-class concern.
 - Secrecy: Custom package to encapsulate credentials using SecretString container to **prevent accidental** logging or marshalling even using unpopular verbs.
 - Coverage: **Edge cases** covered by test suite to avoid unexpected responses, including internal details leakage.
 - Hardening: Project ensures it's running in a **safe environment** on any server.
@@ -178,7 +178,7 @@ To prevent reputation and money loss, security is seriously taken into account.
 To avoid frequent merge conflicts, integrate only qualified changes, iterate quicker, robust CI pipeline is implemented.
 - Trunk-based development
 - **Fully automated** integration process
-- **Lefthook:** Basic local checks for quick response, auto code formatting and documntation regeneration.
+- **Lefthook:** Basic local checks for quick response, auto code formatting and documentation regeneration.
 - **Remote checks:** Advanced jobs performed after each push and merge
 - **Release Drafter:** Automatically generates draft changelogs from PR
 - **Docker:** Used for transferring and deploying standalone build images  
@@ -190,7 +190,7 @@ To avoid frequent merge conflicts, integrate only qualified changes, iterate qui
 - Require code to be **tested**, **scanned**, **built and deployed**.
 
 ## CD
-- This pipline ensures **secure**, **reproducible**, and **quck** way to get hardened server with running app in a few minutes.
+- This pipeline ensures **secure**, **reproducible**, and **quick** way to get hardened server with running app in a few minutes.
 ##### CD pipeline is almost **fully automated**:
 - Get VDS server, generate SSH keys, copy public key (manual)
 - Configure reverse proxy to handle HTTPS and high-level routing
