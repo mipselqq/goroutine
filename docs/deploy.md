@@ -3,9 +3,6 @@
 ## Server setup
 Rent a VDS server. Generate SSH keys and copy your public key to the server.
 
-> [!WARNING]
-> Ensure the SSH key is successfully uploaded. If this step is skipped, SSH access to the server will be lost after the deployment pipeline secures the host.
-
 ## Reverse proxy
 Although the application ensures it runs in a safe environment, it is not responsible for HTTPS and high-level routing. Therefore, without a reverse proxy, it is inaccessible from the internet.
 
