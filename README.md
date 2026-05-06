@@ -208,7 +208,7 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 > Some firewalls block local Grafana, ensure `172.16.0.0/12` outbound is open in case monitoring doesn't work.
 
 ## Performance
-Though high performance was never a goal of this project, the code is able to handle up to 1200 test users (VUs) creating objects, reading and updating them, according to the latest k6 run.
+Though high performance was never a goal of this project, the code is able to handle up to **1200 test users** (VUs) creating objects, reading and updating them, according to the latest k6 run.
 
 Server specs: 1 vCPU 2.5 GHz, 900 MB RAM, SSD, Ubuntu
 
@@ -286,8 +286,8 @@ make: *** [Makefile:88: happy-load] Error 99
 </details>
 
 Thresholds that cause the test to stop if crossed:
-- 95% of users must receive response in under 1 second
-- Error rate must be below 1%
+- 95% of users must receive response in under **1 second**
+- Error rate must be below **1%**
 
 <img width="2559" height="1539" alt="image" src="https://github.com/user-attachments/assets/c99e5d6d-134f-422c-a0a0-2ef839bca9e6" />
 
