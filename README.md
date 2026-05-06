@@ -18,8 +18,8 @@
 - [Developer Guidelines](DEVELOPER_GUIDELINES.md)
 
 # Summary
-Kanban-style **task tracker** API written in Go. Reference implementation
-of **production-grade** backend service.
+Kanban-style **task tracker** API written in Go. A reference implementation
+of a **production-grade** backend service.
 
 ## Keywords
 All technologies and methodologies used in the project:
@@ -79,7 +79,7 @@ graph TD
 - **Driver**, managing protocols, done with external modules
 
 ##### Benefits.
-At cost of more boilerplate code, we get following advantages:
+At the cost of more boilerplate code, we get the following advantages:
 - **Decoupling** of components, ensuring high **testability** with mocks.
 - **Clear boundaries** allow developers to **focus** more
 - **Complexity doesn't grow exponentially** as the project evolves
@@ -140,15 +140,15 @@ Annotated overview of the repository layout:
 - `tests/` - End-to-end test suite.
 
 ## API Documentation
-To get interactive remote documentation, API is documented using Swagger (OpenAPI 3.0).
+To get interactive remote documentation, the API is documented using Swagger (OpenAPI 3.0).
 - **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/v1/swagger).
-- **Remote Swagger UI** Go to /v1/swagger on host specified in the description of this repo.
+- **Remote Swagger UI:** Go to /v1/swagger on the host specified in the description of this repo.
 - **Specs:** Generated files are located in [docs/openapi](docs/openapi).
 
 ## Test suite
-##### Project generally has 5 types of tests and follows testing **pyramid** principle. At cost of writing and maintaining around 3x more code, robust test suite ensures no regressions, reduces human factor and manual testing.
+##### The project generally has 5 types of tests and follows the testing **pyramid** principle. At the cost of writing and maintaining around 3x more code, a robust test suite ensures no regressions, reduces the human factor, and manual testing.
 - **Unit** tests: Cover all independent code blocks. Run with race detection
-- **Integration** tests: Verify interaction between repository and database. Run with race detection
+- **Integration** tests: Verify the interaction between the repository and the database. Run with race detection
 - **End-to-end** tests: Check happy paths to catch tricky infrastructure issues
 - **Load** testing: Act as thousands of real users, stressing likely API paths
 - Application-level **race checks**: Target only previously or potentially vulnerable operations
@@ -162,12 +162,12 @@ To get interactive remote documentation, API is documented using Swagger (OpenAP
 
 ## Security
 Security is treated as a first-class concern.
-- Secrecy: Custom package to encapsulate credentials using SecretString container to **prevent accidental** logging or marshalling even using unpopular verbs.
-- Coverage: **Edge cases** covered by test suite to avoid unexpected responses, including internal details leakage.
-- Hardening: Project ensures it's running in a **safe environment** on any server.
+- Secrecy: A custom package to encapsulate credentials using the SecretString container to **prevent accidental** logging or marshalling even using unpopular verbs.
+- Coverage: **Edge cases** covered by the test suite to avoid unexpected responses, including internal details leakage.
+- Hardening: The project ensures it's running in a **safe environment** on any server.
 
 ## CI
-To avoid frequent merge conflicts, integrate only qualified changes, iterate quicker, robust CI pipeline is implemented.
+To avoid frequent merge conflicts, integrate only qualified changes, and iterate quicker, a robust CI pipeline is implemented.
 - Trunk-based development
 - **Fully automated** integration process
 - **Lefthook:** Basic local checks for quick response, auto code formatting and documentation regeneration.
@@ -182,8 +182,8 @@ To avoid frequent merge conflicts, integrate only qualified changes, iterate qui
 - Require code to be **tested**, **scanned**, **built and deployed**.
 
 ## CD
-- This pipeline ensures **secure**, **reproducible**, and **quick** way to get hardened server with running app in a few minutes.
-##### CD pipeline is almost **fully automated**:
+- This pipeline ensures a **secure**, **reproducible**, and **quick** way to get a hardened server with a running app in a few minutes.
+##### The CD pipeline is almost **fully automated**:
 - Get VDS server, generate SSH keys, copy public key (manual)
 - Configure reverse proxy to handle HTTPS and high-level routing
 - Set up config in GitHub secrets (manual)
@@ -199,9 +199,9 @@ To avoid frequent merge conflicts, integrate only qualified changes, iterate qui
 - Copy configs and run app
 
 ## Observability
-log/slog is used to log errors and valuable events in code.
+log/slog is used to log errors and valuable events in the code.
 Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observability** to investigate incidents and collect runtime data for optimizations:
-- Detailed **resource usage** of machine
+- Detailed **resource usage** of the machine
 - **Remote logs** for all containers
 - RED: Core **app metrics** (RPS, error rate, duration)
 
@@ -209,10 +209,9 @@ Prometheus, Loki, Node-exporter, and Grafana provide **clear remote observabilit
 > Some firewalls block local Grafana, ensure `172.16.0.0/12` outbound is open in case monitoring doesn't work.
 
 ## Workflow
-Project follows **issue-pull** model to get cleaner history, review changes and integrate with CI/CD pipeline.
+The project follows the **issue-pull** model to get a cleaner history, review changes, and integrate with the CI/CD pipeline.
 
 ## AI-assisted development
-LLMs help a lot to **compensate** overhead to create this big **production-ready setup**, doing repetitive tasks **under guidance** and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
-
+LLMs help a lot to **compensate** the overhead to create this big **production-ready setup**, doing **repetitive tasks** under guidance and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
 Want to join the project? Check the guidelines first:
 [Developer Guidelines](DEVELOPER_GUIDELINES.md)
