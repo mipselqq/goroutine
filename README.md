@@ -33,33 +33,7 @@ All technologies and methodologies used in the project:
 - **Quality Assurance:** Table-Driven Unit, Integration, E2E, k6 (Race and load), tests, GolangCI-Lint, Gofumpt, Govulncheck
 - **Documentation:** OpenAPI, Swagger, Swaggo
 
-## Quick Start
-To get started with this project, follow the steps below:
-
-0. Clone the Repository:
-    ```sh
-    git clone git@github.com:mipselqq/goroutine.git
-    ```
-1. Install Go and ensure the binaries directory is added to your `PATH`, install Docker.
-2. Install required tools:
-   ```sh
-   make tools
-   ```
-3. Create a `.env.dev` file based on the provided `.env.example`:
-   ```sh
-   cp .env.example .env.dev
-   ```
-4. Start the development environment:
-   ```sh
-   make dev-env
-   ```
-5. Run the development server:
-   ```sh
-   make dev
-   ```
-
 ## Architecture
-
 ```mermaid
 graph TD
     Main[cmd/server/main.go]:::config
@@ -110,6 +84,31 @@ At cost of more boilerplate code, we get following advantages:
 - **Clear boundaries** allow developers to **focus** more
 - **Complexity doesn't grow exponentially** as the project evolves
 - The core of the app (domain, use cases) **can't break due to more of an infrastructural change**, say, replacing the standard router, or migrating to another database
+
+## Quick Start
+To get started with this project, follow the steps below:
+
+0. Clone the Repository:
+    ```sh
+    git clone git@github.com:mipselqq/goroutine.git
+    ```
+1. Install Go and ensure the binaries directory is added to your `PATH`, install Docker.
+2. Install required tools:
+   ```sh
+   make tools
+   ```
+3. Create a `.env.dev` file based on the provided `.env.example`:
+   ```sh
+   cp .env.example .env.dev
+   ```
+4. Start the development environment:
+   ```sh
+   make dev-env
+   ```
+5. Run the development server:
+   ```sh
+   make dev
+   ```
 
 ## Project Structure
 Annotated overview of the repository layout:
