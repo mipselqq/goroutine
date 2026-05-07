@@ -140,7 +140,6 @@ Annotated overview of the repository layout:
 - `tests/` - End-to-end test suite.
 
 ## API Documentation
-## Documentation
 Deploy guide: [docs/deploy.md](docs/deploy.md)
 
 Developer guidelines: [developer-guidelines.md](docs/developer-guidelines.md)
