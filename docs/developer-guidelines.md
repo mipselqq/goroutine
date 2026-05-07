@@ -87,7 +87,7 @@ For most features, touch the layers in this order:
   - service errors -> HTTP statuses/responses
 
 ### 5.6 Observability
- - **Logging:** Use `slog` with module context (`logging.WithModule`). Never log secrets. Use secrecy.SecretString for all credentials. Keep dev logs human-readable, prod logs structured (JSON). Prefer `*Context` methods (e.g., `InfoContext(ctx, ...)`) to automatically include request and user IDs. Do not spam in logs, only log what's important to buisness, line internal errors and key events.
+ - **Logging:** Use `slog` with module context (`logging.WithModule`). Never log secrets. Use secrecy.SecretString for all credentials. Keep dev logs human-readable, prod logs structured (JSON). Prefer `*Context` methods (e.g., `InfoContext(ctx, ...)`) to automatically include request and user IDs. Do not spam logs; only log what is important to the business, such as internal errors and key events.
 - **Tracing:** Propagate `context.Context` everywhere to ensure Request IDs are preserved across layers
 
 ## 6) Testing Culture
