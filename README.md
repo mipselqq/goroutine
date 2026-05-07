@@ -140,9 +140,6 @@ Annotated overview of the repository layout:
 - `tests/` - End-to-end test suite.
 
 ## API Documentation
-Deploy guide: [docs/deploy.md](docs/deploy.md)
-
-Developer guidelines: [docs/developer-guidelines.md](docs/developer-guidelines.md)
 
 To get interactive remote documentation, the API is documented using Swagger (OpenAPI 3.0).
 - **Local Swagger UI:** Once the app is running (`make dev`), visit http://localhost:8080/v1/swagger.
