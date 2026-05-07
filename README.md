@@ -15,10 +15,10 @@
 - [Observability](#observability)
 - [Performance](#performance)
 - [Workflow](#workflow)
-- [AI-assisted development](#llm-usage)
+- [AI-assisted development](#ai-assisted-development)
 - [Documentation](#documentation)
 
-# Summary
+## Summary
 Kanban-style **task tracker** API written in Go. A reference implementation
 of a **production-grade** backend service.
 
@@ -31,7 +31,7 @@ All technologies and methodologies used in the project:
 - **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
 - **Observability**: Prometheus, Grafana, Alloy, Loki, Node Exporter, log/slog + lmittmann/tint, 
 - **Security:** Distroless, Argon2id, JWT, Trivy, Hadolint, Secrecy (Custom package)
-- **Quality Assurance:** Table-Driven Unit, Integration, E2E, k6 (Race and load), tests, GolangCI-Lint, Gofumpt, Govulncheck
+- **Quality Assurance:** Table-driven unit tests, integration tests, E2E tests, k6 load and race tests, GolangCI-Lint, Gofumpt, Govulncheck
 - **Documentation:** OpenAPI, Swagger, Swaggo
 
 ## Architecture
@@ -165,7 +165,7 @@ ok      goroutine/internal/config            coverage: 88.6% of statements
 ok      goroutine/internal/http              coverage: 100.0% of statements
 ok      goroutine/internal/http/handler      coverage: 99.6% of statements
 ok      goroutine/internal/http/httpschema   coverage: 10.3% of statements (indirectly tested in http/handler)
-ok      goroutine/internal/http/middlewar    coverage: 98.8% of statements
+ok      goroutine/internal/http/middleware    coverage: 98.8% of statements
 ok      goroutine/internal/secrecy           coverage: 71.4% of statements (indirectly tested in domain)
 ok      goroutine/internal/service           coverage: 85.9% of statements
 ok      goroutine/internal/domain            coverage: 89.9% of statements
