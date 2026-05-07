@@ -140,10 +140,20 @@ Annotated overview of the repository layout:
 - `tests/` - End-to-end test suite.
 
 ## API Documentation
+## Documentation
+Deploy guide: [docs/deploy.md](docs/deploy.md)
+
+Developer guidelines: [developer-guidelines.md](docs/developer-guidelines.md)
+
 To get interactive remote documentation, the API is documented using Swagger (OpenAPI 3.0).
 - **Local Swagger UI:** Once the app is running (`make dev`), visit [http://localhost:8080/swagger/index.html](http://localhost:8080/v1/swagger).
-- **Remote Swagger UI:** Go to /v1/swagger on the host specified in the description of this repo.
+- **Remote Swagger UI:** https://goroutine.mipselqq.uk/v1/swagger
 - **Specs:** Generated files are located in [docs/openapi](docs/openapi).
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/35d69e53-e2ee-4999-a618-57c75e5cd239" width="49%" />
+  <img src="https://github.com/user-attachments/assets/a1b05628-8ea4-4011-a527-be835d5b7507" width="49%" />
+</p>
 
 ## Test suite
 The project generally has 5 types of tests and follows the testing **pyramid** principle. At the cost of writing and maintaining around 3x more code, a robust test suite ensures no regressions, reduces the human factor, and manual testing.
@@ -302,8 +312,3 @@ The project follows the **issue-pull** model to get a cleaner history, review ch
 
 ## AI-assisted development
 LLMs help a lot to **compensate** the overhead to create this big **production-ready setup**, doing **repetitive tasks** under guidance and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
-
-## Documentation
-Deploy guide: [docs/deploy.md](docs/deploy.md)
-
-Developer guidelines: [DEVELOPER_GUIDELINES.md](DEVELOPER_GUIDELINES.md)
