@@ -145,7 +145,11 @@ A task is done when:
 - **Secrets:** Treat all tokens/passwords as `secrecy.SecretString`
 - **Dependencies:** Regularly check for vulnerabilities (`govulncheck`)
 
-## 12) Common Anti-Patterns to Avoid
+## 12) Git rules
+- Always use conventional commit messages
+- Always squash and merge PRs
+
+## 13) Common Anti-Patterns to Avoid
 - Business logic inside handlers
 - Raw SQL/driver errors propagated to HTTP layer
 - Secret or token leaks in logs
