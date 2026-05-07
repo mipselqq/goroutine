@@ -7,7 +7,7 @@ assignees: 'mipselqq'
 ---
 
 ### Description
-<!-- Provide a high-level explanation for non-developers (managers). What is the business value or user need? -->
+<!--  What is the business value or user need? -->
 
 ### Proposed Solution
 <!-- A clear and concise description of the intended technical approach. -->
