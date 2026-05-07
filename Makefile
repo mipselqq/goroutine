@@ -74,7 +74,7 @@ lint:
 	golangci-lint run
 
 # Run govulncheck
-govulncheck:
+vuln:
 	govulncheck ./...
 
 # Run gofmt
