@@ -14,6 +14,6 @@ Closes #
 
 ### Checklist
 - [ ] Code follows the style guidelines
-- [ ] Unit, E2E, integration tests, load/race tesets added or updated
+- [ ] Unit, E2E, integration tests, load/race tests added or updated
 - [ ] Documentation updated
 - [ ] No sensitive data committed
