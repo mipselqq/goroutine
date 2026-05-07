@@ -1,3 +1,4 @@
+// Package testutil contains fixtures, helpers, and a test logger. Used in all the layers.
 package testutil
 
 import (

@@ -1,3 +1,5 @@
+// Package service provides business logic for the application, doing service-level error handling,
+// managing authentication, and repository invocations.
 package service
 
 import (

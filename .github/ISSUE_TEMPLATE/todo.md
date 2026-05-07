@@ -7,7 +7,7 @@ assignees: 'mipselqq'
 ---
 
 ### Description
-<!-- Provide a high-level explanation: what are we doing and why? (Business or maintenance value) -->
+<!-- A high-level explanation, business or maintenance value. -->
 
 ### Tasks
 <!-- Checklist of implementation steps for developers -->

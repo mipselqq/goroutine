@@ -3,7 +3,7 @@
 Closes #
 
 ### Summary
-<!-- A short, grammatical explanation for managers and stakeholders: WHAT was changed and WHY. Focus on value. -->
+<!-- A short explanation: WHAT was changed and WHY. -->
 
 ### Technical Details (optional)
 <!-- Technical notes, architecture choices, or trade-offs for developers and code reviewers. -->
@@ -14,6 +14,6 @@ Closes #
 
 ### Checklist
 - [ ] Code follows the style guidelines
-- [ ] Unit tests added/updated
+- [ ] Unit, E2E, integration tests, load/race tests added or updated
 - [ ] Documentation updated
 - [ ] No sensitive data committed

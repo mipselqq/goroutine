@@ -1,3 +1,4 @@
+// Package config loads application and database settings from environment variables.
 package config
 
 import (

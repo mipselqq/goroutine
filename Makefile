@@ -4,37 +4,56 @@ test-race test-integration-race test-k6-race test-some-race
 
 VERSION := $(shell git describe --tags --always --dirty || "")
 
+# Run uncontainerized development server only
 dev:
 	go run -ldflags "-X main.version=$(VERSION)" ./cmd/server/main.go
+# Run development environment with docker compose
 dev-env:
 	docker compose --env-file .env.dev up -d
 
+# Run all tests
 test:
 	go test ./...
+
+# Prepare test environment
 prepare-test-env:
 	test -f .env.dev || cp .env.example .env.dev
 	docker compose --env-file .env.dev up -d --wait postgres
 
+# Run integration tests
 test-integration: prepare-test-env
 	go test -tags=integration ./internal/repository/...
+
+# Run E2E tests
 test-e2e: prepare-test-env
 	go test -tags=e2e ./tests/...
+
+# Run coverage tests
 test-cover:
 	go test -tags=integration -cover ./...
+
+# Run all tests
 test-all: test test-integration test-e2e
 
+# Run Go-level tests with race detection
 test-race:
 	go test -race ./...
+
+# Run Go-level integration tests with race detection
 test-integration-race: prepare-test-env
 	go test -race -tags=integration ./internal/repository/...
+
+# Run application-level k6 tests with race detection
 test-k6-race:
 	k6 run ./k6/columns-create-race.ts
 	k6 run ./k6/columns-delete-compaction-race.ts
 	k6 run ./k6/tasks-create-race.ts
 	k6 run ./k6/tasks-delete-compaction-race.ts
 
+# Run some tests with race detection
 test-some-race: test-race test-integration-race
 
+# Build binaries
 build-bin: try-fetch-tags
 	CGO_ENABLED=0 \
 	GOOS=linux \
@@ -46,25 +65,34 @@ build-bin: try-fetch-tags
 	go build \
 	-o /bin/ping ./cmd/ping/main.go
 
+# Try to fetch tags
 try-fetch-tags:
 	git fetch --tags || true
 
+# Run golangci-lint
 lint:
 	golangci-lint run
+
+# Run govulncheck
 vuln:
 	govulncheck ./...
+
+# Run gofmt
 fmt:
 	gofumpt	-l -w .
 swag:
 	swag init -g cmd/server/main.go -o docs/openapi
 
+# Create a new migration
 migrate-create:
 	@if [ -z "$(name)" ]; then echo "Error: migration name is required. Use: make migrate-create name=migration_name"; exit 1; fi
 	goose -dir migrations create $(name) sql
 
+# Run migrations
 migrate-up migrate-down migrate-status: migrate-%:
 	export $$(cat .env.dev | xargs) && goose -dir migrations postgres "user=$$POSTGRES_USER password=$$POSTGRES_PASSWORD dbname=$$POSTGRES_DB host=$$POSTGRES_HOST sslmode=disable" $*
 
+# Install development tools
 tools:
 	go install github.com/evilmartians/lefthook@latest
 	lefthook install
@@ -76,6 +104,7 @@ tools:
 	go install go.k6.io/k6@latest
 	npm install -D @types/k6
 
+# Load testing configuration
 K6_PROMETHEUS_RW_SERVER_URL ?=
 K6_PROMETHEUS_RW_TREND_STATS ?= p(90),p(95),p(99),min,max,avg,med,count,sum
 K6_PROMETHEUS_RW_USERNAME ?=
@@ -84,6 +113,7 @@ K6_TESTID ?= $(shell date +%s)
 K6_EXTRA_ARGS ?= --tag testid=$(K6_TESTID)
 K6_OUTPUT_ARGS := $(if $(strip $(K6_PROMETHEUS_RW_SERVER_URL)),-o experimental-prometheus-rw,)
 
+# Run happy path load test, simulating real user behavior
 happy-load:
 	K6_ROOT='$(K6_ROOT)' \
 	K6_VUS_STEP='$(K6_VUS_STEP)' \

@@ -1,3 +1,6 @@
+// Package handler provides HTTP handlers for the application.
+// Handlers are the entry points for the HTTP requests, doing parsing, validation,
+// user-visible error handling, service invocation, and encoding.
 package handler
 
 import (

@@ -7,7 +7,7 @@ assignees: 'mipselqq'
 ---
 
 ### Description
-<!-- A high-level description for everyone. Impact on users or business. -->
+<!-- A high-level description, impact on users or business. -->
 
 ### Steps to Reproduce
 <!-- Technical steps for developers to debug -->

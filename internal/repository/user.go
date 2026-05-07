@@ -1,3 +1,4 @@
+// Package repository provides abstract data access for the application.
 package repository
 
 import (

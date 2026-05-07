@@ -1,3 +1,4 @@
+// A program that pings the server for distroless healthcheck.
 package main
 
 import (

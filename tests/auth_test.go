@@ -1,5 +1,6 @@
 //go:build e2e
 
+// Package tests contains end-to-end happy path tests.
 package tests
 
 import (
