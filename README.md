@@ -309,6 +309,23 @@ Quick analysis of the metrics shows:
 
 ## Workflow
 The project follows the **issue-pull** model to get a cleaner history, review changes, and integrate with the CI/CD pipeline.
+To keep issues and PRs consistent, the following templates are used:
+- [PR](.github/PULL_REQUEST_TEMPLATE.md)
+- [Feature issue](.github/ISSUE_TEMPLATE/feature.md)
+- [Bug issue](.github/ISSUE_TEMPLATE/bug.md)
+- [Todo issue](.github/ISSUE_TEMPLATE/todo.md)
+
+Also, the following labels are used:
+- feat (user-visible features)
+- bug
+- security
+- documentation
+- refactor
+- maintenance, todo, chore (other non-user-visible tasks)
+- enhancement (low priority changes to improve codebase)
+- go, docker, github-actions (for Dependabot PRs)
+
+Commits and PR names are formatted using the Conventional Commits specification.
 
 ## AI-assisted development
 LLMs help a lot to **compensate** the overhead to create this big **production-ready setup**, doing **repetitive tasks** under guidance and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
