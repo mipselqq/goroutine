@@ -312,3 +312,8 @@ The project follows the **issue-pull** model to get a cleaner history, review ch
 
 ## AI-assisted development
 LLMs help a lot to **compensate** the overhead to create this big **production-ready setup**, doing **repetitive tasks** under guidance and **reviewing** PRs for mistakes that may be **overlooked during human reviews**. Also, AI proposed useful ideas during **brainstorming**.
+
+## Documentation
+Deploy guide: [docs/deploy.md](docs/deploy.md)
+
+Developer guidelines: [docs/developer-guidelines.md](docs/developer-guidelines.md)
