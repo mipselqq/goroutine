@@ -12,12 +12,12 @@ This document is a quick onboarding guide and the single source of development r
 ## 2) Quick Start
 Use the canonical Quick Start from the README:
 
-- [README Quick Start](README.md#quick-start)
+- [README Quick Start](../README.md#quick-start)
 
 ## 3) Project Structure
 Use the canonical project structure overview from the README:
 
-- [README Project Structure](README.md#project-structure)
+- [README Project Structure](../README.md#project-structure)
 
 ## 4) Feature Development Workflow
 ### Step 1. Define the task
