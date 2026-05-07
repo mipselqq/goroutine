@@ -163,7 +163,7 @@ The project generally has 5 types of tests and follows the testing **pyramid** p
 - **Load** testing: Act as thousands of real users, stressing likely API paths
 - Application-level **race checks**: Target only previously or potentially vulnerable operations
 
-Static coverage analysis by built-in Go tooling proves that the core functionality coverage is high, however, the effective coverage (including indirect testing and other kinds of tests) is around 90%:
+Static coverage analysis by built-in Go tooling proves that the core functionality coverage is **high**, however, the effective coverage (including indirect testing and other kinds of tests) is **around 90%**:
 ```
 ok      goroutine/internal/config            coverage: 88.6% of statements
 ok      goroutine/internal/http              coverage: 100.0% of statements
