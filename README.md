@@ -163,6 +163,18 @@ The project generally has 5 types of tests and follows the testing **pyramid** p
 - **Load** testing: Act as thousands of real users, stressing likely API paths
 - Application-level **race checks**: Target only previously or potentially vulnerable operations
 
+Static coverage analysis by built-in Go tooling proves that the core functionality coverage is high, however, the effective coverage (including indirect testing and other kinds of tests) is around 90%:
+```
+ok      goroutine/internal/config            coverage: 88.6% of statements
+ok      goroutine/internal/http              coverage: 100.0% of statements
+ok      goroutine/internal/http/handler      coverage: 99.6% of statements
+ok      goroutine/internal/http/httpschema   coverage: 10.3% of statements (indirectly tested in http/handler)
+ok      goroutine/internal/http/middlewar    coverage: 98.8% of statements
+ok      goroutine/internal/secrecy           coverage: 71.4% of statements (indirectly tested in domain)
+ok      goroutine/internal/service           coverage: 85.9% of statements
+ok      goroutine/internal/domain            coverage: 89.9% of statements
+```
+
 ## Linting
 Linting is extensively used to early catch bugs, vulnerabilities, and guideline violations.
 - GolangCI-Lint: **Code checks** (govet, gocritic, gorevive, staticcheck, errcheck)
@@ -297,7 +309,7 @@ make: *** [Makefile:88: happy-load] Error 99
 
 Thresholds that cause the test to stop if crossed:
 - 95% of users must receive response in under **1 second**
-- Error rate must be below **1%**
+- Total error rate must be below **1%**
 
 <img width="2559" height="1539" alt="image" src="https://github.com/user-attachments/assets/c99e5d6d-134f-422c-a0a0-2ef839bca9e6" />
 
