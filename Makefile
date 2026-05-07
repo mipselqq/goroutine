@@ -35,7 +35,7 @@ test-cover:
 # Run all tests
 test-all: test test-integration test-e2e
 
-# Run Go-level integration tests with race detection
+# Run Go-level tests with race detection
 test-race:
 	go test -race ./...
 
@@ -113,7 +113,7 @@ K6_TESTID ?= $(shell date +%s)
 K6_EXTRA_ARGS ?= --tag testid=$(K6_TESTID)
 K6_OUTPUT_ARGS := $(if $(strip $(K6_PROMETHEUS_RW_SERVER_URL)),-o experimental-prometheus-rw,)
 
-# Run happy path load test, sumulating real user behavior
+# Run happy path load test, simulating real user behavior
 happy-load:
 	K6_ROOT='$(K6_ROOT)' \
 	K6_VUS_STEP='$(K6_VUS_STEP)' \
