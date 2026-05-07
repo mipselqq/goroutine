@@ -198,6 +198,8 @@ To avoid frequent **merge conflicts**, integrate only qualified changes, and ite
 - **Docker:** Used for transferring and deploying standalone build images  
 - **Makefile:** Ensures basic workflow and tooling is consistent across different developers
 
+<img width="70%" alt="image" src="https://github.com/user-attachments/assets/ca229b07-0ac9-4898-b34d-6760b01b11ea" />
+
 Branch protection rules (GitHub):
 - Forbid **direct pushes** to main
 - Forbid administrator **overrides**
