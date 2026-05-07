@@ -1,3 +1,4 @@
+// Package app wires the application layers together, including dependency injection.
 package app
 
 import (

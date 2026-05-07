@@ -1,3 +1,6 @@
+// Package domain provides DDD-style value objects with validation.
+//
+// Value object rules: no dependencies, no side effects, if an object exists, then its value is valid.
 package domain
 
 import (

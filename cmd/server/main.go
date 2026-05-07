@@ -1,3 +1,4 @@
+// Main application binary loading configuration and starting the servers.
 package main
 
 import (

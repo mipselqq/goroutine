@@ -33,5 +33,3 @@ linters:
       rules:
         - name: exported
           disabled: true
-        - name: package-comments
-          disabled: true
