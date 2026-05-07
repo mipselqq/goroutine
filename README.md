@@ -72,14 +72,14 @@ graph TD
     linkStyle 3,4,5,6,7 stroke:#FFA500,stroke-width:2px;
 ```
 
-This project uses clean architecture with rings as such:
+This project uses **clean architecture** with rings as such:
 - **Domain**, containing value objects with validation invariants
 - **Handler**, establishing API contract
 - **Service**, implementing use cases
 - **Repository**, hiding database implementation details
 - **Driver**, managing protocols, done with external modules
 
-At the cost of more boilerplate code, we get the following advantages:
+At the cost of **more boilerplate** code, we get the following advantages:
 - **Decoupling** of components, ensuring high **testability** with mocks.
 - **Clear boundaries** allow developers to **focus** more
 - **Complexity doesn't grow exponentially** as the project evolves
