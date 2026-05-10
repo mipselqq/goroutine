@@ -28,6 +28,11 @@ func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request,
 		r.Error(w, 499, "CLIENT_CLOSED_REQUEST")
 		return
 	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		r.logger.DebugContext(req.Context(), "Request timed out", slog.String("err", err.Error()))
+		r.Error(w, http.StatusRequestTimeout, "REQUEST_TIMEOUT")
+		return
+	}
 	r.logger.ErrorContext(req.Context(), "Internal server error", slog.String("err", err.Error()))
 	r.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 }

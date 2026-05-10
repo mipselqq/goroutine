@@ -38,6 +38,17 @@ func TestErrorResponder_InternalError(t *testing.T) {
 			wantLevel: "DEBUG",
 		},
 		{
+			name:         "wrapped context.DeadlineExceeded returns 408 and logs DEBUG",
+			err:          fmt.Errorf("board repo: get by id: %w", context.DeadlineExceeded),
+			wantHTTPCode: http.StatusRequestTimeout,
+			wantBody: map[string]any{
+				"code":      "REQUEST_TIMEOUT",
+				"message":   "Request timed out",
+				"timestamp": testutil.FixedTimeNowStr(),
+			},
+			wantLevel: "DEBUG",
+		},
+		{
 			name:         "ordinary error returns 500 and logs ERROR",
 			err:          fmt.Errorf("db connection refused"),
 			wantHTTPCode: http.StatusInternalServerError,
