@@ -34,7 +34,11 @@ services:
       - ./infra/prometheus/web-config.template.yml:/etc/prometheus/web-config.yml.template:ro,Z
       - prometheus_data_dev:/prometheus
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --spider -q http://$$PROMETHEUS_USER:$$PROMETHEUS_PASSWORD@localhost:9090/-/healthy",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -43,6 +47,7 @@ services:
     environment:
       - ADMIN_PORT
       - PROMETHEUS_USER
+      - PROMETHEUS_PASSWORD
       - PROMETHEUS_BCRYPT_HASH
     user: root
     entrypoint: ["/bin/sh", "-c"]
