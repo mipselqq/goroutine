@@ -181,6 +181,7 @@ Linting is extensively used to early catch bugs, vulnerabilities, and guideline 
 ## Security
 Security is treated as a first-class concern.
 - Secrecy: A custom package to encapsulate credentials using the SecretString container to **prevent accidental** logging or marshalling even using unpopular verbs.
+- Limiting: Basic request **limits** (body size, timeouts) are set up as a **second line of defense** against bugged clients and simple DOS attacks.
 - Coverage: **Edge cases** covered by the test suite to avoid unexpected responses, including internal details leakage.
 - Hardening: The project ensures it's running in a **safe environment** on any server.
 

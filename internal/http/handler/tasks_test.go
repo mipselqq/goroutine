@@ -151,6 +151,14 @@ func TestTasks_Create(t *testing.T) {
 			wantCode: http.StatusInternalServerError,
 			wantBody: internalErrorBody(),
 		},
+		{
+			name:      "Body too large",
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
+		},
 	}
 
 	for _, tt := range tests {
@@ -502,6 +510,15 @@ func TestTasks_UpdateByID(t *testing.T) {
 			wantCode: http.StatusInternalServerError,
 			wantBody: internalErrorBody(),
 		},
+		{
+			name:      "Body too large",
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
+			taskID:    validTask.ID.String(),
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
+		},
 	}
 
 	for _, tt := range tests {
@@ -713,6 +730,15 @@ func TestTasks_Move(t *testing.T) {
 			},
 			wantCode: http.StatusInternalServerError,
 			wantBody: internalErrorBody(),
+		},
+		{
+			name:      "Body too large",
+			boardID:   validBoard.ID.String(),
+			columnID:  validColumn.ID.String(),
+			taskID:    validTask.ID.String(),
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
 		},
 	}
 

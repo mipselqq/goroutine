@@ -4,21 +4,43 @@
 Rent a VDS server. Generate SSH keys and copy your public key to the server.
 
 ## Reverse proxy
-Although the application ensures it runs in a safe environment, it is not responsible for HTTPS and high-level routing. Therefore, without a reverse proxy, it is inaccessible from the internet.
+Although the application ensures it runs in a safe environment, it is not responsible for rate limiting, HTTPS and high-level routing. Therefore, without a reverse proxy, it is inaccessible from the internet.
 
 Configure any reverse proxy. Below is an example configuration using Caddy:
 
 ```caddyfile
+{
+	servers {
+		timeouts {
+			idle 2m
+		}
+	}
+}
+
 goroutine.mipselqq.uk {
-    reverse_proxy localhost:8080
+	reverse_proxy localhost:8080 {
+		transport http {
+			read_timeout  5s
+			write_timeout 10s
+		}
+	}
+	request_body {
+		max_size 20KB
+	}
 }
 
 grafana.goroutine.mipselqq.uk {
-    reverse_proxy localhost:3000
+	reverse_proxy localhost:3000
+	request_body {
+		max_size 10MB
+	}
 }
 
 prometheus.goroutine.mipselqq.uk {
-    reverse_proxy localhost:9090
+	reverse_proxy localhost:9090
+	request_body {
+		max_size 1MB
+	}
 }
 ```
 

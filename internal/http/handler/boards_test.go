@@ -103,6 +103,12 @@ func TestBoards_Create(t *testing.T) {
 			wantCode: http.StatusInternalServerError,
 			wantBody: internalErrorBody(),
 		},
+		{
+			name:      "Body too large",
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
+		},
 	}
 
 	for _, tt := range tests {
@@ -731,6 +737,13 @@ func TestBoards_UpdateByID(t *testing.T) {
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
 			wantBody: unauthorizedTokenBody(),
+		},
+		{
+			name:      "Body too large",
+			boardID:   validBoard.ID.String(),
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
 		},
 	}
 

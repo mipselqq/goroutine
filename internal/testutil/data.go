@@ -2,6 +2,8 @@
 package testutil
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +24,10 @@ func FixedTime5mFromNowStr() string {
 }
 
 func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
+
+func Big25KBJson() json.RawMessage {
+	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
+}
 
 func Must[A any, T any](fn func(A) (T, error), arg A) T {
 	v, err := fn(arg)

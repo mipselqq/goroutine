@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"goroutine/internal/config"
 	"goroutine/internal/logging"
@@ -59,8 +60,11 @@ func SetupDatabaseFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 
 func RunBackgroundServer(logger *slog.Logger, name, addr string, handler http.Handler) *http.Server {
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: handler,
+		Addr:         addr,
+		Handler:      handler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	go func() {

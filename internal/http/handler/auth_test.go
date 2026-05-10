@@ -126,6 +126,12 @@ func TestAuth_Register(t *testing.T) {
 				"timestamp": testutil.FixedTimeNowStr(),
 			},
 		},
+		{
+			name:      "Body too large",
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
+		},
 	}
 
 	for _, tt := range tests {
@@ -289,6 +295,12 @@ func TestAuth_Login(t *testing.T) {
 					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
 				},
 			},
+		},
+		{
+			name:      "Body too large",
+			inputBody: testutil.Big25KBJson(),
+			wantCode:  http.StatusRequestEntityTooLarge,
+			wantBody:  payloadTooLargeBody(),
 		},
 	}
 

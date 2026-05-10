@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -84,6 +83,7 @@ func newTaskResponse(task *domain.Task) taskResponse {
 // @Param body body createTaskBody true "Task details"
 // @Success 201 {object} taskResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
@@ -95,9 +95,13 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body createTaskBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, errBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 
@@ -183,6 +187,7 @@ func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
 // @Param body body updateTaskBody true "Task fields to update"
 // @Success 200 {object} taskResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.DetailedError "TASK_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
@@ -194,9 +199,13 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body updateTaskBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, errBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 
@@ -247,6 +256,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 // @Param body body moveTaskBody true "Target column and position"
 // @Success 200 {object} taskPositionResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.DetailedError "TASK_NOT_FOUND or COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
@@ -258,9 +268,13 @@ func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body moveTaskBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, errBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 

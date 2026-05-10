@@ -5,7 +5,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -49,15 +48,20 @@ type registerBody struct {
 // @Param body body registerBody true "Registration details"
 // @Success 200 {object} httpschema.Status
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 409 {object} httpschema.DetailedError "USER_ALREADY_EXISTS"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/register [post]
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, errBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 
@@ -103,15 +107,20 @@ type loginResponse struct {
 // @Param body body loginBody true "Login credentials"
 // @Success 200 {object} loginResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 401 {object} httpschema.DetailedError "INVALID_CREDENTIALS or USER_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/login [post]
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, errBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 

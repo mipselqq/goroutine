@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -16,8 +18,22 @@ type Handlers struct {
 	Tasks   *Tasks
 }
 
-func extractUserIDOrHandleMissing(
-	w http.ResponseWriter,
+var errBodyTooLarge = errors.New("request body too large")
+
+func decodeJSONLimited(r *http.Request, v any) error {
+	const maxBodySize = 20 * 1024 // 20KB is the absolute max for API
+	err := json.NewDecoder(http.MaxBytesReader(nil, r.Body, maxBodySize)).Decode(v)
+	if err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			return errBodyTooLarge
+		}
+		return err
+	}
+	return nil
+}
+
+func extractUserIDOrHandleMissing(w http.ResponseWriter,
 	r *http.Request,
 	logger *slog.Logger,
 	responder *httpschema.ErrorResponder,
