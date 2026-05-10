@@ -1,6 +1,8 @@
 package httpschema
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 )
@@ -21,6 +23,11 @@ func MustNewErrorResponder(logger *slog.Logger, timeFn timeFunc) *ErrorResponder
 }
 
 func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request, err error) {
+	if errors.Is(err, context.Canceled) {
+		r.logger.DebugContext(req.Context(), "Client closed request", slog.String("err", err.Error()))
+		r.Error(w, 499, "CLIENT_CLOSED_REQUEST")
+		return
+	}
 	r.logger.ErrorContext(req.Context(), "Internal server error", slog.String("err", err.Error()))
 	r.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 }
