@@ -62,7 +62,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("warnings on unset variables", func(t *testing.T) {
 		UnsetEnv(t, pgEnvVars...)
 
-		logger, buf := testutil.NewBufJsonLogger(t)
+		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
 		_ = config.NewPGConfigFromEnv(logger)
 
 		for _, envVar := range pgEnvVars {
@@ -75,7 +75,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("no warnings if all variables are set", func(t *testing.T) {
 		setCustomPgEnvVars(t)
 
-		logger, buf := testutil.NewBufJsonLogger(t)
+		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
 		_ = config.NewPGConfigFromEnv(logger)
 
 		if buf.String() != "" {
