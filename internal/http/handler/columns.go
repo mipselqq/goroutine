@@ -93,8 +93,13 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body createColumnBody
-	if err = DecodeJSONLimited(r, &body); err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+	err = DecodeJSONLimited(r, &body)
+	if err != nil {
+		if errors.Is(err, ErrBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 
@@ -200,8 +205,13 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body updateColumnBody
-	if err = DecodeJSONLimited(r, &body); err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+	err = DecodeJSONLimited(r, &body)
+	if err != nil {
+		if errors.Is(err, ErrBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 
@@ -272,8 +282,13 @@ func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body moveColumnBody
-	if err = DecodeJSONLimited(r, &body); err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+	err = DecodeJSONLimited(r, &body)
+	if err != nil {
+		if errors.Is(err, ErrBodyTooLarge) {
+			h.responder.PayloadTooLarge(w)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 

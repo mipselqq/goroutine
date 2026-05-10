@@ -157,6 +157,17 @@ func taskNotFoundByFieldError(field string) map[string]any {
 	}
 }
 
+func payloadTooLargeBody() map[string]any {
+	return map[string]any{
+		"code":      "PAYLOAD_TOO_LARGE",
+		"message":   "Request body too large",
+		"timestamp": testutil.FixedTimeNowStr(),
+		"details": []any{
+			map[string]any{"field": "body", "issues": []string{"Please stop spamming >_<"}},
+		},
+	}
+}
+
 func invalidJsonBody() map[string]any {
 	return map[string]any{
 		"code":      "VALIDATION_ERROR",
