@@ -5,7 +5,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -55,7 +54,7 @@ type registerBody struct {
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -109,7 +108,7 @@ type loginResponse struct {
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return

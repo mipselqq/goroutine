@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -95,7 +94,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body createTaskBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -194,7 +193,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body updateTaskBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -258,7 +257,7 @@ func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body moveTaskBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
