@@ -97,7 +97,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		if errors.Is(err, ErrBodyTooLarge) {
-			h.responder.PayloadTooLarge(w, nil)
+			h.responder.PayloadTooLarge(w)
 		} else {
 			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		}
@@ -200,7 +200,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		if errors.Is(err, ErrBodyTooLarge) {
-			h.responder.PayloadTooLarge(w, nil)
+			h.responder.PayloadTooLarge(w)
 		} else {
 			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		}
@@ -268,7 +268,7 @@ func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
 	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		if errors.Is(err, ErrBodyTooLarge) {
-			h.responder.PayloadTooLarge(w, nil)
+			h.responder.PayloadTooLarge(w)
 		} else {
 			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		}
