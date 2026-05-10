@@ -30,23 +30,15 @@ func TestErrorResponder_InternalError(t *testing.T) {
 			name:         "wrapped context.Canceled returns 499 and logs DEBUG",
 			err:          fmt.Errorf("task service: create get board: %w", context.Canceled),
 			wantHTTPCode: 499,
-			wantBody: map[string]any{
-				"code":      "CLIENT_CLOSED_REQUEST",
-				"message":   "Client closed request",
-				"timestamp": testutil.FixedTimeNowStr(),
-			},
-			wantLevel: "DEBUG",
+			wantBody:     nil,
+			wantLevel:    "DEBUG",
 		},
 		{
 			name:         "wrapped context.DeadlineExceeded returns 408 and logs DEBUG",
 			err:          fmt.Errorf("board repo: get by id: %w", context.DeadlineExceeded),
 			wantHTTPCode: http.StatusRequestTimeout,
-			wantBody: map[string]any{
-				"code":      "REQUEST_TIMEOUT",
-				"message":   "Request timed out",
-				"timestamp": testutil.FixedTimeNowStr(),
-			},
-			wantLevel: "DEBUG",
+			wantBody:     nil,
+			wantLevel:    "DEBUG",
 		},
 		{
 			name:         "ordinary error returns 500 and logs ERROR",
@@ -74,7 +66,14 @@ func TestErrorResponder_InternalError(t *testing.T) {
 			er.InternalError(rr, req, tt.err)
 
 			testutil.AssertStatusCode(t, rr, tt.wantHTTPCode)
-			testutil.AssertResponseBody(t, rr, tt.wantBody)
+
+			if tt.wantBody == nil {
+				if rr.Body.Len() != 0 {
+					t.Fatalf("got body %q, want empty", rr.Body.String())
+				}
+			} else {
+				testutil.AssertResponseBody(t, rr, tt.wantBody)
+			}
 
 			assertLogLevel(t, buf, tt.wantLevel)
 		})
