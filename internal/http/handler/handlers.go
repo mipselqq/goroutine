@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -17,9 +18,20 @@ type Handlers struct {
 	Tasks   *Tasks
 }
 
+// ErrBodyTooLarge is returned by DecodeJSONLimited when the request body exceeds the limit.
+var ErrBodyTooLarge = errors.New("request body too large")
+
 func DecodeJSONLimited(r *http.Request, v any) error {
 	const maxBodySize = 20 * 1024 // 20KB is the absolute max for API
-	return json.NewDecoder(http.MaxBytesReader(nil, r.Body, maxBodySize)).Decode(v)
+	err := json.NewDecoder(http.MaxBytesReader(nil, r.Body, maxBodySize)).Decode(v)
+	if err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			return ErrBodyTooLarge
+		}
+		return err
+	}
+	return nil
 }
 
 func extractUserIDOrHandleMissing(w http.ResponseWriter,

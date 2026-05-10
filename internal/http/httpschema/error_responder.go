@@ -37,6 +37,10 @@ func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request,
 	r.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 }
 
+func (r *ErrorResponder) PayloadTooLarge(w http.ResponseWriter, details []Detail) {
+	r.DetailedError(w, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", details)
+}
+
 func (r *ErrorResponder) BoardNotFound(w http.ResponseWriter, details []Detail) {
 	r.DetailedError(w, http.StatusNotFound, "BOARD_NOT_FOUND", details)
 }

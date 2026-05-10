@@ -114,7 +114,11 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 
 	err := DecodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, ErrBodyTooLarge) {
+			h.responder.PayloadTooLarge(w, nil)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 
@@ -278,7 +282,11 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	var body updateBoardBody
 	err = DecodeJSONLimited(r, &body)
 	if err != nil {
-		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		if errors.Is(err, ErrBodyTooLarge) {
+			h.responder.PayloadTooLarge(w, nil)
+		} else {
+			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
+		}
 		return
 	}
 

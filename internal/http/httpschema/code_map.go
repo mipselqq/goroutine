@@ -14,6 +14,7 @@ var codeMap = map[string]string{
 	"INVALID_TOKEN":         "Invalid token",
 	"CLIENT_CLOSED_REQUEST": "Client closed request",
 	"REQUEST_TIMEOUT":       "Request timed out",
+	"PAYLOAD_TOO_LARGE":     "Request body too large",
 }
 
 func MapCodeToDescription(code string) string {
