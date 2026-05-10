@@ -106,15 +106,16 @@ type getManyBoardsResponse = []boardResponse
 // @Param body body createBoardBody true "Board details"
 // @Success 201 {object} boardResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [post]
 func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 	var body createBoardBody
 
-	err := DecodeJSONLimited(r, &body)
+	err := decodeJSONLimited(r, &body)
 	if err != nil {
-		if errors.Is(err, ErrBodyTooLarge) {
+		if errors.Is(err, errBodyTooLarge) {
 			h.responder.PayloadTooLarge(w)
 		} else {
 			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
@@ -267,6 +268,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 // @Param body body updateBoardBody true "Board fields to update"
 // @Success 200 {object} boardResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
+// @Failure 413 {object} httpschema.DetailedError "PAYLOAD_TOO_LARGE"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
@@ -280,9 +282,9 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body updateBoardBody
-	err = DecodeJSONLimited(r, &body)
+	err = decodeJSONLimited(r, &body)
 	if err != nil {
-		if errors.Is(err, ErrBodyTooLarge) {
+		if errors.Is(err, errBodyTooLarge) {
 			h.responder.PayloadTooLarge(w)
 		} else {
 			h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})

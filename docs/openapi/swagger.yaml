@@ -346,6 +346,10 @@ paths:
           description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -465,6 +469,10 @@ paths:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
           description: BOARD_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -593,6 +601,10 @@ paths:
           description: BOARD_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -686,6 +698,10 @@ paths:
           description: COLUMN_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -735,6 +751,10 @@ paths:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
           description: COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -830,6 +850,10 @@ paths:
             $ref: '#/definitions/httpschema.DetailedError'
         "404":
           description: COLUMN_NOT_FOUND
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":
@@ -935,6 +959,10 @@ paths:
           description: TASK_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -991,6 +1019,10 @@ paths:
           description: TASK_NOT_FOUND or COLUMN_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -1040,6 +1072,10 @@ paths:
           description: INVALID_CREDENTIALS or USER_NOT_FOUND
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
         "500":
           description: Internal server error
           schema:
@@ -1072,6 +1108,10 @@ paths:
             $ref: '#/definitions/httpschema.DetailedError'
         "409":
           description: USER_ALREADY_EXISTS
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "413":
+          description: PAYLOAD_TOO_LARGE
           schema:
             $ref: '#/definitions/httpschema.DetailedError'
         "500":

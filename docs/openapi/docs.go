@@ -110,6 +110,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -291,6 +297,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "BOARD_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -485,6 +497,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -625,6 +643,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -698,6 +722,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -841,6 +871,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "COLUMN_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
@@ -999,6 +1035,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -1083,6 +1125,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -1155,6 +1203,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
                     },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -1203,6 +1257,12 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "USER_ALREADY_EXISTS",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "413": {
+                        "description": "PAYLOAD_TOO_LARGE",
                         "schema": {
                             "$ref": "#/definitions/httpschema.DetailedError"
                         }
