@@ -29,7 +29,7 @@ func TestErrorResponder_InternalError(t *testing.T) {
 		{
 			name:         "wrapped context.Canceled returns 499 and logs DEBUG",
 			err:          fmt.Errorf("task service: create get board: %w", context.Canceled),
-			wantHTTPCode: 499,
+			wantHTTPCode: 499, // ClientClosedRequest, non-standard, used by nginx
 			wantBody:     nil,
 			wantLevel:    "DEBUG",
 		},
