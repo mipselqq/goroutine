@@ -37,7 +37,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget --spider -q http://$$PROMETHEUS_USER:$$PROMETHEUS_PASSWORD@localhost:9090/-/healthy",
+          'wget --spider -q "http://$$PROMETHEUS_USER:$$PROMETHEUS_PASSWORD@localhost:9090/-/healthy"',
         ]
       interval: 10s
       timeout: 5s
