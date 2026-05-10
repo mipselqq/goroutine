@@ -94,7 +94,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body createTaskBody
-	err := decodeJSONLimited(r, &body)
+	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -193,7 +193,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body updateTaskBody
-	err := decodeJSONLimited(r, &body)
+	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -257,7 +257,7 @@ func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body moveTaskBody
-	err := decodeJSONLimited(r, &body)
+	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return

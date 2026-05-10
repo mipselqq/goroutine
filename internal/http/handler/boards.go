@@ -112,7 +112,7 @@ type getManyBoardsResponse = []boardResponse
 func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 	var body createBoardBody
 
-	err := decodeJSONLimited(r, &body)
+	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -276,7 +276,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body updateBoardBody
-	err = decodeJSONLimited(r, &body)
+	err = DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return

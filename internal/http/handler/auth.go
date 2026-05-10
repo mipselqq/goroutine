@@ -54,7 +54,7 @@ type registerBody struct {
 func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
-	err := decodeJSONLimited(r, &body)
+	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return
@@ -108,7 +108,7 @@ type loginResponse struct {
 func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
-	err := decodeJSONLimited(r, &body)
+	err := DecodeJSONLimited(r, &body)
 	if err != nil {
 		h.responder.ValidationError(w, []httpschema.Detail{{Field: "body", Issues: []string{"Invalid JSON body"}}})
 		return

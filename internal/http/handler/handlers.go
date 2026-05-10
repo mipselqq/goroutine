@@ -17,7 +17,7 @@ type Handlers struct {
 	Tasks   *Tasks
 }
 
-func decodeJSONLimited(r *http.Request, v any) error {
+func DecodeJSONLimited(r *http.Request, v any) error {
 	const maxBodySize = 20 * 1024 // 20KB is the absolute max for API
 	return json.NewDecoder(http.MaxBytesReader(nil, r.Body, maxBodySize)).Decode(v)
 }
