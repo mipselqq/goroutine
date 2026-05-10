@@ -1,6 +1,8 @@
 package httpschema
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 )
@@ -21,6 +23,16 @@ func MustNewErrorResponder(logger *slog.Logger, timeFn timeFunc) *ErrorResponder
 }
 
 func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request, err error) {
+	if errors.Is(err, context.Canceled) {
+		r.logger.DebugContext(req.Context(), "Client closed request", slog.String("err", err.Error()))
+		w.WriteHeader(499) // ClientClosedRequest, non-standard, used by nginx
+		return
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		r.logger.DebugContext(req.Context(), "Request timed out", slog.String("err", err.Error()))
+		w.WriteHeader(http.StatusRequestTimeout)
+		return
+	}
 	r.logger.ErrorContext(req.Context(), "Internal server error", slog.String("err", err.Error()))
 	r.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 }

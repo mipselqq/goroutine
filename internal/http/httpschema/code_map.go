@@ -12,6 +12,8 @@ var codeMap = map[string]string{
 	"INVALID_AUTH_HEADER":   "Invalid authorization header",
 	"USER_NOT_FOUND":        "User not found",
 	"INVALID_TOKEN":         "Invalid token",
+	"CLIENT_CLOSED_REQUEST": "Client closed request",
+	"REQUEST_TIMEOUT":       "Request timed out",
 }
 
 func MapCodeToDescription(code string) string {
