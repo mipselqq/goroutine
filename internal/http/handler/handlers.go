@@ -18,7 +18,6 @@ type Handlers struct {
 	Tasks   *Tasks
 }
 
-// ErrBodyTooLarge is returned by DecodeJSONLimited when the request body exceeds the limit.
 var ErrBodyTooLarge = errors.New("request body too large")
 
 func DecodeJSONLimited(r *http.Request, v any) error {
