@@ -22,6 +22,9 @@
 Kanban-style **task tracker** API written in Go. A reference implementation
 of a **production-grade** backend service.
 
+A demo frontend is available at https://mipselqq.github.io/goroutine-demo:
+<video src="https://github.com/user-attachments/assets/ec693077-b3db-490e-9c30-1bdb72d7e2a1" width="100%" controls alt="demo frontend"></video>
+
 ## Keywords
 All technologies and methodologies used in the project:
 - **Languages:** Go, TypeScript (k6)
