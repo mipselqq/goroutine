@@ -21,6 +21,23 @@ services:
     volumes:
       - postgres_data_dev:/var/lib/postgresql
 
+  redis:
+    image: redis:8.6.3-alpine
+    container_name: goro-redis-dev
+    cpu_shares: 512
+    oom_score_adj: -500
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data_dev:/data
+
   prometheus:
     image: prom/prometheus:v3.9.1
     container_name: goro-prometheus-dev
@@ -137,3 +154,4 @@ volumes:
   prometheus_data_dev:
   loki_data_dev:
   alloy_data_dev:
+  redis_data_dev:

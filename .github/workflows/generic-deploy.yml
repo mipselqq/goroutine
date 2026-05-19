@@ -64,6 +64,10 @@ jobs:
           PROMETHEUS_BCRYPT_HASH='${{ secrets.PROMETHEUS_BCRYPT_HASH }}'
 
           GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+
+          REDIS_HOST=${{ vars.REDIS_HOST }}
+          REDIS_PORT=${{ vars.REDIS_PORT }}
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
           EOF
 
       - name: Run Ansible Playbook
