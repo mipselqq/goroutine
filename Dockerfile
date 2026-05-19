@@ -10,7 +10,7 @@ RUN go mod download
 COPY . .
 RUN make build-bin
 
-FROM gcr.io/distroless/static-debian12@sha256:cd64bec9cec257044ce3a8dd3620cf83b387920100332f2b041f19c4d2febf93
+FROM gcr.io/distroless/static-debian12@sha256:9c346e4be81b5ca7ff31a0d89eaeade58b0f95cfd3baed1f36083ddb47ca3160
 
 COPY --from=builder /bin/app /app
 COPY --from=builder /bin/ping /ping
