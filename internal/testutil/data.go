@@ -37,8 +37,10 @@ func Must[A any, T any](fn func(A) (T, error), arg A) T {
 	return v
 }
 
+const validUUIDv7 = "018e1000-0000-7000-8000-000000000000"
+
 func ValidUserID() domain.UserID {
-	return Must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
+	return Must(domain.ParseUserID, validUUIDv7)
 }
 
 func ValidEmail() domain.Email {
@@ -96,6 +98,10 @@ func NewValidTaskPosition(t *testing.T, n int64) domain.TaskPosition {
 
 func ValidJWTSecret() secrecy.SecretString {
 	return secrecy.SecretString("secret")
+}
+
+func ValidTelegramLinkToken() domain.TelegramLinkToken {
+	return Must(domain.NewTelegramLinkToken, validUUIDv7)
 }
 
 func ValidJWTOptions() service.JWTOptions {

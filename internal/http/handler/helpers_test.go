@@ -10,8 +10,9 @@ import (
 )
 
 type MockAuthService struct {
-	RegisterFunc func(ctx context.Context, email domain.Email, password domain.UserPassword) error
-	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
+	RegisterFunc                func(ctx context.Context, email domain.Email, password domain.UserPassword) error
+	LoginFunc                   func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
+	CreateTelegramLinkTokenFunc func(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error)
 }
 
 func AssertFuncNotNil(funcName string, fn any) {
@@ -28,6 +29,11 @@ func (m *MockAuthService) Register(ctx context.Context, email domain.Email, pass
 func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
 	AssertFuncNotNil("AuthService.LoginFunc", m.LoginFunc)
 	return m.LoginFunc(ctx, email, password)
+}
+
+func (m *MockAuthService) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
+	AssertFuncNotNil("AuthService.CreateTelegramLinkTokenFunc", m.CreateTelegramLinkTokenFunc)
+	return m.CreateTelegramLinkTokenFunc(ctx, userID)
 }
 
 type MockBoardService struct {
