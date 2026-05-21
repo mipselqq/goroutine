@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"goroutine/internal/config"
+	"goroutine/internal/domain"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/httpschema"
@@ -36,6 +37,9 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		JWTSecret:     cfg.JWTSecret,
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
+	}, func() domain.TelegramLinkToken {
+		tok, _ := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
+		return tok
 	})
 	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
 	columnsService := service.NewColumn(columnsRepo, boardsRepo)

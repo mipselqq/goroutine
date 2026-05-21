@@ -14,18 +14,24 @@ func AssertFuncNotNil(funcName string, fn any) {
 }
 
 type MockUserRepository struct {
-	InsertFunc     func(ctx context.Context, email domain.Email, hash string) error
-	GetByEmailFunc func(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+	InsertUserFunc              func(ctx context.Context, email domain.Email, hash string) error
+	GetUserByEmailFunc          func(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+	InsertTelegramLinkTokenFunc func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
 }
 
-func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
-	AssertFuncNotNil("UserRepository.InsertFunc", m.InsertFunc)
-	return m.InsertFunc(ctx, email, hash)
+func (m *MockUserRepository) InsertUser(ctx context.Context, email domain.Email, hash string) error {
+	AssertFuncNotNil("UserRepository.InsertUserFunc", m.InsertUserFunc)
+	return m.InsertUserFunc(ctx, email, hash)
 }
 
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
-	AssertFuncNotNil("UserRepository.GetByEmailFunc", m.GetByEmailFunc)
-	return m.GetByEmailFunc(ctx, email)
+func (m *MockUserRepository) GetUserByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
+	AssertFuncNotNil("UserRepository.GetUserByEmailFunc", m.GetUserByEmailFunc)
+	return m.GetUserByEmailFunc(ctx, email)
+}
+
+func (m *MockUserRepository) InsertTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
+	AssertFuncNotNil("UserRepository.InsertTelegramLinkTokenFunc", m.InsertTelegramLinkTokenFunc)
+	return m.InsertTelegramLinkTokenFunc(ctx, token, userID)
 }
 
 type MockBoardRepository struct {

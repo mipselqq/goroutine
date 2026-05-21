@@ -64,7 +64,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			inputBody: nil,
 			setupAuthService: func(t *testing.T, s *MockAuthService) {
 				s.CreateTelegramLinkTokenFunc = func(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
-					return domain.TelegramLinkToken{}, errors.New("db exploded")
+					return domain.TelegramLinkToken{}, errors.New("storage crash")
 				}
 			},
 			wantCode: http.StatusInternalServerError,

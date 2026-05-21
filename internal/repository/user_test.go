@@ -15,7 +15,7 @@ import (
 	"goroutine/internal/testutil"
 )
 
-func TestUserRepository_Insert(t *testing.T) {
+func TestUserRepository_InsertUser(t *testing.T) {
 	pool, r := userRepoPrelude(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -27,9 +27,9 @@ func TestUserRepository_Insert(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		err := r.Insert(ctx, email, hash)
+		err := r.InsertUser(ctx, email, hash)
 		if err != nil {
-			t.Errorf("Insert() error = %v", err)
+			t.Errorf("InsertUser() error = %v", err)
 		}
 
 		var dbEmail domain.Email
@@ -46,7 +46,7 @@ func TestUserRepository_Insert(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		InsertUser(t, pool, testutil.ValidUserID(), email, hash)
-		err := r.Insert(ctx, email, hash)
+		err := r.InsertUser(ctx, email, hash)
 
 		if !errors.Is(err, repository.ErrUniqueViolation) {
 			t.Errorf("got error %v, want ErrUniqueViolation", err)
@@ -54,7 +54,7 @@ func TestUserRepository_Insert(t *testing.T) {
 	})
 }
 
-func TestUserRepository_GetByEmail(t *testing.T) {
+func TestUserRepository_GetUserByEmail(t *testing.T) {
 	pool, r := userRepoPrelude(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -69,9 +69,9 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 
 		InsertUser(t, pool, userID, email, hash)
 
-		gotID, gotHash, err := r.GetByEmail(ctx, email)
+		gotID, gotHash, err := r.GetUserByEmail(ctx, email)
 		if err != nil {
-			t.Errorf("GetByEmail() error = %v", err)
+			t.Errorf("GetUserByEmail() error = %v", err)
 		}
 		if gotHash != hash {
 			t.Errorf("got hash %q, want %q", gotHash, hash)
@@ -85,7 +85,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		unknownEmail, _ := domain.NewEmail("unknown@example.com")
-		_, _, err := r.GetByEmail(ctx, unknownEmail)
+		_, _, err := r.GetUserByEmail(ctx, unknownEmail)
 
 		assertErrRowNotFound(t, err)
 	})

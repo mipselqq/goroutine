@@ -17,8 +17,9 @@ import (
 )
 
 type UserRepository interface {
-	Insert(ctx context.Context, email domain.Email, hash string) error
-	GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+	InsertUser(ctx context.Context, email domain.Email, hash string) error
+	GetUserByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+	InsertTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
 }
 
 type JWTOptions struct {
@@ -28,12 +29,17 @@ type JWTOptions struct {
 }
 
 type Auth struct {
-	repository UserRepository
-	jwtOptions JWTOptions
+	repository          UserRepository
+	jwtOptions          JWTOptions
+	telegramLinkTokenFn func() domain.TelegramLinkToken
 }
 
-func NewAuth(r UserRepository, opts JWTOptions) *Auth {
-	return &Auth{repository: r, jwtOptions: opts}
+func NewAuth(r UserRepository, opts JWTOptions, telegramLinkTokenFn func() domain.TelegramLinkToken) *Auth {
+	return &Auth{
+		repository:          r,
+		jwtOptions:          opts,
+		telegramLinkTokenFn: telegramLinkTokenFn,
+	}
 }
 
 func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
@@ -42,7 +48,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
-	err = s.repository.Insert(ctx, email, hash)
+	err = s.repository.InsertUser(ctx, email, hash)
 	if errors.Is(err, repository.ErrUniqueViolation) {
 		return fmt.Errorf("auth service: register: user insert: %w", ErrUserAlreadyExists)
 	}
@@ -54,7 +60,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 }
 
 func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
-	id, hash, err := s.repository.GetByEmail(ctx, email)
+	id, hash, err := s.repository.GetUserByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
 	}
@@ -131,4 +137,15 @@ func (s *Auth) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.
 	}
 
 	return domain.UserID{}, fmt.Errorf("auth service: verify token: %w", ErrInvalidToken)
+}
+
+func (s *Auth) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
+	token := s.telegramLinkTokenFn()
+
+	err := s.repository.InsertTelegramLinkToken(ctx, token, userID)
+	if err != nil {
+		return domain.TelegramLinkToken{}, fmt.Errorf("auth service: create telegram link token: save token: %v: %w", err, ErrInternal)
+	}
+
+	return token, nil
 }

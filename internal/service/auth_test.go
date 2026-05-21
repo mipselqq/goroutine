@@ -29,7 +29,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Success",
 			wantErr: nil,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					if hash == testutil.ValidPassword().RevealSecret() {
 						return errors.New("service saved plaintext password!")
 					}
@@ -41,7 +41,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "User already exists",
 			wantErr: service.ErrUserAlreadyExists,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrUniqueViolation
 				}
 			},
@@ -50,7 +50,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Internal repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrInternal
 				}
 			},
@@ -59,7 +59,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Unexpected repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return errors.New("Super unknown error happened")
 				}
 			},
@@ -72,7 +72,7 @@ func TestAuth_Register(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupUserRepo(r)
-			s := service.NewAuth(r, testutil.ValidJWTOptions())
+			s := service.NewAuth(r, testutil.ValidJWTOptions(), nil)
 
 			err := s.Register(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
 
@@ -90,7 +90,7 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name: "Success",
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return testutil.ValidUserID(), testutil.ValidPasswordHash(), nil
 				}
 			},
@@ -100,7 +100,7 @@ func TestAuth_Login(t *testing.T) {
 			name:    "User not found",
 			wantErr: service.ErrUserNotFound,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return domain.UserID{}, "", repository.ErrRowNotFound
 				}
 			},
@@ -109,7 +109,7 @@ func TestAuth_Login(t *testing.T) {
 			name:    "Invalid password",
 			wantErr: service.ErrInvalidCredentials,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return testutil.ValidUserID(), testutil.AnotherValidPasswordHash(), nil
 				}
 			},
@@ -118,7 +118,7 @@ func TestAuth_Login(t *testing.T) {
 			name:    "Internal repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return domain.UserID{}, "", repository.ErrInternal
 				}
 			},
@@ -127,7 +127,7 @@ func TestAuth_Login(t *testing.T) {
 			name:    "Unexpected repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
 					return domain.UserID{}, "", errors.New("Super unknown error happened")
 				}
 			},
@@ -141,7 +141,7 @@ func TestAuth_Login(t *testing.T) {
 			r := &MockUserRepository{}
 			tt.setupUserRepo(r)
 			jwtOpts := testutil.ValidJWTOptions()
-			s := service.NewAuth(r, jwtOpts)
+			s := service.NewAuth(r, jwtOpts, nil)
 
 			token, err := s.Login(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
 
@@ -163,7 +163,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 	t.Parallel()
 
 	jwtOpts := testutil.ValidJWTOptions()
-	s := service.NewAuth(nil, jwtOpts)
+	s := service.NewAuth(nil, jwtOpts, nil)
 
 	tests := []struct {
 		name       string
@@ -305,7 +305,7 @@ func TestAuth_CreateToken(t *testing.T) {
 	t.Parallel()
 
 	jwtOpts := testutil.ValidJWTOptions()
-	s := service.NewAuth(nil, jwtOpts)
+	s := service.NewAuth(nil, jwtOpts, nil)
 	now := time.Now()
 	userID := testutil.ValidUserID()
 	token, err := s.CreateToken(userID, jwtOpts.Exp)
@@ -349,5 +349,82 @@ func TestAuth_CreateToken(t *testing.T) {
 
 	if parsedToken.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 		t.Errorf("got alg %v, want %v", parsedToken.Method.Alg(), jwt.SigningMethodHS256.Alg())
+	}
+}
+
+func TestAuth_CreateTelegramLinkToken(t *testing.T) {
+	t.Parallel()
+
+	wantUserID := testutil.ValidUserID()
+	wantToken := testutil.ValidTelegramLinkToken()
+
+	tests := []struct {
+		name          string
+		tokenFn       func() domain.TelegramLinkToken
+		setupUserRepo func(r *MockUserRepository)
+		wantErr       error
+	}{
+		{
+			name: "Success",
+			tokenFn: func() domain.TelegramLinkToken {
+				return wantToken
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.InsertTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
+					if token != wantToken {
+						t.Errorf("got token %v, want %v", token, wantToken)
+					}
+					if userID != wantUserID {
+						t.Errorf("got userID %v, want %v", userID, wantUserID)
+					}
+					return nil
+				}
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Internal error",
+			tokenFn: func() domain.TelegramLinkToken {
+				return wantToken
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.InsertTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
+					return repository.ErrInternal
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+		{
+			name: "Unexpected error",
+			tokenFn: func() domain.TelegramLinkToken {
+				return wantToken
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.InsertTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
+					return errors.New("db exploded")
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			r := &MockUserRepository{}
+			tt.setupUserRepo(r)
+			s := service.NewAuth(r, testutil.ValidJWTOptions(), tt.tokenFn)
+
+			gotToken, err := s.CreateTelegramLinkToken(context.Background(), wantUserID)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr == nil && gotToken != wantToken {
+				t.Errorf("got token %v, want %v", gotToken, wantToken)
+			}
+		})
 	}
 }
