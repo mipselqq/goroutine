@@ -54,7 +54,3 @@ func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (id dom
 
 	return id, hash, nil
 }
-
-func (r *PgUser) InsertTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
-	return fmt.Errorf("user repo: insert telegram link token: %w", ErrInternal)
-}

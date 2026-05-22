@@ -72,7 +72,7 @@ func TestAuth_Register(t *testing.T) {
 
 			r := &MockUserRepository{}
 			tt.setupUserRepo(r)
-			s := service.NewAuth(r, testutil.ValidJWTOptions(), nil)
+			s := service.NewAuth(r, nil, testutil.ValidJWTOptions(), nil)
 
 			err := s.Register(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
 
@@ -141,7 +141,7 @@ func TestAuth_Login(t *testing.T) {
 			r := &MockUserRepository{}
 			tt.setupUserRepo(r)
 			jwtOpts := testutil.ValidJWTOptions()
-			s := service.NewAuth(r, jwtOpts, nil)
+			s := service.NewAuth(r, nil, jwtOpts, nil)
 
 			token, err := s.Login(context.Background(), testutil.ValidEmail(), testutil.ValidPassword())
 
@@ -163,7 +163,7 @@ func TestAuth_VerifyToken(t *testing.T) {
 	t.Parallel()
 
 	jwtOpts := testutil.ValidJWTOptions()
-	s := service.NewAuth(nil, jwtOpts, nil)
+	s := service.NewAuth(nil, nil, jwtOpts, nil)
 
 	tests := []struct {
 		name       string
@@ -305,7 +305,7 @@ func TestAuth_CreateToken(t *testing.T) {
 	t.Parallel()
 
 	jwtOpts := testutil.ValidJWTOptions()
-	s := service.NewAuth(nil, jwtOpts, nil)
+	s := service.NewAuth(nil, nil, jwtOpts, nil)
 	now := time.Now()
 	userID := testutil.ValidUserID()
 	token, err := s.CreateToken(userID, jwtOpts.Exp)
@@ -359,18 +359,18 @@ func TestAuth_CreateTelegramLinkToken(t *testing.T) {
 	wantToken := testutil.ValidTelegramLinkToken()
 
 	tests := []struct {
-		name          string
-		tokenFn       func() domain.TelegramLinkToken
-		setupUserRepo func(r *MockUserRepository)
-		wantErr       error
+		name           string
+		tokenFn        func() domain.TelegramLinkToken
+		setupTokenRepo func(r *MockTelegramTokenRepository)
+		wantErr        error
 	}{
 		{
 			name: "Success",
 			tokenFn: func() domain.TelegramLinkToken {
 				return wantToken
 			},
-			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.InsertLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
 					if token != wantToken {
 						t.Errorf("got token %v, want %v", token, wantToken)
 					}
@@ -387,8 +387,8 @@ func TestAuth_CreateTelegramLinkToken(t *testing.T) {
 			tokenFn: func() domain.TelegramLinkToken {
 				return wantToken
 			},
-			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.InsertLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
 					return repository.ErrInternal
 				}
 			},
@@ -399,8 +399,8 @@ func TestAuth_CreateTelegramLinkToken(t *testing.T) {
 			tokenFn: func() domain.TelegramLinkToken {
 				return wantToken
 			},
-			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.InsertLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
 					return errors.New("db exploded")
 				}
 			},
@@ -412,9 +412,9 @@ func TestAuth_CreateTelegramLinkToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockUserRepository{}
-			tt.setupUserRepo(r)
-			s := service.NewAuth(r, testutil.ValidJWTOptions(), tt.tokenFn)
+			tr := &MockTelegramTokenRepository{}
+			tt.setupTokenRepo(tr)
+			s := service.NewAuth(nil, tr, testutil.ValidJWTOptions(), tt.tokenFn)
 
 			gotToken, err := s.CreateTelegramLinkToken(context.Background(), wantUserID)
 

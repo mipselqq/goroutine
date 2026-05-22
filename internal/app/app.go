@@ -29,11 +29,12 @@ type App struct {
 
 func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg prometheus.Registerer) *App {
 	userRepo := repository.NewPgUser(pool)
+	telegramTokenRepo := repository.NewRedisTelegramToken()
 	boardsRepo := repository.NewPgBoard(pool)
 	columnsRepo := repository.NewPgColumn(pool)
 	tasksRepo := repository.NewPgTask(pool)
 
-	authService := service.NewAuth(userRepo, service.JWTOptions{
+	authService := service.NewAuth(userRepo, telegramTokenRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,

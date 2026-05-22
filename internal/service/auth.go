@@ -19,7 +19,10 @@ import (
 type UserRepository interface {
 	InsertUser(ctx context.Context, email domain.Email, hash string) error
 	GetUserByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
-	InsertTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
+}
+
+type TelegramTokenRepository interface {
+	InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
 }
 
 type JWTOptions struct {
@@ -30,13 +33,15 @@ type JWTOptions struct {
 
 type Auth struct {
 	repository          UserRepository
+	tokenRepository     TelegramTokenRepository
 	jwtOptions          JWTOptions
 	telegramLinkTokenFn func() domain.TelegramLinkToken
 }
 
-func NewAuth(r UserRepository, opts JWTOptions, telegramLinkTokenFn func() domain.TelegramLinkToken) *Auth {
+func NewAuth(ur UserRepository, tr TelegramTokenRepository, opts JWTOptions, telegramLinkTokenFn func() domain.TelegramLinkToken) *Auth {
 	return &Auth{
-		repository:          r,
+		repository:          ur,
+		tokenRepository:     tr,
 		jwtOptions:          opts,
 		telegramLinkTokenFn: telegramLinkTokenFn,
 	}
@@ -142,7 +147,7 @@ func (s *Auth) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.
 func (s *Auth) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
 	token := s.telegramLinkTokenFn()
 
-	err := s.repository.InsertTelegramLinkToken(ctx, token, userID)
+	err := s.tokenRepository.InsertLinkToken(ctx, token, userID)
 	if err != nil {
 		return domain.TelegramLinkToken{}, fmt.Errorf("auth service: create telegram link token: save token: %v: %w", err, ErrInternal)
 	}
