@@ -27,7 +27,7 @@ import (
 func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
 	t.Helper()
 
-	pool := testutil.SetupTestDB(t, "../migrations")
+	pool := testutil.SetupTestPostgres(t, "../migrations")
 
 	if os.Getenv("ENV") != "prod" {
 		err := godotenv.Load("../.env.dev")

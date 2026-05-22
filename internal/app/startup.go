@@ -15,7 +15,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-func SetupDatabaseFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.Pool, error) {
+func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.Pool, error) {
 	cfg := config.NewPGConfigFromEnv(logger)
 
 	logger.Info("Database config", slog.Any("config", cfg))

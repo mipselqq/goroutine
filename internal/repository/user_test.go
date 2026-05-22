@@ -94,7 +94,7 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgUser) {
 	t.Helper()
 
-	pool := testutil.SetupTestDB(t, "../../migrations")
+	pool := testutil.SetupTestPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPgUser(pool)
