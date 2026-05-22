@@ -17,7 +17,7 @@ type PgConfig struct {
 	DB       string
 }
 
-func NewPGConfigFromEnv(logger *slog.Logger) PgConfig {
+func NewPGFromEnv(logger *slog.Logger) PgConfig {
 	return PgConfig{
 		User:     getenvOrDefault("POSTGRES_USER", "user", logger),
 		Password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password", logger)),

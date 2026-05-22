@@ -16,7 +16,7 @@ import (
 )
 
 func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.Pool, error) {
-	cfg := config.NewPGConfigFromEnv(logger)
+	cfg := config.NewPGFromEnv(logger)
 
 	logger.Info("Database config", slog.Any("config", cfg))
 
