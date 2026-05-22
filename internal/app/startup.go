@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/redis/go-redis/v9"
 )
 
 func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.Pool, error) {
@@ -56,6 +57,25 @@ func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 	}
 
 	return pool, nil
+}
+
+func SetupRedisFromEnv(logger *slog.Logger) (*redis.Client, error) {
+	cfg := config.NewRedisFromEnv(logger)
+
+	logger.Info("Redis config", slog.Any("config", cfg))
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     cfg.BuildAddr(),
+		Password: cfg.Password.RevealSecret(),
+	})
+
+	err := client.Ping(context.Background()).Err()
+	if err != nil {
+		logger.Error("Failed to ping Redis", slog.String("err", err.Error()))
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func RunBackgroundServer(logger *slog.Logger, name, addr string, handler http.Handler) *http.Server {

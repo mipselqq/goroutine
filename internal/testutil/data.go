@@ -3,6 +3,7 @@ package testutil
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -12,7 +13,15 @@ import (
 	"goroutine/internal/service"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 )
+
+func MustLoadDevEnv() {
+	err := godotenv.Load("../../.env.dev")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to load dev env from file: %v", err))
+	}
+}
 
 func FixedTimeNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
 func FixedTime5mFromNow() time.Time { return FixedTimeNow().Add(5 * time.Minute) }

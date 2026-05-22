@@ -14,6 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const telegramTokenPrefix = "tg_token:"
+
 func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
