@@ -3,7 +3,6 @@ package testutil
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -18,9 +17,14 @@ import (
 
 func MustLoadDevEnv() {
 	err := godotenv.Load("../../.env.dev")
-	if err != nil {
-		panic(fmt.Sprintf("Failed to load dev env from file: %v", err))
+	if err == nil {
+		return
 	}
+	err = godotenv.Load("../.env.dev")
+	if err == nil {
+		return
+	}
+	panic("Failed to load dev env from file (tried ../../.env.dev and ../.env.dev)")
 }
 
 func FixedTimeNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }

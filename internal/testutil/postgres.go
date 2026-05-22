@@ -11,12 +11,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 func SetupTestPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	t.Helper()
-	_ = godotenv.Load("../../.env.dev", "../.env.dev")
+	MustLoadDevEnv()
 	logger := NewTestLogger(t)
 
 	pool, err := app.SetupPostgresFromEnv(logger, migrationsDir)

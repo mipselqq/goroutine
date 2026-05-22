@@ -27,6 +27,7 @@ func NewRouter(h *handler.Handlers, m *middleware.Middlewares) http.Handler {
 	mux.Handle("POST "+loginPath, public(h.Auth.Login))
 	mux.Handle("GET /v1/health", public(h.Health.Health))
 	mux.Handle("GET /v1/whoami", protected(h.Auth.WhoAmI))
+	mux.Handle("POST /v1/users/me/telegram/link", protected(h.User.CreateTelegramLinkToken))
 	mux.Handle("POST /v1/boards", protected(h.Boards.Create))
 	mux.Handle("GET /v1/boards/{boardId}", protected(h.Boards.Get))
 	mux.Handle("GET /v1/boards/{boardId}/aggregate", protected(h.Boards.GetAggregate))

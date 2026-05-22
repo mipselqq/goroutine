@@ -42,12 +42,14 @@ func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
 	cfg := config.NewAppConfigFromEnv(logger)
 	logger.Info("App config", slog.Any("config", cfg))
 
-	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
+	redisClient := testutil.SetupTestRedis(t)
+	application := app.New(logger, pool, redisClient, &cfg, prometheus.NewRegistry())
 
 	ts := httptest.NewServer(application.Router)
 	t.Cleanup(func() {
 		ts.Close()
 		pool.Close()
+		_ = redisClient.Close()
 	})
 
 	client := ts.Client()

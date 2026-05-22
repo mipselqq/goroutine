@@ -46,9 +46,19 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-	defer pool.Close()
 
-	application := app.New(logger, pool, &appCfg, prometheus.DefaultRegisterer)
+	redisClient, err := app.SetupRedisFromEnv(logger)
+	if err != nil {
+		pool.Close()
+		os.Exit(1)
+	}
+
+	defer pool.Close()
+	defer func() {
+		_ = redisClient.Close()
+	}()
+
+	application := app.New(logger, pool, redisClient, &appCfg, prometheus.DefaultRegisterer)
 
 	srv := app.RunBackgroundServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
 	adminSrv := app.RunBackgroundServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)

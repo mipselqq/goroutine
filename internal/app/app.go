@@ -20,6 +20,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -27,13 +28,20 @@ type App struct {
 	AdminRouter http.Handler
 }
 
-func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg prometheus.Registerer) *App {
-	userRepo := repository.NewPgUser(pool)
-	boardsRepo := repository.NewPgBoard(pool)
-	columnsRepo := repository.NewPgColumn(pool)
-	tasksRepo := repository.NewPgTask(pool)
+func New(
+	logger *slog.Logger,
+	pgPool *pgxpool.Pool,
+	redisClient *redis.Client,
+	cfg *config.AppConfig,
+	reg prometheus.Registerer,
+) *App {
+	userRepo := repository.NewPgUser(pgPool)
+	telegramTokenRepo := repository.NewRedisTelegramToken(redisClient)
+	boardsRepo := repository.NewPgBoard(pgPool)
+	columnsRepo := repository.NewPgColumn(pgPool)
+	tasksRepo := repository.NewPgTask(pgPool)
 
-	authService := service.NewAuth(userRepo, nil, service.JWTOptions{
+	authService := service.NewAuth(userRepo, telegramTokenRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
@@ -51,6 +59,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	boardsHandler := handler.NewBoards(logger, boardsService, errorResponder)
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
+	userHandler := handler.NewUser(logger, authService, errorResponder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
@@ -59,7 +68,14 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 
-	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler, Columns: columnsHandler, Tasks: tasksHandler}
+	handlers := &handler.Handlers{
+		Auth:    authHandler,
+		Health:  healthHandler,
+		Boards:  boardsHandler,
+		Columns: columnsHandler,
+		Tasks:   tasksHandler,
+		User:    userHandler,
+	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   metricsMiddleware,
 		CORS:      corsMiddleware,
