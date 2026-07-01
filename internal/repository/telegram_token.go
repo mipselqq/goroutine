@@ -44,26 +44,12 @@ func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.T
 }
 
 func (r *RedisTelegramToken) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
-	const script = `
-		local userID = redis.call('GET', KEYS[1])
-		if userID then
-			redis.call('DEL', KEYS[1])
-			return userID
-		end
-		return nil
-	`
-
-	rawUserID, err := r.redisClient.Eval(ctx, script, []string{tokenToKey(token)}).Result()
+	userIDStr, err := r.redisClient.GetDel(ctx, tokenToKey(token)).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: token not found: %w", ErrTelegramLinkTokenNotFound)
 		}
 		return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: %v: %w", err, ErrInternal)
-	}
-
-	userIDStr, ok := rawUserID.(string)
-	if !ok {
-		return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: unexpected value type %T: %w", rawUserID, ErrInternal)
 	}
 
 	userID, err := domain.ParseUserID(userIDStr)
