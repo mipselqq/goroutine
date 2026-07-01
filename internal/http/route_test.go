@@ -35,7 +35,7 @@ func TestNewRouter_Full(t *testing.T) {
 		RequestID: &spyRequestIDMiddleware{},
 	}
 
-	router := app.NewRouter(handlers, middlewares)
+	router := app.NewRouter(handlers, middlewares, nil)
 
 	type entry struct {
 		name   string

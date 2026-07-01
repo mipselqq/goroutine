@@ -18,16 +18,22 @@ type TelegramTokenRepository interface {
 	ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
 }
 
+type TelegramNotifier interface {
+	NotifyLinkSuccess(ctx context.Context, chatID domain.TelegramChatID) error
+}
+
 type User struct {
 	userRepo            UserRepository
 	tokenRepo           TelegramTokenRepository
+	telegramNotifier    TelegramNotifier
 	telegramLinkTokenFn func() domain.TelegramLinkToken
 }
 
-func NewUser(ur UserRepository, tr TelegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
+func NewUser(ur UserRepository, tr TelegramTokenRepository, tnotifier TelegramNotifier, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
 	return &User{
 		userRepo:            ur,
 		tokenRepo:           tr,
+		telegramNotifier:    tnotifier,
 		telegramLinkTokenFn: telegramLinkTokenFn,
 	}
 }
@@ -64,6 +70,9 @@ func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLin
 		}
 		return fmt.Errorf("user service: link update telegram info: %v: %w", err, ErrInternal)
 	}
+
+	// Currently no retries, will add async notifications worker with rate limits handling later on
+	_ = s.telegramNotifier.NotifyLinkSuccess(ctx, chatID)
 
 	return nil
 }

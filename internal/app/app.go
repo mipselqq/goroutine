@@ -10,6 +10,7 @@ import (
 
 	"goroutine/internal/config"
 	"goroutine/internal/domain"
+	telegramdriver "goroutine/internal/driver/telegram"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/httpschema"
@@ -47,7 +48,8 @@ func New(
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
+	telegramAPIClient := telegramdriver.NewAPIClient(telegramCfg.Token.RevealSecret(), nil)
+	userService := service.NewUser(userRepo, telegramTokenRepo, telegramAPIClient, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {
 			panic(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
@@ -65,6 +67,7 @@ func New(
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
 	userHandler := handler.NewUser(logger, userService, errorResponder)
+	telegramWebhook := telegramdriver.NewWebhookHandler(userService, logger)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
@@ -89,7 +92,7 @@ func New(
 	}
 
 	return &App{
-		Router:      httpapp.NewRouter(handlers, middlewares),
+		Router:      httpapp.NewRouter(handlers, middlewares, telegramWebhook),
 		AdminRouter: httpapp.NewAdminRouter(),
 	}
 }

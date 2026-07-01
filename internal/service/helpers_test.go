@@ -49,6 +49,15 @@ func (m *MockTelegramTokenRepository) ConsumeTelegramLinkToken(ctx context.Conte
 	return m.ConsumeTelegramLinkTokenFunc(ctx, token)
 }
 
+type MockTelegramNotifier struct {
+	NotifyLinkSuccessFunc func(ctx context.Context, chatID domain.TelegramChatID) error
+}
+
+func (m *MockTelegramNotifier) NotifyLinkSuccess(ctx context.Context, chatID domain.TelegramChatID) error {
+	AssertFuncNotNil("TelegramNotifier.NotifyLinkSuccessFunc", m.NotifyLinkSuccessFunc)
+	return m.NotifyLinkSuccessFunc(ctx, chatID)
+}
+
 type MockBoardRepository struct {
 	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetByIDFunc    func(ctx context.Context, id domain.BoardID) (domain.Board, error)
