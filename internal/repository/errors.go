@@ -7,5 +7,6 @@ var (
 	ErrUniqueViolation                = errors.New("attempt to insert unique value twice")
 	ErrIndexOutOfBounds               = errors.New("index out of bounds")
 	ErrTelegramLinkTokenAlreadyExists = errors.New("telegram link token already exists")
+	ErrTelegramLinkTokenNotFound      = errors.New("telegram link token not found")
 	ErrInternal                       = errors.New("internal error")
 )

@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 const telegramTokenPrefix = "tg_token:"
@@ -374,4 +375,24 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 			t.Errorf("got datetime_precision=%d for %s.%s, want >= 3", precision, tableName, columnName)
 		}
 	}
+}
+
+func setTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken, userID domain.UserID) {
+	t.Helper()
+
+	err := client.Set(context.Background(), telegramTokenPrefix+token.RevealSecret(), userID.String(), 0).Err()
+	if err != nil {
+		t.Fatalf("setTelegramTokenInRedis() error = %v", err)
+	}
+}
+
+func getTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken) string {
+	t.Helper()
+
+	val, err := client.Get(context.Background(), telegramTokenPrefix+token.RevealSecret()).Result()
+	if err != nil {
+		t.Fatalf("getTelegramTokenFromRedis() error = %v", err)
+	}
+
+	return val
 }
