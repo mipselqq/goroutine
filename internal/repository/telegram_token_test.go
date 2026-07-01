@@ -52,30 +52,35 @@ func TestTelegramTokenRepository_InsertLinkToken_AlreadyExists(t *testing.T) {
 
 	redisUserID := getUserIDByTelegramLinkToken(t, client, token)
 	if redisUserID != userID {
-		t.Fatalf("GetUserIDByLinkToken() userID = %s, want %s", redisUserID, userID.String())
+		t.Fatalf("ConsumeTelegramLinkToken() userID = %s, want %s", redisUserID, userID.String())
 	}
 }
 
-func TestTelegramTokenRepository_GetUserIDByLinkToken(t *testing.T) {
+func TestTelegramTokenRepository_ConsumeTelegramLinkToken(t *testing.T) {
 	client, repo := telegramTokenRepoPrelude(t)
 
 	ctx := context.Background()
 	token := testutil.ValidTelegramLinkToken()
 	userID := domain.NewUserID()
 
-	_, err := repo.GetUserIDByLinkToken(ctx, token)
+	_, err := repo.ConsumeTelegramLinkToken(ctx, token)
 	if !errors.Is(err, repository.ErrTelegramLinkTokenNotFound) {
-		t.Fatalf("GetUserIDByLinkToken() error = %v, want ErrTelegramLinkTokenNotFound", err)
+		t.Fatalf("ConsumeTelegramLinkToken() error = %v, want ErrTelegramLinkTokenNotFound", err)
 	}
 
 	setUserIDByTelegramLinkToken(t, client, token, userID)
 
-	userIDFromToken, err := repo.GetUserIDByLinkToken(ctx, token)
+	userIDFromToken, err := repo.ConsumeTelegramLinkToken(ctx, token)
 	if err != nil {
-		t.Fatalf("GetUserIDByLinkToken() error = %v, want nil", err)
+		t.Fatalf("ConsumeTelegramLinkToken() error = %v, want nil", err)
 	}
 	if userIDFromToken != userID {
-		t.Fatalf("GetUserIDByLinkToken() userID = %v, want %v", userIDFromToken, userID)
+		t.Fatalf("ConsumeTelegramLinkToken() userID = %v, want %v", userIDFromToken, userID)
+	}
+
+	_, err = repo.ConsumeTelegramLinkToken(ctx, token)
+	if !errors.Is(err, repository.ErrTelegramLinkTokenNotFound) {
+		t.Fatalf("ConsumeTelegramLinkToken() second call error = %v, want ErrTelegramLinkTokenNotFound", err)
 	}
 }
 

@@ -21,10 +21,14 @@ func NewRedisTelegramToken(redisClient *redis.Client) *RedisTelegramToken {
 
 const telegramTokenPrefix = "tg_token:"
 
+func tokenToKey(token domain.TelegramLinkToken) string {
+	return telegramTokenPrefix + token.RevealSecret()
+}
+
 func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
 	inserted, err := r.redisClient.SetNX(
 		ctx,
-		telegramTokenPrefix+token.RevealSecret(),
+		tokenToKey(token),
 		userID.String(),
 		15*time.Minute,
 	).Result()
@@ -39,21 +43,32 @@ func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.T
 	return nil
 }
 
-func (r *RedisTelegramToken) GetUserIDByLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
-	userIDStr, err := r.redisClient.Get(
-		ctx,
-		telegramTokenPrefix+token.RevealSecret(),
-	).Result()
+func (r *RedisTelegramToken) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+	const script = `
+		local userID = redis.call('GET', KEYS[1])
+		if userID then
+			redis.call('DEL', KEYS[1])
+			return userID
+		end
+		return nil
+	`
+
+	rawUserID, err := r.redisClient.Eval(ctx, script, []string{tokenToKey(token)}).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return domain.UserID{}, fmt.Errorf("redis: get user id by link token: token not found: %w", ErrTelegramLinkTokenNotFound)
+			return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: token not found: %w", ErrTelegramLinkTokenNotFound)
 		}
-		return domain.UserID{}, fmt.Errorf("redis: get user id by link token: %v: %w", err, ErrInternal)
+		return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: %v: %w", err, ErrInternal)
+	}
+
+	userIDStr, ok := rawUserID.(string)
+	if !ok {
+		return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: unexpected value type %T: %w", rawUserID, ErrInternal)
 	}
 
 	userID, err := domain.ParseUserID(userIDStr)
 	if err != nil {
-		return domain.UserID{}, fmt.Errorf("redis: get user id by link token: parse user id: corrupted data: %v: %w", err, ErrInternal)
+		return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: parse user id: corrupted data: %v: %w", err, ErrInternal)
 	}
 
 	return userID, nil
