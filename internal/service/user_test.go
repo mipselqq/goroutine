@@ -85,7 +85,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 
 			tr := &MockTelegramTokenRepository{}
 			tt.setupTokenRepo(tr)
-			s := service.NewUser(tr, tt.tokenFn)
+			s := service.NewUser(&MockUserRepository{}, tr, tt.tokenFn)
 
 			gotToken, err := s.CreateTelegramLinkToken(context.Background(), wantUserID)
 
@@ -95,6 +95,115 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 
 			if tt.wantErr == nil && gotToken != wantToken {
 				t.Errorf("got token %v, want %v", gotToken, wantToken)
+			}
+		})
+	}
+}
+
+func TestUser_LinkTelegramByToken(t *testing.T) {
+	t.Parallel()
+
+	wantUserID := testutil.ValidUserID()
+	wantToken := testutil.ValidTelegramLinkToken()
+	wantChatID := testutil.ValidTelegramChatID()
+	wantUsername := testutil.ValidTelegramUsername()
+
+	tests := []struct {
+		name           string
+		setupTokenRepo func(r *MockTelegramTokenRepository)
+		setupUserRepo  func(r *MockUserRepository)
+		wantErr        error
+	}{
+		{
+			name: "Success",
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.ConsumeTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+					if token != wantToken {
+						t.Errorf("got token %v, want %v", token, wantToken)
+					}
+					return wantUserID, nil
+				}
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.UpdateTelegramInfoFunc = func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+					if userID != wantUserID {
+						t.Errorf("got userID %v, want %v", userID, wantUserID)
+					}
+					if chatID != wantChatID {
+						t.Errorf("got chatID %v, want %v", chatID, wantChatID)
+					}
+					if username != wantUsername {
+						t.Errorf("got username %v, want %v", username, wantUsername)
+					}
+					return nil
+				}
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Token not found",
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.ConsumeTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+					return domain.UserID{}, repository.ErrKeyNotFound
+				}
+			},
+			setupUserRepo: func(r *MockUserRepository) {},
+			wantErr:       service.ErrTelegramLinkTokenNotFound,
+		},
+		{
+			name: "Consume internal error",
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.ConsumeTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+					return domain.UserID{}, repository.ErrInternal
+				}
+			},
+			setupUserRepo: func(r *MockUserRepository) {},
+			wantErr:       service.ErrInternal,
+		},
+		{
+			name: "User not found",
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.ConsumeTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+					return wantUserID, nil
+				}
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.UpdateTelegramInfoFunc = func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+					return repository.ErrRowNotFound
+				}
+			},
+			wantErr: service.ErrUserNotFound,
+		},
+		{
+			name: "Update internal error",
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.ConsumeTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+					return wantUserID, nil
+				}
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.UpdateTelegramInfoFunc = func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+					return repository.ErrInternal
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			tr := &MockTelegramTokenRepository{}
+			tt.setupTokenRepo(tr)
+			ur := &MockUserRepository{}
+			tt.setupUserRepo(ur)
+			s := service.NewUser(ur, tr, nil)
+
+			err := s.LinkTelegramByToken(context.Background(), wantToken, wantChatID, wantUsername)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 		})
 	}

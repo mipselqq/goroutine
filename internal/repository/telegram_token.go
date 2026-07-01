@@ -47,6 +47,23 @@ func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.T
 	return nil
 }
 
+func (r *RedisTelegramToken) GetUserIDByLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+	userIDStr, err := r.redisClient.Get(ctx, tokenToKey(token)).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return domain.UserID{}, fmt.Errorf("redis: get user id by link token: token not found: %w", ErrKeyNotFound)
+		}
+		return domain.UserID{}, fmt.Errorf("redis: get user id by link token: %v: %w", err, ErrInternal)
+	}
+
+	userID, err := domain.ParseUserID(userIDStr)
+	if err != nil {
+		return domain.UserID{}, fmt.Errorf("redis: get user id by link token: parse user id: corrupted data: %v: %w", err, ErrInternal)
+	}
+
+	return userID, nil
+}
+
 func (r *RedisTelegramToken) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
 	userIDStr, err := r.redisClient.GetDel(ctx, tokenToKey(token)).Result()
 	if err != nil {

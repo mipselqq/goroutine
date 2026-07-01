@@ -16,7 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type UserRepository interface {
+type AuthUserRepository interface {
 	InsertUser(ctx context.Context, email domain.Email, hash string) error
 	GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error)
 }
@@ -28,11 +28,11 @@ type JWTOptions struct {
 }
 
 type Auth struct {
-	repository UserRepository
+	repository AuthUserRepository
 	jwtOptions JWTOptions
 }
 
-func NewAuth(ur UserRepository, opts JWTOptions) *Auth {
+func NewAuth(ur AuthUserRepository, opts JWTOptions) *Auth {
 	return &Auth{
 		repository: ur,
 		jwtOptions: opts,

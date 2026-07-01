@@ -65,9 +65,13 @@ func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain
 func (r *PgUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
 	const query = `UPDATE users SET telegram_chat_id = $1, telegram_username = $2 WHERE id = $3`
 
-	_, err := r.pool.Exec(ctx, query, chatID, username, userID)
+	status, err := r.pool.Exec(ctx, query, chatID, username, userID)
 	if err != nil {
 		return fmt.Errorf("user repo: update telegram info: %v: %w", err, ErrInternal)
+	}
+
+	if status.RowsAffected() == 0 {
+		return fmt.Errorf("user repo: update telegram info: %w", ErrRowNotFound)
 	}
 
 	return nil

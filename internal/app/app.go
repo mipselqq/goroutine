@@ -47,7 +47,7 @@ func New(
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	userService := service.NewUser(telegramTokenRepo, func() domain.TelegramLinkToken {
+	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {
 			panic(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))

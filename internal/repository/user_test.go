@@ -97,12 +97,12 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	userID := testutil.ValidUserID()
+	chatID := testutil.ValidTelegramChatID()
+	username := testutil.ValidTelegramUsername()
+
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
-
-		userID := testutil.ValidUserID()
-		chatID := testutil.ValidTelegramChatID()
-		username := testutil.ValidTelegramUsername()
 
 		InsertUser(t, pool, userID, testutil.ValidEmail(), testutil.ValidPasswordHash())
 		err := r.UpdateTelegramInfo(ctx, userID, chatID, username)
@@ -120,6 +120,13 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 		if user.TelegramUsername != username {
 			t.Errorf("got username %v, want %v", user.TelegramUsername, username)
 		}
+	})
+
+	t.Run("User not found", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		err := r.UpdateTelegramInfo(ctx, userID, chatID, username)
+		assertErrRowNotFound(t, err)
 	})
 }
 

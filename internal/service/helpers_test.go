@@ -14,8 +14,9 @@ func AssertFuncNotNil(funcName string, fn any) {
 }
 
 type MockUserRepository struct {
-	InsertUserFunc     func(ctx context.Context, email domain.Email, hash string) error
-	GetUserByEmailFunc func(ctx context.Context, email domain.Email) (domain.User, error)
+	InsertUserFunc         func(ctx context.Context, email domain.Email, hash string) error
+	GetUserByEmailFunc     func(ctx context.Context, email domain.Email) (domain.User, error)
+	UpdateTelegramInfoFunc func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
 func (m *MockUserRepository) InsertUser(ctx context.Context, email domain.Email, hash string) error {
@@ -28,13 +29,24 @@ func (m *MockUserRepository) GetUserByEmail(ctx context.Context, email domain.Em
 	return m.GetUserByEmailFunc(ctx, email)
 }
 
+func (m *MockUserRepository) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+	AssertFuncNotNil("UserRepository.UpdateTelegramInfoFunc", m.UpdateTelegramInfoFunc)
+	return m.UpdateTelegramInfoFunc(ctx, userID, chatID, username)
+}
+
 type MockTelegramTokenRepository struct {
-	InsertLinkTokenFunc func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
+	InsertLinkTokenFunc          func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
+	ConsumeTelegramLinkTokenFunc func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
 }
 
 func (m *MockTelegramTokenRepository) InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
 	AssertFuncNotNil("TelegramTokenRepository.InsertLinkTokenFunc", m.InsertLinkTokenFunc)
 	return m.InsertLinkTokenFunc(ctx, token, userID)
+}
+
+func (m *MockTelegramTokenRepository) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+	AssertFuncNotNil("TelegramTokenRepository.ConsumeTelegramLinkTokenFunc", m.ConsumeTelegramLinkTokenFunc)
+	return m.ConsumeTelegramLinkTokenFunc(ctx, token)
 }
 
 type MockBoardRepository struct {
