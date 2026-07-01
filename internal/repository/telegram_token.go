@@ -41,7 +41,7 @@ func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.T
 	}
 
 	if !inserted {
-		return fmt.Errorf("redis: insert link token: %w", ErrTelegramLinkTokenAlreadyExists)
+		return fmt.Errorf("redis: insert link token: %w", ErrKeyExists)
 	}
 
 	return nil
@@ -51,7 +51,7 @@ func (r *RedisTelegramToken) ConsumeTelegramLinkToken(ctx context.Context, token
 	userIDStr, err := r.redisClient.GetDel(ctx, tokenToKey(token)).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: token not found: %w", ErrTelegramLinkTokenNotFound)
+			return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: token not found: %w", ErrKeyNotFound)
 		}
 		return domain.UserID{}, fmt.Errorf("redis: consume telegram link token: %v: %w", err, ErrInternal)
 	}

@@ -47,7 +47,7 @@ func TestTelegramTokenRepository_InsertLinkToken_AlreadyExists(t *testing.T) {
 	}
 
 	err = repo.InsertLinkToken(ctx, token, anotherUserID)
-	if !errors.Is(err, repository.ErrTelegramLinkTokenAlreadyExists) {
+	if !errors.Is(err, repository.ErrKeyExists) {
 		t.Fatalf("InsertLinkToken() second insert error = %v, want ErrTelegramLinkTokenAlreadyExists", err)
 	}
 
@@ -65,7 +65,7 @@ func TestTelegramTokenRepository_ConsumeTelegramLinkToken(t *testing.T) {
 	userID := domain.NewUserID()
 
 	_, err := repo.ConsumeTelegramLinkToken(ctx, token)
-	if !errors.Is(err, repository.ErrTelegramLinkTokenNotFound) {
+	if !errors.Is(err, repository.ErrKeyNotFound) {
 		t.Fatalf("ConsumeTelegramLinkToken() error = %v, want ErrTelegramLinkTokenNotFound", err)
 	}
 
@@ -80,7 +80,7 @@ func TestTelegramTokenRepository_ConsumeTelegramLinkToken(t *testing.T) {
 	}
 
 	_, err = repo.ConsumeTelegramLinkToken(ctx, token)
-	if !errors.Is(err, repository.ErrTelegramLinkTokenNotFound) {
+	if !errors.Is(err, repository.ErrKeyNotFound) {
 		t.Fatalf("ConsumeTelegramLinkToken() second call error = %v, want ErrTelegramLinkTokenNotFound", err)
 	}
 }

@@ -60,7 +60,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			},
 			setupTokenRepo: func(r *MockTelegramTokenRepository) {
 				r.InsertLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
-					return repository.ErrTelegramLinkTokenAlreadyExists
+					return repository.ErrKeyExists
 				}
 			},
 			wantErr: service.ErrInternal,

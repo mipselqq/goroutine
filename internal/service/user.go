@@ -30,7 +30,7 @@ func (s *User) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID
 
 	err := s.tokenRepository.InsertLinkToken(ctx, token, userID)
 	if err != nil {
-		if errors.Is(err, repository.ErrTelegramLinkTokenAlreadyExists) {
+		if errors.Is(err, repository.ErrKeyExists) {
 			return domain.TelegramLinkToken{}, fmt.Errorf("user service: create telegram link token: %v: %w", err, ErrInternal)
 		}
 		return domain.TelegramLinkToken{}, fmt.Errorf("user service: create telegram link token: save token: %v: %w", err, ErrInternal)
