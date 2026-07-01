@@ -73,7 +73,7 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := domain.NewTelegramUsername(update.Message.Chat.Username)
+	username, err := domain.NewTelegramUsername("@" + update.Message.Chat.Username)
 	if err != nil {
 		h.logger.WarnContext(r.Context(), "Invalid username from telegram", slog.String("err", err.Error()))
 		w.WriteHeader(http.StatusOK)
