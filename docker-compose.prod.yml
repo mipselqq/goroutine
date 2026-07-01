@@ -60,6 +60,9 @@ services:
       - JWT_SECRET
       - ALLOWED_ORIGINS
       - JWT_EXP
+
+      - TELEGRAM_BOT_TOKEN
+      - TELEGRAM_LINK_TOKEN_TTL
     depends_on:
       db:
         condition: service_healthy
@@ -190,4 +193,3 @@ volumes:
   loki_data_prod:
   alloy_data_prod:
   redis_data_prod:
-

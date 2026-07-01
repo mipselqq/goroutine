@@ -68,6 +68,9 @@ jobs:
           REDIS_HOST=${{ vars.REDIS_HOST }}
           REDIS_PORT=${{ vars.REDIS_PORT }}
           REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_LINK_TOKEN_TTL=${{ vars.TELEGRAM_LINK_TOKEN_TTL }}
           EOF
 
       - name: Run Ansible Playbook
