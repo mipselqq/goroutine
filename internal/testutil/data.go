@@ -117,6 +117,14 @@ func ValidTelegramLinkToken() domain.TelegramLinkToken {
 	return Must(domain.NewTelegramLinkToken, validUUIDv7)
 }
 
+func ValidTelegramChatID() domain.TelegramChatID {
+	return Must(domain.NewTelegramChatID, int64(123456789))
+}
+
+func ValidTelegramUsername() domain.TelegramUsername {
+	return Must(domain.NewTelegramUsername, "@testuser")
+}
+
 func ValidJWTOptions() service.JWTOptions {
 	return service.JWTOptions{
 		JWTSecret:     ValidJWTSecret(),

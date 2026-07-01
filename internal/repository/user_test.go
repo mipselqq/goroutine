@@ -69,15 +69,15 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 
 		InsertUser(t, pool, userID, email, hash)
 
-		gotID, gotHash, err := r.GetUserByEmail(ctx, email)
+		user, err := r.GetUserByEmail(ctx, email)
 		if err != nil {
-			t.Errorf("GetUserByEmail() error = %v", err)
+			t.Fatalf("GetUserByEmail() error = %v", err)
 		}
-		if gotHash != hash {
-			t.Errorf("got hash %q, want %q", gotHash, hash)
+		if user.PasswordHash != hash {
+			t.Errorf("got hash %q, want %q", user.PasswordHash, hash)
 		}
-		if gotID != userID {
-			t.Errorf("got id %q, want %q", gotID, userID)
+		if user.ID != userID {
+			t.Errorf("got id %q, want %q", user.ID, userID)
 		}
 	})
 
@@ -85,9 +85,41 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		unknownEmail, _ := domain.NewEmail("unknown@example.com")
-		_, _, err := r.GetUserByEmail(ctx, unknownEmail)
+		_, err := r.GetUserByEmail(ctx, unknownEmail)
 
 		assertErrRowNotFound(t, err)
+	})
+}
+
+func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
+	pool, r := userRepoPrelude(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	t.Run("Success", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		userID := testutil.ValidUserID()
+		chatID := testutil.ValidTelegramChatID()
+		username := testutil.ValidTelegramUsername()
+
+		InsertUser(t, pool, userID, testutil.ValidEmail(), testutil.ValidPasswordHash())
+		err := r.UpdateTelegramInfo(ctx, userID, chatID, username)
+		if err != nil {
+			t.Fatalf("UpdateTelegramInfo() error = %v", err)
+		}
+
+		user, found := FindUserByID(t, pool, userID)
+		if !found {
+			t.Fatal("FindUserByID() user not found")
+		}
+		if user.TelegramChatID != chatID {
+			t.Errorf("got chatID %v, want %v", user.TelegramChatID, chatID)
+		}
+		if user.TelegramUsername != username {
+			t.Errorf("got username %v, want %v", user.TelegramUsername, username)
+		}
 	})
 }
 

@@ -15,7 +15,7 @@ func AssertFuncNotNil(funcName string, fn any) {
 
 type MockUserRepository struct {
 	InsertUserFunc     func(ctx context.Context, email domain.Email, hash string) error
-	GetUserByEmailFunc func(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+	GetUserByEmailFunc func(ctx context.Context, email domain.Email) (domain.User, error)
 }
 
 func (m *MockUserRepository) InsertUser(ctx context.Context, email domain.Email, hash string) error {
@@ -23,7 +23,7 @@ func (m *MockUserRepository) InsertUser(ctx context.Context, email domain.Email,
 	return m.InsertUserFunc(ctx, email, hash)
 }
 
-func (m *MockUserRepository) GetUserByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
+func (m *MockUserRepository) GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
 	AssertFuncNotNil("UserRepository.GetUserByEmailFunc", m.GetUserByEmailFunc)
 	return m.GetUserByEmailFunc(ctx, email)
 }
