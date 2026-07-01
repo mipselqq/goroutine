@@ -41,11 +41,12 @@ func New(
 	columnsRepo := repository.NewPgColumn(pgPool)
 	tasksRepo := repository.NewPgTask(pgPool)
 
-	authService := service.NewAuth(userRepo, telegramTokenRepo, service.JWTOptions{
+	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
-	}, func() domain.TelegramLinkToken {
+	})
+	userService := service.NewUser(telegramTokenRepo, func() domain.TelegramLinkToken {
 		tok, _ := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		return tok
 	})
@@ -59,7 +60,7 @@ func New(
 	boardsHandler := handler.NewBoards(logger, boardsService, errorResponder)
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
-	userHandler := handler.NewUser(logger, authService, errorResponder)
+	userHandler := handler.NewUser(logger, userService, errorResponder)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)

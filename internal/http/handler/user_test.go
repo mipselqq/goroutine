@@ -17,7 +17,7 @@ type userTestCase struct {
 	name             string
 	inputBody        any
 	context          context.Context
-	setupAuthService func(t *testing.T, s *MockAuthService)
+	setupUserService func(t *testing.T, s *MockUserService)
 	wantCode         int
 	wantBody         any
 }
@@ -31,7 +31,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 		{
 			name:      "Success",
 			inputBody: testutil.Big25KBJson(), // Body is ignored, no error on big payload
-			setupAuthService: func(t *testing.T, s *MockAuthService) {
+			setupUserService: func(t *testing.T, s *MockUserService) {
 				s.CreateTelegramLinkTokenFunc = func(ctx context.Context, callerID domain.UserID) (domain.TelegramLinkToken, error) {
 					if callerID != authorizedUserID {
 						t.Errorf("got service call user ID %q, want %q as in context", authorizedUserID, callerID)
@@ -51,7 +51,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 		{
 			name:      "Internal error",
 			inputBody: nil,
-			setupAuthService: func(t *testing.T, s *MockAuthService) {
+			setupUserService: func(t *testing.T, s *MockUserService) {
 				s.CreateTelegramLinkTokenFunc = func(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
 					return domain.TelegramLinkToken{}, service.ErrInternal
 				}
@@ -62,7 +62,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 		{
 			name:      "Unexpected error",
 			inputBody: nil,
-			setupAuthService: func(t *testing.T, s *MockAuthService) {
+			setupUserService: func(t *testing.T, s *MockUserService) {
 				s.CreateTelegramLinkTokenFunc = func(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
 					return domain.TelegramLinkToken{}, errors.New("storage crash")
 				}
@@ -83,13 +83,13 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			mockAuth := &MockAuthService{}
-			if tt.setupAuthService != nil {
-				tt.setupAuthService(t, mockAuth)
+			mockUser := &MockUserService{}
+			if tt.setupUserService != nil {
+				tt.setupUserService(t, mockUser)
 			}
 
 			logger := testutil.NewTestLogger(t)
-			h := handler.NewUser(logger, mockAuth, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewUser(logger, mockUser, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.CreateTelegramLinkToken(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

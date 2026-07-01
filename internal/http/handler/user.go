@@ -10,20 +10,20 @@ import (
 	"goroutine/internal/logging"
 )
 
-type UserAuthService interface {
+type UserService interface {
 	CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error)
 }
 
 type User struct {
 	logger         *slog.Logger
-	authService    UserAuthService
+	userService    UserService
 	errorResponder *httpschema.ErrorResponder
 }
 
-func NewUser(l *slog.Logger, authService UserAuthService, errorResponder *httpschema.ErrorResponder) *User {
+func NewUser(l *slog.Logger, userService UserService, errorResponder *httpschema.ErrorResponder) *User {
 	return &User{
 		logger:         logging.WithModule(l, "handler.user"),
-		authService:    authService,
+		userService:    userService,
 		errorResponder: errorResponder,
 	}
 }
@@ -34,7 +34,7 @@ func (u *User) CreateTelegramLinkToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := u.authService.CreateTelegramLinkToken(r.Context(), userID)
+	token, err := u.userService.CreateTelegramLinkToken(r.Context(), userID)
 	if err != nil {
 		u.errorResponder.InternalError(w, r, err)
 		return
