@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -27,14 +28,16 @@ type User struct {
 	tokenRepo           TelegramTokenRepository
 	telegramNotifier    TelegramNotifier
 	telegramLinkTokenFn func() domain.TelegramLinkToken
+	logger              *slog.Logger
 }
 
-func NewUser(ur UserRepository, tr TelegramTokenRepository, tnotifier TelegramNotifier, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
+func NewUser(ur UserRepository, tr TelegramTokenRepository, tnotifier TelegramNotifier, telegramLinkTokenFn func() domain.TelegramLinkToken, logger *slog.Logger) *User {
 	return &User{
 		userRepo:            ur,
 		tokenRepo:           tr,
 		telegramNotifier:    tnotifier,
 		telegramLinkTokenFn: telegramLinkTokenFn,
+		logger:              logger,
 	}
 }
 
@@ -72,7 +75,10 @@ func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLin
 	}
 
 	// Currently no retries, will add async notifications worker with rate limits handling later on
-	_ = s.telegramNotifier.NotifyLinkSuccess(ctx, chatID)
+	err = s.telegramNotifier.NotifyLinkSuccess(ctx, chatID)
+	if err != nil {
+		s.logger.WarnContext(ctx, "telegram notify link success failed", slog.String("err", err.Error()))
+	}
 
 	return nil
 }

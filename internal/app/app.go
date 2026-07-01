@@ -48,14 +48,14 @@ func New(
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	telegramAPIClient := telegramdriver.NewAPIClient(telegramCfg.Token.RevealSecret(), nil)
+	telegramAPIClient := telegramdriver.NewAPIClient(telegramCfg.Token.RevealSecret(), nil, logger)
 	userService := service.NewUser(userRepo, telegramTokenRepo, telegramAPIClient, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {
 			panic(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
 		}
 		return tok
-	})
+	}, logger)
 	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
 	columnsService := service.NewColumn(columnsRepo, boardsRepo)
 	tasksService := service.NewTask(tasksRepo, boardsRepo, columnsRepo)

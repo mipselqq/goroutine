@@ -85,7 +85,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 
 			tr := &MockTelegramTokenRepository{}
 			tt.setupTokenRepo(tr)
-			s := service.NewUser(&MockUserRepository{}, tr, &MockTelegramNotifier{}, tt.tokenFn)
+			s := service.NewUser(&MockUserRepository{}, tr, &MockTelegramNotifier{}, tt.tokenFn, nil)
 
 			gotToken, err := s.CreateTelegramLinkToken(context.Background(), wantUserID)
 
@@ -215,7 +215,7 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			tt.setupUserRepo(userRepo)
 			tt.setupNotifier(tnotifier)
 
-			s := service.NewUser(userRepo, tokenRepo, tnotifier, nil)
+			s := service.NewUser(userRepo, tokenRepo, tnotifier, nil, nil)
 
 			err := s.LinkTelegramByToken(context.Background(), wantToken, wantChatID, wantUsername)
 
