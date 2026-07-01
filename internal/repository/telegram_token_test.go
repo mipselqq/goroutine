@@ -4,6 +4,7 @@ package repository_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -36,6 +37,24 @@ func TestRedisTelegramToken_InsertLinkToken(t *testing.T) {
 	err = client.Del(ctx, telegramTokenPrefix+token.RevealSecret()).Err()
 	if err != nil {
 		t.Fatalf("Delete() error = %v, want nil", err)
+	}
+}
+
+func TestRedisTelegramToken_InsertLinkToken_AlreadyExists(t *testing.T) {
+	_, repo := telegramTokenRepoPrelude(t)
+
+	ctx := context.Background()
+	token := testutil.ValidTelegramLinkToken()
+	userID := domain.NewUserID()
+
+	err := repo.InsertLinkToken(ctx, token, userID)
+	if err != nil {
+		t.Fatalf("InsertLinkToken() first insert error = %v, want nil", err)
+	}
+
+	err = repo.InsertLinkToken(ctx, token, userID)
+	if !errors.Is(err, repository.ErrTelegramLinkTokenAlreadyExists) {
+		t.Fatalf("InsertLinkToken() second insert error = %v, want ErrTelegramLinkTokenAlreadyExists", err)
 	}
 }
 

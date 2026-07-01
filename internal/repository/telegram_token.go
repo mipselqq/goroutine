@@ -21,14 +21,18 @@ func NewRedisTelegramToken(redisClient *redis.Client) *RedisTelegramToken {
 const telegramTokenPrefix = "tg_token:"
 
 func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
-	err := r.redisClient.Set(
+	inserted, err := r.redisClient.SetNX(
 		ctx,
 		telegramTokenPrefix+token.RevealSecret(),
 		userID.String(),
 		15*time.Minute,
-	).Err()
+	).Result()
 	if err != nil {
 		return fmt.Errorf("redis: insert link token: %v: %w", err, ErrInternal)
+	}
+
+	if !inserted {
+		return fmt.Errorf("redis: insert link token: %w", ErrTelegramLinkTokenAlreadyExists)
 	}
 
 	return nil

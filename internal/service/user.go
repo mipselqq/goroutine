@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/repository"
 )
 
 type TelegramTokenRepository interface {
@@ -28,6 +30,9 @@ func (s *User) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID
 
 	err := s.tokenRepository.InsertLinkToken(ctx, token, userID)
 	if err != nil {
+		if errors.Is(err, repository.ErrTelegramLinkTokenAlreadyExists) {
+			return domain.TelegramLinkToken{}, fmt.Errorf("user service: create telegram link token: %v: %w", err, ErrInternal)
+		}
 		return domain.TelegramLinkToken{}, fmt.Errorf("user service: create telegram link token: save token: %v: %w", err, ErrInternal)
 	}
 

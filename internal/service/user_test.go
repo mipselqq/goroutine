@@ -54,6 +54,18 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			wantErr: service.ErrInternal,
 		},
 		{
+			name: "Token already exists",
+			tokenFn: func() domain.TelegramLinkToken {
+				return wantToken
+			},
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.InsertLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, uID domain.UserID) error {
+					return repository.ErrTelegramLinkTokenAlreadyExists
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+		{
 			name: "Unexpected error",
 			tokenFn: func() domain.TelegramLinkToken {
 				return wantToken
