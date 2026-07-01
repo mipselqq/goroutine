@@ -12,11 +12,15 @@ import (
 )
 
 type RedisTelegramToken struct {
-	redisClient *redis.Client
+	redisClient  *redis.Client
+	linkTokenTTL time.Duration
 }
 
-func NewRedisTelegramToken(redisClient *redis.Client) *RedisTelegramToken {
-	return &RedisTelegramToken{redisClient: redisClient}
+func NewRedisTelegramToken(redisClient *redis.Client, linkTokenTTL time.Duration) *RedisTelegramToken {
+	return &RedisTelegramToken{
+		redisClient:  redisClient,
+		linkTokenTTL: linkTokenTTL,
+	}
 }
 
 const telegramTokenPrefix = "tg_token:"
@@ -30,7 +34,7 @@ func (r *RedisTelegramToken) InsertLinkToken(ctx context.Context, token domain.T
 		ctx,
 		tokenToKey(token),
 		userID.String(),
-		15*time.Minute,
+		r.linkTokenTTL,
 	).Result()
 	if err != nil {
 		return fmt.Errorf("redis: insert link token: %v: %w", err, ErrInternal)

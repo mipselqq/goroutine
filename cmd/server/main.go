@@ -36,6 +36,10 @@ func main() {
 
 	bootLogger := logging.NewLogger("dev", "info")
 	appCfg := config.NewAppConfigFromEnv(bootLogger)
+	telegramCfg, err := config.NewTelegramConfigFromEnv(bootLogger)
+	if err != nil {
+		panic(err)
+	}
 	openapi.SwaggerInfo.Host = appCfg.SwaggerHost
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel, httpschema.AllExtractors()...)
 
@@ -58,7 +62,7 @@ func main() {
 		_ = redisClient.Close()
 	}()
 
-	application := app.New(logger, pool, redisClient, &appCfg, prometheus.DefaultRegisterer)
+	application := app.New(logger, pool, redisClient, &appCfg, &telegramCfg, prometheus.DefaultRegisterer)
 
 	srv := app.RunBackgroundServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
 	adminSrv := app.RunBackgroundServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)

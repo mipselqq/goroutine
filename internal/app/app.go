@@ -33,10 +33,11 @@ func New(
 	pgPool *pgxpool.Pool,
 	redisClient *redis.Client,
 	cfg *config.AppConfig,
+	telegramCfg *config.TelegramConfig,
 	reg prometheus.Registerer,
 ) *App {
 	userRepo := repository.NewPgUser(pgPool)
-	telegramTokenRepo := repository.NewRedisTelegramToken(redisClient)
+	telegramTokenRepo := repository.NewRedisTelegramToken(redisClient, telegramCfg.LinkTokenTTL)
 	boardsRepo := repository.NewPgBoard(pgPool)
 	columnsRepo := repository.NewPgColumn(pgPool)
 	tasksRepo := repository.NewPgTask(pgPool)

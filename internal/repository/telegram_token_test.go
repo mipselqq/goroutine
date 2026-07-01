@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -96,7 +97,7 @@ func telegramTokenRepoPrelude(t *testing.T) (*redis.Client, *repository.RedisTel
 		}
 		testutil.FlushCurrentRedisDB(t, redisClient)
 	})
-	tokenRepo := repository.NewRedisTelegramToken(redisClient)
+	tokenRepo := repository.NewRedisTelegramToken(redisClient, 15*time.Minute)
 
 	return redisClient, tokenRepo
 }

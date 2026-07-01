@@ -40,10 +40,14 @@ func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
 
 	logger := testutil.NewTestLogger(t)
 	cfg := config.NewAppConfigFromEnv(logger)
+	telegramCfg, err := config.NewTelegramConfigFromEnv(logger)
+	if err != nil {
+		t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+	}
 	logger.Info("App config", slog.Any("config", cfg))
 
 	redisClient := testutil.SetupTestRedis(t)
-	application := app.New(logger, pool, redisClient, &cfg, prometheus.NewRegistry())
+	application := app.New(logger, pool, redisClient, &cfg, &telegramCfg, prometheus.NewRegistry())
 
 	ts := httptest.NewServer(application.Router)
 	t.Cleanup(func() {
