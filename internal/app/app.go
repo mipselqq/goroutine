@@ -48,7 +48,10 @@ func New(
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	userService := service.NewUser(telegramTokenRepo, func() domain.TelegramLinkToken {
-		tok, _ := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
+		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
+		if err != nil {
+			panic(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
+		}
 		return tok
 	})
 	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
