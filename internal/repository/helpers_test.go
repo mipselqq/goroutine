@@ -377,7 +377,7 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 	}
 }
 
-func setTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken, userID domain.UserID) {
+func setUserIDByTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken, userID domain.UserID) {
 	t.Helper()
 
 	err := client.Set(context.Background(), telegramTokenPrefix+token.RevealSecret(), userID.String(), 0).Err()
@@ -386,7 +386,7 @@ func setTelegramLinkToken(t *testing.T, client *redis.Client, token domain.Teleg
 	}
 }
 
-func getTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken) string {
+func getUserIDByTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken) domain.UserID {
 	t.Helper()
 
 	val, err := client.Get(context.Background(), telegramTokenPrefix+token.RevealSecret()).Result()
@@ -394,5 +394,10 @@ func getTelegramLinkToken(t *testing.T, client *redis.Client, token domain.Teleg
 		t.Fatalf("getTelegramTokenFromRedis() error = %v", err)
 	}
 
-	return val
+	userID, err := domain.ParseUserID(val)
+	if err != nil {
+		t.Fatalf("getUserIDByTelegramLinkToken() error = %v", err)
+	}
+
+	return userID
 }

@@ -26,30 +26,34 @@ func TestTelegramTokenRepository_InsertLinkToken(t *testing.T) {
 		t.Fatalf("InsertLinkToken() error = %v, want nil", err)
 	}
 
-	value := getTelegramLinkToken(t, client, token)
-	if value != userID.String() {
-		t.Fatalf("Get() value = %s, want %s", value, userID.String())
+	redisUserID := getUserIDByTelegramLinkToken(t, client, token)
+	if redisUserID != userID {
+		t.Fatalf("Get() value = %s, want %s", redisUserID, userID.String())
 	}
 }
 
 func TestTelegramTokenRepository_InsertLinkToken_AlreadyExists(t *testing.T) {
-	_, repo := telegramTokenRepoPrelude(t)
+	client, repo := telegramTokenRepoPrelude(t)
 
 	ctx := context.Background()
 	token := testutil.ValidTelegramLinkToken()
 	userID := domain.NewUserID()
+	anotherUserID := domain.NewUserID()
 
 	err := repo.InsertLinkToken(ctx, token, userID)
 	if err != nil {
 		t.Fatalf("InsertLinkToken() first insert error = %v, want nil", err)
 	}
 
-	err = repo.InsertLinkToken(ctx, token, userID)
+	err = repo.InsertLinkToken(ctx, token, anotherUserID)
 	if !errors.Is(err, repository.ErrTelegramLinkTokenAlreadyExists) {
 		t.Fatalf("InsertLinkToken() second insert error = %v, want ErrTelegramLinkTokenAlreadyExists", err)
 	}
 
-	// Ensure the token is not overwritten
+	redisUserID := getUserIDByTelegramLinkToken(t, client, token)
+	if redisUserID != userID {
+		t.Fatalf("GetUserIDByLinkToken() userID = %s, want %s", redisUserID, userID.String())
+	}
 }
 
 func TestTelegramTokenRepository_GetUserIDByLinkToken(t *testing.T) {
@@ -64,7 +68,7 @@ func TestTelegramTokenRepository_GetUserIDByLinkToken(t *testing.T) {
 		t.Fatalf("GetUserIDByLinkToken() error = %v, want ErrTelegramLinkTokenNotFound", err)
 	}
 
-	setTelegramLinkToken(t, client, token, userID)
+	setUserIDByTelegramLinkToken(t, client, token, userID)
 
 	userIDFromToken, err := repo.GetUserIDByLinkToken(ctx, token)
 	if err != nil {
