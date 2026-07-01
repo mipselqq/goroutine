@@ -14,7 +14,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func TestRedisTelegramToken_InsertLinkToken(t *testing.T) {
+func TestTelegramTokenRepository_InsertLinkToken(t *testing.T) {
 	client, repo := telegramTokenRepoPrelude(t)
 
 	ctx := context.Background()
@@ -32,7 +32,7 @@ func TestRedisTelegramToken_InsertLinkToken(t *testing.T) {
 	}
 }
 
-func TestRedisTelegramToken_InsertLinkToken_AlreadyExists(t *testing.T) {
+func TestTelegramTokenRepository_InsertLinkToken_AlreadyExists(t *testing.T) {
 	_, repo := telegramTokenRepoPrelude(t)
 
 	ctx := context.Background()
@@ -52,7 +52,7 @@ func TestRedisTelegramToken_InsertLinkToken_AlreadyExists(t *testing.T) {
 	// Ensure the token is not overwritten
 }
 
-func TestRedisTelegramToken_GetUserIDByLinkToken(t *testing.T) {
+func TestTelegramTokenRepository_GetUserIDByLinkToken(t *testing.T) {
 	client, repo := telegramTokenRepoPrelude(t)
 
 	ctx := context.Background()
