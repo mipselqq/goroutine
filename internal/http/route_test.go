@@ -35,7 +35,7 @@ func TestNewRouter_Full(t *testing.T) {
 		RequestID: &spyRequestIDMiddleware{},
 	}
 
-	router := app.NewRouter(handlers, middlewares, nil)
+	router := app.NewRouter(handlers, middlewares, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	type entry struct {
 		name   string
@@ -123,8 +123,8 @@ func TestNewRouter_Full(t *testing.T) {
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"Swagger", http.MethodGet, "/v1/swagger/index.html"},
-			auth:  false, metrics: false, cors: true, requestID: true,
+			entry: entry{"Telegram webhook", http.MethodPost, "/webhook/telegram"},
+			auth:  false, metrics: true, cors: true, requestID: true,
 		},
 	}
 
