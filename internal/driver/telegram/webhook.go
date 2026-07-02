@@ -9,20 +9,27 @@ import (
 	"strings"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/service"
 )
 
 type UserService interface {
 	LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
+type Notifier interface {
+	Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error
+}
+
 type WebhookHandler struct {
 	userService UserService
+	notifier    Notifier
 	logger      *slog.Logger
 }
 
-func NewWebhookHandler(us UserService, logger *slog.Logger) *WebhookHandler {
+func NewWebhookHandler(us UserService, notifier Notifier, logger *slog.Logger) *WebhookHandler {
 	return &WebhookHandler{
 		userService: us,
+		notifier:    notifier,
 		logger:      logger,
 	}
 }
@@ -46,7 +53,7 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &maxBytesErr) {
 			h.logger.WarnContext(r.Context(), "Telegram update body too large")
 		} else {
-			h.logger.WarnContext(r.Context(), "Failed to decode telegram update", slog.String("err", err.Error()))
+			h.logger.ErrorContext(r.Context(), "Failed to decode telegram update", slog.String("err", err.Error()))
 		}
 		w.WriteHeader(http.StatusOK)
 		return
@@ -80,11 +87,24 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	msg := "Something went wrong. Please try again later."
 	err = h.userService.LinkTelegramByToken(r.Context(), linkToken, chatID, username)
 	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrTelegramLinkTokenNotFound):
+			msg = "This link has expired or is invalid. Please generate a new link in the app."
+		case errors.Is(err, service.ErrUserNotFound):
+			msg = "User account not found."
+		}
+
 		h.logger.ErrorContext(r.Context(), "Failed to link telegram by token", slog.String("err", err.Error()))
-		w.WriteHeader(http.StatusOK)
-		return
+	} else {
+		msg = "Successfully linked your account <3"
+	}
+
+	err = h.notifier.Notify(r.Context(), chatID, msg)
+	if err != nil {
+		h.logger.WarnContext(r.Context(), "telegram link notify failed", slog.String("err", err.Error()))
 	}
 
 	w.WriteHeader(http.StatusOK)

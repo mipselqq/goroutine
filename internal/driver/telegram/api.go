@@ -18,14 +18,11 @@ type APIClient struct {
 	logger   *slog.Logger
 }
 
-func NewAPIClient(botToken string, httpClient *http.Client, logger *slog.Logger) *APIClient {
-	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 10 * time.Second}
-	}
+func NewAPIClient(logger *slog.Logger, botToken string) *APIClient {
 	return &APIClient{
 		botToken: botToken,
 		baseURL:  "https://api.telegram.org",
-		http:     httpClient,
+		http:     &http.Client{Timeout: 10 * time.Second},
 		logger:   logger,
 	}
 }
@@ -58,6 +55,6 @@ func (c *APIClient) SendMessage(ctx context.Context, chatID int64, text string) 
 	return nil
 }
 
-func (c *APIClient) NotifyLinkSuccess(ctx context.Context, chatID domain.TelegramChatID) error {
-	return c.SendMessage(ctx, chatID.Int64(), "Successfully linked your account <3")
+func (c *APIClient) Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error {
+	return c.SendMessage(ctx, chatID.Int64(), text)
 }

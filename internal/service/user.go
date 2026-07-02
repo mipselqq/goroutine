@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
@@ -19,25 +18,17 @@ type TelegramTokenRepository interface {
 	ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
 }
 
-type TelegramNotifier interface {
-	NotifyLinkSuccess(ctx context.Context, chatID domain.TelegramChatID) error
-}
-
 type User struct {
 	userRepo            UserRepository
 	tokenRepo           TelegramTokenRepository
-	telegramNotifier    TelegramNotifier
 	telegramLinkTokenFn func() domain.TelegramLinkToken
-	logger              *slog.Logger
 }
 
-func NewUser(ur UserRepository, tr TelegramTokenRepository, tnotifier TelegramNotifier, telegramLinkTokenFn func() domain.TelegramLinkToken, logger *slog.Logger) *User {
+func NewUser(ur UserRepository, tr TelegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
 	return &User{
 		userRepo:            ur,
 		tokenRepo:           tr,
-		telegramNotifier:    tnotifier,
 		telegramLinkTokenFn: telegramLinkTokenFn,
-		logger:              logger,
 	}
 }
 
@@ -59,7 +50,7 @@ func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLin
 	userID, err := s.tokenRepo.ConsumeTelegramLinkToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, repository.ErrKeyNotFound) {
-			return fmt.Errorf("user service: link telegram by token: %v: %w", err, ErrTelegramLinkTokenNotFound)
+			return ErrTelegramLinkTokenNotFound
 		}
 		return fmt.Errorf("user service: link telegram by token: %v: %w", err, ErrInternal)
 	}
@@ -72,12 +63,6 @@ func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLin
 			return ErrUserNotFound
 		}
 		return fmt.Errorf("user service: link update telegram info: %v: %w", err, ErrInternal)
-	}
-
-	// Currently no retries, will add async notifications worker with rate limits handling later on
-	err = s.telegramNotifier.NotifyLinkSuccess(ctx, chatID)
-	if err != nil {
-		s.logger.WarnContext(ctx, "telegram notify link success failed", slog.String("err", err.Error()))
 	}
 
 	return nil
