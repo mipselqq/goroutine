@@ -18,10 +18,10 @@ type APIClient struct {
 	logger   *slog.Logger
 }
 
-func NewAPIClient(logger *slog.Logger, botToken string) *APIClient {
+func NewAPIClient(logger *slog.Logger, baseURL, botToken string) *APIClient {
 	return &APIClient{
 		botToken: botToken,
-		baseURL:  "https://api.telegram.org",
+		baseURL:  baseURL,
 		http:     &http.Client{Timeout: 10 * time.Second},
 		logger:   logger,
 	}
