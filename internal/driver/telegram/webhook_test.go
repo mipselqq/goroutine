@@ -13,29 +13,24 @@ import (
 )
 
 type telegramUpdate struct {
-	Message struct {
-		Text string `json:"text"`
-		Chat struct {
-			ID       int64  `json:"id"`
-			Username string `json:"username"`
-		} `json:"chat"`
-	} `json:"message"`
+	Message telegramMessage `json:"message"`
+}
+
+type telegramMessage struct {
+	Text string       `json:"text"`
+	Chat telegramChat `json:"chat"`
+}
+
+type telegramChat struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
 }
 
 func update(text string, chatID int64, username string) telegramUpdate {
 	return telegramUpdate{
-		Message: struct {
-			Text string `json:"text"`
-			Chat struct {
-				ID       int64  `json:"id"`
-				Username string `json:"username"`
-			} `json:"chat"`
-		}{
+		Message: telegramMessage{
 			Text: text,
-			Chat: struct {
-				ID       int64  `json:"id"`
-				Username string `json:"username"`
-			}{ID: chatID, Username: username},
+			Chat: telegramChat{ID: chatID, Username: username},
 		},
 	}
 }
