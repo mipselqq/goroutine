@@ -49,6 +49,7 @@ func TestAPIClient_SendMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var captured sendMessageQuery
+
 			token := testutil.ValidTelegramToken()
 			mux := http.NewServeMux()
 			mux.HandleFunc(sendMessagePath(token), func(w http.ResponseWriter, r *http.Request) {
