@@ -113,18 +113,6 @@ func ValidJWTSecret() secrecy.SecretString {
 	return secrecy.SecretString("secret")
 }
 
-func ValidTelegramLinkToken() domain.TelegramLinkToken {
-	return Must(domain.NewTelegramLinkToken, validUUIDv7)
-}
-
-func ValidTelegramChatID() domain.TelegramChatID {
-	return Must(domain.NewTelegramChatID, int64(123456789))
-}
-
-func ValidTelegramUsername() domain.TelegramUsername {
-	return Must(domain.NewTelegramUsername, "@testuser")
-}
-
 func ValidJWTOptions() service.JWTOptions {
 	return service.JWTOptions{
 		JWTSecret:     ValidJWTSecret(),
@@ -263,4 +251,26 @@ func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, 
 		CreatedAt:   base.CreatedAt,
 		UpdatedAt:   updatedAt,
 	}
+}
+
+// TODO: create domain.TelegramToken
+func ValidTelegramToken() string {
+	return "8927121804:AAEIhk1QdJpRJdISscC0COr19kH79_4f9vw"
+}
+
+func ValidTelegramLinkToken() domain.TelegramLinkToken {
+	return Must(domain.NewTelegramLinkToken, validUUIDv7)
+}
+
+func ValidTelegramChatID() domain.TelegramChatID {
+	return Must(domain.NewTelegramChatID, int64(123456789))
+}
+
+func ValidTelegramUsername() domain.TelegramUsername {
+	return Must(domain.NewTelegramUsername, "@testuser")
+}
+
+// TODO: create domain.TelegramMessage
+func ValidTelegramMessage() string {
+	return "Hello, world!"
 }
