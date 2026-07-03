@@ -13,30 +13,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-var defaultTelegramConfig = config.TelegramConfig{
-	Token:        secrecy.SecretString("mock_token"),
-	LinkTokenTTL: 15 * time.Minute,
-}
-
-var telegramEnvVars = []string{"TELEGRAM_BOT_TOKEN", "TELEGRAM_LINK_TOKEN_TTL"}
-
 func setCustomTelegramEnvVars(t *testing.T) {
 	t.Setenv("TELEGRAM_BOT_TOKEN", testutil.AnotherValidTelegramToken().RevealSecret())
 	t.Setenv("TELEGRAM_LINK_TOKEN_TTL", "30m")
 }
 
 func TestNewTelegramConfigFromEnv(t *testing.T) {
-	t.Run("uses defaults", func(t *testing.T) {
-		UnsetEnv(t, telegramEnvVars...)
-
-		cfg := MustNewTelegramConfigFromEnv(t)
-
-		diff := cmp.Diff(defaultTelegramConfig, cfg)
-		if diff != "" {
-			t.Errorf("NewTelegramConfigFromEnv() diff (-want +got):\n%s", diff)
-		}
-	})
-
 	t.Run("uses env vars", func(t *testing.T) {
 		setCustomTelegramEnvVars(t)
 
@@ -51,7 +33,17 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 		}
 	})
 
+	t.Run("missing bot token", func(t *testing.T) {
+		t.Setenv("TELEGRAM_LINK_TOKEN_TTL", "30m")
+
+		_, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
+		if err == nil {
+			t.Fatal("NewTelegramConfigFromEnv() error = nil, want non-nil")
+		}
+	})
+
 	t.Run("invalid duration", func(t *testing.T) {
+		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 		t.Setenv("TELEGRAM_LINK_TOKEN_TTL", "not-a-duration")
 
 		_, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
@@ -60,19 +52,20 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 		}
 	})
 
-	t.Run("warnings on unset variables", func(t *testing.T) {
-		UnsetEnv(t, telegramEnvVars...)
+	t.Run("uses default link token ttl", func(t *testing.T) {
+		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		_, err := config.NewTelegramConfigFromEnv(logger)
+		cfg, err := config.NewTelegramConfigFromEnv(logger)
 		if err != nil {
 			t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
 		}
 
-		for _, envVar := range telegramEnvVars {
-			if !strings.Contains(buf.String(), envVar) {
-				t.Errorf("got log output %q, want mention of %q", buf.String(), envVar)
-			}
+		if cfg.LinkTokenTTL != 15*time.Minute {
+			t.Errorf("LinkTokenTTL = %v, want 15m", cfg.LinkTokenTTL)
+		}
+		if !strings.Contains(buf.String(), "TELEGRAM_LINK_TOKEN_TTL") {
+			t.Errorf("got log output %q, want mention of TELEGRAM_LINK_TOKEN_TTL", buf.String())
 		}
 	})
 
@@ -92,13 +85,18 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 }
 
 func TestTelegramConfig_LogValue(t *testing.T) {
-	v := defaultTelegramConfig.LogValue()
+	cfg := config.TelegramConfig{
+		Token:        secrecy.SecretString(testutil.ValidTelegramToken().RevealSecret()),
+		LinkTokenTTL: 15 * time.Minute,
+	}
+
+	v := cfg.LogValue()
 	if v.Kind() != slog.KindGroup {
 		t.Fatalf("got kind %v, want Group", v.Kind())
 	}
 
 	wantAttrs := map[string]string{
-		"token":          "(10 chars)",
+		"token":          "(46 chars)",
 		"link_token_ttl": "15m0s",
 	}
 

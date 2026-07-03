@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"goroutine/internal/secrecy"
@@ -14,13 +15,18 @@ type TelegramConfig struct {
 }
 
 func NewTelegramConfigFromEnv(logger *slog.Logger) (TelegramConfig, error) {
+	token := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if token == "" {
+		return TelegramConfig{}, fmt.Errorf("telegram config: TELEGRAM_BOT_TOKEN is required")
+	}
+
 	linkTokenTTL, err := getEnvTimeOrDefault("TELEGRAM_LINK_TOKEN_TTL", 15*time.Minute, logger)
 	if err != nil {
 		return TelegramConfig{}, fmt.Errorf("telegram config: %w", err)
 	}
 
 	return TelegramConfig{
-		Token:        secrecy.SecretString(getenvOrDefault("TELEGRAM_BOT_TOKEN", "mock_token", logger)),
+		Token:        secrecy.SecretString(token),
 		LinkTokenTTL: linkTokenTTL,
 	}, nil
 }
