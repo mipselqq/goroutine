@@ -24,6 +24,9 @@ func sendMessagePath(token string) string {
 }
 
 func TestAPIClient_SendMessage(t *testing.T) {
+	token := testutil.ValidTelegramToken()
+	message := testutil.ValidTelegramMessage()
+
 	tests := []struct {
 		name       string
 		statusCode int
@@ -36,7 +39,7 @@ func TestAPIClient_SendMessage(t *testing.T) {
 			wantErr:    false,
 			wantQuery: &sendMessageQuery{
 				ChatID: testutil.ValidTelegramChatID().Int64(),
-				Text:   testutil.ValidTelegramMessage(),
+				Text:   message.String(),
 			},
 		},
 		{
@@ -49,10 +52,8 @@ func TestAPIClient_SendMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var captured sendMessageQuery
-
-			token := testutil.ValidTelegramToken()
 			mux := http.NewServeMux()
-			mux.HandleFunc(sendMessagePath(token), func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc(sendMessagePath(token.RevealSecret()), func(w http.ResponseWriter, r *http.Request) {
 				q := r.URL.Query()
 				captured.ChatID, _ = strconv.ParseInt(q.Get("chat_id"), 10, 64)
 				captured.Text = q.Get("text")
@@ -63,7 +64,11 @@ func TestAPIClient_SendMessage(t *testing.T) {
 			defer ts.Close()
 
 			client := telegram.NewAPIClient(testutil.NewDiscardLogger(), ts.URL, token)
-			err := client.SendMessage(context.Background(), testutil.ValidTelegramChatID().Int64(), testutil.ValidTelegramMessage())
+			err := client.SendMessage(
+				context.Background(),
+				testutil.ValidTelegramChatID().Int64(),
+				message,
+			)
 
 			if tt.wantErr && err == nil {
 				t.Fatal("expected error, got nil")

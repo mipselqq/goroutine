@@ -23,10 +23,10 @@ func (m *MockUserService) LinkTelegramByToken(ctx context.Context, token domain.
 }
 
 type MockNotifier struct {
-	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text string) error
+	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
 }
 
-func (m *MockNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error {
+func (m *MockNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
 	AssertFuncNotNil("Notifier.NotifyFunc", m.NotifyFunc)
 	return m.NotifyFunc(ctx, chatID, text)
 }

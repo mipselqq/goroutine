@@ -21,7 +21,7 @@ var defaultTelegramConfig = config.TelegramConfig{
 var telegramEnvVars = []string{"TELEGRAM_BOT_TOKEN", "TELEGRAM_LINK_TOKEN_TTL"}
 
 func setCustomTelegramEnvVars(t *testing.T) {
-	t.Setenv("TELEGRAM_BOT_TOKEN", "custom_bot_token")
+	t.Setenv("TELEGRAM_BOT_TOKEN", testutil.AnotherValidTelegramToken().RevealSecret())
 	t.Setenv("TELEGRAM_LINK_TOKEN_TTL", "30m")
 }
 
@@ -42,7 +42,7 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 
 		cfg := MustNewTelegramConfigFromEnv(t)
 		wantCfg := config.TelegramConfig{
-			Token:        secrecy.SecretString("custom_bot_token"),
+			Token:        secrecy.SecretString(testutil.AnotherValidTelegramToken().RevealSecret()),
 			LinkTokenTTL: 30 * time.Minute,
 		}
 		diff := cmp.Diff(wantCfg, cfg)

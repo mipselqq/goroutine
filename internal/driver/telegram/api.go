@@ -12,13 +12,13 @@ import (
 )
 
 type APIClient struct {
-	botToken string
+	botToken domain.TelegramToken
 	baseURL  string
 	http     *http.Client
 	logger   *slog.Logger
 }
 
-func NewAPIClient(logger *slog.Logger, baseURL, botToken string) *APIClient {
+func NewAPIClient(logger *slog.Logger, baseURL string, botToken domain.TelegramToken) *APIClient {
 	return &APIClient{
 		botToken: botToken,
 		baseURL:  baseURL,
@@ -27,12 +27,12 @@ func NewAPIClient(logger *slog.Logger, baseURL, botToken string) *APIClient {
 	}
 }
 
-func (c *APIClient) SendMessage(ctx context.Context, chatID int64, text string) error {
+func (c *APIClient) SendMessage(ctx context.Context, chatID int64, text domain.TelegramMessage) error {
 	q := url.Values{}
 	q.Set("chat_id", fmt.Sprintf("%d", chatID))
-	q.Set("text", text)
+	q.Set("text", text.String())
 
-	reqURL := fmt.Sprintf("%s/bot%s/sendMessage?%s", c.baseURL, c.botToken, q.Encode())
+	reqURL := fmt.Sprintf("%s/bot%s/sendMessage?%s", c.baseURL, c.botToken.RevealSecret(), q.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, http.NoBody)
 	if err != nil {
@@ -55,6 +55,6 @@ func (c *APIClient) SendMessage(ctx context.Context, chatID int64, text string) 
 	return nil
 }
 
-func (c *APIClient) Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error {
+func (c *APIClient) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
 	return c.SendMessage(ctx, chatID.Int64(), text)
 }

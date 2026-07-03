@@ -17,7 +17,7 @@ type UserService interface {
 }
 
 type Notifier interface {
-	Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error
+	Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
 }
 
 type WebhookHandler struct {
@@ -87,19 +87,19 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := "Something went wrong. Please try again later."
+	msg := domain.MustTelegramMessage("Something went wrong. Please try again later.")
 	err = h.userService.LinkTelegramByToken(r.Context(), linkToken, chatID, username)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrTelegramLinkTokenNotFound):
-			msg = "This link has expired or is invalid. Please generate a new link in the app."
+			msg = domain.MustTelegramMessage("This link has expired or is invalid. Please generate a new link in the app.")
 		case errors.Is(err, service.ErrUserNotFound):
-			msg = "User account not found."
+			msg = domain.MustTelegramMessage("User account not found.")
 		}
 
 		h.logger.ErrorContext(r.Context(), "Failed to link telegram by token", slog.String("err", err.Error()))
 	} else {
-		msg = "Successfully linked your account <3"
+		msg = domain.MustTelegramMessage("Successfully linked your account <3")
 	}
 
 	err = h.notifier.Notify(r.Context(), chatID, msg)

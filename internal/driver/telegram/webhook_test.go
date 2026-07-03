@@ -56,11 +56,12 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 				}
 			},
 			setupNotifier: func(n *MockNotifier) {
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text string) error {
+				successMsg := domain.MustTelegramMessage("Successfully linked your account <3")
+				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
 					if chatID != validChatID {
 						t.Errorf("got chatID %v, want %v", chatID, validChatID)
 					}
-					if text != "Successfully linked your account <3" {
+					if text != successMsg {
 						t.Errorf("got text %q, want success message", text)
 					}
 					return nil
@@ -106,8 +107,9 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 				}
 			},
 			setupNotifier: func(n *MockNotifier) {
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text string) error {
-					if text != "This link has expired or is invalid. Please generate a new link in the app." {
+				expiredMsg := domain.MustTelegramMessage("This link has expired or is invalid. Please generate a new link in the app.")
+				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
+					if text != expiredMsg {
 						t.Errorf("got text %q, want expired message", text)
 					}
 					return nil
@@ -123,8 +125,9 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 				}
 			},
 			setupNotifier: func(n *MockNotifier) {
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text string) error {
-					if text != "User account not found." {
+				notFoundMsg := domain.MustTelegramMessage("User account not found.")
+				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
+					if text != notFoundMsg {
 						t.Errorf("got text %q, want not found message", text)
 					}
 					return nil
@@ -140,8 +143,9 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 				}
 			},
 			setupNotifier: func(n *MockNotifier) {
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text string) error {
-					if text != "Something went wrong. Please try again later." {
+				internalMsg := domain.MustTelegramMessage("Something went wrong. Please try again later.")
+				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
+					if text != internalMsg {
 						t.Errorf("got text %q, want generic error message", text)
 					}
 					return nil
@@ -157,7 +161,7 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 				}
 			},
 			setupNotifier: func(n *MockNotifier) {
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text string) error {
+				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
 					return errors.New("network error")
 				}
 			},

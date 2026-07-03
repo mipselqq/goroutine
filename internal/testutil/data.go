@@ -253,9 +253,12 @@ func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, 
 	}
 }
 
-// TODO: create domain.TelegramToken
-func ValidTelegramToken() string {
-	return "8927121804:AAEIhk1QdJpRJdISscC0COr19kH79_4f9vw"
+func ValidTelegramToken() domain.TelegramToken {
+	return Must(domain.NewTelegramToken, "8927121804:MOCKhk1QdJpRJdISscC0COr19kH79_4f9vw")
+}
+
+func AnotherValidTelegramToken() domain.TelegramToken {
+	return Must(domain.NewTelegramToken, "8927121804:MOCKtw0QdJpRJdISscC0COr19kH79_4f9vw")
 }
 
 func ValidTelegramLinkToken() domain.TelegramLinkToken {
@@ -270,7 +273,6 @@ func ValidTelegramUsername() domain.TelegramUsername {
 	return Must(domain.NewTelegramUsername, "@testuser")
 }
 
-// TODO: create domain.TelegramMessage
-func ValidTelegramMessage() string {
-	return "Hello, world!"
+func ValidTelegramMessage() domain.TelegramMessage {
+	return Must(domain.NewTelegramMessage, "Hello, world!")
 }
