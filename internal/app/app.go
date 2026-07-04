@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 
@@ -48,15 +49,12 @@ func New(
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	telegramToken, err := domain.NewTelegramToken(telegramCfg.Token.RevealSecret())
-	if err != nil {
-		panic(fmt.Sprintf("NewTelegramToken() rejected config token: %v", err))
-	}
-	telegramAPIClient := telegramDrv.NewAPIClient("https://api.telegram.org", telegramToken)
+	telegramAPIClient := telegramDrv.NewAPIClient("https://api.telegram.org", telegramCfg.Token)
 	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {
-			panic(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
+			logger.Error(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
+			os.Exit(1)
 		}
 		return tok
 	})

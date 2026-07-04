@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"goroutine/internal/config"
-	"goroutine/internal/secrecy"
 	"goroutine/internal/testutil"
 
 	"github.com/google/go-cmp/cmp"
@@ -24,12 +23,21 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 
 		cfg := MustNewTelegramConfigFromEnv(t)
 		wantCfg := config.TelegramConfig{
-			Token:        secrecy.SecretString(testutil.AnotherValidTelegramToken().RevealSecret()),
+			Token:        testutil.AnotherValidTelegramToken(),
 			LinkTokenTTL: 30 * time.Minute,
 		}
-		diff := cmp.Diff(wantCfg, cfg)
+		diff := cmp.Diff(wantCfg, cfg, testutil.CmpAllowUnexported())
 		if diff != "" {
 			t.Errorf("NewTelegramConfigFromEnv() diff (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("invalid bot token format", func(t *testing.T) {
+		t.Setenv("TELEGRAM_BOT_TOKEN", "not-a-valid-token")
+
+		_, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
+		if err == nil {
+			t.Fatal("NewTelegramConfigFromEnv() error = nil, want non-nil")
 		}
 	})
 
@@ -86,7 +94,7 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 
 func TestTelegramConfig_LogValue(t *testing.T) {
 	cfg := config.TelegramConfig{
-		Token:        secrecy.SecretString(testutil.ValidTelegramToken().RevealSecret()),
+		Token:        testutil.ValidTelegramToken(),
 		LinkTokenTTL: 15 * time.Minute,
 	}
 
