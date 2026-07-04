@@ -12,7 +12,7 @@ import (
 
 type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	Get(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
 	List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 	Update(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error

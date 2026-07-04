@@ -40,14 +40,14 @@ func (r *PGBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 	return board, nil
 }
 
-func (r *PGBoard) Get(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+func (r *PGBoard) Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error) {
 	const query = `
 		SELECT id, owner_id, name, description, created_at, updated_at
 		FROM boards
 		WHERE id = $1`
 
 	var board domain.Board
-	err := r.pgPool.QueryRow(ctx, query, id).Scan(
+	err := r.pgPool.QueryRow(ctx, query, boardID).Scan(
 		&board.ID,
 		&board.OwnerID,
 		&board.Name,

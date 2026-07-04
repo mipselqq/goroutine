@@ -19,11 +19,11 @@ type TaskRepository interface {
 }
 
 type TaskBoardRepository interface {
-	Get(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
 }
 
 type TaskColumnRepository interface {
-	Get(ctx context.Context, id domain.ColumnID) (domain.Column, error)
+	Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 }
 
 type Task struct {

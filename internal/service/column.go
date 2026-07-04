@@ -19,7 +19,7 @@ type ColumnRepository interface {
 }
 
 type ColumnBoardRepository interface {
-	Get(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
 }
 
 type Column struct {
