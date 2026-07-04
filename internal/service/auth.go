@@ -16,9 +16,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type UserRepository interface {
-	Insert(ctx context.Context, email domain.Email, hash string) error
-	GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+type AuthUserRepository interface {
+	InsertUser(ctx context.Context, email domain.Email, hash string) error
+	GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error)
 }
 
 type JWTOptions struct {
@@ -28,12 +28,15 @@ type JWTOptions struct {
 }
 
 type Auth struct {
-	repository UserRepository
+	repository AuthUserRepository
 	jwtOptions JWTOptions
 }
 
-func NewAuth(r UserRepository, opts JWTOptions) *Auth {
-	return &Auth{repository: r, jwtOptions: opts}
+func NewAuth(ur AuthUserRepository, opts JWTOptions) *Auth {
+	return &Auth{
+		repository: ur,
+		jwtOptions: opts,
+	}
 }
 
 func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
@@ -42,7 +45,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
-	err = s.repository.Insert(ctx, email, hash)
+	err = s.repository.InsertUser(ctx, email, hash)
 	if errors.Is(err, repository.ErrUniqueViolation) {
 		return fmt.Errorf("auth service: register: user insert: %w", ErrUserAlreadyExists)
 	}
@@ -54,7 +57,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 }
 
 func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
-	id, hash, err := s.repository.GetByEmail(ctx, email)
+	user, err := s.repository.GetUserByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
 	}
@@ -62,7 +65,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Us
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %v: %w", err, ErrInternal)
 	}
 
-	isMatch, err := argon2id.ComparePasswordAndHash(password.RevealSecret(), hash)
+	isMatch, err := argon2id.ComparePasswordAndHash(password.RevealSecret(), user.PasswordHash)
 	if err != nil {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: compare password and hash: %v: %w", err, ErrInternal)
 	}
@@ -70,7 +73,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Us
 		return domain.AuthToken{}, ErrInvalidCredentials
 	}
 
-	token, err := s.CreateToken(id, s.jwtOptions.Exp)
+	token, err := s.CreateToken(user.ID, s.jwtOptions.Exp)
 	if err != nil {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: create token: %v: %w", err, ErrInternal)
 	}

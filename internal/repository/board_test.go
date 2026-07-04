@@ -324,7 +324,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgBoard) {
 	t.Helper()
 
-	pool := testutil.SetupTestDB(t, "../../migrations")
+	pool := testutil.SetupTestPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPgBoard(pool)

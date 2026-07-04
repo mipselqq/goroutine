@@ -22,12 +22,20 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/redis/go-redis/v9"
 )
 
-func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
+type PreludeResult struct {
+	HTTPClient  *http.Client
+	Server      *httptest.Server
+	Pool        *pgxpool.Pool
+	RedisClient *redis.Client
+}
+
+func Prelude(t *testing.T) PreludeResult {
 	t.Helper()
 
-	pool := testutil.SetupTestDB(t, "../migrations")
+	pool := testutil.SetupTestPostgres(t, "../migrations")
 
 	if os.Getenv("ENV") != "prod" {
 		err := godotenv.Load("../.env.dev")
@@ -40,19 +48,28 @@ func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
 
 	logger := testutil.NewTestLogger(t)
 	cfg := config.NewAppConfigFromEnv(logger)
+	telegramCfg, err := config.NewTelegramConfigFromEnv(logger)
+	if err != nil {
+		t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+	}
 	logger.Info("App config", slog.Any("config", cfg))
 
-	application := app.New(logger, pool, &cfg, prometheus.NewRegistry())
+	redisClient := testutil.SetupTestRedis(t)
+	application := app.New(logger, pool, redisClient, &cfg, &telegramCfg, prometheus.NewRegistry())
 
 	ts := httptest.NewServer(application.Router)
 	t.Cleanup(func() {
 		ts.Close()
 		pool.Close()
+		_ = redisClient.Close()
 	})
 
-	client := ts.Client()
-
-	return client, ts, pool
+	return PreludeResult{
+		HTTPClient:  ts.Client(),
+		Server:      ts,
+		Pool:        pool,
+		RedisClient: redisClient,
+	}
 }
 
 func Register(t *testing.T, c *http.Client, baseURL, email, password string) {

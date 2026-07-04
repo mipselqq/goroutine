@@ -12,8 +12,12 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
+const telegramTokenPrefix = "tg_token:"
+
+// TODO: remove this function. Too implicit.
 func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
@@ -372,4 +376,55 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 			t.Errorf("got datetime_precision=%d for %s.%s, want >= 3", precision, tableName, columnName)
 		}
 	}
+}
+
+func FindUserByID(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const q = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE id = $1`
+
+	var user domain.User
+	err := pool.QueryRow(ctx, q, userID).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.TelegramChatID,
+		&user.TelegramUsername,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.User{}, false
+		}
+		t.Fatalf("FindUserByID() error = %v", err)
+	}
+
+	return user, true
+}
+
+func setUserIDByTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken, userID domain.UserID) {
+	t.Helper()
+
+	err := client.Set(context.Background(), telegramTokenPrefix+token.RevealSecret(), userID.String(), 0).Err()
+	if err != nil {
+		t.Fatalf("setTelegramTokenInRedis() error = %v", err)
+	}
+}
+
+func getUserIDByTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken) domain.UserID {
+	t.Helper()
+
+	val, err := client.Get(context.Background(), telegramTokenPrefix+token.RevealSecret()).Result()
+	if err != nil {
+		t.Fatalf("getTelegramTokenFromRedis() error = %v", err)
+	}
+
+	userID, err := domain.ParseUserID(val)
+	if err != nil {
+		t.Fatalf("getUserIDByTelegramLinkToken() error = %v", err)
+	}
+
+	return userID
 }

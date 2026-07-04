@@ -36,19 +36,33 @@ func main() {
 
 	bootLogger := logging.NewLogger("dev", "info")
 	appCfg := config.NewAppConfigFromEnv(bootLogger)
+	telegramCfg, err := config.NewTelegramConfigFromEnv(bootLogger)
+	if err != nil {
+		panic(err)
+	}
 	openapi.SwaggerInfo.Host = appCfg.SwaggerHost
 	logger := logging.NewLogger(appCfg.Env, appCfg.LogLevel, httpschema.AllExtractors()...)
 
 	logger.Info("Running", slog.String("version", version))
 	logger.Info("App config", slog.Any("config", appCfg))
 
-	pool, err := app.SetupDatabaseFromEnv(logger, "migrations")
+	pool, err := app.SetupPostgresFromEnv(logger, "migrations")
 	if err != nil {
 		os.Exit(1)
 	}
-	defer pool.Close()
 
-	application := app.New(logger, pool, &appCfg, prometheus.DefaultRegisterer)
+	redisClient, err := app.SetupRedisFromEnv(logger)
+	if err != nil {
+		pool.Close()
+		os.Exit(1)
+	}
+
+	defer pool.Close()
+	defer func() {
+		_ = redisClient.Close()
+	}()
+
+	application := app.New(logger, pool, redisClient, &appCfg, &telegramCfg, prometheus.DefaultRegisterer)
 
 	srv := app.RunBackgroundServer(logger, "server", appCfg.Host+":"+appCfg.Port, application.Router)
 	adminSrv := app.RunBackgroundServer(logger, "admin server", appCfg.Host+":"+appCfg.AdminPort, application.AdminRouter)

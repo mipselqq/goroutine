@@ -29,7 +29,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Success",
 			wantErr: nil,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					if hash == testutil.ValidPassword().RevealSecret() {
 						return errors.New("service saved plaintext password!")
 					}
@@ -41,7 +41,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "User already exists",
 			wantErr: service.ErrUserAlreadyExists,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrUniqueViolation
 				}
 			},
@@ -50,7 +50,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Internal repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return repository.ErrInternal
 				}
 			},
@@ -59,7 +59,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Unexpected repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.InsertFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.InsertUserFunc = func(ctx context.Context, email domain.Email, hash string) error {
 					return errors.New("Super unknown error happened")
 				}
 			},
@@ -90,8 +90,8 @@ func TestAuth_Login(t *testing.T) {
 		{
 			name: "Success",
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return testutil.ValidUserID(), testutil.ValidPasswordHash(), nil
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.User, error) {
+					return domain.User{ID: testutil.ValidUserID(), PasswordHash: testutil.ValidPasswordHash()}, nil
 				}
 			},
 			wantErr: nil,
@@ -100,8 +100,8 @@ func TestAuth_Login(t *testing.T) {
 			name:    "User not found",
 			wantErr: service.ErrUserNotFound,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return domain.UserID{}, "", repository.ErrRowNotFound
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.User, error) {
+					return domain.User{}, repository.ErrRowNotFound
 				}
 			},
 		},
@@ -109,8 +109,8 @@ func TestAuth_Login(t *testing.T) {
 			name:    "Invalid password",
 			wantErr: service.ErrInvalidCredentials,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return testutil.ValidUserID(), testutil.AnotherValidPasswordHash(), nil
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.User, error) {
+					return domain.User{ID: testutil.ValidUserID(), PasswordHash: testutil.AnotherValidPasswordHash()}, nil
 				}
 			},
 		},
@@ -118,8 +118,8 @@ func TestAuth_Login(t *testing.T) {
 			name:    "Internal repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return domain.UserID{}, "", repository.ErrInternal
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.User, error) {
+					return domain.User{}, repository.ErrInternal
 				}
 			},
 		},
@@ -127,8 +127,8 @@ func TestAuth_Login(t *testing.T) {
 			name:    "Unexpected repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.GetByEmailFunc = func(ctx context.Context, email domain.Email) (domain.UserID, string, error) {
-					return domain.UserID{}, "", errors.New("Super unknown error happened")
+				r.GetUserByEmailFunc = func(ctx context.Context, email domain.Email) (domain.User, error) {
+					return domain.User{}, errors.New("Super unknown error happened")
 				}
 			},
 		},

@@ -18,7 +18,7 @@ test:
 # Prepare test environment
 prepare-test-env:
 	test -f .env.dev || cp .env.example .env.dev
-	docker compose --env-file .env.dev up -d --wait postgres
+	docker compose --env-file .env.dev up -d --wait postgres redis
 
 # Run integration tests
 test-integration: prepare-test-env

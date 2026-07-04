@@ -68,5 +68,10 @@ func CmpAllowUnexported() cmp.Option {
 		domain.TaskPosition{},
 		domain.UserPassword{},
 		domain.AuthToken{},
+		domain.TelegramLinkToken{},
+		domain.TelegramChatID{},
+		domain.TelegramUsername{},
+		domain.TelegramToken{},
+		domain.TelegramMessage{},
 	)
 }

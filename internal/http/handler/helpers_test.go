@@ -9,25 +9,15 @@ import (
 	"goroutine/internal/testutil"
 )
 
-type MockAuthService struct {
-	RegisterFunc func(ctx context.Context, email domain.Email, password domain.UserPassword) error
-	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
-}
-
 func AssertFuncNotNil(funcName string, fn any) {
 	if fn == nil {
 		panic(fmt.Sprintf("%s = nil, want configured mock", funcName))
 	}
 }
 
-func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
-	AssertFuncNotNil("AuthService.RegisterFunc", m.RegisterFunc)
-	return m.RegisterFunc(ctx, email, password)
-}
-
-func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
-	AssertFuncNotNil("AuthService.LoginFunc", m.LoginFunc)
-	return m.LoginFunc(ctx, email, password)
+type MockAuthService struct {
+	RegisterFunc func(ctx context.Context, email domain.Email, password domain.UserPassword) error
+	LoginFunc    func(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
 }
 
 type MockBoardService struct {
@@ -53,6 +43,25 @@ type MockTaskService struct {
 	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
 	MoveFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error)
 	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
+}
+
+func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
+	AssertFuncNotNil("AuthService.RegisterFunc", m.RegisterFunc)
+	return m.RegisterFunc(ctx, email, password)
+}
+
+func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
+	AssertFuncNotNil("AuthService.LoginFunc", m.LoginFunc)
+	return m.LoginFunc(ctx, email, password)
+}
+
+type MockUserService struct {
+	CreateTelegramLinkTokenFunc func(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error)
+}
+
+func (m *MockUserService) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
+	AssertFuncNotNil("UserService.CreateTelegramLinkTokenFunc", m.CreateTelegramLinkTokenFunc)
+	return m.CreateTelegramLinkTokenFunc(ctx, userID)
 }
 
 func (m *MockBoardService) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {

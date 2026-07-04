@@ -11,17 +11,16 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
-func SetupTestDB(t *testing.T, migrationsDir string) *pgxpool.Pool {
+func SetupTestPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	t.Helper()
-	_ = godotenv.Load("../../.env.dev", "../.env.dev")
+	MustLoadDevEnv()
 	logger := NewTestLogger(t)
 
-	pool, err := app.SetupDatabaseFromEnv(logger, migrationsDir)
+	pool, err := app.SetupPostgresFromEnv(logger, migrationsDir)
 	if err != nil {
-		t.Fatalf("SetupDatabaseFromEnv() error = %v", err)
+		t.Fatalf("SetupPostgresFromEnv() error = %v", err)
 	}
 
 	return pool

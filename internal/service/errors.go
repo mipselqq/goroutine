@@ -14,4 +14,6 @@ var (
 	ErrInvalidToken         = errors.New("invalid token")
 	ErrTokenExpired         = errors.New("token expired")
 	ErrInvalidSigningMethod = errors.New("invalid signing method")
+
+	ErrTelegramLinkTokenNotFound = errors.New("telegram link token not found")
 )

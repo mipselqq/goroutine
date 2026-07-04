@@ -67,6 +67,9 @@ Variable and secret settings are located in your repository under **Settings > S
 - `POSTGRES_PORT`: Database port (`5432`)
 - `POSTGRES_USER`: Database user (`user`)
 - `PROMETHEUS_USER`: Prometheus dashboard username (`admin`)
+- `REDIS_HOST`: Redis host (`redis`)
+- `REDIS_PORT`: Redis port (`6379`)
+- `TELEGRAM_LINK_TOKEN_TTL`: TTL for Telegram link tokens (`15m`)
 - `SWAGGER_HOST`: API documentation host (`goroutine.mipselqq.uk`)
 
 ### Secrets
@@ -76,6 +79,8 @@ Variable and secret settings are located in your repository under **Settings > S
 - `POSTGRES_PASSWORD`: Database password
 - `PROMETHEUS_BCRYPT_HASH`: Bcrypt hash of the Prometheus password
 - `PROMETHEUS_PASSWORD`: Plain password for Prometheus
+- `REDIS_PASSWORD`: Redis password
+- `TELEGRAM_BOT_TOKEN`: Telegram bot token from @BotFather
 
 ## Continuous deployment
 After the deploy action is triggered, the application will be automatically built, transferred, and run on the server.

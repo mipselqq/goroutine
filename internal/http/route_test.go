@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"goroutine/internal/driver/telegram"
 	app "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/httpschema"
@@ -34,8 +35,9 @@ func TestNewRouter_Full(t *testing.T) {
 		Auth:      &spyAuthMiddleware{},
 		RequestID: &spyRequestIDMiddleware{},
 	}
+	telegramWebhook := telegram.NewWebhookHandler(logger, nil, nil)
 
-	router := app.NewRouter(handlers, middlewares)
+	router := app.NewRouter(handlers, middlewares, telegramWebhook)
 
 	type entry struct {
 		name   string
@@ -125,6 +127,10 @@ func TestNewRouter_Full(t *testing.T) {
 		{
 			entry: entry{"Swagger", http.MethodGet, "/v1/swagger/index.html"},
 			auth:  false, metrics: false, cors: true, requestID: true,
+		},
+		{
+			entry: entry{"Telegram webhook", http.MethodPost, "/webhook/telegram"},
+			auth:  false, metrics: true, cors: true, requestID: true,
 		},
 	}
 

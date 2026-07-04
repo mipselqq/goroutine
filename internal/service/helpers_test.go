@@ -14,18 +14,48 @@ func AssertFuncNotNil(funcName string, fn any) {
 }
 
 type MockUserRepository struct {
-	InsertFunc     func(ctx context.Context, email domain.Email, hash string) error
-	GetByEmailFunc func(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error)
+	InsertUserFunc         func(ctx context.Context, email domain.Email, hash string) error
+	GetUserByEmailFunc     func(ctx context.Context, email domain.Email) (domain.User, error)
+	UpdateTelegramInfoFunc func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
-func (m *MockUserRepository) Insert(ctx context.Context, email domain.Email, hash string) error {
-	AssertFuncNotNil("UserRepository.InsertFunc", m.InsertFunc)
-	return m.InsertFunc(ctx, email, hash)
+func (m *MockUserRepository) InsertUser(ctx context.Context, email domain.Email, hash string) error {
+	AssertFuncNotNil("UserRepository.InsertUserFunc", m.InsertUserFunc)
+	return m.InsertUserFunc(ctx, email, hash)
 }
 
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
-	AssertFuncNotNil("UserRepository.GetByEmailFunc", m.GetByEmailFunc)
-	return m.GetByEmailFunc(ctx, email)
+func (m *MockUserRepository) GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+	AssertFuncNotNil("UserRepository.GetUserByEmailFunc", m.GetUserByEmailFunc)
+	return m.GetUserByEmailFunc(ctx, email)
+}
+
+func (m *MockUserRepository) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+	AssertFuncNotNil("UserRepository.UpdateTelegramInfoFunc", m.UpdateTelegramInfoFunc)
+	return m.UpdateTelegramInfoFunc(ctx, userID, chatID, username)
+}
+
+type MockTelegramTokenRepository struct {
+	InsertLinkTokenFunc          func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
+	ConsumeTelegramLinkTokenFunc func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
+}
+
+func (m *MockTelegramTokenRepository) InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
+	AssertFuncNotNil("TelegramTokenRepository.InsertLinkTokenFunc", m.InsertLinkTokenFunc)
+	return m.InsertLinkTokenFunc(ctx, token, userID)
+}
+
+func (m *MockTelegramTokenRepository) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+	AssertFuncNotNil("TelegramTokenRepository.ConsumeTelegramLinkTokenFunc", m.ConsumeTelegramLinkTokenFunc)
+	return m.ConsumeTelegramLinkTokenFunc(ctx, token)
+}
+
+type MockTelegramNotifier struct {
+	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text string) error
+}
+
+func (m *MockTelegramNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error {
+	AssertFuncNotNil("TelegramNotifier.NotifyFunc", m.NotifyFunc)
+	return m.NotifyFunc(ctx, chatID, text)
 }
 
 type MockBoardRepository struct {
