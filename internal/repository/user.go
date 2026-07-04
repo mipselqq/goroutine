@@ -13,19 +13,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgUser struct {
+type PGUser struct {
 	pgPool *pgxpool.Pool
 }
 
-func NewPgUser(pgPool *pgxpool.Pool) *PgUser {
-	return &PgUser{
+func NewPGUser(pgPool *pgxpool.Pool) *PGUser {
+	return &PGUser{
 		pgPool: pgPool,
 	}
 }
 
 const pgUniqueViolation = "23505"
 
-func (r *PgUser) InsertUser(ctx context.Context, email domain.Email, hash string) error {
+func (r *PGUser) InsertUser(ctx context.Context, email domain.Email, hash string) error {
 	const query = `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
 
 	_, err := r.pgPool.Exec(ctx, query, email, hash)
@@ -41,7 +41,7 @@ func (r *PgUser) InsertUser(ctx context.Context, email domain.Email, hash string
 	return fmt.Errorf("user repo: insert user: %v: %w", err, ErrInternal)
 }
 
-func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+func (r *PGUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
 	const query = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE email = $1`
 
 	var user domain.User
@@ -62,7 +62,7 @@ func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain
 	return user, nil
 }
 
-func (r *PgUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+func (r *PGUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
 	const query = `UPDATE users SET telegram_chat_id = $1, telegram_username = $2 WHERE id = $3`
 
 	status, err := r.pgPool.Exec(ctx, query, chatID, username, userID)

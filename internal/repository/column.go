@@ -11,15 +11,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgColumn struct {
+type PGColumn struct {
 	pgPool *pgxpool.Pool
 }
 
-func NewPgColumn(pgPool *pgxpool.Pool) *PgColumn {
-	return &PgColumn{pgPool: pgPool}
+func NewPGColumn(pgPool *pgxpool.Pool) *PGColumn {
+	return &PGColumn{pgPool: pgPool}
 }
 
-func (r *PgColumn) Create(
+func (r *PGColumn) Create(
 	ctx context.Context,
 	boardID domain.BoardID,
 	name domain.ColumnName,
@@ -95,7 +95,7 @@ func (r *PgColumn) Create(
 	return column, nil
 }
 
-func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+func (r *PGColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
@@ -134,7 +134,7 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 	return result, nil
 }
 
-func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+func (r *PGColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
@@ -160,7 +160,7 @@ func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domai
 	return column, nil
 }
 
-func (r *PgColumn) UpdateByID(
+func (r *PGColumn) UpdateByID(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
@@ -197,7 +197,7 @@ func (r *PgColumn) UpdateByID(
 	return column, nil
 }
 
-func (r *PgColumn) Move(
+func (r *PGColumn) Move(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
@@ -342,7 +342,7 @@ func (r *PgColumn) Move(
 	return targetPosition, nil
 }
 
-func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+func (r *PGColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
 	const (
 		// 1. Lock the board row so no concurrent operation can reorder columns in the same board.
 		lockBoardQuery = `

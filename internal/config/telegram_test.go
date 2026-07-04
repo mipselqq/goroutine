@@ -65,7 +65,7 @@ func TestNewTelegramFromEnv(t *testing.T) {
 	t.Run("uses default link token ttl", func(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 
-		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+		logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 		cfg, err := config.NewTelegramFromEnv(logger)
 		if err != nil {
 			t.Fatalf("NewTelegramFromEnv() error = %v", err)
@@ -101,7 +101,7 @@ func TestNewTelegramFromEnv(t *testing.T) {
 	t.Run("no warnings if all variables are set", func(t *testing.T) {
 		setCustomTelegramEnvVars(t)
 
-		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+		logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 		_, err := config.NewTelegramFromEnv(logger)
 		if err != nil {
 			t.Fatalf("NewTelegramFromEnv() error = %v", err)

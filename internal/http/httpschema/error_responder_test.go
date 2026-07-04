@@ -57,7 +57,7 @@ func TestErrorResponder_InternalError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			logger, buf := testutil.NewBufJsonLogger(t, slog.LevelDebug)
+			logger, buf := testutil.NewBufJSONLogger(t, slog.LevelDebug)
 			er := httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr)
 
 			req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)

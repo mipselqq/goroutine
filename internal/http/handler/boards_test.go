@@ -72,7 +72,7 @@ func TestBoards_Create(t *testing.T) {
 			name:      "Invalid JSON",
 			inputBody: json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, validBoard.Name.String(), validBoard.Description.String()))), // missing closing brace
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONBody(),
 		},
 		{
 			name:      "No context user ID",
@@ -105,7 +105,7 @@ func TestBoards_Create(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeBody(),
 		},
@@ -741,7 +741,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeBody(),
 		},

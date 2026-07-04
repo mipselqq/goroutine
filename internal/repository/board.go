@@ -11,17 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgBoard struct {
+type PGBoard struct {
 	pgPool *pgxpool.Pool
 }
 
-func NewPgBoard(pgPool *pgxpool.Pool) *PgBoard {
-	return &PgBoard{
+func NewPGBoard(pgPool *pgxpool.Pool) *PGBoard {
+	return &PGBoard{
 		pgPool: pgPool,
 	}
 }
 
-func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+func (r *PGBoard) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 	const query = `INSERT INTO boards (owner_id, name, description) VALUES ($1, $2, $3) RETURNING id, owner_id, name, description, created_at, updated_at`
 
 	var board domain.Board
@@ -40,7 +40,7 @@ func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 	return board, nil
 }
 
-func (r *PgBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+func (r *PGBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 	const query = `
 		SELECT id, owner_id, name, description, created_at, updated_at
 		FROM boards
@@ -65,7 +65,7 @@ func (r *PgBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board,
 	return board, nil
 }
 
-func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+func (r *PGBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 	const query = `
 		SELECT id, owner_id, name, description, created_at, updated_at
 		FROM boards
@@ -104,7 +104,7 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 	return boards, nil
 }
 
-func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+func (r *PGBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	const query = `
 		UPDATE boards
 		SET
@@ -133,7 +133,7 @@ func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *
 	return board, nil
 }
 
-func (r *PgBoard) Delete(ctx context.Context, boardID domain.BoardID) error {
+func (r *PGBoard) Delete(ctx context.Context, boardID domain.BoardID) error {
 	const query = `DELETE FROM boards WHERE id = $1`
 
 	cmd, err := r.pgPool.Exec(ctx, query, boardID)

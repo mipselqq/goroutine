@@ -38,7 +38,7 @@ func FixedTime5mFromNowStr() string {
 
 func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
 
-func Big25KBJson() json.RawMessage {
+func Big25KBJSON() json.RawMessage {
 	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
 }
 

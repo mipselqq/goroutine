@@ -177,7 +177,7 @@ func payloadTooLargeBody() map[string]any {
 	}
 }
 
-func invalidJsonBody() map[string]any {
+func invalidJSONBody() map[string]any {
 	return map[string]any{
 		"code":      "VALIDATION_ERROR",
 		"message":   "Some fields are invalid",

@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-var defaultPgConfig = config.Pg{
+var defaultPgConfig = config.PG{
 	User:     "user",
 	Password: secrecy.SecretString("password"),
 	Host:     "127.0.0.1",
@@ -46,7 +46,7 @@ func TestNewPGFromEnv(t *testing.T) {
 		setCustomPgEnvVars(t)
 
 		cfg := config.NewPGFromEnv(testutil.NewDiscardLogger())
-		wantCfg := config.Pg{
+		wantCfg := config.PG{
 			User:     "custom_user",
 			Password: secrecy.SecretString("custom_pass"),
 			Host:     "custom_host",
@@ -62,7 +62,7 @@ func TestNewPGFromEnv(t *testing.T) {
 	t.Run("warnings on unset variables", func(t *testing.T) {
 		UnsetEnv(t, pgEnvVars...)
 
-		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+		logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 		_ = config.NewPGFromEnv(logger)
 
 		for _, envVar := range pgEnvVars {
@@ -75,7 +75,7 @@ func TestNewPGFromEnv(t *testing.T) {
 	t.Run("no warnings if all variables are set", func(t *testing.T) {
 		setCustomPgEnvVars(t)
 
-		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+		logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 		_ = config.NewPGFromEnv(logger)
 
 		if buf.String() != "" {
@@ -84,7 +84,7 @@ func TestNewPGFromEnv(t *testing.T) {
 	})
 }
 
-func TestPg_BuildDSN(t *testing.T) {
+func TestPG_BuildDSN(t *testing.T) {
 	want := "postgres://user:password@127.0.0.1:5432/todo_db"
 
 	dsn := defaultPgConfig.BuildDSN()
@@ -96,7 +96,7 @@ func TestPg_BuildDSN(t *testing.T) {
 	testutil.AssertSecretHidden(t, want, dsn)
 }
 
-func TestPg_ParsePGXpoolConfig(t *testing.T) {
+func TestPG_ParsePGXpoolConfig(t *testing.T) {
 	cfg, err := defaultPgConfig.ParsePGXpoolConfig()
 	if err != nil {
 		t.Fatalf("ParsePGXpoolConfig() error = %v", err)
@@ -107,7 +107,7 @@ func TestPg_ParsePGXpoolConfig(t *testing.T) {
 	}
 }
 
-func TestPg_LogValue(t *testing.T) {
+func TestPG_LogValue(t *testing.T) {
 	v := defaultPgConfig.LogValue()
 	if v.Kind() != slog.KindGroup {
 		t.Fatalf("got kind %v, want Group", v.Kind())

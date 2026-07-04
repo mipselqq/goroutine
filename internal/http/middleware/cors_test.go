@@ -156,7 +156,7 @@ func TestCors_Wrap(t *testing.T) {
 func TestCors_WarnsAnyOriginAllowed(t *testing.T) {
 	t.Parallel()
 
-	logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+	logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 
 	_ = middleware.NewCORS(logger, config.ParseAllowedOrigins(goodSite+",*,"+awesomeSite))
 

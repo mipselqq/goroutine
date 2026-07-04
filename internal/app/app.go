@@ -38,11 +38,11 @@ func New(
 	telegramCfg *config.Telegram,
 	reg prometheus.Registerer,
 ) *App {
-	userRepo := repository.NewPgUser(pgPool)
+	userRepo := repository.NewPGUser(pgPool)
 	telegramTokenRepo := repository.NewRedisTelegramToken(redisClient, telegramCfg.LinkTokenTTL)
-	boardsRepo := repository.NewPgBoard(pgPool)
-	columnsRepo := repository.NewPgColumn(pgPool)
-	tasksRepo := repository.NewPgTask(pgPool)
+	boardsRepo := repository.NewPGBoard(pgPool)
+	columnsRepo := repository.NewPGColumn(pgPool)
+	tasksRepo := repository.NewPGTask(pgPool)
 
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,

@@ -56,7 +56,7 @@ func TestNewRedisFromEnv(t *testing.T) {
 	t.Run("warnings on unset variables", func(t *testing.T) {
 		UnsetEnv(t, redisEnvVars...)
 
-		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+		logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 		_ = config.NewRedisFromEnv(logger)
 
 		for _, envVar := range redisEnvVars {
@@ -69,7 +69,7 @@ func TestNewRedisFromEnv(t *testing.T) {
 	t.Run("no warnings if all variables are set", func(t *testing.T) {
 		setCustomRedisEnvVars(t)
 
-		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
+		logger, buf := testutil.NewBufJSONLogger(t, slog.LevelWarn)
 		_ = config.NewRedisFromEnv(logger)
 
 		if buf.String() != "" {

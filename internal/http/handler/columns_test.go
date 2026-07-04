@@ -74,7 +74,7 @@ func TestColumns_Create(t *testing.T) {
 			boardID:   validBoard.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONBody(),
 		},
 		{
 			name:      "Invalid name",
@@ -137,7 +137,7 @@ func TestColumns_Create(t *testing.T) {
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeBody(),
 		},
@@ -475,7 +475,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONBody(),
 		},
 		{
 			name:      "Invalid name",
@@ -532,7 +532,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeBody(),
 		},
@@ -646,7 +646,7 @@ func TestColumns_Move(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: "{\"targetPosition\":",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONBody(),
 		},
 		{
 			name:      "Invalid target position",
@@ -708,7 +708,7 @@ func TestColumns_Move(t *testing.T) {
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeBody(),
 		},

@@ -130,11 +130,11 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 	})
 }
 
-func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgUser) {
+func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGUser) {
 	t.Helper()
 
 	pool := testutil.SetupTestPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
-	return pool, repository.NewPgUser(pool)
+	return pool, repository.NewPGUser(pool)
 }

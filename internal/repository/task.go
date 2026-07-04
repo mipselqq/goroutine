@@ -11,12 +11,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgTask struct {
+type PGTask struct {
 	pgPool *pgxpool.Pool
 }
 
-func NewPgTask(pgPool *pgxpool.Pool) *PgTask {
-	return &PgTask{pgPool: pgPool}
+func NewPGTask(pgPool *pgxpool.Pool) *PGTask {
+	return &PGTask{pgPool: pgPool}
 }
 
 // LockTaskColumns acquires FOR UPDATE row locks on the given columns for boardID.
@@ -79,7 +79,7 @@ func LockTaskColumns(
 	return nil
 }
 
-func (r *PgTask) Create(
+func (r *PGTask) Create(
 	ctx context.Context,
 	columnID domain.ColumnID,
 	name domain.TaskName,
@@ -155,7 +155,7 @@ func (r *PgTask) Create(
 	return task, nil
 }
 
-func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
+func (r *PGTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
 	const query = `
 	SELECT t.id, t.column_id, t.name, t.description, t.position, t.created_at, t.updated_at
 	FROM tasks t JOIN columns c ON t.column_id = c.id
@@ -195,7 +195,7 @@ func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]d
 	return result, nil
 }
 
-func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error) {
+func (r *PGTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error) {
 	const query = `
 		SELECT id, column_id, name, description, position, created_at, updated_at
 		FROM tasks
@@ -234,7 +234,7 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 	return result, nil
 }
 
-func (r *PgTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+func (r *PGTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 	const query = `
 		SELECT id, column_id, name, description, position, created_at, updated_at
 		FROM tasks
@@ -260,7 +260,7 @@ func (r *PgTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task
 	return task, nil
 }
 
-func (r *PgTask) UpdateByID(
+func (r *PGTask) UpdateByID(
 	ctx context.Context,
 	columnID domain.ColumnID,
 	taskID domain.TaskID,
@@ -297,7 +297,7 @@ func (r *PgTask) UpdateByID(
 	return task, nil
 }
 
-func (r *PgTask) Move(
+func (r *PGTask) Move(
 	ctx context.Context,
 	boardID domain.BoardID,
 	currentColumnID domain.ColumnID,
@@ -496,7 +496,7 @@ func (r *PgTask) Move(
 	return targetColumnID, targetPosition, nil
 }
 
-func (r *PgTask) Delete(
+func (r *PGTask) Delete(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
