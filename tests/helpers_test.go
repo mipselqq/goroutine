@@ -47,10 +47,10 @@ func Prelude(t *testing.T) PreludeResult {
 	}
 
 	logger := testutil.NewTestLogger(t)
-	cfg := config.NewAppConfigFromEnv(logger)
-	telegramCfg, err := config.NewTelegramConfigFromEnv(logger)
+	cfg := config.NewAppFromEnv(logger)
+	telegramCfg, err := config.NewTelegramFromEnv(logger)
 	if err != nil {
-		t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+		t.Fatalf("NewTelegramFromEnv() error = %v", err)
 	}
 	logger.Info("App config", slog.Any("config", cfg))
 

@@ -35,8 +35,8 @@ func main() {
 	}
 
 	bootLogger := logging.NewLogger("dev", "info")
-	appCfg := config.NewAppConfigFromEnv(bootLogger)
-	telegramCfg, err := config.NewTelegramConfigFromEnv(bootLogger)
+	appCfg := config.NewAppFromEnv(bootLogger)
+	telegramCfg, err := config.NewTelegramFromEnv(bootLogger)
 	if err != nil {
 		panic(err)
 	}

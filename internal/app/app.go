@@ -34,8 +34,8 @@ func New(
 	logger *slog.Logger,
 	pgPool *pgxpool.Pool,
 	redisClient *redis.Client,
-	cfg *config.AppConfig,
-	telegramCfg *config.TelegramConfig,
+	cfg *config.App,
+	telegramCfg *config.Telegram,
 	reg prometheus.Registerer,
 ) *App {
 	userRepo := repository.NewPgUser(pgPool)
