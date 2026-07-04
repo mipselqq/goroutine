@@ -32,9 +32,9 @@ type Auth struct {
 	jwtOptions JWTOptions
 }
 
-func NewAuth(ur AuthUserRepository, opts JWTOptions) *Auth {
+func NewAuth(userRepo AuthUserRepository, opts JWTOptions) *Auth {
 	return &Auth{
-		userRepo:   ur,
+		userRepo:   userRepo,
 		jwtOptions: opts,
 	}
 }

@@ -16,12 +16,12 @@ type RequestID struct {
 	generateRequestIDFn GenerateRequestIDFn
 }
 
-func MustNewRequestID(l *slog.Logger, g GenerateRequestIDFn) *RequestID {
-	if g == nil {
+func MustNewRequestID(logger *slog.Logger, gen GenerateRequestIDFn) *RequestID {
+	if gen == nil {
 		panic("BUG: generateRequestIDFn is nil")
 	}
 
-	return &RequestID{logger: l, generateRequestIDFn: g}
+	return &RequestID{logger: logger, generateRequestIDFn: gen}
 }
 
 func (m *RequestID) Wrap(next http.Handler) http.Handler {

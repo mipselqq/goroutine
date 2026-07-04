@@ -26,10 +26,10 @@ type WebhookHandler struct {
 	logger      *slog.Logger
 }
 
-func NewWebhookHandler(logger *slog.Logger, us UserService, notifier Notifier) *WebhookHandler {
+func NewWebhookHandler(logger *slog.Logger, userService UserService, notifier Notifier) *WebhookHandler {
 	return &WebhookHandler{
 		logger:      logger,
-		userService: us,
+		userService: userService,
 		notifier:    notifier,
 	}
 }

@@ -25,8 +25,8 @@ type Tasks struct {
 	responder    *httpschema.ErrorResponder
 }
 
-func NewTasks(logger *slog.Logger, svc TasksService, responder *httpschema.ErrorResponder) *Tasks {
-	return &Tasks{logger: logger, tasksService: svc, responder: responder}
+func NewTasks(logger *slog.Logger, tasksService TasksService, responder *httpschema.ErrorResponder) *Tasks {
+	return &Tasks{logger: logger, tasksService: tasksService, responder: responder}
 }
 
 type createTaskBody struct {

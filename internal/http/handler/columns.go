@@ -25,8 +25,8 @@ type Columns struct {
 	responder      *httpschema.ErrorResponder
 }
 
-func NewColumns(logger *slog.Logger, svc ColumnsService, responder *httpschema.ErrorResponder) *Columns {
-	return &Columns{logger: logger, columnsService: svc, responder: responder}
+func NewColumns(logger *slog.Logger, columnsService ColumnsService, responder *httpschema.ErrorResponder) *Columns {
+	return &Columns{logger: logger, columnsService: columnsService, responder: responder}
 }
 
 type createColumnBody struct {

@@ -26,8 +26,8 @@ type Boards struct {
 	responder     *httpschema.ErrorResponder
 }
 
-func NewBoards(logger *slog.Logger, svc BoardsService, responder *httpschema.ErrorResponder) *Boards {
-	return &Boards{logger: logger, boardsService: svc, responder: responder}
+func NewBoards(logger *slog.Logger, boardsService BoardsService, responder *httpschema.ErrorResponder) *Boards {
+	return &Boards{logger: logger, boardsService: boardsService, responder: responder}
 }
 
 type createBoardBody struct {

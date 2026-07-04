@@ -20,8 +20,8 @@ type Auth struct {
 	responder *httpschema.ErrorResponder
 }
 
-func NewAuth(l *slog.Logger, v TokenVerifier, r *httpschema.ErrorResponder) *Auth {
-	return &Auth{logger: l, verifier: v, responder: r}
+func NewAuth(logger *slog.Logger, verifier TokenVerifier, responder *httpschema.ErrorResponder) *Auth {
+	return &Auth{logger: logger, verifier: verifier, responder: responder}
 }
 
 func (m *Auth) Wrap(next http.Handler) http.Handler {

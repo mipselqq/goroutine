@@ -20,9 +20,9 @@ type User struct {
 	responder   *httpschema.ErrorResponder
 }
 
-func NewUser(l *slog.Logger, userService UserService, responder *httpschema.ErrorResponder) *User {
+func NewUser(logger *slog.Logger, userService UserService, responder *httpschema.ErrorResponder) *User {
 	return &User{
-		logger:      logging.WithModule(l, "handler.user"),
+		logger:      logging.WithModule(logger, "handler.user"),
 		userService: userService,
 		responder:   responder,
 	}

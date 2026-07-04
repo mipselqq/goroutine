@@ -26,10 +26,10 @@ type Auth struct {
 	responder   *httpschema.ErrorResponder
 }
 
-func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.ErrorResponder) *Auth {
+func NewAuth(logger *slog.Logger, authService AuthService, responder *httpschema.ErrorResponder) *Auth {
 	return &Auth{
-		authService: s,
-		logger:      logging.WithModule(l, "handler.auth"),
+		authService: authService,
+		logger:      logging.WithModule(logger, "handler.auth"),
 		responder:   responder,
 	}
 }
