@@ -20,13 +20,13 @@ type TasksService interface {
 }
 
 type Tasks struct {
-	logger    *slog.Logger
-	service   TasksService
-	responder *httpschema.ErrorResponder
+	logger       *slog.Logger
+	tasksService TasksService
+	responder    *httpschema.ErrorResponder
 }
 
 func NewTasks(logger *slog.Logger, svc TasksService, responder *httpschema.ErrorResponder) *Tasks {
-	return &Tasks{logger: logger, service: svc, responder: responder}
+	return &Tasks{logger: logger, tasksService: svc, responder: responder}
 }
 
 type createTaskBody struct {
@@ -118,7 +118,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.service.Create(r.Context(), userID, boardID, columnID, name, description)
+	task, err := h.tasksService.Create(r.Context(), userID, boardID, columnID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})
@@ -156,7 +156,7 @@ func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := h.service.List(r.Context(), userID, boardID, columnID)
+	tasks, err := h.tasksService.List(r.Context(), userID, boardID, columnID)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})
@@ -230,7 +230,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.service.UpdateByID(r.Context(), userID, boardID, columnID, taskID, name, description)
+	task, err := h.tasksService.UpdateByID(r.Context(), userID, boardID, columnID, taskID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrTaskNotFound) {
 			h.responder.TaskNotFound(w, []httpschema.Detail{{Field: "taskId", Issues: []string{"Task not found"}}})
@@ -294,7 +294,7 @@ func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newColumnID, newPosition, err := h.service.Move(r.Context(), userID, boardID, columnID, taskID, targetColumnID, targetPosition)
+	newColumnID, newPosition, err := h.tasksService.Move(r.Context(), userID, boardID, columnID, taskID, targetColumnID, targetPosition)
 	if err != nil {
 		if errors.Is(err, service.ErrTaskNotFound) {
 			h.responder.TaskNotFound(w, []httpschema.Detail{{Field: "taskId", Issues: []string{"Task not found"}}})
@@ -345,7 +345,7 @@ func (h *Tasks) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.service.Delete(r.Context(), userID, boardID, columnID, taskID)
+	err := h.tasksService.Delete(r.Context(), userID, boardID, columnID, taskID)
 	if err != nil {
 		if errors.Is(err, service.ErrTaskNotFound) {
 			h.responder.TaskNotFound(w, []httpschema.Detail{{Field: "taskId", Issues: []string{"Task not found"}}})

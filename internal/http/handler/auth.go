@@ -21,16 +21,16 @@ type AuthService interface {
 }
 
 type Auth struct {
-	logger    *slog.Logger
-	service   AuthService
-	responder *httpschema.ErrorResponder
+	logger      *slog.Logger
+	authService AuthService
+	responder   *httpschema.ErrorResponder
 }
 
 func NewAuth(l *slog.Logger, s AuthService, responder *httpschema.ErrorResponder) *Auth {
 	return &Auth{
-		service:   s,
-		logger:    logging.WithModule(l, "handler.auth"),
-		responder: responder,
+		authService: s,
+		logger:      logging.WithModule(l, "handler.auth"),
+		responder:   responder,
 	}
 }
 
@@ -73,7 +73,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Register(r.Context(), email, password)
+	err = h.authService.Register(r.Context(), email, password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists):
@@ -132,7 +132,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.Login(r.Context(), email, password)
+	token, err := h.authService.Login(r.Context(), email, password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):

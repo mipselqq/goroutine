@@ -21,13 +21,13 @@ type BoardsService interface {
 }
 
 type Boards struct {
-	logger    *slog.Logger
-	service   BoardsService
-	responder *httpschema.ErrorResponder
+	logger        *slog.Logger
+	boardsService BoardsService
+	responder     *httpschema.ErrorResponder
 }
 
 func NewBoards(logger *slog.Logger, svc BoardsService, responder *httpschema.ErrorResponder) *Boards {
-	return &Boards{logger: logger, service: svc, responder: responder}
+	return &Boards{logger: logger, boardsService: svc, responder: responder}
 }
 
 type createBoardBody struct {
@@ -136,7 +136,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.Create(r.Context(), userID, name, description)
+	board, err := h.boardsService.Create(r.Context(), userID, name, description)
 	if err != nil {
 		h.responder.InternalError(w, r, err)
 		return
@@ -172,7 +172,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.Get(r.Context(), userID, boardID)
+	board, err := h.boardsService.Get(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -212,7 +212,7 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	aggregate, err := h.service.GetAggregate(r.Context(), userID, boardID)
+	aggregate, err := h.boardsService.GetAggregate(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -243,7 +243,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	boards, err := h.service.GetMany(r.Context(), userID)
+	boards, err := h.boardsService.GetMany(r.Context(), userID)
 	if err != nil {
 		h.responder.InternalError(w, r, err)
 		return
@@ -315,7 +315,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.UpdateByID(r.Context(), userID, boardID, name, description)
+	board, err := h.boardsService.UpdateByID(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -355,7 +355,7 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Delete(r.Context(), userID, boardID)
+	err = h.boardsService.Delete(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
