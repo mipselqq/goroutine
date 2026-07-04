@@ -15,12 +15,12 @@ type TelegramConfig struct {
 }
 
 func NewTelegramConfigFromEnv(logger *slog.Logger) (TelegramConfig, error) {
-	env_token := os.Getenv("TELEGRAM_BOT_TOKEN")
-	if env_token == "" {
+	envToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if envToken == "" {
 		return TelegramConfig{}, fmt.Errorf("telegram config: TELEGRAM_BOT_TOKEN is required")
 	}
 
-	token, err := domain.NewTelegramToken(env_token)
+	token, err := domain.NewTelegramToken(envToken)
 	if err != nil {
 		return TelegramConfig{}, fmt.Errorf("telegram config: %w", err)
 	}
