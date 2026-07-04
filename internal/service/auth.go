@@ -28,13 +28,13 @@ type JWTOptions struct {
 }
 
 type Auth struct {
-	repository AuthUserRepository
+	userRepo   AuthUserRepository
 	jwtOptions JWTOptions
 }
 
 func NewAuth(ur AuthUserRepository, opts JWTOptions) *Auth {
 	return &Auth{
-		repository: ur,
+		userRepo:   ur,
 		jwtOptions: opts,
 	}
 }
@@ -45,7 +45,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
-	err = s.repository.Create(ctx, email, hash)
+	err = s.userRepo.Create(ctx, email, hash)
 	if errors.Is(err, repository.ErrUniqueViolation) {
 		return fmt.Errorf("auth service: register: user insert: %w", ErrUserAlreadyExists)
 	}
@@ -57,7 +57,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 }
 
 func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
-	user, err := s.repository.GetByEmail(ctx, email)
+	user, err := s.userRepo.GetByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
 	}

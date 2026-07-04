@@ -58,7 +58,7 @@ func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.
 func (s *Board) List(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
 	boards, err := s.boardRepo.List(ctx, callerID)
 	if err != nil {
-		return nil, fmt.Errorf("board service: get many: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("board service: list: %v: %w", err, ErrInternal)
 	}
 
 	return boards, nil

@@ -82,7 +82,7 @@ func NewColumnDescription(description string) (ColumnDescription, error) {
 	trimmedDescription := strings.TrimSpace(description)
 	var issues []string
 	if len(trimmedDescription) > 1024 {
-		issues = append(issues, ErrDescriptionTooLong)
+		issues = append(issues, ErrBoardDescriptionTooLong)
 	}
 
 	if len(issues) > 0 {

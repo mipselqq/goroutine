@@ -94,7 +94,7 @@ func newBoardAggregateResponse(aggregateBoard *service.AggregateBoard) aggregate
 	}
 }
 
-type getManyBoardsResponse = []boardResponse
+type listBoardsResponse = []boardResponse
 
 // Create godoc
 // @Summary Create a new board
@@ -226,13 +226,13 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 }
 
 // List godoc
-// @Summary Get many boards
-// @Description Get many boards for the current user. Results are returned in increasing creation time order.
+// @Summary List all boards
+// @Description List all boards for the current user. Results are returned in increasing creation time order.
 // @Tags boards
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} getManyBoardsResponse
+// @Success 200 {object} listBoardsResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
@@ -249,7 +249,7 @@ func (h *Boards) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := make(getManyBoardsResponse, len(boards))
+	response := make(listBoardsResponse, len(boards))
 	for i := range boards {
 		response[i] = newBoardResponse(&boards[i])
 	}

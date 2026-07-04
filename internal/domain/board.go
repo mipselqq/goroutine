@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	ErrNameTooShort       string = "Name is too short"
-	ErrNameTooLong        string = "Name is too long"
-	ErrDescriptionTooLong string = "Description is too long"
+	ErrBoardNameTooShort       string = "Name is too short"
+	ErrBoardNameTooLong        string = "Name is too long"
+	ErrBoardDescriptionTooLong string = "Description is too long"
 )
 
 type Board struct {
@@ -30,11 +30,11 @@ func NewBoardName(name string) (BoardName, error) {
 	trimmedName := strings.TrimSpace(name)
 	var issues []string
 	if trimmedName == "" {
-		issues = append(issues, ErrNameTooShort)
+		issues = append(issues, ErrBoardNameTooShort)
 	}
 
 	if len(trimmedName) > 128 {
-		issues = append(issues, ErrNameTooLong)
+		issues = append(issues, ErrBoardNameTooLong)
 	}
 
 	if len(issues) > 0 {
@@ -81,7 +81,7 @@ func NewBoardDescription(description string) (BoardDescription, error) {
 	trimmedDescription := strings.TrimSpace(description)
 	var issues []string
 	if len(trimmedDescription) > 1024 {
-		issues = append(issues, ErrDescriptionTooLong)
+		issues = append(issues, ErrBoardDescriptionTooLong)
 	}
 
 	if len(issues) > 0 {

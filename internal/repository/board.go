@@ -74,7 +74,7 @@ func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Boa
 
 	rows, err := r.pgPool.Query(ctx, query, ownerID)
 	if err != nil {
-		return nil, fmt.Errorf("board repo: get many: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("board repo: list: %v: %w", err, ErrInternal)
 	}
 	defer rows.Close()
 
@@ -90,7 +90,7 @@ func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Boa
 			&board.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("board repo: get many scan: %v: %w", err, ErrInternal)
+			return nil, fmt.Errorf("board repo: list: scan: %v: %w", err, ErrInternal)
 		}
 
 		boards = append(boards, board)
@@ -98,7 +98,7 @@ func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Boa
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("board repo: get many rows: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("board repo: list: rows final error: %v: %w", err, ErrInternal)
 	}
 
 	return boards, nil

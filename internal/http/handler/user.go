@@ -15,16 +15,16 @@ type UserService interface {
 }
 
 type User struct {
-	logger         *slog.Logger
-	userService    UserService
-	errorResponder *httpschema.ErrorResponder
+	logger      *slog.Logger
+	userService UserService
+	responder   *httpschema.ErrorResponder
 }
 
-func NewUser(l *slog.Logger, userService UserService, errorResponder *httpschema.ErrorResponder) *User {
+func NewUser(l *slog.Logger, userService UserService, responder *httpschema.ErrorResponder) *User {
 	return &User{
-		logger:         logging.WithModule(l, "handler.user"),
-		userService:    userService,
-		errorResponder: errorResponder,
+		logger:      logging.WithModule(l, "handler.user"),
+		userService: userService,
+		responder:   responder,
 	}
 }
 
@@ -43,14 +43,14 @@ type telegramLinkTokenResponse struct {
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/users/me/telegram/link [post]
 func (u *User) CreateTelegramLinkToken(w http.ResponseWriter, r *http.Request) {
-	userID, ok := extractUserIDOrHandleMissing(w, r, u.logger, u.errorResponder)
+	userID, ok := extractUserIDOrHandleMissing(w, r, u.logger, u.responder)
 	if !ok {
 		return
 	}
 
 	token, err := u.userService.CreateTelegramLinkToken(r.Context(), userID)
 	if err != nil {
-		u.errorResponder.InternalError(w, r, err)
+		u.responder.InternalError(w, r, err)
 		return
 	}
 
