@@ -144,7 +144,7 @@ func (m *MockTaskService) Delete(ctx context.Context, callerID domain.UserID, bo
 	return m.DeleteFunc(ctx, callerID, boardID, columnID, taskID)
 }
 
-func columnNotFoundByFieldError(field string) map[string]any {
+func columnNotFoundError(field string) map[string]any {
 	return map[string]any{
 		"code":      "COLUMN_NOT_FOUND",
 		"message":   "Column not found",
@@ -155,7 +155,7 @@ func columnNotFoundByFieldError(field string) map[string]any {
 	}
 }
 
-func taskNotFoundByFieldError(field string) map[string]any {
+func taskNotFoundError(field string) map[string]any {
 	return map[string]any{
 		"code":      "TASK_NOT_FOUND",
 		"message":   "Task not found",
@@ -166,7 +166,7 @@ func taskNotFoundByFieldError(field string) map[string]any {
 	}
 }
 
-func payloadTooLargeBody() map[string]any {
+func payloadTooLargeError() map[string]any {
 	return map[string]any{
 		"code":      "PAYLOAD_TOO_LARGE",
 		"message":   "Request body too large",
@@ -177,7 +177,7 @@ func payloadTooLargeBody() map[string]any {
 	}
 }
 
-func invalidJSONBody() map[string]any {
+func invalidJSONError() map[string]any {
 	return map[string]any{
 		"code":      "VALIDATION_ERROR",
 		"message":   "Some fields are invalid",
@@ -188,7 +188,7 @@ func invalidJSONBody() map[string]any {
 	}
 }
 
-func internalErrorBody() map[string]any {
+func internalError() map[string]any {
 	return map[string]any{
 		"code":      "INTERNAL_SERVER_ERROR",
 		"message":   "Internal server error",
@@ -196,7 +196,7 @@ func internalErrorBody() map[string]any {
 	}
 }
 
-func boardNotFoundErrorBody() map[string]any {
+func boardNotFoundError() map[string]any {
 	return map[string]any{
 		"code":      "BOARD_NOT_FOUND",
 		"message":   "Board not found",
@@ -207,7 +207,7 @@ func boardNotFoundErrorBody() map[string]any {
 	}
 }
 
-func userAlreadyExistsErrorBody() map[string]any {
+func userAlreadyExistsError() map[string]any {
 	return map[string]any{
 		"code":      "USER_ALREADY_EXISTS",
 		"message":   "User already exists",
@@ -218,7 +218,7 @@ func userAlreadyExistsErrorBody() map[string]any {
 	}
 }
 
-func unauthorizedTokenBody() map[string]any {
+func unauthorizedTokenError() map[string]any {
 	return map[string]any{
 		"code":      "INVALID_TOKEN",
 		"message":   "Invalid token",
@@ -229,7 +229,7 @@ func unauthorizedTokenBody() map[string]any {
 	}
 }
 
-func validationErrorBody(field string, issues []string) map[string]any {
+func validationError(field string, issues []string) map[string]any {
 	return map[string]any{
 		"code":      "VALIDATION_ERROR",
 		"message":   "Some fields are invalid",

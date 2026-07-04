@@ -46,7 +46,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			name:     "Missing context user ID",
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:      "Internal error",
@@ -57,7 +57,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unexpected error",
@@ -68,7 +68,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 

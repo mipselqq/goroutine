@@ -67,28 +67,28 @@ func TestColumns_Create(t *testing.T) {
 			boardID:   "not-a-uuid",
 			inputBody: map[string]string{"name": "To Do"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody:  validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid JSON",
 			boardID:   validBoard.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJSONBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "Invalid name",
 			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": "   ", "description": validColumn.Description.String()},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+			wantBody:  validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Description too long",
 			boardID:   validBoard.ID.String(),
 			inputBody: map[string]string{"name": validColumn.Name.String(), "description": strings.Repeat("a", 1025)},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
+			wantBody:  validationError("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Missing context user",
@@ -96,7 +96,7 @@ func TestColumns_Create(t *testing.T) {
 			inputBody: map[string]string{"name": "To Do"},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Board not found",
@@ -108,7 +108,7 @@ func TestColumns_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:      "Internal error",
@@ -120,7 +120,7 @@ func TestColumns_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unexpected error",
@@ -132,14 +132,14 @@ func TestColumns_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -236,14 +236,14 @@ func TestColumns_List(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:     "Missing context user",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:    "Board not found",
@@ -254,7 +254,7 @@ func TestColumns_List(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -265,7 +265,7 @@ func TestColumns_List(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 
@@ -459,7 +459,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody:  validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
@@ -467,7 +467,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  "not-a-uuid",
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody:  validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid JSON",
@@ -475,7 +475,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJSONBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "Invalid name",
@@ -483,7 +483,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "   ", "description": validColumn.Description.String()},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+			wantBody:  validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Invalid description",
@@ -491,7 +491,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": validColumn.Name.String(), "description": strings.Repeat("a", 1025)},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
+			wantBody:  validationError("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Missing context user",
@@ -500,7 +500,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			inputBody: map[string]string{"name": "Renamed"},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Column not found",
@@ -513,7 +513,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundByFieldError("columnId"),
+			wantBody: columnNotFoundError("columnId"),
 		},
 		{
 			name:      "Internal error",
@@ -526,7 +526,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
@@ -534,7 +534,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -630,7 +630,7 @@ func TestColumns_Move(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody:  validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
@@ -638,7 +638,7 @@ func TestColumns_Move(t *testing.T) {
 			columnID:  "not-a-uuid",
 			inputBody: map[string]int64{"targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody:  validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid JSON",
@@ -646,7 +646,7 @@ func TestColumns_Move(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: "{\"targetPosition\":",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJSONBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "Invalid target position",
@@ -654,7 +654,7 @@ func TestColumns_Move(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]int64{"targetPosition": 0},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("targetPosition", []string{"Position is invalid"}),
+			wantBody:  validationError("targetPosition", []string{"Position is invalid"}),
 		},
 		{
 			name:      "Missing context user",
@@ -663,7 +663,7 @@ func TestColumns_Move(t *testing.T) {
 			inputBody: map[string]int64{"targetPosition": 1},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Index out of bounds",
@@ -676,7 +676,7 @@ func TestColumns_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("targetPosition", []string{"Index out of bounds"}),
+			wantBody: validationError("targetPosition", []string{"Index out of bounds"}),
 		},
 		{
 			name:      "Column not found",
@@ -689,7 +689,7 @@ func TestColumns_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundByFieldError("columnId"),
+			wantBody: columnNotFoundError("columnId"),
 		},
 		{
 			name:      "Internal error",
@@ -702,7 +702,7 @@ func TestColumns_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
@@ -710,7 +710,7 @@ func TestColumns_Move(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -794,14 +794,14 @@ func TestColumns_Delete(t *testing.T) {
 			boardID:  "not-a-uuid",
 			columnID: validColumn.ID.String(),
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:     "Invalid column id",
 			boardID:  validBoard.ID.String(),
 			columnID: "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody: validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:     "Missing context user",
@@ -809,7 +809,7 @@ func TestColumns_Delete(t *testing.T) {
 			columnID: validColumn.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:     "Column not found",
@@ -821,7 +821,7 @@ func TestColumns_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundByFieldError("columnId"),
+			wantBody: columnNotFoundError("columnId"),
 		},
 		{
 			name:     "Internal error",
@@ -833,7 +833,7 @@ func TestColumns_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 

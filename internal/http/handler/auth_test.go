@@ -109,7 +109,7 @@ func TestAuth_Register(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusConflict,
-			wantBody: userAlreadyExistsErrorBody(),
+			wantBody: userAlreadyExistsError(),
 		},
 		{
 			name:      "Unknown error",
@@ -130,7 +130,7 @@ func TestAuth_Register(t *testing.T) {
 			name:      "Body too large",
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -300,7 +300,7 @@ func TestAuth_Login(t *testing.T) {
 			name:      "Body too large",
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 

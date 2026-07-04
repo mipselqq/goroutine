@@ -60,26 +60,26 @@ func TestBoards_Create(t *testing.T) {
 			name:      "Empty name",
 			inputBody: map[string]string{"name": "", "description": validBoard.Description.String()},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+			wantBody:  validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Description too long",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": strings.Repeat("a", 1025)},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
+			wantBody:  validationError("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Invalid JSON",
 			inputBody: json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, validBoard.Name.String(), validBoard.Description.String()))), // missing closing brace
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJSONBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "No context user ID",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Internal error",
@@ -90,7 +90,7 @@ func TestBoards_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unknown error",
@@ -101,13 +101,13 @@ func TestBoards_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -176,7 +176,7 @@ func TestBoards_Get(t *testing.T) {
 			inputBody: "",
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Internal error",
@@ -187,7 +187,7 @@ func TestBoards_Get(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unknown error",
@@ -198,7 +198,7 @@ func TestBoards_Get(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 
@@ -266,7 +266,7 @@ func TestBoards_GetByID(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Not found",
@@ -277,7 +277,7 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -288,7 +288,7 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -299,14 +299,14 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:     "No context user ID",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 	}
 
@@ -446,7 +446,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Board not found",
@@ -457,7 +457,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -468,7 +468,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -479,14 +479,14 @@ func TestBoards_GetAggregate(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:     "No context user ID",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 	}
 
@@ -573,7 +573,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("name", []string{"Name is too short"}),
+			wantBody: validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:    "Success (name only)",
@@ -680,7 +680,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Not found",
@@ -695,7 +695,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -710,7 +710,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -725,7 +725,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "No context user ID",
@@ -736,14 +736,14 @@ func TestBoards_UpdateByID(t *testing.T) {
 			},
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -803,7 +803,7 @@ func TestBoards_Delete(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Not found",
@@ -814,7 +814,7 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -825,7 +825,7 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -836,14 +836,14 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:     "No context user ID",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 	}
 
