@@ -11,6 +11,7 @@ import (
 
 type TelegramConfig struct {
 	Token        domain.TelegramToken
+	BaseURL      string
 	LinkTokenTTL time.Duration
 }
 
@@ -30,8 +31,11 @@ func NewTelegramConfigFromEnv(logger *slog.Logger) (TelegramConfig, error) {
 		return TelegramConfig{}, fmt.Errorf("telegram config: %w", err)
 	}
 
+	baseURL := getenvOrDefault("TELEGRAM_API_BASE_URL", "https://api.telegram.org", logger)
+
 	return TelegramConfig{
 		Token:        token,
+		BaseURL:      baseURL,
 		LinkTokenTTL: linkTokenTTL,
 	}, nil
 }
@@ -40,6 +44,7 @@ func NewTelegramConfigFromEnv(logger *slog.Logger) (TelegramConfig, error) {
 func (c TelegramConfig) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Any("token", c.Token),
+		slog.String("base_url", c.BaseURL),
 		slog.Duration("link_token_ttl", c.LinkTokenTTL),
 	)
 }

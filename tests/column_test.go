@@ -29,13 +29,13 @@ type ColumnPositionJSON struct {
 }
 
 func TestColumn_HappyPath(t *testing.T) {
-	httpClient, ts, pool := Prelude(t)
+	p := Prelude(t)
 
 	t.Run("Full column flow", func(t *testing.T) {
-		testutil.TruncateAllTables(t, pool)
+		testutil.TruncateAllTables(t, p.Pool)
 
 		// 1. Register (already done via ac client)
-		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
+		ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 		boardName := testutil.ValidBoardName().String()
 		boardDescription := testutil.ValidBoardDescription().String()

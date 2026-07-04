@@ -49,7 +49,7 @@ func New(
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	telegramAPIClient := telegramDrv.NewAPIClient("https://api.telegram.org", telegramCfg.Token)
+	telegramAPIClient := telegramDrv.NewAPIClient(telegramCfg.BaseURL, telegramCfg.Token)
 	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {

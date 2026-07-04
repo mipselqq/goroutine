@@ -2,10 +2,7 @@ package telegram_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,10 +14,6 @@ import (
 type sendMessageQuery struct {
 	ChatID int64
 	Text   string
-}
-
-func sendMessagePath(token string) string {
-	return fmt.Sprintf("POST /bot%s/sendMessage", token)
 }
 
 func TestAPIClient_SendMessage(t *testing.T) {
@@ -51,19 +44,10 @@ func TestAPIClient_SendMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var captured sendMessageQuery
-			mux := http.NewServeMux()
-			mux.HandleFunc(sendMessagePath(token.RevealSecret()), func(w http.ResponseWriter, r *http.Request) {
-				q := r.URL.Query()
-				captured.ChatID, _ = strconv.ParseInt(q.Get("chat_id"), 10, 64)
-				captured.Text = q.Get("text")
-				w.WriteHeader(tt.statusCode)
-			})
+			mock := testutil.NewMockTelegramAPI(t, tt.statusCode)
+			defer mock.Close()
 
-			ts := httptest.NewServer(mux)
-			defer ts.Close()
-
-			client := telegram.NewAPIClient(ts.URL, token)
+			client := telegram.NewAPIClient(mock.URL(), token)
 			err := client.SendMessage(
 				context.Background(),
 				testutil.ValidTelegramChatID().Int64(),
@@ -78,7 +62,11 @@ func TestAPIClient_SendMessage(t *testing.T) {
 			}
 
 			if tt.wantQuery != nil {
-				if diff := cmp.Diff(*tt.wantQuery, captured); diff != "" {
+				got := sendMessageQuery{
+					ChatID: mock.LastChatID,
+					Text:   mock.LastText,
+				}
+				if diff := cmp.Diff(*tt.wantQuery, got); diff != "" {
 					t.Errorf("query params mismatch (-want +got):\n%s", diff)
 				}
 			}

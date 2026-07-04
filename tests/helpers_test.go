@@ -22,9 +22,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/redis/go-redis/v9"
 )
 
-func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
+type PreludeResult struct {
+	HTTPClient  *http.Client
+	Server      *httptest.Server
+	Pool        *pgxpool.Pool
+	RedisClient *redis.Client
+}
+
+func Prelude(t *testing.T) PreludeResult {
 	t.Helper()
 
 	pool := testutil.SetupTestPostgres(t, "../migrations")
@@ -56,9 +64,12 @@ func Prelude(t *testing.T) (*http.Client, *httptest.Server, *pgxpool.Pool) {
 		_ = redisClient.Close()
 	})
 
-	client := ts.Client()
-
-	return client, ts, pool
+	return PreludeResult{
+		HTTPClient:  ts.Client(),
+		Server:      ts,
+		Pool:        pool,
+		RedisClient: redisClient,
+	}
 }
 
 func Register(t *testing.T, c *http.Client, baseURL, email, password string) {
