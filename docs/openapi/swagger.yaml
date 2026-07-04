@@ -1147,6 +1147,20 @@ paths:
       summary: Get current user info
       tags:
       - auth
+  /webhook/telegram:
+    post:
+      consumes:
+      - application/json
+      description: Receives Update objects from Telegram Bot API. Processes /start
+        command with a link token to link a Telegram account to the user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Always returns 200 OK per Telegram webhook protocol
+      summary: Receive Telegram webhook updates
+      tags:
+      - webhook
 securityDefinitions:
   BearerAuth:
     description: Enter JWT token with `Bearer ` prefix, e.g. `Bearer eyJhbGciOi...`

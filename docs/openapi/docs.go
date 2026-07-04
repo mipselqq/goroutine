@@ -1312,6 +1312,26 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/webhook/telegram": {
+            "post": {
+                "description": "Receives Update objects from Telegram Bot API. Processes /start command with a link token to link a Telegram account to the user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhook"
+                ],
+                "summary": "Receive Telegram webhook updates",
+                "responses": {
+                    "200": {
+                        "description": "Always returns 200 OK per Telegram webhook protocol"
+                    }
+                }
+            }
         }
     },
     "definitions": {

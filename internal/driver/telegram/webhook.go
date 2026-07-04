@@ -34,6 +34,14 @@ func NewWebhookHandler(us UserService, notifier Notifier, logger *slog.Logger) *
 	}
 }
 
+// ServeHTTP godoc
+// @Summary Receive Telegram webhook updates
+// @Description Receives update objects from Telegram Bot API. Processes /start command with a link token to link a Telegram account to the user.
+// @Tags webhook
+// @Accept json
+// @Produce json
+// @Success 200 "Always returns 200 OK per Telegram webhook protocol"
+// @Router /webhook/telegram [post]
 func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	const maxBodySize = 10 * 1024 // 10KB is more than enough for a Telegram update
 
