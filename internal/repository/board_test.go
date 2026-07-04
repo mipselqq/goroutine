@@ -54,7 +54,7 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := FindBoardByID(t, pool, board.ID)
+		stored, ok := GetBoardByID(t, pool, board.ID)
 		if !ok {
 			t.Fatalf("created board %q not found in DB", board.ID)
 		}
@@ -97,9 +97,9 @@ func TestBoardRepository_GetByID(t *testing.T) {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		}
-		InsertBoard(t, pool, &want)
+		CreateBoard(t, pool, &want)
 
-		got, err := r.GetByID(context.Background(), want.ID)
+		got, err := r.Get(context.Background(), want.ID)
 		if err != nil {
 			t.Errorf("GetByID() error = %v", err)
 		}
@@ -126,7 +126,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	t.Run("Not found", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		_, err := r.GetByID(context.Background(), domain.NewBoardID())
+		_, err := r.Get(context.Background(), domain.NewBoardID())
 		assertErrRowNotFound(t, err)
 	})
 }
@@ -143,7 +143,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		CreateFixedUser(t, pool)
 
-		got, err := r.GetMany(context.Background(), userID)
+		got, err := r.List(context.Background(), userID)
 		if err != nil {
 			t.Errorf("GetMany() error = %v", err)
 		}
@@ -178,10 +178,10 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			UpdatedAt:   testutil.FixedTime5mFromNow(),
 		}
 
-		InsertBoard(t, pool, &second)
-		InsertBoard(t, pool, &first)
+		CreateBoard(t, pool, &second)
+		CreateBoard(t, pool, &first)
 
-		got, err := r.GetMany(context.Background(), userID)
+		got, err := r.List(context.Background(), userID)
 		if err != nil {
 			t.Errorf("GetMany() error = %v", err)
 		}
@@ -234,7 +234,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := FindBoardByID(t, pool, validBoard.ID)
+		stored, ok := GetBoardByID(t, pool, validBoard.ID)
 		if !ok {
 			t.Fatalf("updated board %q not found in DB", validBoard.ID)
 		}
@@ -247,9 +247,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		CreateFixedUser(t, pool)
-		InsertBoard(t, pool, &validBoard)
+		CreateBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
+		got, err := r.Update(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
@@ -260,9 +260,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		CreateFixedUser(t, pool)
-		InsertBoard(t, pool, &validBoard)
+		CreateBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
+		got, err := r.Update(context.Background(), validBoard.ID, &updatedNameOnly, nil)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
@@ -273,9 +273,9 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		CreateFixedUser(t, pool)
-		InsertBoard(t, pool, &validBoard)
+		CreateBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
+		got, err := r.Update(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
 		if err != nil {
 			t.Errorf("UpdateByID() error = %v", err)
 		}
@@ -287,7 +287,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		CreateFixedUser(t, pool)
 
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
+		_, err := r.Update(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
 		assertErrRowNotFound(t, err)
 	})
 }
@@ -305,7 +305,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 			t.Errorf("Delete() error = %v", err)
 		}
 
-		_, ok := FindBoardByID(t, pool, board.ID)
+		_, ok := GetBoardByID(t, pool, board.ID)
 		if ok {
 			t.Errorf("got board %q in DB, want deleted row", board.ID)
 		}

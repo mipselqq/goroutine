@@ -234,7 +234,7 @@ func (r *PGTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 	return result, nil
 }
 
-func (r *PGTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+func (r *PGTask) Get(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 	const query = `
 		SELECT id, column_id, name, description, position, created_at, updated_at
 		FROM tasks
@@ -260,7 +260,7 @@ func (r *PGTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task
 	return task, nil
 }
 
-func (r *PGTask) UpdateByID(
+func (r *PGTask) Update(
 	ctx context.Context,
 	columnID domain.ColumnID,
 	taskID domain.TaskID,

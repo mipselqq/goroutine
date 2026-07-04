@@ -13,8 +13,8 @@ import (
 
 type TasksService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
-	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error)
-	UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
+	ListByColumnID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error)
+	Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
 	Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error)
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
 }
@@ -156,7 +156,7 @@ func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := h.tasksService.List(r.Context(), userID, boardID, columnID)
+	tasks, err := h.tasksService.ListByColumnID(r.Context(), userID, boardID, columnID)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})
@@ -174,7 +174,7 @@ func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
-// UpdateByID godoc
+// Update godoc
 // @Summary Update a task by id
 // @Description Partially update task metadata for the current user. Provided fields are updated; omitted or null fields are ignored.
 // @Tags tasks
@@ -192,7 +192,7 @@ func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "TASK_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId} [patch]
-func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
+func (h *Tasks) Update(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, taskID, ok := h.parseBoardColumnAndTaskID(w, r)
 	if !ok {
 		return
@@ -230,7 +230,7 @@ func (h *Tasks) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.tasksService.UpdateByID(r.Context(), userID, boardID, columnID, taskID, name, description)
+	task, err := h.tasksService.Update(r.Context(), userID, boardID, columnID, taskID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrTaskNotFound) {
 			h.responder.TaskNotFound(w, []httpschema.Detail{{Field: "taskId", Issues: []string{"Task not found"}}})

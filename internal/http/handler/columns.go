@@ -14,7 +14,7 @@ import (
 type ColumnsService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
 	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
-	UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
+	Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
@@ -174,7 +174,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
-// UpdateByID godoc
+// Update godoc
 // @Summary Rename a column by id
 // @Description Partially update column metadata for the current user. Provided fields are updated; omitted or null fields are ignored.
 // @Tags columns
@@ -191,7 +191,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId} [patch]
-func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
+func (h *Columns) Update(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -239,7 +239,7 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	column, err := h.columnsService.UpdateByID(r.Context(), userID, boardID, columnID, name, description)
+	column, err := h.columnsService.Update(r.Context(), userID, boardID, columnID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})

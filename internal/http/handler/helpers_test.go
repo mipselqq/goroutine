@@ -24,25 +24,25 @@ type MockBoardService struct {
 	CreateFunc       func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetFunc          func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetAggregateFunc func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
-	GetManyFunc      func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByIDFunc   func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	ListFunc         func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateFunc       func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	DeleteFunc       func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
 type MockColumnService struct {
-	CreateFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
-	ListFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
-	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
-	MoveFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
-	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
+	CreateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
+	ListFunc   func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
+	UpdateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
+	MoveFunc   func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
+	DeleteFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 type MockTaskService struct {
-	CreateFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
-	ListFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error)
-	UpdateByIDFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
-	MoveFunc       func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error)
-	DeleteFunc     func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
+	CreateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
+	ListFunc   func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error)
+	UpdateFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
+	MoveFunc   func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error)
+	DeleteFunc func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
 }
 
 func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
@@ -64,6 +64,11 @@ func (m *MockUserService) CreateTelegramLinkToken(ctx context.Context, userID do
 	return m.CreateTelegramLinkTokenFunc(ctx, userID)
 }
 
+func (m *MockBoardService) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+	AssertFuncNotNil("BoardsService.CreateFunc", m.CreateFunc)
+	return m.CreateFunc(ctx, ownerID, name, description)
+}
+
 func (m *MockBoardService) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 	AssertFuncNotNil("BoardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
@@ -74,19 +79,14 @@ func (m *MockBoardService) GetAggregate(ctx context.Context, ownerID domain.User
 	return m.GetAggregateFunc(ctx, ownerID, boardID)
 }
 
-func (m *MockBoardService) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	AssertFuncNotNil("BoardsService.GetManyFunc", m.GetManyFunc)
-	return m.GetManyFunc(ctx, ownerID)
+func (m *MockBoardService) List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+	AssertFuncNotNil("BoardsService.ListFunc", m.ListFunc)
+	return m.ListFunc(ctx, ownerID)
 }
 
-func (m *MockBoardService) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	AssertFuncNotNil("BoardsService.CreateFunc", m.CreateFunc)
-	return m.CreateFunc(ctx, ownerID, name, description)
-}
-
-func (m *MockBoardService) UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
-	AssertFuncNotNil("BoardsService.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, ownerID, boardID, name, description)
+func (m *MockBoardService) Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+	AssertFuncNotNil("BoardsService.UpdateFunc", m.UpdateFunc)
+	return m.UpdateFunc(ctx, ownerID, boardID, name, description)
 }
 
 func (m *MockBoardService) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
@@ -104,9 +104,9 @@ func (m *MockColumnService) List(ctx context.Context, callerID domain.UserID, bo
 	return m.ListFunc(ctx, callerID, boardID)
 }
 
-func (m *MockColumnService) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
-	AssertFuncNotNil("ColumnsService.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, callerID, boardID, columnID, name, description)
+func (m *MockColumnService) Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+	AssertFuncNotNil("ColumnsService.UpdateFunc", m.UpdateFunc)
+	return m.UpdateFunc(ctx, callerID, boardID, columnID, name, description)
 }
 
 func (m *MockColumnService) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
@@ -124,14 +124,14 @@ func (m *MockTaskService) Create(ctx context.Context, callerID domain.UserID, bo
 	return m.CreateFunc(ctx, callerID, boardID, columnID, name, description)
 }
 
-func (m *MockTaskService) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
-	AssertFuncNotNil("TasksService.ListFunc", m.ListFunc)
+func (m *MockTaskService) ListByColumnID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+	AssertFuncNotNil("TasksService.ListByColumnIDFunc", m.ListFunc)
 	return m.ListFunc(ctx, callerID, boardID, columnID)
 }
 
-func (m *MockTaskService) UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
-	AssertFuncNotNil("TasksService.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, callerID, boardID, columnID, taskID, name, description)
+func (m *MockTaskService) Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+	AssertFuncNotNil("TasksService.UpdateFunc", m.UpdateFunc)
+	return m.UpdateFunc(ctx, callerID, boardID, columnID, taskID, name, description)
 }
 
 func (m *MockTaskService) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {

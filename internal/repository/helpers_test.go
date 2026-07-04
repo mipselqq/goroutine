@@ -23,10 +23,10 @@ func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 
 	id := testutil.ValidUserID()
 	domainEmail := testutil.ValidEmail()
-	InsertUser(t, pool, id, domainEmail, testutil.ValidPasswordHash())
+	CreateUser(t, pool, id, domainEmail, testutil.ValidPasswordHash())
 }
 
-func InsertUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain.Email, hash string) {
+func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain.Email, hash string) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -39,7 +39,7 @@ func InsertUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain
 	}
 }
 
-func InsertBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
+func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -58,11 +58,11 @@ func InsertBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 		board.UpdatedAt,
 	)
 	if err != nil {
-		t.Fatalf("InsertBoard() error = %v", err)
+		t.Fatalf("CreateBoard() error = %v", err)
 	}
 }
 
-func FindBoardByID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.Board, bool) {
+func GetBoardByID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.Board, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -92,7 +92,7 @@ func FindBoardByID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (do
 	return board, true
 }
 
-func InsertColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
+func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -112,11 +112,11 @@ func InsertColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 		column.UpdatedAt,
 	)
 	if err != nil {
-		t.Fatalf("InsertColumn() error = %v", err)
+		t.Fatalf("CreateColumn() error = %v", err)
 	}
 }
 
-func FindColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
+func GetColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -141,7 +141,7 @@ func FindColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) 
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, false
 		}
-		t.Fatalf("FindColumnByID() error = %v", err)
+		t.Fatalf("GetColumnByID() error = %v", err)
 	}
 
 	return column, true
@@ -192,7 +192,7 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	return columns
 }
 
-func InsertTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
+func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -212,11 +212,11 @@ func InsertTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 		task.UpdatedAt,
 	)
 	if err != nil {
-		t.Fatalf("InsertTask() error = %v", err)
+		t.Fatalf("CreateTask() error = %v", err)
 	}
 }
 
-func FindTaskByID(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
+func GetTaskByID(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -241,7 +241,7 @@ func FindTaskByID(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domai
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, false
 		}
-		t.Fatalf("FindTaskByID() error = %v", err)
+		t.Fatalf("GetTaskByID() error = %v", err)
 	}
 
 	return task, true
@@ -297,7 +297,7 @@ func insertFixedUserAndBoard(t *testing.T, pool *pgxpool.Pool) domain.Board {
 
 	CreateFixedUser(t, pool)
 	board := testutil.ValidBoard()
-	InsertBoard(t, pool, &board)
+	CreateBoard(t, pool, &board)
 
 	return board
 }
@@ -307,7 +307,7 @@ func insertFixedUserBoardAndColumn(t *testing.T, pool *pgxpool.Pool) (domain.Boa
 
 	board := insertFixedUserAndBoard(t, pool)
 	column := testutil.ValidColumn(board.ID)
-	InsertColumn(t, pool, &column)
+	CreateColumn(t, pool, &column)
 
 	return board, column
 }
@@ -378,7 +378,7 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 	}
 }
 
-func FindUserByID(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
+func GetUserByID(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -398,7 +398,7 @@ func FindUserByID(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domai
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.User{}, false
 		}
-		t.Fatalf("FindUserByID() error = %v", err)
+		t.Fatalf("GetUserByID() error = %v", err)
 	}
 
 	return user, true

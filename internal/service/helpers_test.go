@@ -14,19 +14,19 @@ func AssertFuncNotNil(funcName string, fn any) {
 }
 
 type MockUserRepository struct {
-	InsertUserFunc         func(ctx context.Context, email domain.Email, hash string) error
-	GetUserByEmailFunc     func(ctx context.Context, email domain.Email) (domain.User, error)
+	CreateFunc             func(ctx context.Context, email domain.Email, hash string) error
+	GetByEmailFunc         func(ctx context.Context, email domain.Email) (domain.User, error)
 	UpdateTelegramInfoFunc func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
-func (m *MockUserRepository) InsertUser(ctx context.Context, email domain.Email, hash string) error {
-	AssertFuncNotNil("UserRepository.InsertUserFunc", m.InsertUserFunc)
-	return m.InsertUserFunc(ctx, email, hash)
+func (m *MockUserRepository) Create(ctx context.Context, email domain.Email, hash string) error {
+	AssertFuncNotNil("UserRepository.CreateFunc", m.CreateFunc)
+	return m.CreateFunc(ctx, email, hash)
 }
 
-func (m *MockUserRepository) GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	AssertFuncNotNil("UserRepository.GetUserByEmailFunc", m.GetUserByEmailFunc)
-	return m.GetUserByEmailFunc(ctx, email)
+func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+	AssertFuncNotNil("UserRepository.GetByEmailFunc", m.GetByEmailFunc)
+	return m.GetByEmailFunc(ctx, email)
 }
 
 func (m *MockUserRepository) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
@@ -59,20 +59,20 @@ func (m *MockTelegramNotifier) Notify(ctx context.Context, chatID domain.Telegra
 }
 
 type MockBoardRepository struct {
-	CreateFunc     func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	GetByIDFunc    func(ctx context.Context, id domain.BoardID) (domain.Board, error)
-	GetManyFunc    func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByIDFunc func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
-	DeleteFunc     func(ctx context.Context, boardID domain.BoardID) error
+	CreateFunc func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
+	GetFunc    func(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	ListFunc   func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	UpdateFunc func(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	DeleteFunc func(ctx context.Context, boardID domain.BoardID) error
 }
 
 type MockColumnRepository struct {
-	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
-	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
-	GetByIDFunc       func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
-	UpdateByIDFunc    func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
-	MoveFunc          func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
-	DeleteFunc        func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
+	CreateFunc func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
+	ListFunc   func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	GetFunc    func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
+	UpdateFunc func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
+	MoveFunc   func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
+	DeleteFunc func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -80,19 +80,19 @@ func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID,
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
-func (m *MockBoardRepository) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.GetByIDFunc", m.GetByIDFunc)
-	return m.GetByIDFunc(ctx, id)
+func (m *MockBoardRepository) Get(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+	AssertFuncNotNil("BoardRepository.GetFunc", m.GetFunc)
+	return m.GetFunc(ctx, id)
 }
 
-func (m *MockBoardRepository) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.GetManyFunc", m.GetManyFunc)
-	return m.GetManyFunc(ctx, ownerID)
+func (m *MockBoardRepository) List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+	AssertFuncNotNil("BoardRepository.ListFunc", m.ListFunc)
+	return m.ListFunc(ctx, ownerID)
 }
 
-func (m *MockBoardRepository) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, boardID, name, description)
+func (m *MockBoardRepository) Update(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+	AssertFuncNotNil("BoardRepository.UpdateFunc", m.UpdateFunc)
+	return m.UpdateFunc(ctx, boardID, name, description)
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
@@ -110,25 +110,25 @@ func (m *MockColumnRepository) Create(
 	return m.CreateFunc(ctx, boardID, name, description)
 }
 
-func (m *MockColumnRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
-	return m.ListByBoardIDFunc(ctx, boardID)
+func (m *MockColumnRepository) List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+	AssertFuncNotNil("ColumnRepository.ListFunc", m.ListFunc)
+	return m.ListFunc(ctx, boardID)
 }
 
-func (m *MockColumnRepository) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.GetByIDFunc", m.GetByIDFunc)
-	return m.GetByIDFunc(ctx, columnID)
+func (m *MockColumnRepository) Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+	AssertFuncNotNil("ColumnRepository.GetFunc", m.GetFunc)
+	return m.GetFunc(ctx, columnID)
 }
 
-func (m *MockColumnRepository) UpdateByID(
+func (m *MockColumnRepository) Update(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
 	name *domain.ColumnName,
 	description *domain.ColumnDescription,
 ) (domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, boardID, columnID, name, description)
+	AssertFuncNotNil("ColumnRepository.UpdateFunc", m.UpdateFunc)
+	return m.UpdateFunc(ctx, boardID, columnID, name, description)
 }
 
 func (m *MockColumnRepository) Move(
@@ -150,8 +150,8 @@ type MockTaskRepository struct {
 	CreateFunc         func(ctx context.Context, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
 	ListByBoardIDFunc  func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error)
 	ListByColumnIDFunc func(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error)
-	GetByIDFunc        func(ctx context.Context, taskID domain.TaskID) (domain.Task, error)
-	UpdateByIDFunc     func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
+	GetFunc            func(ctx context.Context, taskID domain.TaskID) (domain.Task, error)
+	UpdateFunc         func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
 	MoveFunc           func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error)
 	DeleteFunc         func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
 }
@@ -176,20 +176,20 @@ func (m *MockTaskRepository) ListByColumnID(ctx context.Context, columnID domain
 	return m.ListByColumnIDFunc(ctx, columnID)
 }
 
-func (m *MockTaskRepository) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.GetByIDFunc", m.GetByIDFunc)
-	return m.GetByIDFunc(ctx, taskID)
+func (m *MockTaskRepository) Get(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+	AssertFuncNotNil("TaskRepository.GetFunc", m.GetFunc)
+	return m.GetFunc(ctx, taskID)
 }
 
-func (m *MockTaskRepository) UpdateByID(
+func (m *MockTaskRepository) Update(
 	ctx context.Context,
 	columnID domain.ColumnID,
 	taskID domain.TaskID,
 	name *domain.TaskName,
 	description *domain.TaskDescription,
 ) (domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.UpdateByIDFunc", m.UpdateByIDFunc)
-	return m.UpdateByIDFunc(ctx, columnID, taskID, name, description)
+	AssertFuncNotNil("TaskRepository.UpdateFunc", m.UpdateFunc)
+	return m.UpdateFunc(ctx, columnID, taskID, name, description)
 }
 
 func (m *MockTaskRepository) Move(

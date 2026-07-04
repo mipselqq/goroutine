@@ -40,7 +40,7 @@ func (r *PGBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 	return board, nil
 }
 
-func (r *PGBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+func (r *PGBoard) Get(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 	const query = `
 		SELECT id, owner_id, name, description, created_at, updated_at
 		FROM boards
@@ -65,7 +65,7 @@ func (r *PGBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board,
 	return board, nil
 }
 
-func (r *PGBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 	const query = `
 		SELECT id, owner_id, name, description, created_at, updated_at
 		FROM boards
@@ -104,7 +104,7 @@ func (r *PGBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 	return boards, nil
 }
 
-func (r *PGBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+func (r *PGBoard) Update(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 	const query = `
 		UPDATE boards
 		SET

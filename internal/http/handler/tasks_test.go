@@ -366,7 +366,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": updatedName.String(), "description": updatedDescription.String()},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -406,7 +406,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]any{},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
 					}
@@ -489,7 +489,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					return domain.Task{}, service.ErrTaskNotFound
 				}
 			},
@@ -503,7 +503,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					return domain.Task{}, service.ErrInternal
 				}
 			},
@@ -544,7 +544,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
-			h.UpdateByID(rr, req)
+			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")

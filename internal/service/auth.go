@@ -17,8 +17,8 @@ import (
 )
 
 type AuthUserRepository interface {
-	InsertUser(ctx context.Context, email domain.Email, hash string) error
-	GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error)
+	Create(ctx context.Context, email domain.Email, hash string) error
+	GetByEmail(ctx context.Context, email domain.Email) (domain.User, error)
 }
 
 type JWTOptions struct {
@@ -45,7 +45,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
-	err = s.repository.InsertUser(ctx, email, hash)
+	err = s.repository.Create(ctx, email, hash)
 	if errors.Is(err, repository.ErrUniqueViolation) {
 		return fmt.Errorf("auth service: register: user insert: %w", ErrUserAlreadyExists)
 	}
@@ -57,7 +57,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 }
 
 func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
-	user, err := s.repository.GetUserByEmail(ctx, email)
+	user, err := s.repository.GetByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
 	}

@@ -11,15 +11,15 @@ import (
 
 type ColumnRepository interface {
 	Create(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
-	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
-	GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
-	UpdateByID(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
+	List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
+	Update(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	Move(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 type ColumnBoardRepository interface {
-	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	Get(ctx context.Context, id domain.BoardID) (domain.Board, error)
 }
 
 type Column struct {
@@ -32,7 +32,7 @@ func NewColumn(columnRepo ColumnRepository, boardRepo ColumnBoardRepository) *Co
 }
 
 func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Column{}, ErrBoardNotFound
@@ -52,7 +52,7 @@ func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID dom
 }
 
 func (s *Column) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return nil, ErrBoardNotFound
@@ -64,7 +64,7 @@ func (s *Column) List(ctx context.Context, callerID domain.UserID, boardID domai
 		return nil, ErrBoardNotFound
 	}
 
-	columns, err := s.columnRepo.ListByBoardID(ctx, boardID)
+	columns, err := s.columnRepo.List(ctx, boardID)
 	if err != nil {
 		return nil, fmt.Errorf("column service: list: %v: %w", err, ErrInternal)
 	}
@@ -72,7 +72,7 @@ func (s *Column) List(ctx context.Context, callerID domain.UserID, boardID domai
 	return columns, nil
 }
 
-func (s *Column) UpdateByID(
+func (s *Column) Update(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
@@ -80,7 +80,7 @@ func (s *Column) UpdateByID(
 	name *domain.ColumnName,
 	description *domain.ColumnDescription,
 ) (domain.Column, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Column{}, ErrColumnNotFound
@@ -91,7 +91,7 @@ func (s *Column) UpdateByID(
 		return domain.Column{}, ErrColumnNotFound
 	}
 
-	column, err := s.columnRepo.GetByID(ctx, columnID)
+	column, err := s.columnRepo.Get(ctx, columnID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Column{}, ErrColumnNotFound
@@ -106,7 +106,7 @@ func (s *Column) UpdateByID(
 		return column, nil
 	}
 
-	updated, err := s.columnRepo.UpdateByID(ctx, boardID, columnID, name, description)
+	updated, err := s.columnRepo.Update(ctx, boardID, columnID, name, description)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Column{}, ErrColumnNotFound
@@ -123,7 +123,7 @@ func (s *Column) Delete(
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
 ) error {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return ErrColumnNotFound
@@ -152,7 +152,7 @@ func (s *Column) Move(
 	columnID domain.ColumnID,
 	targetPosition domain.ColumnPosition,
 ) (domain.ColumnPosition, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.ColumnPosition{}, ErrColumnNotFound
@@ -163,7 +163,7 @@ func (s *Column) Move(
 		return domain.ColumnPosition{}, ErrColumnNotFound
 	}
 
-	column, err := s.columnRepo.GetByID(ctx, columnID)
+	column, err := s.columnRepo.Get(ctx, columnID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.ColumnPosition{}, ErrColumnNotFound

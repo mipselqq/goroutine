@@ -151,7 +151,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Success",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
@@ -182,7 +182,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Internal error",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, service.ErrInternal
 				}
 			},
@@ -193,7 +193,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Unknown error",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, errors.New("unknown error")
 				}
 			},
@@ -223,7 +223,7 @@ func TestBoards_Get(t *testing.T) {
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 
-			h.GetMany(rr, req)
+			h.List(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -539,7 +539,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": updatedValidBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
@@ -582,7 +582,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name": updatedNameOnlyBoard.Name.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name == nil || *name != updatedNameOnlyBoard.Name {
 						t.Errorf("got name %+v, want %+v", name, updatedNameOnlyBoard.Name)
 					}
@@ -609,7 +609,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": updatedDescriptionOnlyBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
 					}
@@ -634,7 +634,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			boardID:   validBoard.ID.String(),
 			inputBody: map[string]any{"name": nil, "description": nil},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name != nil || description != nil {
 						t.Errorf("got name %+v, description %+v, want nil, nil", name, description)
 					}
@@ -659,7 +659,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": "",
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name == nil || description == nil {
 						t.Errorf("got name %+v, description %+v, want non-nil, non-nil", name, description)
 					}
@@ -690,7 +690,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
 				}
 			},
@@ -705,7 +705,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
@@ -720,7 +720,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
 				}
 			},
@@ -767,7 +767,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
-			h.UpdateByID(rr, req)
+			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")

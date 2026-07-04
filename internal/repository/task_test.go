@@ -65,7 +65,7 @@ func TestTaskRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "tasks", "created_at", "updated_at")
 
-		stored, ok := FindTaskByID(t, pool, task.ID)
+		stored, ok := GetTaskByID(t, pool, task.ID)
 		if !ok {
 			t.Fatalf("created task %q not found in DB", task.ID)
 		}
@@ -83,7 +83,7 @@ func TestTaskRepository_Create_AppendsPosition(t *testing.T) {
 	_, column := insertFixedUserBoardAndColumn(t, pool)
 
 	existing := testutil.ValidTask(column.ID)
-	InsertTask(t, pool, &existing)
+	CreateTask(t, pool, &existing)
 
 	toCreate := testutil.NewValidTask(t, column.ID, "Second", "Second description", 2)
 
@@ -123,15 +123,15 @@ func TestTaskRepository_ListByColumnID(t *testing.T) {
 
 		board, columnA := insertFixedUserBoardAndColumn(t, pool)
 		columnB := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
-		InsertColumn(t, pool, &columnB)
+		CreateColumn(t, pool, &columnB)
 
 		first := testutil.ValidTask(columnA.ID)
 		second := testutil.NewValidTask(t, columnA.ID, "Second", "second", 2)
 		otherColumnTask := testutil.NewValidTask(t, columnB.ID, "Other", "other", 1)
 
-		InsertTask(t, pool, &second)
-		InsertTask(t, pool, &first)
-		InsertTask(t, pool, &otherColumnTask)
+		CreateTask(t, pool, &second)
+		CreateTask(t, pool, &first)
+		CreateTask(t, pool, &otherColumnTask)
 
 		got, err := r.ListByColumnID(context.Background(), columnA.ID)
 		if err != nil {
@@ -153,22 +153,22 @@ func TestTaskRepository_ListByBoardID(t *testing.T) {
 
 		board, firstColumn := insertFixedUserBoardAndColumn(t, pool)
 		secondColumn := testutil.NewValidColumn(t, board.ID, "Done", 2)
-		InsertColumn(t, pool, &secondColumn)
+		CreateColumn(t, pool, &secondColumn)
 
 		otherBoard := testutil.ValidBoard()
-		InsertBoard(t, pool, &otherBoard)
+		CreateBoard(t, pool, &otherBoard)
 		otherBoardColumn := testutil.ValidColumn(otherBoard.ID)
-		InsertColumn(t, pool, &otherBoardColumn)
+		CreateColumn(t, pool, &otherBoardColumn)
 
 		firstTask := testutil.ValidTask(firstColumn.ID)
 		secondTask := testutil.NewValidTask(t, firstColumn.ID, "Second", "second", 2)
 		thirdTask := testutil.ValidTask(secondColumn.ID)
 		otherBoardTask := testutil.ValidTask(otherBoardColumn.ID)
 
-		InsertTask(t, pool, &secondTask)
-		InsertTask(t, pool, &firstTask)
-		InsertTask(t, pool, &thirdTask)
-		InsertTask(t, pool, &otherBoardTask)
+		CreateTask(t, pool, &secondTask)
+		CreateTask(t, pool, &firstTask)
+		CreateTask(t, pool, &thirdTask)
+		CreateTask(t, pool, &otherBoardTask)
 
 		got, err := r.ListByBoardID(context.Background(), board.ID)
 		if err != nil {
@@ -191,9 +191,9 @@ func TestTaskRepository_GetByID(t *testing.T) {
 		_, column := insertFixedUserBoardAndColumn(t, pool)
 
 		created := testutil.ValidTask(column.ID)
-		InsertTask(t, pool, &created)
+		CreateTask(t, pool, &created)
 
-		got, err := r.GetByID(context.Background(), created.ID)
+		got, err := r.Get(context.Background(), created.ID)
 		if err != nil {
 			t.Fatalf("GetByID() error = %v", err)
 		}
@@ -205,7 +205,7 @@ func TestTaskRepository_GetByID(t *testing.T) {
 	t.Run("Not found", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		_, err := r.GetByID(context.Background(), domain.NewTaskID())
+		_, err := r.Get(context.Background(), domain.NewTaskID())
 		assertErrRowNotFound(t, err)
 	})
 }
@@ -239,7 +239,7 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "tasks", "created_at", "updated_at")
 
-		stored, ok := FindTaskByID(t, pool, want.ID)
+		stored, ok := GetTaskByID(t, pool, want.ID)
 		if !ok {
 			t.Fatalf("updated task %q not found in DB", want.ID)
 		}
@@ -258,10 +258,10 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		updatedAtBeforeUpdate := createdAtBeforeUpdate
 		created.CreatedAt = createdAtBeforeUpdate
 		created.UpdatedAt = updatedAtBeforeUpdate
-		InsertTask(t, pool, &created)
+		CreateTask(t, pool, &created)
 
 		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.FixedTime5mFromNow())
-		updated, err := r.UpdateByID(context.Background(), column.ID, created.ID, &want.Name, &want.Description)
+		updated, err := r.Update(context.Background(), column.ID, created.ID, &want.Name, &want.Description)
 		if err != nil {
 			t.Fatalf("UpdateByID() error = %v", err)
 		}
@@ -275,7 +275,7 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		_, column := insertFixedUserBoardAndColumn(t, pool)
 
 		updatedName, _ := domain.NewTaskName("Renamed")
-		_, err := r.UpdateByID(context.Background(), column.ID, domain.NewTaskID(), &updatedName, nil)
+		_, err := r.Update(context.Background(), column.ID, domain.NewTaskID(), &updatedName, nil)
 		assertErrRowNotFound(t, err)
 	})
 
@@ -285,10 +285,10 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		_, column := insertFixedUserBoardAndColumn(t, pool)
 
 		created := testutil.ValidTask(column.ID)
-		InsertTask(t, pool, &created)
+		CreateTask(t, pool, &created)
 
 		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.FixedTime5mFromNow())
-		_, err := r.UpdateByID(context.Background(), domain.NewColumnID(), created.ID, &want.Name, &want.Description)
+		_, err := r.Update(context.Background(), domain.NewColumnID(), created.ID, &want.Name, &want.Description)
 		assertErrRowNotFound(t, err)
 	})
 }
@@ -305,9 +305,9 @@ func TestTaskRepository_Move(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
-		InsertTask(t, pool, &third)
-		InsertTask(t, pool, &first)
-		InsertTask(t, pool, &second)
+		CreateTask(t, pool, &third)
+		CreateTask(t, pool, &first)
+		CreateTask(t, pool, &second)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 3)
 
@@ -340,9 +340,9 @@ func TestTaskRepository_Move(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
-		InsertTask(t, pool, &second)
-		InsertTask(t, pool, &third)
-		InsertTask(t, pool, &first)
+		CreateTask(t, pool, &second)
+		CreateTask(t, pool, &third)
+		CreateTask(t, pool, &first)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 1)
 
@@ -374,8 +374,8 @@ func TestTaskRepository_Move(t *testing.T) {
 		first := testutil.ValidTask(column.ID)
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 
-		InsertTask(t, pool, &second)
-		InsertTask(t, pool, &first)
+		CreateTask(t, pool, &second)
+		CreateTask(t, pool, &first)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 2)
 
@@ -407,9 +407,9 @@ func TestTaskRepository_Move(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
-		InsertTask(t, pool, &second)
-		InsertTask(t, pool, &third)
-		InsertTask(t, pool, &first)
+		CreateTask(t, pool, &second)
+		CreateTask(t, pool, &third)
+		CreateTask(t, pool, &first)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 4)
 
@@ -432,7 +432,7 @@ func TestTaskRepository_Move(t *testing.T) {
 
 		board, columnA := insertFixedUserBoardAndColumn(t, pool)
 		columnB := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
-		InsertColumn(t, pool, &columnB)
+		CreateColumn(t, pool, &columnB)
 
 		a1 := testutil.ValidTask(columnA.ID)
 		a2 := testutil.NewValidTask(t, columnA.ID, "A2", "a2", 2)
@@ -441,11 +441,11 @@ func TestTaskRepository_Move(t *testing.T) {
 		b1 := testutil.NewValidTask(t, columnB.ID, "B1", "b1", 1)
 		b2 := testutil.NewValidTask(t, columnB.ID, "B2", "b2", 2)
 
-		InsertTask(t, pool, &a3)
-		InsertTask(t, pool, &a1)
-		InsertTask(t, pool, &a2)
-		InsertTask(t, pool, &b2)
-		InsertTask(t, pool, &b1)
+		CreateTask(t, pool, &a3)
+		CreateTask(t, pool, &a1)
+		CreateTask(t, pool, &a2)
+		CreateTask(t, pool, &b2)
+		CreateTask(t, pool, &b1)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 2)
 
@@ -475,7 +475,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		assertTaskIDAndPosition(t, &gotB[1], a2.ID, 2)
 		assertTaskIDAndPosition(t, &gotB[2], b2.ID, 3)
 
-		movedTask, ok := FindTaskByID(t, pool, a2.ID)
+		movedTask, ok := GetTaskByID(t, pool, a2.ID)
 		if !ok {
 			t.Fatalf("moved task %q not found in DB", a2.ID)
 		}
@@ -489,13 +489,13 @@ func TestTaskRepository_Move(t *testing.T) {
 
 		board, columnA := insertFixedUserBoardAndColumn(t, pool)
 		columnB := testutil.NewValidColumn(t, board.ID, "Done", 2)
-		InsertColumn(t, pool, &columnB)
+		CreateColumn(t, pool, &columnB)
 
 		a1 := testutil.ValidTask(columnA.ID)
 		b1 := testutil.NewValidTask(t, columnB.ID, "B1", "b1", 1)
 
-		InsertTask(t, pool, &b1)
-		InsertTask(t, pool, &a1)
+		CreateTask(t, pool, &b1)
+		CreateTask(t, pool, &a1)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 2)
 
@@ -528,13 +528,13 @@ func TestTaskRepository_Move(t *testing.T) {
 
 		board, columnA := insertFixedUserBoardAndColumn(t, pool)
 		columnB := testutil.NewValidColumn(t, board.ID, "Done", 2)
-		InsertColumn(t, pool, &columnB)
+		CreateColumn(t, pool, &columnB)
 
 		a1 := testutil.ValidTask(columnA.ID)
 		b1 := testutil.NewValidTask(t, columnB.ID, "B1", "b1", 1)
 
-		InsertTask(t, pool, &b1)
-		InsertTask(t, pool, &a1)
+		CreateTask(t, pool, &b1)
+		CreateTask(t, pool, &a1)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 3)
 
@@ -573,7 +573,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		_, column := insertFixedUserBoardAndColumn(t, pool)
 
 		created := testutil.ValidTask(column.ID)
-		InsertTask(t, pool, &created)
+		CreateTask(t, pool, &created)
 
 		targetPosition := testutil.NewValidTaskPosition(t, 1)
 
@@ -594,9 +594,9 @@ func TestTaskRepository_Delete(t *testing.T) {
 		second := testutil.NewValidTask(t, column.ID, "Second", "second", 2)
 		third := testutil.NewValidTask(t, column.ID, "Third", "third", 3)
 
-		InsertTask(t, pool, &third)
-		InsertTask(t, pool, &first)
-		InsertTask(t, pool, &second)
+		CreateTask(t, pool, &third)
+		CreateTask(t, pool, &first)
+		CreateTask(t, pool, &second)
 
 		err := r.Delete(context.Background(), board.ID, column.ID, second.ID)
 		if err != nil {
@@ -611,7 +611,7 @@ func TestTaskRepository_Delete(t *testing.T) {
 		assertTaskIDAndPosition(t, &got[0], first.ID, 1)
 		assertTaskIDAndPosition(t, &got[1], third.ID, 2)
 
-		_, ok := FindTaskByID(t, pool, second.ID)
+		_, ok := GetTaskByID(t, pool, second.ID)
 		if ok {
 			t.Error("got deleted task in DB, want absent")
 		}
@@ -632,7 +632,7 @@ func TestTaskRepository_Delete(t *testing.T) {
 		_, column := insertFixedUserBoardAndColumn(t, pool)
 
 		created := testutil.ValidTask(column.ID)
-		InsertTask(t, pool, &created)
+		CreateTask(t, pool, &created)
 
 		err := r.Delete(context.Background(), domain.NewBoardID(), column.ID, created.ID)
 		assertErrRowNotFound(t, err)

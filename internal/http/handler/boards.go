@@ -15,8 +15,8 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
-	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
@@ -225,7 +225,7 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, newBoardAggregateResponse(&aggregate))
 }
 
-// GetMany godoc
+// List godoc
 // @Summary Get many boards
 // @Description Get many boards for the current user. Results are returned in increasing creation time order.
 // @Tags boards
@@ -237,13 +237,13 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [get]
-func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
+func (h *Boards) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
 
-	boards, err := h.boardsService.GetMany(r.Context(), userID)
+	boards, err := h.boardsService.List(r.Context(), userID)
 	if err != nil {
 		h.responder.InternalError(w, r, err)
 		return
@@ -257,8 +257,8 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
-// UpdateByID godoc
-// @Summary UpdateByID a board by id
+// Update godoc
+// @Summary Update a board by id
 // @Description Partially update board metadata for the current user (owner only). Provided fields are updated; omitted or null fields are ignored.
 // @Tags boards
 // @Accept json
@@ -273,7 +273,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [patch]
-func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
+func (h *Boards) Update(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
@@ -315,7 +315,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.boardsService.UpdateByID(r.Context(), userID, boardID, name, description)
+	board, err := h.boardsService.Update(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})

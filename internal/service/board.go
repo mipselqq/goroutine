@@ -12,14 +12,14 @@ import (
 
 type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
-	GetByID(ctx context.Context, id domain.BoardID) (domain.Board, error)
-	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByID(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	Get(ctx context.Context, id domain.BoardID) (domain.Board, error)
+	List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	Update(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
 type BoardColumnRepository interface {
-	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 }
 
 type BoardTaskRepository interface {
@@ -55,8 +55,8 @@ func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.
 	return board, nil
 }
 
-func (s *Board) GetMany(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
-	boards, err := s.boardRepo.GetMany(ctx, callerID)
+func (s *Board) List(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
+	boards, err := s.boardRepo.List(ctx, callerID)
 	if err != nil {
 		return nil, fmt.Errorf("board service: get many: %v: %w", err, ErrInternal)
 	}
@@ -65,7 +65,7 @@ func (s *Board) GetMany(ctx context.Context, callerID domain.UserID) ([]domain.B
 }
 
 func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
@@ -80,7 +80,7 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 }
 
 func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (AggregateBoard, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return AggregateBoard{}, ErrBoardNotFound
@@ -90,7 +90,7 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 	if board.OwnerID != callerID {
 		return AggregateBoard{}, ErrBoardNotFound
 	}
-	columns, err := s.columnRepo.ListByBoardID(ctx, boardID)
+	columns, err := s.columnRepo.List(ctx, boardID)
 	if err != nil {
 		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: list columns by board id: %v: %w", err, ErrInternal)
 	}
@@ -134,14 +134,14 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 	return aggregate, nil
 }
 
-func (s *Board) UpdateByID(
+func (s *Board) Update(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
 	name *domain.BoardName,
 	description *domain.BoardDescription,
 ) (domain.Board, error) {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
@@ -156,7 +156,7 @@ func (s *Board) UpdateByID(
 		return board, nil
 	}
 
-	updated, err := s.boardRepo.UpdateByID(ctx, boardID, name, description)
+	updated, err := s.boardRepo.Update(ctx, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
@@ -168,7 +168,7 @@ func (s *Board) UpdateByID(
 }
 
 func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {
-	board, err := s.boardRepo.GetByID(ctx, boardID)
+	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return ErrBoardNotFound

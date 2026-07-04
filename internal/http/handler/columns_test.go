@@ -345,7 +345,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": updatedName.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -381,7 +381,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"description": updatedDescOnly.String()},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
 					}
@@ -408,7 +408,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]any{},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
 					}
@@ -435,7 +435,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": updatedName.String(), "description": ""},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					if name == nil || description == nil {
 						t.Errorf("got name %+v, description %+v, want non-nil, non-nil", name, description)
 					}
@@ -508,7 +508,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, service.ErrColumnNotFound
 				}
 			},
@@ -521,7 +521,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
 					return domain.Column{}, service.ErrInternal
 				}
 			},
@@ -568,7 +568,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 
 			logger := testutil.NewTestLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
-			h.UpdateByID(rr, req)
+			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")

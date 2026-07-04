@@ -95,7 +95,7 @@ func (r *PGColumn) Create(
 	return column, nil
 }
 
-func (r *PGColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+func (r *PGColumn) List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
@@ -134,7 +134,7 @@ func (r *PGColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 	return result, nil
 }
 
-func (r *PGColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+func (r *PGColumn) Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
@@ -160,7 +160,7 @@ func (r *PGColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domai
 	return column, nil
 }
 
-func (r *PGColumn) UpdateByID(
+func (r *PGColumn) Update(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
