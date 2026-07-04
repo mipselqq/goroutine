@@ -1276,6 +1276,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/users/me/telegram/link": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a one-time token that a user can send to the Telegram bot via /start to link their Telegram account to the app.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Generate a Telegram link token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.telegramLinkTokenResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.DetailedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httpschema.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/whoami": {
             "get": {
                 "security": [
@@ -1315,7 +1352,7 @@ const docTemplate = `{
         },
         "/webhook/telegram": {
             "post": {
-                "description": "Receives Update objects from Telegram Bot API. Processes /start command with a link token to link a Telegram account to the user.",
+                "description": "Receives update objects from Telegram Bot API. Processes /start command with a link token to link a Telegram account to the user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1619,6 +1656,15 @@ const docTemplate = `{
                 "updatedAt": {
                     "type": "string",
                     "example": "2026-03-07T20:56:50.000+03:00"
+                }
+            }
+        },
+        "handler.telegramLinkTokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "018e1000-0000-7000-8000-000000000000"
                 }
             }
         },
