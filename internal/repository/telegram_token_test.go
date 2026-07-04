@@ -88,10 +88,10 @@ func TestTelegramTokenRepository_ConsumeTelegramLinkToken(t *testing.T) {
 func telegramTokenRepoPrelude(t *testing.T) (*redis.Client, *repository.RedisTelegramToken) {
 	t.Helper()
 
-	redisClient := testutil.SetupTestRedis(t)
-	testutil.FlushCurrentRedisDB(t, redisClient)
+	redisClient := testutil.SetupRedis(t)
+	testutil.FlushRedisDB(t, redisClient)
 	t.Cleanup(func() {
-		testutil.FlushCurrentRedisDB(t, redisClient)
+		testutil.FlushRedisDB(t, redisClient)
 		err := redisClient.Close()
 		if err != nil {
 			t.Fatalf("Failed to close Redis client: %v", err)

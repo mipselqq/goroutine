@@ -181,7 +181,7 @@ func TestTasks_Create(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Create(rr, req)
 
@@ -318,7 +318,7 @@ func TestTasks_List(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.List(rr, req)
 
@@ -542,7 +542,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Update(rr, req)
 
@@ -763,7 +763,7 @@ func TestTasks_Move(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Move(rr, req)
 
@@ -898,7 +898,7 @@ func TestTasks_Delete(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Delete(rr, req)
 

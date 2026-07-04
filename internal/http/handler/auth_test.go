@@ -146,7 +146,7 @@ func TestAuth_Register(t *testing.T) {
 				tt.setupAuthService(t, &s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Register(rr, req)
 
@@ -315,7 +315,7 @@ func TestAuth_Login(t *testing.T) {
 				tt.setupAuthService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Login(rr, req)
 
@@ -362,7 +362,7 @@ func TestAuth_WhoAmI(t *testing.T) {
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/whoami", "")
 			req = req.WithContext(tt.context)
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewAuth(logger, &MockAuthService{}, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.WhoAmI(rr, req)
 

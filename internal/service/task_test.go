@@ -384,7 +384,7 @@ func TestTask_UpdateByID(t *testing.T) {
 	validBoard := testutil.ValidBoard()
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	validTask := testutil.ValidTask(validColumn.ID)
-	updatedTask := testutil.UpdateValidTask(t, &validTask, "Renamed", "Renamed description", testutil.FixedTimeNow())
+	updatedTask := testutil.UpdateValidTask(t, &validTask, "Renamed", "Renamed description", testutil.FixedNow())
 	updatedName := updatedTask.Name
 	updatedDescription := updatedTask.Description
 

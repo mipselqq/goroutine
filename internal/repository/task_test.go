@@ -722,7 +722,7 @@ func TestLockTaskColumns_BlocksSecondTransaction(t *testing.T) {
 func taskRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGTask) {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGTask(pool)

@@ -19,7 +19,7 @@ const UUIDv7 = "018e1000-0000-7000-8000-000000000001"
 func TestNewRouter_Full(t *testing.T) {
 	t.Parallel()
 
-	logger := testutil.NewTestLogger(t)
+	logger := testutil.NewLogger(t)
 	responder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 
 	handlers := &handler.Handlers{

@@ -66,8 +66,8 @@ func (m *Metrics) Wrap(next http.Handler) http.Handler {
 	})
 }
 
-func AbstractMetricPath(rawPath string) string {
-	segments := strings.Split(rawPath, "/")
+func AbstractMetricPath(path string) string {
+	segments := strings.Split(path, "/")
 	for i, segment := range segments {
 		if segment == "" {
 			continue

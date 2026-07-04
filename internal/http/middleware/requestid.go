@@ -12,23 +12,23 @@ import (
 type GenerateRequestIDFn func() string
 
 type RequestID struct {
-	logger              *slog.Logger
-	generateRequestIDFn GenerateRequestIDFn
+	logger *slog.Logger
+	gen    GenerateRequestIDFn
 }
 
 func MustNewRequestID(logger *slog.Logger, gen GenerateRequestIDFn) *RequestID {
 	if gen == nil {
-		panic("BUG: generateRequestIDFn is nil")
+		panic("BUG: gen is nil")
 	}
 
-	return &RequestID{logger: logger, generateRequestIDFn: gen}
+	return &RequestID{logger: logger, gen: gen}
 }
 
 func (m *RequestID) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID := strings.TrimSpace(r.Header.Get("X-Request-Id"))
 		if reqID == "" {
-			reqID = m.generateRequestIDFn()
+			reqID = m.gen()
 		}
 
 		ctx := context.WithValue(r.Context(), httpschema.ContextKeyRequestID, reqID)

@@ -40,7 +40,7 @@ func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 		return nil, err
 	}
 
-	goose.SetLogger(&logging.GooseLogger{Logger: logger})
+	goose.SetLogger(&logging.GooseLogger{Base: logger})
 
 	err = goose.SetDialect("postgres")
 	if err != nil {

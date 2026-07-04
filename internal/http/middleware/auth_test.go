@@ -237,7 +237,7 @@ func TestAuth(t *testing.T) {
 				w.WriteHeader(mockStatusCode)
 			})
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			wrapped := m.Wrap(h)
 

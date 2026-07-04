@@ -9,9 +9,9 @@ import (
 	"goroutine/internal/testutil"
 )
 
-func AssertFuncNotNil(funcName string, fn any) {
+func AssertFuncNotNil(name string, fn any) {
 	if fn == nil {
-		panic(fmt.Sprintf("%s = nil, want configured mock", funcName))
+		panic(fmt.Sprintf("%s = nil, want configured mock", name))
 	}
 }
 

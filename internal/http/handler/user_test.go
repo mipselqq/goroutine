@@ -88,7 +88,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 				tt.setupUserService(t, mockUser)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewUser(logger, mockUser, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.CreateTelegramLinkToken(rr, req)
 

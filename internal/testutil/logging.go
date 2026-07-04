@@ -22,7 +22,7 @@ func trimTrailingNewline(s string) string {
 	return s
 }
 
-func NewTestLogger(t testing.TB) *slog.Logger {
+func NewLogger(t testing.TB) *slog.Logger {
 	return slog.New(slog.NewTextHandler(testWriter{t}, nil))
 }
 
@@ -37,22 +37,22 @@ func NewDiscardLogger() *slog.Logger {
 	return slog.New(slog.DiscardHandler)
 }
 
-func FailOnInvalidLogValue(t *testing.T, attrs []slog.Attr, wantAttrs map[string]string) {
+func FailOnInvalidLogValue(t *testing.T, attrs []slog.Attr, want map[string]string) {
 	t.Helper()
 
 	for _, a := range attrs {
-		want, ok := wantAttrs[a.Key]
+		expected, ok := want[a.Key]
 		if !ok {
 			t.Errorf("got unexpected attribute %q, want only configured keys", a.Key)
 			continue
 		}
-		if a.Value.String() != want {
-			t.Errorf("for key %q, got %q, want %q", a.Key, a.Value.String(), want)
+		if a.Value.String() != expected {
+			t.Errorf("for key %q, got %q, want %q", a.Key, a.Value.String(), expected)
 		}
-		delete(wantAttrs, a.Key)
+		delete(want, a.Key)
 	}
 
-	for key := range wantAttrs {
+	for key := range want {
 		t.Errorf("missing attribute %q", key)
 	}
 }

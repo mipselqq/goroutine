@@ -504,7 +504,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGColumn) {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGColumn(pool)

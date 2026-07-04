@@ -11,7 +11,7 @@ import (
 
 	"goroutine/internal/config"
 	"goroutine/internal/domain"
-	telegramDrv "goroutine/internal/driver/telegram"
+	"goroutine/internal/driver/telegram"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/httpschema"
@@ -49,7 +49,7 @@ func New(
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
 	})
-	telegramAPIClient := telegramDrv.NewAPIClient(telegramCfg.BaseURL, telegramCfg.Token)
+	telegramClient := telegram.NewClient(telegramCfg.BaseURL, telegramCfg.Token)
 	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {
@@ -69,7 +69,7 @@ func New(
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
 	userHandler := handler.NewUser(logger, userService, errorResponder)
-	telegramWebhook := telegramDrv.NewWebhookHandler(logger, userService, telegramAPIClient)
+	telegramWebhook := telegram.NewWebhookHandler(logger, userService, telegramClient)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)

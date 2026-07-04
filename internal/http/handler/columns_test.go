@@ -169,7 +169,7 @@ func TestColumns_Create(t *testing.T) {
 				tt.setupColumnService(t, mockColumns)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Create(rr, req)
 
@@ -288,7 +288,7 @@ func TestColumns_List(t *testing.T) {
 				tt.setupColumnService(t, mockColumns)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.List(rr, req)
 
@@ -566,7 +566,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 				tt.setupColumnService(t, mockColumns)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Update(rr, req)
 
@@ -742,7 +742,7 @@ func TestColumns_Move(t *testing.T) {
 				tt.setupColumnService(t, mockColumns)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Move(rr, req)
 
@@ -858,7 +858,7 @@ func TestColumns_Delete(t *testing.T) {
 				tt.setupColumnService(t, mockColumns)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Delete(rr, req)
 

@@ -166,8 +166,8 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			OwnerID:     userID,
 			Name:        boardName,
 			Description: boardDescription,
-			CreatedAt:   testutil.FixedTimeNow(),
-			UpdatedAt:   testutil.FixedTimeNow(),
+			CreatedAt:   testutil.FixedNow(),
+			UpdatedAt:   testutil.FixedNow(),
 		}
 		second := domain.Board{
 			ID:          domain.NewBoardID(),
@@ -324,7 +324,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGBoard) {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGBoard(pool)

@@ -129,7 +129,7 @@ func TestBoards_Create(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 
 			h.Create(rr, req)
@@ -220,7 +220,7 @@ func TestBoards_Get(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 
 			h.List(rr, req)
@@ -330,7 +330,7 @@ func TestBoards_GetByID(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Get(rr, req)
 
@@ -510,7 +510,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.GetAggregate(rr, req)
 
@@ -765,7 +765,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Update(rr, req)
 
@@ -867,7 +867,7 @@ func TestBoards_Delete(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
 			h.Delete(rr, req)
 

@@ -16,7 +16,7 @@ type sendMessageQuery struct {
 	Text   string
 }
 
-func TestAPIClient_SendMessage(t *testing.T) {
+func TestClient_SendMessage(t *testing.T) {
 	token := testutil.ValidTelegramToken()
 	chatID := testutil.ValidTelegramChatID()
 	message := testutil.ValidTelegramMessage()
@@ -48,7 +48,7 @@ func TestAPIClient_SendMessage(t *testing.T) {
 			mock := testutil.NewMockTelegramAPI(t, tt.statusCode)
 			defer mock.Close()
 
-			client := telegram.NewAPIClient(mock.URL(), token)
+			client := telegram.NewClient(mock.URL(), token)
 			err := client.SendMessage(
 				context.Background(),
 				testutil.ValidTelegramChatID().Int64(),

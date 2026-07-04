@@ -22,24 +22,24 @@ func TestUser_TelegramNotifications(t *testing.T) {
 
 	t.Run("Telegram notifications full flow", func(t *testing.T) {
 		testutil.TruncateAllTables(t, p.Pool)
-		testutil.FlushCurrentRedisDB(t, p.RedisClient)
+		testutil.FlushRedisDB(t, p.RedisClient)
 
 		ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 		// 1. Get Telegram link token.
-		resp := ac.Do(t, http.MethodPost, "/v1/users/me/telegram/link", nil)
+		linkResp := ac.Do(t, http.MethodPost, "/v1/users/me/telegram/link", nil)
 		defer func() {
-			_ = resp.Body.Close()
+			_ = linkResp.Body.Close()
 		}()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("got status %d, want %d", resp.StatusCode, http.StatusOK)
+		if linkResp.StatusCode != http.StatusOK {
+			t.Fatalf("got status %d, want %d", linkResp.StatusCode, http.StatusOK)
 		}
 
 		var linkBody struct {
 			Token string `json:"token"`
 		}
-		err := json.NewDecoder(resp.Body).Decode(&linkBody)
+		err := json.NewDecoder(linkResp.Body).Decode(&linkBody)
 		if err != nil {
 			t.Fatalf("Decode() error = %v", err)
 		}
@@ -54,11 +54,11 @@ func TestUser_TelegramNotifications(t *testing.T) {
 				},
 			},
 		}
-		bodyBytes, err := json.Marshal(webhookBody)
+		body, err := json.Marshal(webhookBody)
 		if err != nil {
 			t.Fatalf("json.Marshal() error = %v", err)
 		}
-		webhookResp, err := p.HTTPClient.Post(p.Server.URL+"/webhook/telegram", "application/json", bytes.NewReader(bodyBytes))
+		webhookResp, err := p.HTTPClient.Post(p.Server.URL+"/webhook/telegram", "application/json", bytes.NewReader(body))
 		if err != nil {
 			t.Fatalf("webhook Post() error = %v", err)
 		}

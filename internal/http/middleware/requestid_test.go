@@ -71,7 +71,7 @@ func TestRequestIDMiddleware(t *testing.T) {
 				w.WriteHeader(mockStatusCode)
 			})
 
-			mw := middleware.MustNewRequestID(testutil.NewTestLogger(t), generateStaticID)
+			mw := middleware.MustNewRequestID(testutil.NewLogger(t), generateStaticID)
 
 			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 			rr := httptest.NewRecorder()

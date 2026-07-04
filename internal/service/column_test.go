@@ -245,7 +245,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 	}
 	updatedColumn := validColumn
 	updatedColumn.Name = updatedName
-	updatedColumn.UpdatedAt = testutil.FixedTimeNow()
+	updatedColumn.UpdatedAt = testutil.FixedNow()
 
 	updatedDesc, errDesc := domain.NewColumnDescription("Patched column description")
 	if errDesc != nil {
@@ -253,7 +253,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 	}
 	updatedColumnDescOnly := validColumn
 	updatedColumnDescOnly.Description = updatedDesc
-	updatedColumnDescOnly.UpdatedAt = testutil.FixedTimeNow()
+	updatedColumnDescOnly.UpdatedAt = testutil.FixedNow()
 
 	tests := []struct {
 		name             string

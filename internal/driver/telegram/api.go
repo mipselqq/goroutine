@@ -10,26 +10,26 @@ import (
 	"goroutine/internal/domain"
 )
 
-type APIClient struct {
-	botToken domain.TelegramToken
-	baseURL  string
-	http     *http.Client
+type Client struct {
+	token   domain.TelegramToken
+	baseURL string
+	http    *http.Client
 }
 
-func NewAPIClient(baseURL string, botToken domain.TelegramToken) *APIClient {
-	return &APIClient{
-		botToken: botToken,
-		baseURL:  baseURL,
-		http:     &http.Client{Timeout: 10 * time.Second},
+func NewClient(baseURL string, token domain.TelegramToken) *Client {
+	return &Client{
+		token:   token,
+		baseURL: baseURL,
+		http:    &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
-func (c *APIClient) SendMessage(ctx context.Context, chatID int64, text domain.TelegramMessage) error {
+func (c *Client) SendMessage(ctx context.Context, chatID int64, text domain.TelegramMessage) error {
 	q := url.Values{}
 	q.Set("chat_id", fmt.Sprintf("%d", chatID))
 	q.Set("text", text.String())
 
-	reqURL := fmt.Sprintf("%s/bot%s/sendMessage?%s", c.baseURL, c.botToken.RevealSecret(), q.Encode())
+	reqURL := fmt.Sprintf("%s/bot%s/sendMessage?%s", c.baseURL, c.token.RevealSecret(), q.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, http.NoBody)
 	if err != nil {
@@ -49,6 +49,6 @@ func (c *APIClient) SendMessage(ctx context.Context, chatID int64, text domain.T
 	return nil
 }
 
-func (c *APIClient) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
+func (c *Client) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
 	return c.SendMessage(ctx, chatID.Int64(), text)
 }

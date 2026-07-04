@@ -133,7 +133,7 @@ func TestCors_Wrap(t *testing.T) {
 				w.WriteHeader(tt.wantStatus)
 			})
 
-			mw := middleware.NewCORS(testutil.NewTestLogger(t), tt.allowedOrigins)
+			mw := middleware.NewCORS(testutil.NewLogger(t), tt.allowedOrigins)
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, tt.method, "/", "")
 			for k, v := range tt.reqHeaders {

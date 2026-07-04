@@ -27,8 +27,8 @@ func MustLoadDevEnv() {
 	panic("Failed to load dev env from file (tried ../../.env.dev and ../.env.dev)")
 }
 
-func FixedTimeNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
-func FixedTime5mFromNow() time.Time { return FixedTimeNow().Add(5 * time.Minute) }
+func FixedNow() time.Time           { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
+func FixedTime5mFromNow() time.Time { return FixedNow().Add(5 * time.Minute) }
 
 const timeFormat = "2006-01-02T15:04:05.000Z07:00"
 
@@ -36,7 +36,7 @@ func FixedTime5mFromNowStr() string {
 	return FixedTime5mFromNow().UTC().Format(timeFormat)
 }
 
-func FixedTimeNowStr() string { return FixedTimeNow().UTC().Format(timeFormat) }
+func FixedTimeNowStr() string { return FixedNow().UTC().Format(timeFormat) }
 
 func Big25KBJSON() json.RawMessage {
 	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
@@ -126,7 +126,7 @@ func ValidBoard() domain.Board {
 	description := ValidBoardDescription()
 	id := domain.NewBoardID()
 	userID := ValidUserID()
-	pseudoNow := FixedTimeNow()
+	pseudoNow := FixedNow()
 
 	validBoard := domain.Board{
 		ID:          id,
@@ -159,7 +159,7 @@ func ValidColumn(boardID domain.BoardID) domain.Column {
 	name := ValidColumnName()
 	description := ValidColumnDescription()
 	position := ValidColumnPosition()
-	pseudoNow := FixedTimeNow()
+	pseudoNow := FixedNow()
 
 	return domain.Column{
 		ID:          domain.NewColumnID(),
@@ -207,7 +207,7 @@ func ValidTask(columnID domain.ColumnID) domain.Task {
 	name := ValidTaskName()
 	description := ValidTaskDescription()
 	position := ValidTaskPosition()
-	pseudoNow := FixedTimeNow()
+	pseudoNow := FixedNow()
 
 	return domain.Task{
 		ID:          domain.NewTaskID(),
