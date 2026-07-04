@@ -12,12 +12,12 @@ import (
 )
 
 type PgBoard struct {
-	pool *pgxpool.Pool
+	pgPool *pgxpool.Pool
 }
 
-func NewPgBoard(pool *pgxpool.Pool) *PgBoard {
+func NewPgBoard(pgPool *pgxpool.Pool) *PgBoard {
 	return &PgBoard{
-		pool: pool,
+		pgPool: pgPool,
 	}
 }
 
@@ -25,7 +25,7 @@ func (r *PgBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 	const query = `INSERT INTO boards (owner_id, name, description) VALUES ($1, $2, $3) RETURNING id, owner_id, name, description, created_at, updated_at`
 
 	var board domain.Board
-	err := r.pool.QueryRow(ctx, query, ownerID, name, description).Scan(
+	err := r.pgPool.QueryRow(ctx, query, ownerID, name, description).Scan(
 		&board.ID,
 		&board.OwnerID,
 		&board.Name,
@@ -47,7 +47,7 @@ func (r *PgBoard) GetByID(ctx context.Context, id domain.BoardID) (domain.Board,
 		WHERE id = $1`
 
 	var board domain.Board
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.pgPool.QueryRow(ctx, query, id).Scan(
 		&board.ID,
 		&board.OwnerID,
 		&board.Name,
@@ -72,7 +72,7 @@ func (r *PgBoard) GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.
 		WHERE owner_id = $1
 		ORDER BY created_at ASC`
 
-	rows, err := r.pool.Query(ctx, query, ownerID)
+	rows, err := r.pgPool.Query(ctx, query, ownerID)
 	if err != nil {
 		return nil, fmt.Errorf("board repo: get many: %v: %w", err, ErrInternal)
 	}
@@ -115,7 +115,7 @@ func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *
 		RETURNING id, owner_id, name, description, created_at, updated_at`
 
 	var board domain.Board
-	err := r.pool.QueryRow(ctx, query, name, description, boardID).Scan(
+	err := r.pgPool.QueryRow(ctx, query, name, description, boardID).Scan(
 		&board.ID,
 		&board.OwnerID,
 		&board.Name,
@@ -136,7 +136,7 @@ func (r *PgBoard) UpdateByID(ctx context.Context, boardID domain.BoardID, name *
 func (r *PgBoard) Delete(ctx context.Context, boardID domain.BoardID) error {
 	const query = `DELETE FROM boards WHERE id = $1`
 
-	cmd, err := r.pool.Exec(ctx, query, boardID)
+	cmd, err := r.pgPool.Exec(ctx, query, boardID)
 	if err != nil {
 		return fmt.Errorf("board repo: delete: %v: %w", err, ErrInternal)
 	}

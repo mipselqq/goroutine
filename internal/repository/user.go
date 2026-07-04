@@ -14,12 +14,12 @@ import (
 )
 
 type PgUser struct {
-	pool *pgxpool.Pool
+	pgPool *pgxpool.Pool
 }
 
-func NewPgUser(pool *pgxpool.Pool) *PgUser {
+func NewPgUser(pgPool *pgxpool.Pool) *PgUser {
 	return &PgUser{
-		pool: pool,
+		pgPool: pgPool,
 	}
 }
 
@@ -28,7 +28,7 @@ const pgUniqueViolation = "23505"
 func (r *PgUser) InsertUser(ctx context.Context, email domain.Email, hash string) error {
 	const query = `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
 
-	_, err := r.pool.Exec(ctx, query, email, hash)
+	_, err := r.pgPool.Exec(ctx, query, email, hash)
 	if err == nil {
 		return nil
 	}
@@ -45,7 +45,7 @@ func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain
 	const query = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE email = $1`
 
 	var user domain.User
-	err := r.pool.QueryRow(ctx, query, email).Scan( // TODO: Maybe implement Scan for the struct itself?
+	err := r.pgPool.QueryRow(ctx, query, email).Scan( // TODO: Maybe implement Scan for the struct itself?
 		&user.ID,
 		&user.Email,
 		&user.PasswordHash,
@@ -65,7 +65,7 @@ func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain
 func (r *PgUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
 	const query = `UPDATE users SET telegram_chat_id = $1, telegram_username = $2 WHERE id = $3`
 
-	status, err := r.pool.Exec(ctx, query, chatID, username, userID)
+	status, err := r.pgPool.Exec(ctx, query, chatID, username, userID)
 	if err != nil {
 		return fmt.Errorf("user repo: update telegram info: %v: %w", err, ErrInternal)
 	}

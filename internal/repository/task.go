@@ -12,11 +12,11 @@ import (
 )
 
 type PgTask struct {
-	pool *pgxpool.Pool
+	pgPool *pgxpool.Pool
 }
 
-func NewPgTask(pool *pgxpool.Pool) *PgTask {
-	return &PgTask{pool: pool}
+func NewPgTask(pgPool *pgxpool.Pool) *PgTask {
+	return &PgTask{pgPool: pgPool}
 }
 
 // LockTaskColumns acquires FOR UPDATE row locks on the given columns for boardID.
@@ -101,7 +101,7 @@ func (r *PgTask) Create(
 		RETURNING id, column_id, name, description, position, created_at, updated_at`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("task repo: create begin tx: %v: %w", err, ErrInternal)
 	}
@@ -163,7 +163,7 @@ func (r *PgTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]d
 	ORDER BY c.position ASC, t.position ASC
 	`
 
-	rows, err := r.pool.Query(ctx, query, boardID)
+	rows, err := r.pgPool.Query(ctx, query, boardID)
 	if err != nil {
 		return nil, fmt.Errorf("task repo: list by board id: %v: %w", err, ErrInternal)
 	}
@@ -202,7 +202,7 @@ func (r *PgTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 		WHERE column_id = $1
 		ORDER BY position ASC`
 
-	rows, err := r.pool.Query(ctx, query, columnID)
+	rows, err := r.pgPool.Query(ctx, query, columnID)
 	if err != nil {
 		return nil, fmt.Errorf("task repo: list by column id: %v: %w", err, ErrInternal)
 	}
@@ -241,7 +241,7 @@ func (r *PgTask) GetByID(ctx context.Context, taskID domain.TaskID) (domain.Task
 		WHERE id = $1`
 
 	var task domain.Task
-	err := r.pool.QueryRow(ctx, query, taskID).Scan(
+	err := r.pgPool.QueryRow(ctx, query, taskID).Scan(
 		&task.ID,
 		&task.ColumnID,
 		&task.Name,
@@ -278,7 +278,7 @@ func (r *PgTask) UpdateByID(
 		RETURNING id, column_id, name, description, position, created_at, updated_at`
 
 	var task domain.Task
-	err := r.pool.QueryRow(ctx, query, columnID, taskID, name, description).Scan(
+	err := r.pgPool.QueryRow(ctx, query, columnID, taskID, name, description).Scan(
 		&task.ID,
 		&task.ColumnID,
 		&task.Name,
@@ -371,7 +371,7 @@ func (r *PgTask) Move(
 		WHERE id = @task_id`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task repo: move begin tx: %v: %w", err, ErrInternal)
 	}
@@ -522,7 +522,7 @@ func (r *PgTask) Delete(
 		  AND position > @deleted_position`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("task repo: delete begin tx: %v: %w", err, ErrInternal)
 	}

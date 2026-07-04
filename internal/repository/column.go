@@ -12,11 +12,11 @@ import (
 )
 
 type PgColumn struct {
-	pool *pgxpool.Pool
+	pgPool *pgxpool.Pool
 }
 
-func NewPgColumn(pool *pgxpool.Pool) *PgColumn {
-	return &PgColumn{pool: pool}
+func NewPgColumn(pgPool *pgxpool.Pool) *PgColumn {
+	return &PgColumn{pgPool: pgPool}
 }
 
 func (r *PgColumn) Create(
@@ -41,7 +41,7 @@ func (r *PgColumn) Create(
 		RETURNING id, board_id, name, description, position, created_at, updated_at`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("column repo: create begin tx: %v: %w", err, ErrInternal)
 	}
@@ -102,7 +102,7 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 		WHERE board_id = $1
 		ORDER BY position ASC`
 
-	rows, err := r.pool.Query(ctx, query, boardID)
+	rows, err := r.pgPool.Query(ctx, query, boardID)
 	if err != nil {
 		return nil, fmt.Errorf("column repo: list: %v: %w", err, ErrInternal)
 	}
@@ -141,7 +141,7 @@ func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domai
 		WHERE id = $1`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, columnID).Scan(
+	err := r.pgPool.QueryRow(ctx, query, columnID).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
@@ -178,7 +178,7 @@ func (r *PgColumn) UpdateByID(
 		RETURNING id, board_id, name, description, position, created_at, updated_at`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, name, description, boardID, columnID).Scan(
+	err := r.pgPool.QueryRow(ctx, query, name, description, boardID, columnID).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
@@ -256,7 +256,7 @@ func (r *PgColumn) Move(
 		  AND id = @column_id`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return domain.ColumnPosition{}, fmt.Errorf("column repo: move begin tx: %v: %w", err, ErrInternal)
 	}
@@ -370,7 +370,7 @@ func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 		  AND position > @deleted_position`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("column repo: delete begin tx: %v: %w", err, ErrInternal)
 	}
