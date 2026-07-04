@@ -27,13 +27,13 @@ type BoardTaskRepository interface {
 }
 
 type Board struct {
-	boardRepository  BoardRepository
-	columnRepository BoardColumnRepository
-	taskRepository   BoardTaskRepository
+	boardRepo  BoardRepository
+	columnRepo BoardColumnRepository
+	taskRepo   BoardTaskRepository
 }
 
 func NewBoard(boardRepo BoardRepository, columnRepo BoardColumnRepository, taskRepo BoardTaskRepository) *Board {
-	return &Board{boardRepository: boardRepo, columnRepository: columnRepo, taskRepository: taskRepo}
+	return &Board{boardRepo: boardRepo, columnRepo: columnRepo, taskRepo: taskRepo}
 }
 
 type AggregateBoard struct {
@@ -47,7 +47,7 @@ type AggregateColumn struct {
 }
 
 func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	board, err := s.boardRepository.Create(ctx, callerID, name, description)
+	board, err := s.boardRepo.Create(ctx, callerID, name, description)
 	if err != nil {
 		return domain.Board{}, fmt.Errorf("board service: create: %v: %w", err, ErrInternal)
 	}
@@ -56,7 +56,7 @@ func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.
 }
 
 func (s *Board) GetMany(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
-	boards, err := s.boardRepository.GetMany(ctx, callerID)
+	boards, err := s.boardRepo.GetMany(ctx, callerID)
 	if err != nil {
 		return nil, fmt.Errorf("board service: get many: %v: %w", err, ErrInternal)
 	}
@@ -65,7 +65,7 @@ func (s *Board) GetMany(ctx context.Context, callerID domain.UserID) ([]domain.B
 }
 
 func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
-	board, err := s.boardRepository.GetByID(ctx, boardID)
+	board, err := s.boardRepo.GetByID(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
@@ -80,7 +80,7 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 }
 
 func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (AggregateBoard, error) {
-	board, err := s.boardRepository.GetByID(ctx, boardID)
+	board, err := s.boardRepo.GetByID(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return AggregateBoard{}, ErrBoardNotFound
@@ -90,12 +90,12 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 	if board.OwnerID != callerID {
 		return AggregateBoard{}, ErrBoardNotFound
 	}
-	columns, err := s.columnRepository.ListByBoardID(ctx, boardID)
+	columns, err := s.columnRepo.ListByBoardID(ctx, boardID)
 	if err != nil {
 		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: list columns by board id: %v: %w", err, ErrInternal)
 	}
 
-	tasks, err := s.taskRepository.ListByBoardID(ctx, boardID)
+	tasks, err := s.taskRepo.ListByBoardID(ctx, boardID)
 	if err != nil {
 		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: list tasks by board id: %v: %w", err, ErrInternal)
 	}
@@ -141,7 +141,7 @@ func (s *Board) UpdateByID(
 	name *domain.BoardName,
 	description *domain.BoardDescription,
 ) (domain.Board, error) {
-	board, err := s.boardRepository.GetByID(ctx, boardID)
+	board, err := s.boardRepo.GetByID(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
@@ -156,7 +156,7 @@ func (s *Board) UpdateByID(
 		return board, nil
 	}
 
-	updated, err := s.boardRepository.UpdateByID(ctx, boardID, name, description)
+	updated, err := s.boardRepo.UpdateByID(ctx, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
@@ -168,7 +168,7 @@ func (s *Board) UpdateByID(
 }
 
 func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {
-	board, err := s.boardRepository.GetByID(ctx, boardID)
+	board, err := s.boardRepo.GetByID(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return ErrBoardNotFound
@@ -179,7 +179,7 @@ func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID doma
 		return ErrBoardNotFound
 	}
 
-	err = s.boardRepository.Delete(ctx, boardID)
+	err = s.boardRepo.Delete(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return ErrBoardNotFound
