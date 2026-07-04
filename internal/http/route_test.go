@@ -34,8 +34,9 @@ func TestNewRouter_Full(t *testing.T) {
 		Auth:      &spyAuthMiddleware{},
 		RequestID: &spyRequestIDMiddleware{},
 	}
+	telegramWebhook := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
-	router := app.NewRouter(handlers, middlewares, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	router := app.NewRouter(handlers, middlewares, telegramWebhook)
 
 	type entry struct {
 		name   string
