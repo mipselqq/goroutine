@@ -29,15 +29,16 @@ See a [demo frontend](https://mipselqq.github.io/goroutine-demo):
 All technologies and methodologies used in the project:
 - **Languages:** Go, TypeScript (k6)
 - **Architecture & Design:** Clean Architecture, TDD, Clean Code, stdlib (net/http), UUIDv7, Value Objects
-- **Database:** PostgreSQL, jackc/pgx (Driver), Goose (Migrations)
+- **Database:** PostgreSQL, jackc/pgx (Driver), Goose (Migrations), Redis (go-redis)
 - **Infrastructure:** Docker, Docker Compose, Ansible, Makefile, Staging & Production
 - **CI/CD:** GitHub Actions, Trunk-based Development, Lefthook, Release Drafter
 - **Observability**: Prometheus, Grafana, Alloy, Loki, Node Exporter, log/slog + lmittmann/tint, 
 - **Security:** Distroless, Argon2id, JWT, Trivy, Hadolint, Secrecy (Custom package)
 - **Quality Assurance:** Table-driven unit tests, integration tests, E2E tests, k6 load and race tests, GolangCI-Lint, Gofumpt, Govulncheck
 - **Documentation:** OpenAPI, Swagger, Swaggo
+- **Integrations:** Telegram Bot API (REST, webhook)
 
-## Architecture
+## Architecture overview
 ```mermaid
 graph TD
     Main[cmd/server/main.go]:::config
@@ -46,7 +47,7 @@ graph TD
     Repo[Repository / Data Access]:::repo
     Domain[Domain / Entities]:::domain
     Driver[Driver / Pgx]:::driver
-    DB[(Database)]:::db
+    DB[(PostgreSQL)]:::db
 
     %% Injection
     Main -.->|Creates| Repo
@@ -59,6 +60,7 @@ graph TD
     Service -->|Calls| Repo
     Repo -->|Interacts| Driver
     Driver -->|Interacts| DB
+    Driver -->|Interacts| Redis
 
     %% Domain Dependencies
     Handler -.->|Uses| Domain
@@ -80,7 +82,7 @@ This project uses **clean architecture** with rings as such:
 - **Handler**, establishing API contract
 - **Service**, implementing use cases
 - **Repository**, hiding database implementation details
-- **Driver**, managing protocols, done with external modules
+- **Driver**, managing external services (pgx for Postgres, Telegram Bot API)
 
 At the cost of **more boilerplate** code, we get the following advantages:
 - **Decoupling** of components, ensuring high **testability** with mocks.
@@ -127,7 +129,9 @@ Annotated overview of the repository layout:
 - `internal/` - Private application code.
    - `app/` - `app.go`, `startup.go` — wiring and startup.
    - `config/` - Configuration (env parsing, database URL, app settings).
-   - `domain/` - Core entities and invariants (boards, columns, tasks, users, email, IDs).
+   - `domain/` - Core entities and invariants (boards, columns, tasks, users, email, IDs, Telegram objects).
+   - `driver/` - Integrations with external services.
+      - `telegram/` - Telegram Bot API client and webhook handler.
    - `http/` - HTTP layer.
       - `handler/` - HTTP handlers (API endpoints).
       - `middleware/` - HTTP middleware (auth, CORS, metrics, request IDs).
