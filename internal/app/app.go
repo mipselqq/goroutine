@@ -69,7 +69,7 @@ func New(
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
 	userHandler := handler.NewUser(logger, userService, errorResponder)
-	telegramWebhook := telegramDrv.NewWebhookHandler(userService, telegramAPIClient, logger)
+	telegramWebhook := telegramDrv.NewWebhookHandler(logger, userService, telegramAPIClient)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)

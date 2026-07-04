@@ -35,7 +35,7 @@ func TestNewRouter_Full(t *testing.T) {
 		Auth:      &spyAuthMiddleware{},
 		RequestID: &spyRequestIDMiddleware{},
 	}
-	telegramWebhook := telegram.NewWebhookHandler(nil, nil, logger)
+	telegramWebhook := telegram.NewWebhookHandler(logger, nil, nil)
 
 	router := app.NewRouter(handlers, middlewares, telegramWebhook)
 
