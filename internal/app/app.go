@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 
 	"goroutine/internal/config"
+	"goroutine/internal/domain"
+	telegramDrv "goroutine/internal/driver/telegram"
 	httpapp "goroutine/internal/http"
 	"goroutine/internal/http/handler"
 	"goroutine/internal/http/httpschema"
@@ -19,6 +22,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -26,16 +30,33 @@ type App struct {
 	AdminRouter http.Handler
 }
 
-func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg prometheus.Registerer) *App {
-	userRepo := repository.NewPgUser(pool)
-	boardsRepo := repository.NewPgBoard(pool)
-	columnsRepo := repository.NewPgColumn(pool)
-	tasksRepo := repository.NewPgTask(pool)
+func New(
+	logger *slog.Logger,
+	pgPool *pgxpool.Pool,
+	redisClient *redis.Client,
+	cfg *config.AppConfig,
+	telegramCfg *config.TelegramConfig,
+	reg prometheus.Registerer,
+) *App {
+	userRepo := repository.NewPgUser(pgPool)
+	telegramTokenRepo := repository.NewRedisTelegramToken(redisClient, telegramCfg.LinkTokenTTL)
+	boardsRepo := repository.NewPgBoard(pgPool)
+	columnsRepo := repository.NewPgColumn(pgPool)
+	tasksRepo := repository.NewPgTask(pgPool)
 
 	authService := service.NewAuth(userRepo, service.JWTOptions{
 		JWTSecret:     cfg.JWTSecret,
 		Exp:           cfg.JWTExp,
 		SigningMethod: jwt.SigningMethodHS256,
+	})
+	telegramAPIClient := telegramDrv.NewAPIClient(telegramCfg.BaseURL, telegramCfg.Token)
+	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
+		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
+		if err != nil {
+			logger.Error(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
+			os.Exit(1)
+		}
+		return tok
 	})
 	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
 	columnsService := service.NewColumn(columnsRepo, boardsRepo)
@@ -47,6 +68,8 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	boardsHandler := handler.NewBoards(logger, boardsService, errorResponder)
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
+	userHandler := handler.NewUser(logger, userService, errorResponder)
+	telegramWebhook := telegramDrv.NewWebhookHandler(logger, userService, telegramAPIClient)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
@@ -55,7 +78,14 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
 
-	handlers := &handler.Handlers{Auth: authHandler, Health: healthHandler, Boards: boardsHandler, Columns: columnsHandler, Tasks: tasksHandler}
+	handlers := &handler.Handlers{
+		Auth:    authHandler,
+		Health:  healthHandler,
+		Boards:  boardsHandler,
+		Columns: columnsHandler,
+		Tasks:   tasksHandler,
+		User:    userHandler,
+	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   metricsMiddleware,
 		CORS:      corsMiddleware,
@@ -64,7 +94,7 @@ func New(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.AppConfig, reg pro
 	}
 
 	return &App{
-		Router:      httpapp.NewRouter(handlers, middlewares),
+		Router:      httpapp.NewRouter(handlers, middlewares, telegramWebhook),
 		AdminRouter: httpapp.NewAdminRouter(),
 	}
 }

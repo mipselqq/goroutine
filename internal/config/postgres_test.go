@@ -30,11 +30,11 @@ func setCustomPgEnvVars(t *testing.T) {
 	t.Setenv("POSTGRES_DB", "custom_db")
 }
 
-func TestNewPGConfigFromEnv(t *testing.T) {
+func TestNewPGFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
 		UnsetEnv(t, pgEnvVars...)
 
-		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
+		cfg := config.NewPGFromEnv(testutil.NewDiscardLogger())
 
 		diff := cmp.Diff(defaultPgConfig, cfg)
 		if diff != "" {
@@ -45,7 +45,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 	t.Run("uses env vars", func(t *testing.T) {
 		setCustomPgEnvVars(t)
 
-		cfg := config.NewPGConfigFromEnv(testutil.NewDiscardLogger())
+		cfg := config.NewPGFromEnv(testutil.NewDiscardLogger())
 		wantCfg := config.PgConfig{
 			User:     "custom_user",
 			Password: secrecy.SecretString("custom_pass"),
@@ -63,7 +63,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		UnsetEnv(t, pgEnvVars...)
 
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		_ = config.NewPGConfigFromEnv(logger)
+		_ = config.NewPGFromEnv(logger)
 
 		for _, envVar := range pgEnvVars {
 			if !strings.Contains(buf.String(), envVar) {
@@ -76,7 +76,7 @@ func TestNewPGConfigFromEnv(t *testing.T) {
 		setCustomPgEnvVars(t)
 
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		_ = config.NewPGConfigFromEnv(logger)
+		_ = config.NewPGFromEnv(logger)
 
 		if buf.String() != "" {
 			t.Errorf("got warnings %q, want none", buf.String())

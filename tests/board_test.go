@@ -36,13 +36,13 @@ type BoardAggregateJSON struct {
 }
 
 func TestBoard_HappyPath(t *testing.T) {
-	httpClient, ts, pool := Prelude(t)
+	p := Prelude(t)
 
 	t.Run("Full board flow", func(t *testing.T) {
-		testutil.TruncateAllTables(t, pool)
+		testutil.TruncateAllTables(t, p.Pool)
 
 		// 1. Register (already done via ac client)
-		ac := CreateUserAndAuthenticateClient(t, httpClient, ts.URL)
+		ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 		name := testutil.ValidBoardName().String()
 		description := testutil.ValidBoardDescription().String()

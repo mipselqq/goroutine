@@ -203,6 +203,12 @@ definitions:
         example: "2026-03-07T20:56:50.000+03:00"
         type: string
     type: object
+  handler.telegramLinkTokenResponse:
+    properties:
+      token:
+        example: 018e1000-0000-7000-8000-000000000000
+        type: string
+    type: object
   handler.updateBoardBody:
     properties:
       description:
@@ -1121,6 +1127,30 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /v1/users/me/telegram/link:
+    post:
+      description: Creates a one-time token that a user can send to the Telegram bot
+        via /start to link their Telegram account to the app.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.telegramLinkTokenResponse'
+        "401":
+          description: 'Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER'
+          schema:
+            $ref: '#/definitions/httpschema.DetailedError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httpschema.Error'
+      security:
+      - BearerAuth: []
+      summary: Generate a Telegram link token
+      tags:
+      - user
   /v1/whoami:
     get:
       description: Get current user ID from token. This is a protected endpoint —
@@ -1147,6 +1177,20 @@ paths:
       summary: Get current user info
       tags:
       - auth
+  /webhook/telegram:
+    post:
+      consumes:
+      - application/json
+      description: Receives update objects from Telegram Bot API. Processes /start
+        command with a link token to link a Telegram account to the user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Always returns 200 OK per Telegram webhook protocol
+      summary: Receive Telegram webhook updates
+      tags:
+      - webhook
 securityDefinitions:
   BearerAuth:
     description: Enter JWT token with `Bearer ` prefix, e.g. `Bearer eyJhbGciOi...`

@@ -16,6 +16,7 @@ type Handlers struct {
 	Boards  *Boards
 	Columns *Columns
 	Tasks   *Tasks
+	User    *User
 }
 
 var errBodyTooLarge = errors.New("request body too large")

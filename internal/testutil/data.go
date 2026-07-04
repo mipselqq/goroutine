@@ -12,7 +12,20 @@ import (
 	"goroutine/internal/service"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 )
+
+func MustLoadDevEnv() {
+	err := godotenv.Load("../../.env.dev")
+	if err == nil {
+		return
+	}
+	err = godotenv.Load("../.env.dev")
+	if err == nil {
+		return
+	}
+	panic("Failed to load dev env from file (tried ../../.env.dev and ../.env.dev)")
+}
 
 func FixedTimeNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
 func FixedTime5mFromNow() time.Time { return FixedTimeNow().Add(5 * time.Minute) }
@@ -37,8 +50,10 @@ func Must[A any, T any](fn func(A) (T, error), arg A) T {
 	return v
 }
 
+const validUUIDv7 = "018e1000-0000-7000-8000-000000000000"
+
 func ValidUserID() domain.UserID {
-	return Must(domain.ParseUserID, "018e1000-0000-7000-8000-000000000000")
+	return Must(domain.ParseUserID, validUUIDv7)
 }
 
 func ValidEmail() domain.Email {
@@ -236,4 +251,28 @@ func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, 
 		CreatedAt:   base.CreatedAt,
 		UpdatedAt:   updatedAt,
 	}
+}
+
+func ValidTelegramToken() domain.TelegramToken {
+	return Must(domain.NewTelegramToken, "8927121804:MOCKhk1QdJpRJdISscC0COr19kH79_4f9vw")
+}
+
+func AnotherValidTelegramToken() domain.TelegramToken {
+	return Must(domain.NewTelegramToken, "8927121804:MOCKtw0QdJpRJdISscC0COr19kH79_4f9vw")
+}
+
+func ValidTelegramLinkToken() domain.TelegramLinkToken {
+	return Must(domain.NewTelegramLinkToken, validUUIDv7)
+}
+
+func ValidTelegramChatID() domain.TelegramChatID {
+	return Must(domain.NewTelegramChatID, int64(123456789))
+}
+
+func ValidTelegramUsername() domain.TelegramUsername {
+	return Must(domain.NewTelegramUsername, "@testuser")
+}
+
+func ValidTelegramMessage() domain.TelegramMessage {
+	return Must(domain.NewTelegramMessage, "Hello, world!")
 }

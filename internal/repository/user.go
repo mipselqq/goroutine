@@ -25,7 +25,7 @@ func NewPgUser(pool *pgxpool.Pool) *PgUser {
 
 const pgUniqueViolation = "23505"
 
-func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) error {
+func (r *PgUser) InsertUser(ctx context.Context, email domain.Email, hash string) error {
 	const query = `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
 
 	_, err := r.pool.Exec(ctx, query, email, hash)
@@ -35,22 +35,44 @@ func (r *PgUser) Insert(ctx context.Context, email domain.Email, hash string) er
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation {
-		return fmt.Errorf("user repo: insert: %w", ErrUniqueViolation)
+		return fmt.Errorf("user repo: insert user: %w", ErrUniqueViolation)
 	}
 
-	return fmt.Errorf("user repo: insert: %v: %w", err, ErrInternal)
+	return fmt.Errorf("user repo: insert user: %v: %w", err, ErrInternal)
 }
 
-func (r *PgUser) GetByEmail(ctx context.Context, email domain.Email) (id domain.UserID, hash string, err error) {
-	const query = `SELECT id, password_hash FROM users WHERE email = $1`
+func (r *PgUser) GetUserByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+	const query = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE email = $1`
 
-	err = r.pool.QueryRow(ctx, query, email).Scan(&id, &hash)
+	var user domain.User
+	err := r.pool.QueryRow(ctx, query, email).Scan( // TODO: Maybe implement Scan for the struct itself?
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.TelegramChatID,
+		&user.TelegramUsername,
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.UserID{}, "", ErrRowNotFound
+			return domain.User{}, ErrRowNotFound
 		}
-		return domain.UserID{}, "", fmt.Errorf("user repo: get by email: %v: %w", err, ErrInternal)
+		return domain.User{}, fmt.Errorf("user repo: get user by email: %v: %w", err, ErrInternal)
 	}
 
-	return id, hash, nil
+	return user, nil
+}
+
+func (r *PgUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+	const query = `UPDATE users SET telegram_chat_id = $1, telegram_username = $2 WHERE id = $3`
+
+	status, err := r.pool.Exec(ctx, query, chatID, username, userID)
+	if err != nil {
+		return fmt.Errorf("user repo: update telegram info: %v: %w", err, ErrInternal)
+	}
+
+	if status.RowsAffected() == 0 {
+		return fmt.Errorf("user repo: update telegram info: %w", ErrRowNotFound)
+	}
+
+	return nil
 }
