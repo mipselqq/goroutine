@@ -163,7 +163,7 @@ func TestTask_HappyPath(t *testing.T) {
 		checkTask.Description = createdTask.Description
 		checkTask.UpdatedAt = createdTask.UpdatedAt
 		if diff := cmp.Diff(createdTask, checkTask); diff != "" {
-			t.Errorf("UpdateByID() diff (-want +got):\n%s", diff)
+			t.Errorf("Update() diff (-want +got):\n%s", diff)
 		}
 
 		// Verify specific changes

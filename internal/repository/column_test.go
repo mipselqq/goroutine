@@ -109,7 +109,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 
 		columns, err := r.List(context.Background(), board.ID)
 		if err != nil {
-			t.Fatalf("ListByBoardID() error = %v", err)
+			t.Fatalf("List() error = %v", err)
 		}
 		if len(columns) != 0 {
 			t.Fatalf("got %d columns, want 0", len(columns))
@@ -137,12 +137,12 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 
 		got, err := r.List(context.Background(), boardA.ID)
 		if err != nil {
-			t.Fatalf("ListByBoardID() error = %v", err)
+			t.Fatalf("List() error = %v", err)
 		}
 
 		want := []domain.Column{first, second}
 		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("ListByBoardID() mismatch (-want +got):\n%s", diff)
+			t.Errorf("List() mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
@@ -160,10 +160,10 @@ func TestColumnRepository_GetByID(t *testing.T) {
 
 		got, err := r.Get(context.Background(), created.ID)
 		if err != nil {
-			t.Fatalf("GetByID() error = %v", err)
+			t.Fatalf("Get() error = %v", err)
 		}
 		if diff := cmp.Diff(created, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("GetByID() mismatch (-want +got):\n%s", diff)
+			t.Errorf("Get() mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -228,7 +228,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.Fixed5mFromNow())
 		updated, err := r.Update(context.Background(), board.ID, created.ID, &want.Name, nil)
 		if err != nil {
-			t.Fatalf("UpdateByID() error = %v", err)
+			t.Fatalf("Update() error = %v", err)
 		}
 
 		assertUpdatedColumn(t, updated, want)
@@ -251,7 +251,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		}
 		updated, err := r.Update(context.Background(), board.ID, created.ID, nil, &newDesc)
 		if err != nil {
-			t.Fatalf("UpdateByID() error = %v", err)
+			t.Fatalf("Update() error = %v", err)
 		}
 
 		if updated.Name != created.Name {

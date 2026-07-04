@@ -470,7 +470,7 @@ func TestColumn_UpdateByID(t *testing.T) {
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantColumn, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("UpdateByID() column mismatch (-want +got):\n%s", diff)
+					t.Errorf("Update() column mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})

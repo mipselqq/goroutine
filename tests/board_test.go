@@ -137,7 +137,7 @@ func TestBoard_HappyPath(t *testing.T) {
 		checkBoard.Name = createdBoard.Name
 		checkBoard.UpdatedAt = createdBoard.UpdatedAt
 		if diff := cmp.Diff(createdBoard, checkBoard); diff != "" {
-			t.Errorf("UpdateByID() diff (-want +got):\n%s", diff)
+			t.Errorf("Update() diff (-want +got):\n%s", diff)
 		}
 
 		// Verify specific changes

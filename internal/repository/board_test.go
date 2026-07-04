@@ -101,7 +101,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 
 		got, err := r.Get(context.Background(), want.ID)
 		if err != nil {
-			t.Errorf("GetByID() error = %v", err)
+			t.Errorf("Get() error = %v", err)
 		}
 		if got.ID != want.ID {
 			t.Errorf("got id %q, want %q", got.ID, want.ID)
@@ -145,7 +145,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		got, err := r.List(context.Background(), userID)
 		if err != nil {
-			t.Errorf("GetMany() error = %v", err)
+			t.Errorf("List() error = %v", err)
 		}
 		if len(got) != 0 {
 			t.Errorf("got %d boards, want 0", len(got))
@@ -183,7 +183,7 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		got, err := r.List(context.Background(), userID)
 		if err != nil {
-			t.Errorf("GetMany() error = %v", err)
+			t.Errorf("List() error = %v", err)
 		}
 		if len(got) != 2 {
 			t.Fatalf("got %d boards, want 2", len(got))
@@ -251,7 +251,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		got, err := r.Update(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
 		if err != nil {
-			t.Errorf("UpdateByID() error = %v", err)
+			t.Errorf("Update() error = %v", err)
 		}
 		assertUpdatedBoard(t, got, updatedValidBoard)
 	})
@@ -264,7 +264,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		got, err := r.Update(context.Background(), validBoard.ID, &updatedNameOnly, nil)
 		if err != nil {
-			t.Errorf("UpdateByID() error = %v", err)
+			t.Errorf("Update() error = %v", err)
 		}
 		assertUpdatedBoard(t, got, updatedNameOnlyBoard)
 	})
@@ -277,7 +277,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		got, err := r.Update(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
 		if err != nil {
-			t.Errorf("UpdateByID() error = %v", err)
+			t.Errorf("Update() error = %v", err)
 		}
 		assertUpdatedBoard(t, got, updatedDescriptionOnlyBoard)
 	})

@@ -144,7 +144,7 @@ func TestBoard_GetMany(t *testing.T) {
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantBoards, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
+					t.Errorf("List() mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
@@ -594,7 +594,7 @@ func TestBoard_UpdateByID(t *testing.T) {
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantBoard, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("UpdateByID() board mismatch (-want +got):\n%s", diff)
+					t.Errorf("Update() board mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})

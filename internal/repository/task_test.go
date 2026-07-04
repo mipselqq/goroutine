@@ -195,10 +195,10 @@ func TestTaskRepository_GetByID(t *testing.T) {
 
 		got, err := r.Get(context.Background(), created.ID)
 		if err != nil {
-			t.Fatalf("GetByID() error = %v", err)
+			t.Fatalf("Get() error = %v", err)
 		}
 		if diff := cmp.Diff(created, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("GetByID() mismatch (-want +got):\n%s", diff)
+			t.Errorf("Get() mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -263,7 +263,7 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.Fixed5mFromNow())
 		updated, err := r.Update(context.Background(), column.ID, created.ID, &want.Name, &want.Description)
 		if err != nil {
-			t.Fatalf("UpdateByID() error = %v", err)
+			t.Fatalf("Update() error = %v", err)
 		}
 
 		assertUpdatedTask(t, updated, want)

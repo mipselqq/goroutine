@@ -672,7 +672,7 @@ func TestTask_UpdateByID(t *testing.T) {
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantTask, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("UpdateByID() task mismatch (-want +got):\n%s", diff)
+					t.Errorf("Update() task mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
