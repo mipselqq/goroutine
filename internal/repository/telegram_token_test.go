@@ -91,11 +91,11 @@ func telegramTokenRepoPrelude(t *testing.T) (*redis.Client, *repository.RedisTel
 	redisClient := testutil.SetupTestRedis(t)
 	testutil.FlushCurrentRedisDB(t, redisClient)
 	t.Cleanup(func() {
+		testutil.FlushCurrentRedisDB(t, redisClient)
 		err := redisClient.Conn().Close()
 		if err != nil {
 			t.Fatalf("Failed to close Redis connection")
 		}
-		testutil.FlushCurrentRedisDB(t, redisClient)
 	})
 	tokenRepo := repository.NewRedisTelegramToken(redisClient, 15*time.Minute)
 
