@@ -112,7 +112,7 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = h.notifier.Notify(r.Context(), chatID, msg)
 	if err != nil {
-		h.logger.WarnContext(r.Context(), "telegram link notify failed", slog.String("err", err.Error()))
+		h.logger.DebugContext(r.Context(), "telegram link final notify failed", slog.String("err", err.Error()))
 	}
 
 	w.WriteHeader(http.StatusOK)

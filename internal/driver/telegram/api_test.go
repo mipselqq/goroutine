@@ -63,7 +63,7 @@ func TestAPIClient_SendMessage(t *testing.T) {
 			ts := httptest.NewServer(mux)
 			defer ts.Close()
 
-			client := telegram.NewAPIClient(testutil.NewDiscardLogger(), ts.URL, token)
+			client := telegram.NewAPIClient(ts.URL, token)
 			err := client.SendMessage(
 				context.Background(),
 				testutil.ValidTelegramChatID().Int64(),
