@@ -89,7 +89,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewUser(logger, mockUser, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewUser(logger, mockUser, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.CreateTelegramLinkToken(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

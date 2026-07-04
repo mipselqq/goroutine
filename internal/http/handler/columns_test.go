@@ -170,7 +170,7 @@ func TestColumns_Create(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Create(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -289,7 +289,7 @@ func TestColumns_List(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.List(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -310,7 +310,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 	}
 	updatedColumn := validColumn
 	updatedColumn.Name = updatedName
-	updatedColumn.UpdatedAt = testutil.FixedTime5mFromNow()
+	updatedColumn.UpdatedAt = testutil.Fixed5mFromNow()
 
 	updatedDescOnly, err := domain.NewColumnDescription("Updated description only")
 	if err != nil {
@@ -318,7 +318,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 	}
 	updatedDescriptionOnlyColumn := validColumn
 	updatedDescriptionOnlyColumn.Description = updatedDescOnly
-	updatedDescriptionOnlyColumn.UpdatedAt = testutil.FixedTime5mFromNow()
+	updatedDescriptionOnlyColumn.UpdatedAt = testutil.Fixed5mFromNow()
 
 	emptyDescriptionColumn := validColumn
 	emptyDescriptionColumn.Name = updatedName
@@ -327,7 +327,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 		t.Fatalf("NewColumnDescription() error = %v", errEmpty)
 	}
 	emptyDescriptionColumn.Description = emptyDesc
-	emptyDescriptionColumn.UpdatedAt = testutil.FixedTime5mFromNow()
+	emptyDescriptionColumn.UpdatedAt = testutil.Fixed5mFromNow()
 
 	tests := []struct {
 		name               string
@@ -567,7 +567,7 @@ func TestColumns_UpdateByID(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -743,7 +743,7 @@ func TestColumns_Move(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Move(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -859,7 +859,7 @@ func TestColumns_Delete(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Delete(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

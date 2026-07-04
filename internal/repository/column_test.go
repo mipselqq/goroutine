@@ -225,7 +225,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		created.UpdatedAt = updatedAtBeforeUpdate
 		CreateColumn(t, pool, &created)
 
-		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.FixedTime5mFromNow())
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.Fixed5mFromNow())
 		updated, err := r.Update(context.Background(), board.ID, created.ID, &want.Name, nil)
 		if err != nil {
 			t.Fatalf("UpdateByID() error = %v", err)
@@ -287,7 +287,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		created := testutil.ValidColumn(board.ID)
 		CreateColumn(t, pool, &created)
 
-		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.FixedTime5mFromNow())
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.Fixed5mFromNow())
 		_, err := r.Update(context.Background(), domain.NewBoardID(), created.ID, &want.Name, nil)
 		assertErrRowNotFound(t, err)
 	})

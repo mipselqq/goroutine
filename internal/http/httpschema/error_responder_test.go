@@ -47,7 +47,7 @@ func TestErrorResponder_InternalError(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 			},
 			wantLevel: "ERROR",
 		},
@@ -58,7 +58,7 @@ func TestErrorResponder_InternalError(t *testing.T) {
 			t.Parallel()
 
 			logger, buf := testutil.NewBufJSONLogger(t, slog.LevelDebug)
-			er := httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr)
+			er := httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr)
 
 			req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 			rr := httptest.NewRecorder()

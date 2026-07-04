@@ -130,7 +130,7 @@ func TestBoards_Create(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 
 			h.Create(rr, req)
 
@@ -221,7 +221,7 @@ func TestBoards_Get(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 
 			h.List(rr, req)
 
@@ -331,7 +331,7 @@ func TestBoards_GetByID(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Get(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -511,7 +511,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.GetAggregate(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -525,10 +525,10 @@ func TestBoards_UpdateByID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
-	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.FixedTime5mFromNow())
-	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.FixedTime5mFromNow())
-	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.FixedTime5mFromNow())
-	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "", testutil.FixedTime5mFromNow())
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.Fixed5mFromNow())
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.Fixed5mFromNow())
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.Fixed5mFromNow())
+	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "", testutil.Fixed5mFromNow())
 
 	tests := []boardsTestCase{
 		{
@@ -766,7 +766,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -868,7 +868,7 @@ func TestBoards_Delete(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Delete(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

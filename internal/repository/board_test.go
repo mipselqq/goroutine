@@ -174,8 +174,8 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			OwnerID:     userID,
 			Name:        otherName,
 			Description: boardDescription,
-			CreatedAt:   testutil.FixedTime5mFromNow(),
-			UpdatedAt:   testutil.FixedTime5mFromNow(),
+			CreatedAt:   testutil.Fixed5mFromNow(),
+			UpdatedAt:   testutil.Fixed5mFromNow(),
 		}
 
 		CreateBoard(t, pool, &second)

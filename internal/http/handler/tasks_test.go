@@ -182,7 +182,7 @@ func TestTasks_Create(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Create(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -319,7 +319,7 @@ func TestTasks_List(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.List(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -346,7 +346,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 	updatedTask := validTask
 	updatedTask.Name = updatedName
 	updatedTask.Description = updatedDescription
-	updatedTask.UpdatedAt = testutil.FixedTime5mFromNow()
+	updatedTask.UpdatedAt = testutil.Fixed5mFromNow()
 
 	tests := []struct {
 		name             string
@@ -543,7 +543,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -764,7 +764,7 @@ func TestTasks_Move(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Move(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -899,7 +899,7 @@ func TestTasks_Delete(t *testing.T) {
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Delete(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

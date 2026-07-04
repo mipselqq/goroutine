@@ -260,7 +260,7 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		created.UpdatedAt = updatedAtBeforeUpdate
 		CreateTask(t, pool, &created)
 
-		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.FixedTime5mFromNow())
+		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.Fixed5mFromNow())
 		updated, err := r.Update(context.Background(), column.ID, created.ID, &want.Name, &want.Description)
 		if err != nil {
 			t.Fatalf("UpdateByID() error = %v", err)
@@ -287,7 +287,7 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		created := testutil.ValidTask(column.ID)
 		CreateTask(t, pool, &created)
 
-		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.FixedTime5mFromNow())
+		want := testutil.UpdateValidTask(t, &created, "Renamed", "Renamed description", testutil.Fixed5mFromNow())
 		_, err := r.Update(context.Background(), domain.NewColumnID(), created.ID, &want.Name, &want.Description)
 		assertErrRowNotFound(t, err)
 	})
