@@ -14,7 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-var defaultAppConfig = config.AppConfig{
+var defaultAppConfig = config.App{
 	Port:           "8080",
 	AdminPort:      "9091",
 	Host:           "0.0.0.0",
@@ -40,23 +40,23 @@ func setCustomAppEnvVars(t *testing.T) {
 	t.Setenv("ALLOWED_ORIGINS", "http://example.com,http://test.com")
 }
 
-func TestNewAppConfigFromEnv(t *testing.T) {
+func TestNewAppFromEnv(t *testing.T) {
 	t.Run("uses defaults", func(t *testing.T) {
 		UnsetEnv(t, appEnvVars...)
 
-		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
+		cfg := config.NewAppFromEnv(testutil.NewDiscardLogger())
 
 		diff := cmp.Diff(defaultAppConfig, cfg)
 		if diff != "" {
-			t.Errorf("NewAppConfigFromEnv() diff (-want +got):\n%s", diff)
+			t.Errorf("NewAppFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("uses env vars", func(t *testing.T) {
 		setCustomAppEnvVars(t)
 
-		cfg := config.NewAppConfigFromEnv(testutil.NewDiscardLogger())
-		wantCfg := config.AppConfig{
+		cfg := config.NewAppFromEnv(testutil.NewDiscardLogger())
+		wantCfg := config.App{
 			Port:           "3000",
 			AdminPort:      "9092",
 			Host:           "127.0.0.1",
@@ -69,14 +69,14 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		}
 		diff := cmp.Diff(wantCfg, cfg)
 		if diff != "" {
-			t.Errorf("NewAppConfigFromEnv() diff (-want +got):\n%s", diff)
+			t.Errorf("NewAppFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("warnings on unset variables", func(t *testing.T) {
 		UnsetEnv(t, appEnvVars...)
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		_ = config.NewAppConfigFromEnv(logger)
+		_ = config.NewAppFromEnv(logger)
 
 		for _, envVar := range appEnvVars {
 			if !strings.Contains(buf.String(), envVar) {
@@ -89,7 +89,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 		setCustomAppEnvVars(t)
 
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		_ = config.NewAppConfigFromEnv(logger)
+		_ = config.NewAppFromEnv(logger)
 
 		if buf.String() != "" {
 			t.Errorf("got warnings %q, want none", buf.String())
@@ -97,7 +97,7 @@ func TestNewAppConfigFromEnv(t *testing.T) {
 	})
 }
 
-func TestAppConfig_LogValue(t *testing.T) {
+func TestApp_LogValue(t *testing.T) {
 	v := defaultAppConfig.LogValue()
 	if v.Kind() != slog.KindGroup {
 		t.Fatalf("got kind %v, want Group", v.Kind())

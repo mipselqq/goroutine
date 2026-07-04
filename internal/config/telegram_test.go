@@ -18,37 +18,37 @@ func setCustomTelegramEnvVars(t *testing.T) {
 	t.Setenv("TELEGRAM_API_BASE_URL", "https://custom.telegram.org")
 }
 
-func TestNewTelegramConfigFromEnv(t *testing.T) {
+func TestNewTelegramFromEnv(t *testing.T) {
 	t.Run("uses env vars", func(t *testing.T) {
 		setCustomTelegramEnvVars(t)
 
-		cfg := MustNewTelegramConfigFromEnv(t)
-		wantCfg := config.TelegramConfig{
+		cfg := MustNewTelegramFromEnv(t)
+		wantCfg := config.Telegram{
 			Token:        testutil.AnotherValidTelegramToken(),
 			BaseURL:      "https://custom.telegram.org",
 			LinkTokenTTL: 30 * time.Minute,
 		}
 		diff := cmp.Diff(wantCfg, cfg, testutil.CmpAllowUnexported())
 		if diff != "" {
-			t.Errorf("NewTelegramConfigFromEnv() diff (-want +got):\n%s", diff)
+			t.Errorf("NewTelegramFromEnv() diff (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("invalid bot token format", func(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", "not-a-valid-token")
 
-		_, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
+		_, err := config.NewTelegramFromEnv(testutil.NewDiscardLogger())
 		if err == nil {
-			t.Fatal("NewTelegramConfigFromEnv() error = nil, want non-nil")
+			t.Fatal("NewTelegramFromEnv() error = nil, want non-nil")
 		}
 	})
 
 	t.Run("missing bot token", func(t *testing.T) {
 		t.Setenv("TELEGRAM_LINK_TOKEN_TTL", "30m")
 
-		_, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
+		_, err := config.NewTelegramFromEnv(testutil.NewDiscardLogger())
 		if err == nil {
-			t.Fatal("NewTelegramConfigFromEnv() error = nil, want non-nil")
+			t.Fatal("NewTelegramFromEnv() error = nil, want non-nil")
 		}
 	})
 
@@ -56,9 +56,9 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 		t.Setenv("TELEGRAM_LINK_TOKEN_TTL", "not-a-duration")
 
-		_, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
+		_, err := config.NewTelegramFromEnv(testutil.NewDiscardLogger())
 		if err == nil {
-			t.Fatal("NewTelegramConfigFromEnv() error = nil, want non-nil")
+			t.Fatal("NewTelegramFromEnv() error = nil, want non-nil")
 		}
 	})
 
@@ -66,9 +66,9 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		cfg, err := config.NewTelegramConfigFromEnv(logger)
+		cfg, err := config.NewTelegramFromEnv(logger)
 		if err != nil {
-			t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+			t.Fatalf("NewTelegramFromEnv() error = %v", err)
 		}
 
 		if cfg.LinkTokenTTL != 15*time.Minute {
@@ -83,7 +83,7 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 		t.Setenv("TELEGRAM_API_BASE_URL", "http://localhost:9999")
 
-		cfg := MustNewTelegramConfigFromEnv(t)
+		cfg := MustNewTelegramFromEnv(t)
 		if cfg.BaseURL != "http://localhost:9999" {
 			t.Errorf("got BaseURL %q, want http://localhost:9999", cfg.BaseURL)
 		}
@@ -92,7 +92,7 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 	t.Run("uses default base url", func(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", testutil.ValidTelegramToken().RevealSecret())
 
-		cfg := MustNewTelegramConfigFromEnv(t)
+		cfg := MustNewTelegramFromEnv(t)
 		if cfg.BaseURL != "https://api.telegram.org" {
 			t.Errorf("got BaseURL %q, want https://api.telegram.org", cfg.BaseURL)
 		}
@@ -102,9 +102,9 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 		setCustomTelegramEnvVars(t)
 
 		logger, buf := testutil.NewBufJsonLogger(t, slog.LevelWarn)
-		_, err := config.NewTelegramConfigFromEnv(logger)
+		_, err := config.NewTelegramFromEnv(logger)
 		if err != nil {
-			t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+			t.Fatalf("NewTelegramFromEnv() error = %v", err)
 		}
 
 		if buf.String() != "" {
@@ -113,8 +113,8 @@ func TestNewTelegramConfigFromEnv(t *testing.T) {
 	})
 }
 
-func TestTelegramConfig_LogValue(t *testing.T) {
-	cfg := config.TelegramConfig{
+func TestTelegram_LogValue(t *testing.T) {
+	cfg := config.Telegram{
 		Token:        testutil.ValidTelegramToken(),
 		BaseURL:      "https://api.telegram.org",
 		LinkTokenTTL: 15 * time.Minute,
