@@ -50,7 +50,7 @@ func New(
 	})
 	telegramToken, err := domain.NewTelegramToken(telegramCfg.Token.RevealSecret())
 	if err != nil {
-		panic(fmt.Sprintf("BUG: NewTelegramToken() rejected config token: %v", err))
+		panic(fmt.Sprintf("NewTelegramToken() rejected config token: %v", err))
 	}
 	telegramAPIClient := telegramDrv.NewAPIClient("https://api.telegram.org", telegramToken)
 	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {

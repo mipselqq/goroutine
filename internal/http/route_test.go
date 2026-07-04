@@ -123,6 +123,10 @@ func TestNewRouter_Full(t *testing.T) {
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
+			entry: entry{"Swagger", http.MethodGet, "/v1/swagger/index.html"},
+			auth:  false, metrics: false, cors: true, requestID: true,
+		},
+		{
 			entry: entry{"Telegram webhook", http.MethodPost, "/webhook/telegram"},
 			auth:  false, metrics: true, cors: true, requestID: true,
 		},
