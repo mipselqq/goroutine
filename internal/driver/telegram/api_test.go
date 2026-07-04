@@ -18,6 +18,7 @@ type sendMessageQuery struct {
 
 func TestAPIClient_SendMessage(t *testing.T) {
 	token := testutil.ValidTelegramToken()
+	chatID := testutil.ValidTelegramChatID()
 	message := testutil.ValidTelegramMessage()
 
 	tests := []struct {
@@ -31,7 +32,7 @@ func TestAPIClient_SendMessage(t *testing.T) {
 			statusCode: http.StatusOK,
 			wantErr:    false,
 			wantQuery: &sendMessageQuery{
-				ChatID: testutil.ValidTelegramChatID().Int64(),
+				ChatID: chatID.Int64(),
 				Text:   message.String(),
 			},
 		},
@@ -66,7 +67,8 @@ func TestAPIClient_SendMessage(t *testing.T) {
 					ChatID: mock.LastChatID,
 					Text:   mock.LastText,
 				}
-				if diff := cmp.Diff(*tt.wantQuery, got); diff != "" {
+				diff := cmp.Diff(*tt.wantQuery, got)
+				if diff != "" {
 					t.Errorf("query params mismatch (-want +got):\n%s", diff)
 				}
 			}
