@@ -32,7 +32,7 @@ func Fixed5mFromNow() time.Time { return FixedNow().Add(5 * time.Minute) }
 
 const timeFormat = "2006-01-02T15:04:05.000Z07:00"
 
-func FixedTime5mFromNowStr() string {
+func Fixed5mFromNowStr() string {
 	return Fixed5mFromNow().UTC().Format(timeFormat)
 }
 
