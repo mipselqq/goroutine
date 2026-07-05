@@ -62,7 +62,7 @@ func TestColumnRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "columns", "created_at", "updated_at")
 
-		stored, ok := GetColumnByID(t, pool, column.ID)
+		stored, ok := GetColumn(t, pool, column.ID)
 		if !ok {
 			t.Fatalf("created column %q not found in DB", column.ID)
 		}
@@ -107,9 +107,9 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 
 		board := insertFixedUserAndBoard(t, pool)
 
-		columns, err := r.List(context.Background(), board.ID)
+		columns, err := r.ListByBoardID(context.Background(), board.ID)
 		if err != nil {
-			t.Fatalf("List() error = %v", err)
+			t.Fatalf("ListByBoardID() error = %v", err)
 		}
 		if len(columns) != 0 {
 			t.Fatalf("got %d columns, want 0", len(columns))
@@ -135,19 +135,19 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		CreateColumn(t, pool, &first)
 		CreateColumn(t, pool, &otherBoardColumn)
 
-		got, err := r.List(context.Background(), boardA.ID)
+		got, err := r.ListByBoardID(context.Background(), boardA.ID)
 		if err != nil {
-			t.Fatalf("List() error = %v", err)
+			t.Fatalf("ListByBoardID() error = %v", err)
 		}
 
 		want := []domain.Column{first, second}
 		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("List() mismatch (-want +got):\n%s", diff)
+			t.Errorf("ListByBoardID() mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
 
-func TestColumnRepository_GetByID(t *testing.T) {
+func TestColumnRepository_Get(t *testing.T) {
 	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
@@ -175,7 +175,7 @@ func TestColumnRepository_GetByID(t *testing.T) {
 	})
 }
 
-func TestColumnRepository_UpdateByID(t *testing.T) {
+func TestColumnRepository_Update(t *testing.T) {
 	pool, r := columnRepoPrelude(t)
 
 	assertUpdatedColumn := func(t *testing.T, got domain.Column, want domain.Column) {
@@ -204,7 +204,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "columns", "created_at", "updated_at")
 
-		stored, ok := GetColumnByID(t, pool, want.ID)
+		stored, ok := GetColumn(t, pool, want.ID)
 		if !ok {
 			t.Fatalf("updated column %q not found in DB", want.ID)
 		}
@@ -260,7 +260,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		if updated.Description != newDesc {
 			t.Errorf("got description %q, want %q", updated.Description, newDesc)
 		}
-		stored, ok := GetColumnByID(t, pool, created.ID)
+		stored, ok := GetColumn(t, pool, created.ID)
 		if !ok {
 			t.Fatalf("column not found after update")
 		}
@@ -473,7 +473,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 		assertColumnIDAndPosition(t, &got[0], first.ID, 1)
 		assertColumnIDAndPosition(t, &got[1], third.ID, 2)
 
-		_, ok := GetColumnByID(t, pool, second.ID)
+		_, ok := GetColumn(t, pool, second.ID)
 		if ok {
 			t.Error("got deleted column in DB, want absent")
 		}

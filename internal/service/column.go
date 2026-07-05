@@ -11,7 +11,7 @@ import (
 
 type ColumnRepository interface {
 	Create(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
-	List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 	Update(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	Move(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
@@ -51,22 +51,22 @@ func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID dom
 	return column, nil
 }
 
-func (s *Column) List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+func (s *Column) ListByBoardID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return nil, ErrBoardNotFound
 		}
-		return nil, fmt.Errorf("column service: list get board: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("column service: list by board id get board: %v: %w", err, ErrInternal)
 	}
 
 	if board.OwnerID != callerID {
 		return nil, ErrBoardNotFound
 	}
 
-	columns, err := s.columnRepo.List(ctx, boardID)
+	columns, err := s.columnRepo.ListByBoardID(ctx, boardID)
 	if err != nil {
-		return nil, fmt.Errorf("column service: list: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("column service: list by board id: %v: %w", err, ErrInternal)
 	}
 
 	return columns, nil
@@ -111,7 +111,7 @@ func (s *Column) Update(
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Column{}, ErrColumnNotFound
 		}
-		return domain.Column{}, fmt.Errorf("column service: update by id: %v: %w", err, ErrInternal)
+		return domain.Column{}, fmt.Errorf("column service: update: %v: %w", err, ErrInternal)
 	}
 
 	return updated, nil

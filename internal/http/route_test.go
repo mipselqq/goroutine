@@ -77,7 +77,7 @@ func TestNewRouter_Full(t *testing.T) {
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"UpdateByID board", http.MethodPatch, "/v1/boards/" + UUIDv7},
+			entry: entry{"Update board", http.MethodPatch, "/v1/boards/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
@@ -93,7 +93,7 @@ func TestNewRouter_Full(t *testing.T) {
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"UpdateByID column", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7},
+			entry: entry{"Update column", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
@@ -113,7 +113,7 @@ func TestNewRouter_Full(t *testing.T) {
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{
-			entry: entry{"UpdateByID task", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7},
+			entry: entry{"Update task", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7},
 			auth:  true, metrics: true, cors: true, requestID: true,
 		},
 		{

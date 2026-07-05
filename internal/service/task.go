@@ -165,7 +165,7 @@ func (s *Task) Update(
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Task{}, ErrTaskNotFound
 		}
-		return domain.Task{}, fmt.Errorf("task service: update by id: %v: %w", err, ErrInternal)
+		return domain.Task{}, fmt.Errorf("task service: update: %v: %w", err, ErrInternal)
 	}
 
 	return updated, nil

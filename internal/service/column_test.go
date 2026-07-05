@@ -127,7 +127,7 @@ func TestColumn_Create(t *testing.T) {
 	}
 }
 
-func TestColumn_List(t *testing.T) {
+func TestColumn_ListByBoardID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -152,7 +152,7 @@ func TestColumn_List(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.ListFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 					if boardID != validBoard.ID {
 						t.Errorf("got board id %v, want %v", boardID, validBoard.ID)
 					}
@@ -170,7 +170,7 @@ func TestColumn_List(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.ListFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return nil, nil
 				}
@@ -186,7 +186,7 @@ func TestColumn_List(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.ListFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return nil, nil
 				}
@@ -202,7 +202,7 @@ func TestColumn_List(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.ListFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+				r.ListByBoardIDFunc = func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, errors.New("db failed")
 				}
 			},
@@ -220,21 +220,21 @@ func TestColumn_List(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 
 			s := service.NewColumn(columnRepo, boardRepo)
-			got, err := s.List(context.Background(), tt.callerID, validBoard.ID)
+			got, err := s.ListByBoardID(context.Background(), tt.callerID, validBoard.ID)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantColumns, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("List() columns mismatch (-want +got):\n%s", diff)
+					t.Errorf("ListByBoardID() columns mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
 	}
 }
 
-func TestColumn_UpdateByID(t *testing.T) {
+func TestColumn_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()

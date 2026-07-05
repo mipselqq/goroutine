@@ -13,7 +13,7 @@ import (
 
 type ColumnsService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
-	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
+	ListByBoardID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 	Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
@@ -143,7 +143,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns [get]
-func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
+func (h *Columns) ListByBoardID(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	columns, err := h.columnsService.List(r.Context(), userID, boardID)
+	columns, err := h.columnsService.ListByBoardID(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})

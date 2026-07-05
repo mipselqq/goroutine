@@ -192,7 +192,7 @@ func TestTasks_Create(t *testing.T) {
 	}
 }
 
-func TestTasks_List(t *testing.T) {
+func TestTasks_ListByColumnID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -215,7 +215,7 @@ func TestTasks_List(t *testing.T) {
 			boardID:  validBoard.ID.String(),
 			columnID: validColumn.ID.String(),
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+				s.ListByColumnIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -277,7 +277,7 @@ func TestTasks_List(t *testing.T) {
 			boardID:  validBoard.ID.String(),
 			columnID: validColumn.ID.String(),
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+				s.ListByColumnIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
 					return nil, service.ErrColumnNotFound
 				}
 			},
@@ -289,7 +289,7 @@ func TestTasks_List(t *testing.T) {
 			boardID:  validBoard.ID.String(),
 			columnID: validColumn.ID.String(),
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+				s.ListByColumnIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
 					return nil, service.ErrInternal
 				}
 			},
@@ -320,7 +320,7 @@ func TestTasks_List(t *testing.T) {
 
 			logger := testutil.NewLogger(t)
 			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
-			h.List(rr, req)
+			h.ListByColumnID(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -329,7 +329,7 @@ func TestTasks_List(t *testing.T) {
 	}
 }
 
-func TestTasks_UpdateByID(t *testing.T) {
+func TestTasks_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()

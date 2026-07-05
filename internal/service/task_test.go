@@ -202,7 +202,7 @@ func TestTask_Create(t *testing.T) {
 	}
 }
 
-func TestTask_List(t *testing.T) {
+func TestTask_ListByColumnID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -371,14 +371,14 @@ func TestTask_List(t *testing.T) {
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantTasks, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("List() tasks mismatch (-want +got):\n%s", diff)
+					t.Errorf("ListByColumnID() tasks mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
 	}
 }
 
-func TestTask_UpdateByID(t *testing.T) {
+func TestTask_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()

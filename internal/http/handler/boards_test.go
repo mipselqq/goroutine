@@ -141,7 +141,7 @@ func TestBoards_Create(t *testing.T) {
 	}
 }
 
-func TestBoards_Get(t *testing.T) {
+func TestBoards_ListByOwnerID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -151,7 +151,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Success",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.ListFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListByOwnerIDFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
@@ -182,7 +182,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Internal error",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.ListFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListByOwnerIDFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, service.ErrInternal
 				}
 			},
@@ -193,7 +193,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Unknown error",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.ListFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListByOwnerIDFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, errors.New("unknown error")
 				}
 			},
@@ -223,7 +223,7 @@ func TestBoards_Get(t *testing.T) {
 			logger := testutil.NewLogger(t)
 			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 
-			h.List(rr, req)
+			h.ListByOwnerID(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -232,7 +232,7 @@ func TestBoards_Get(t *testing.T) {
 	}
 }
 
-func TestBoards_GetByID(t *testing.T) {
+func TestBoards_Get(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -521,7 +521,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 	}
 }
 
-func TestBoards_UpdateByID(t *testing.T) {
+func TestBoards_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()

@@ -228,7 +228,7 @@ func (r *PGTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("task repo: list: rows final error: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("task repo: list by column id: rows final error: %v: %w", err, ErrInternal)
 	}
 
 	return result, nil
@@ -254,7 +254,7 @@ func (r *PGTask) Get(ctx context.Context, taskID domain.TaskID) (domain.Task, er
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, ErrRowNotFound
 		}
-		return domain.Task{}, fmt.Errorf("task repo: get by id: %v: %w", err, ErrInternal)
+		return domain.Task{}, fmt.Errorf("task repo: get: %v: %w", err, ErrInternal)
 	}
 
 	return task, nil
@@ -291,7 +291,7 @@ func (r *PGTask) Update(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, ErrRowNotFound
 		}
-		return domain.Task{}, fmt.Errorf("task repo: update by id: %v: %w", err, ErrInternal)
+		return domain.Task{}, fmt.Errorf("task repo: update: %v: %w", err, ErrInternal)
 	}
 
 	return task, nil

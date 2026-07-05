@@ -13,13 +13,13 @@ import (
 type BoardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
-	List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 	Update(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
 type BoardColumnRepository interface {
-	List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
+	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 }
 
 type BoardTaskRepository interface {
@@ -55,10 +55,10 @@ func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.
 	return board, nil
 }
 
-func (s *Board) List(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
-	boards, err := s.boardRepo.List(ctx, callerID)
+func (s *Board) ListByOwnerID(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
+	boards, err := s.boardRepo.ListByOwnerID(ctx, callerID)
 	if err != nil {
-		return nil, fmt.Errorf("board service: list: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("board service: list by owner id: %v: %w", err, ErrInternal)
 	}
 
 	return boards, nil
@@ -90,7 +90,7 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 	if board.OwnerID != callerID {
 		return AggregateBoard{}, ErrBoardNotFound
 	}
-	columns, err := s.columnRepo.List(ctx, boardID)
+	columns, err := s.columnRepo.ListByBoardID(ctx, boardID)
 	if err != nil {
 		return AggregateBoard{}, fmt.Errorf("board service: get aggregate: list columns by board id: %v: %w", err, ErrInternal)
 	}
@@ -146,7 +146,7 @@ func (s *Board) Update(
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return domain.Board{}, ErrBoardNotFound
 		}
-		return domain.Board{}, fmt.Errorf("board service: update get by id: %v: %w", err, ErrInternal)
+		return domain.Board{}, fmt.Errorf("board service: update: get: %v: %w", err, ErrInternal)
 	}
 	if board.OwnerID != callerID {
 		return domain.Board{}, ErrBoardNotFound
@@ -173,7 +173,7 @@ func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID doma
 		if errors.Is(err, repository.ErrRowNotFound) {
 			return ErrBoardNotFound
 		}
-		return fmt.Errorf("board service: delete get by id: %v: %w", err, ErrInternal)
+		return fmt.Errorf("board service: delete: get: %v: %w", err, ErrInternal)
 	}
 	if board.OwnerID != callerID {
 		return ErrBoardNotFound

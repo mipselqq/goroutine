@@ -59,13 +59,13 @@ func (r *PGBoard) Get(ctx context.Context, boardID domain.BoardID) (domain.Board
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Board{}, ErrRowNotFound
 		}
-		return domain.Board{}, fmt.Errorf("board repo: get by id: %v: %w", err, ErrInternal)
+		return domain.Board{}, fmt.Errorf("board repo: get: %v: %w", err, ErrInternal)
 	}
 
 	return board, nil
 }
 
-func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+func (r *PGBoard) ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 	const query = `
 		SELECT id, owner_id, name, description, created_at, updated_at
 		FROM boards
@@ -74,7 +74,7 @@ func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Boa
 
 	rows, err := r.pgPool.Query(ctx, query, ownerID)
 	if err != nil {
-		return nil, fmt.Errorf("board repo: list: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("board repo: list by owner id: %v: %w", err, ErrInternal)
 	}
 	defer rows.Close()
 
@@ -90,7 +90,7 @@ func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Boa
 			&board.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("board repo: list: scan: %v: %w", err, ErrInternal)
+			return nil, fmt.Errorf("board repo: list by owner id: scan: %v: %w", err, ErrInternal)
 		}
 
 		boards = append(boards, board)
@@ -98,7 +98,7 @@ func (r *PGBoard) List(ctx context.Context, ownerID domain.UserID) ([]domain.Boa
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("board repo: list: rows final error: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("board repo: list by owner id: rows final error: %v: %w", err, ErrInternal)
 	}
 
 	return boards, nil
@@ -127,7 +127,7 @@ func (r *PGBoard) Update(ctx context.Context, boardID domain.BoardID, name *doma
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Board{}, ErrRowNotFound
 		}
-		return domain.Board{}, fmt.Errorf("board repo: update by id: %v: %w", err, ErrInternal)
+		return domain.Board{}, fmt.Errorf("board repo: update: %v: %w", err, ErrInternal)
 	}
 
 	return board, nil

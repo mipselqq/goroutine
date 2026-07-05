@@ -15,7 +15,7 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
-	List(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
 	Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
@@ -237,13 +237,13 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [get]
-func (h *Boards) List(w http.ResponseWriter, r *http.Request) {
+func (h *Boards) ListByOwnerID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
 
-	boards, err := h.boardsService.List(r.Context(), userID)
+	boards, err := h.boardsService.ListByOwnerID(r.Context(), userID)
 	if err != nil {
 		h.responder.InternalError(w, r, err)
 		return

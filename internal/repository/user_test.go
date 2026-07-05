@@ -110,9 +110,9 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 			t.Fatalf("UpdateTelegramInfo() error = %v", err)
 		}
 
-		user, found := GetUserByID(t, pool, userID)
+		user, found := GetUser(t, pool, userID)
 		if !found {
-			t.Fatal("GetUserByID() user not found")
+			t.Fatal("GetUser() user not found")
 		}
 		if user.TelegramChatID != chatID {
 			t.Errorf("got chatID %v, want %v", user.TelegramChatID, chatID)

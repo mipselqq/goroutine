@@ -62,7 +62,7 @@ func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	}
 }
 
-func GetBoardByID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.Board, bool) {
+func GetBoard(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.Board, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -86,7 +86,7 @@ func GetBoardByID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (dom
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Board{}, false
 		}
-		t.Fatalf("find board by id: %v", err)
+		t.Fatalf("GetBoard() error = %v", err)
 	}
 
 	return board, true
@@ -116,7 +116,7 @@ func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	}
 }
 
-func GetColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
+func GetColumn(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -141,7 +141,7 @@ func GetColumnByID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, false
 		}
-		t.Fatalf("GetColumnByID() error = %v", err)
+		t.Fatalf("GetColumn() error = %v", err)
 	}
 
 	return column, true
@@ -216,7 +216,7 @@ func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	}
 }
 
-func GetTaskByID(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
+func GetTask(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -241,7 +241,7 @@ func GetTaskByID(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, false
 		}
-		t.Fatalf("GetTaskByID() error = %v", err)
+		t.Fatalf("GetTask() error = %v", err)
 	}
 
 	return task, true
@@ -378,7 +378,7 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 	}
 }
 
-func GetUserByID(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
+func GetUser(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -398,7 +398,7 @@ func GetUserByID(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.User{}, false
 		}
-		t.Fatalf("GetUserByID() error = %v", err)
+		t.Fatalf("GetUser() error = %v", err)
 	}
 
 	return user, true

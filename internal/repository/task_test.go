@@ -65,7 +65,7 @@ func TestTaskRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "tasks", "created_at", "updated_at")
 
-		stored, ok := GetTaskByID(t, pool, task.ID)
+		stored, ok := GetTask(t, pool, task.ID)
 		if !ok {
 			t.Fatalf("created task %q not found in DB", task.ID)
 		}
@@ -182,7 +182,7 @@ func TestTaskRepository_ListByBoardID(t *testing.T) {
 	})
 }
 
-func TestTaskRepository_GetByID(t *testing.T) {
+func TestTaskRepository_Get(t *testing.T) {
 	pool, r := taskRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestTaskRepository_GetByID(t *testing.T) {
 	})
 }
 
-func TestTaskRepository_UpdateByID(t *testing.T) {
+func TestTaskRepository_Update(t *testing.T) {
 	pool, r := taskRepoPrelude(t)
 
 	assertUpdatedTask := func(t *testing.T, got domain.Task, want domain.Task) {
@@ -239,7 +239,7 @@ func TestTaskRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "tasks", "created_at", "updated_at")
 
-		stored, ok := GetTaskByID(t, pool, want.ID)
+		stored, ok := GetTask(t, pool, want.ID)
 		if !ok {
 			t.Fatalf("updated task %q not found in DB", want.ID)
 		}
@@ -475,7 +475,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		assertTaskIDAndPosition(t, &gotB[1], a2.ID, 2)
 		assertTaskIDAndPosition(t, &gotB[2], b2.ID, 3)
 
-		movedTask, ok := GetTaskByID(t, pool, a2.ID)
+		movedTask, ok := GetTask(t, pool, a2.ID)
 		if !ok {
 			t.Fatalf("moved task %q not found in DB", a2.ID)
 		}
@@ -611,7 +611,7 @@ func TestTaskRepository_Delete(t *testing.T) {
 		assertTaskIDAndPosition(t, &got[0], first.ID, 1)
 		assertTaskIDAndPosition(t, &got[1], third.ID, 2)
 
-		_, ok := GetTaskByID(t, pool, second.ID)
+		_, ok := GetTask(t, pool, second.ID)
 		if ok {
 			t.Error("got deleted task in DB, want absent")
 		}

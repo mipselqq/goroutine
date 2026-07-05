@@ -95,7 +95,7 @@ func (r *PGColumn) Create(
 	return column, nil
 }
 
-func (r *PGColumn) List(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+func (r *PGColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
@@ -104,7 +104,7 @@ func (r *PGColumn) List(ctx context.Context, boardID domain.BoardID) ([]domain.C
 
 	rows, err := r.pgPool.Query(ctx, query, boardID)
 	if err != nil {
-		return nil, fmt.Errorf("column repo: list: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("column repo: list by board id: %v: %w", err, ErrInternal)
 	}
 	defer rows.Close()
 
@@ -121,14 +121,14 @@ func (r *PGColumn) List(ctx context.Context, boardID domain.BoardID) ([]domain.C
 			&col.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("column repo: list: scan: %v: %w", err, ErrInternal)
+			return nil, fmt.Errorf("column repo: list by board id: scan: %v: %w", err, ErrInternal)
 		}
 		result = append(result, col)
 	}
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("column repo: list: rows final error: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("column repo: list by board id: rows final error: %v: %w", err, ErrInternal)
 	}
 
 	return result, nil
@@ -154,7 +154,7 @@ func (r *PGColumn) Get(ctx context.Context, columnID domain.ColumnID) (domain.Co
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, ErrRowNotFound
 		}
-		return domain.Column{}, fmt.Errorf("column repo: get by id: %v: %w", err, ErrInternal)
+		return domain.Column{}, fmt.Errorf("column repo: get: %v: %w", err, ErrInternal)
 	}
 
 	return column, nil
@@ -191,7 +191,7 @@ func (r *PGColumn) Update(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, ErrRowNotFound
 		}
-		return domain.Column{}, fmt.Errorf("column repo: update by id: %v: %w", err, ErrInternal)
+		return domain.Column{}, fmt.Errorf("column repo: update: %v: %w", err, ErrInternal)
 	}
 
 	return column, nil

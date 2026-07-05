@@ -37,22 +37,22 @@ func NewDiscardLogger() *slog.Logger {
 	return slog.New(slog.DiscardHandler)
 }
 
-func FailOnInvalidLogValue(t *testing.T, attrs []slog.Attr, want map[string]string) {
+func FailOnInvalidLogValue(t *testing.T, attrs []slog.Attr, wantAttrs map[string]string) {
 	t.Helper()
 
 	for _, a := range attrs {
-		expected, ok := want[a.Key]
+		want, ok := wantAttrs[a.Key]
 		if !ok {
 			t.Errorf("got unexpected attribute %q, want only configured keys", a.Key)
 			continue
 		}
-		if a.Value.String() != expected {
-			t.Errorf("for key %q, got %q, want %q", a.Key, a.Value.String(), expected)
+		if a.Value.String() != want {
+			t.Errorf("for key %q, got %q, want %q", a.Key, a.Value.String(), want)
 		}
-		delete(want, a.Key)
+		delete(wantAttrs, a.Key)
 	}
 
-	for key := range want {
+	for key := range wantAttrs {
 		t.Errorf("missing attribute %q", key)
 	}
 }

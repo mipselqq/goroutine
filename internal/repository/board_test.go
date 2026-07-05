@@ -54,7 +54,7 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := GetBoardByID(t, pool, board.ID)
+		stored, ok := GetBoard(t, pool, board.ID)
 		if !ok {
 			t.Fatalf("created board %q not found in DB", board.ID)
 		}
@@ -76,7 +76,7 @@ func TestBoardRepository_Create(t *testing.T) {
 	})
 }
 
-func TestBoardRepository_GetByID(t *testing.T) {
+func TestBoardRepository_Get(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
 	userID := testutil.ValidUserID()
@@ -131,7 +131,7 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	})
 }
 
-func TestBoardRepository_GetMany(t *testing.T) {
+func TestBoardRepository_ListByOwnerID(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
 	userID := testutil.ValidUserID()
@@ -143,9 +143,9 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		CreateFixedUser(t, pool)
 
-		got, err := r.List(context.Background(), userID)
+		got, err := r.ListByOwnerID(context.Background(), userID)
 		if err != nil {
-			t.Errorf("List() error = %v", err)
+			t.Errorf("ListByOwnerID() error = %v", err)
 		}
 		if len(got) != 0 {
 			t.Errorf("got %d boards, want 0", len(got))
@@ -181,21 +181,21 @@ func TestBoardRepository_GetMany(t *testing.T) {
 		CreateBoard(t, pool, &second)
 		CreateBoard(t, pool, &first)
 
-		got, err := r.List(context.Background(), userID)
+		got, err := r.ListByOwnerID(context.Background(), userID)
 		if err != nil {
-			t.Errorf("List() error = %v", err)
+			t.Errorf("ListByOwnerID() error = %v", err)
 		}
 		if len(got) != 2 {
 			t.Fatalf("got %d boards, want 2", len(got))
 		}
 		want := []domain.Board{first, second}
 		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
+			t.Errorf("ListByOwnerID() mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
 
-func TestBoardRepository_UpdateByID(t *testing.T) {
+func TestBoardRepository_Update(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
 	validBoard := testutil.ValidBoard()
@@ -234,7 +234,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := GetBoardByID(t, pool, validBoard.ID)
+		stored, ok := GetBoard(t, pool, validBoard.ID)
 		if !ok {
 			t.Fatalf("updated board %q not found in DB", validBoard.ID)
 		}
@@ -305,7 +305,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 			t.Errorf("Delete() error = %v", err)
 		}
 
-		_, ok := GetBoardByID(t, pool, board.ID)
+		_, ok := GetBoard(t, pool, board.ID)
 		if ok {
 			t.Errorf("got board %q in DB, want deleted row", board.ID)
 		}

@@ -145,7 +145,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks [get]
-func (h *Tasks) List(w http.ResponseWriter, r *http.Request) {
+func (h *Tasks) ListByColumnID(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, ok := h.parseBoardAndColumnID(w, r)
 	if !ok {
 		return

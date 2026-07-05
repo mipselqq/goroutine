@@ -180,7 +180,7 @@ func TestColumns_Create(t *testing.T) {
 	}
 }
 
-func TestColumns_List(t *testing.T) {
+func TestColumns_ListByBoardID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -200,7 +200,7 @@ func TestColumns_List(t *testing.T) {
 			name:    "Success",
 			boardID: validBoard.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+				s.ListByBoardIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -249,7 +249,7 @@ func TestColumns_List(t *testing.T) {
 			name:    "Board not found",
 			boardID: validBoard.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+				s.ListByBoardIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, service.ErrBoardNotFound
 				}
 			},
@@ -260,7 +260,7 @@ func TestColumns_List(t *testing.T) {
 			name:    "Internal error",
 			boardID: validBoard.ID.String(),
 			setupColumnService: func(t *testing.T, s *MockColumnService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
+				s.ListByBoardIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
 					return nil, service.ErrInternal
 				}
 			},
@@ -290,7 +290,7 @@ func TestColumns_List(t *testing.T) {
 
 			logger := testutil.NewLogger(t)
 			h := handler.NewColumns(logger, mockColumns, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
-			h.List(rr, req)
+			h.ListByBoardID(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -299,7 +299,7 @@ func TestColumns_List(t *testing.T) {
 	}
 }
 
-func TestColumns_UpdateByID(t *testing.T) {
+func TestColumns_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
