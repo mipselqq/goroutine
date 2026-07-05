@@ -165,7 +165,7 @@ func TestTasks_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			path := "/v0/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks"
+			path := "/v1/boards/" + tt.boardID + "/columns/" + tt.columnID + "/tasks"
 			req := buildTaskRequest(t, http.MethodPost, path, tt.inputBody)
 			ctx := tt.context
 			if ctx == nil {
