@@ -62,7 +62,7 @@ func TestColumnRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "columns", "created_at", "updated_at")
 
-		stored, ok := FindColumnByID(t, pool, column.ID)
+		stored, ok := GetColumn(t, pool, column.ID)
 		if !ok {
 			t.Fatalf("created column %q not found in DB", column.ID)
 		}
@@ -80,7 +80,7 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 	board := insertFixedUserAndBoard(t, pool)
 
 	existing := testutil.ValidColumn(board.ID)
-	InsertColumn(t, pool, &existing)
+	CreateColumn(t, pool, &existing)
 
 	toCreate := testutil.ValidColumn(board.ID)
 	toCreate = testutil.UpdateValidColumn(t, &toCreate, "Done", toCreate.Description.String(), toCreate.UpdatedAt)
@@ -122,18 +122,18 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		CreateFixedUser(t, pool)
 
 		boardA := testutil.ValidBoard()
-		InsertBoard(t, pool, &boardA)
+		CreateBoard(t, pool, &boardA)
 
 		boardB := testutil.ValidBoard()
-		InsertBoard(t, pool, &boardB)
+		CreateBoard(t, pool, &boardB)
 
 		first := testutil.ValidColumn(boardA.ID)
 		second := testutil.NewValidColumn(t, boardA.ID, "In Progress", 2)
 		otherBoardColumn := testutil.NewValidColumn(t, boardB.ID, "Done", 1)
 
-		InsertColumn(t, pool, &second)
-		InsertColumn(t, pool, &first)
-		InsertColumn(t, pool, &otherBoardColumn)
+		CreateColumn(t, pool, &second)
+		CreateColumn(t, pool, &first)
+		CreateColumn(t, pool, &otherBoardColumn)
 
 		got, err := r.ListByBoardID(context.Background(), boardA.ID)
 		if err != nil {
@@ -147,7 +147,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 	})
 }
 
-func TestColumnRepository_GetByID(t *testing.T) {
+func TestColumnRepository_Get(t *testing.T) {
 	pool, r := columnRepoPrelude(t)
 
 	t.Run("Success", func(t *testing.T) {
@@ -156,26 +156,26 @@ func TestColumnRepository_GetByID(t *testing.T) {
 		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
-		InsertColumn(t, pool, &created)
+		CreateColumn(t, pool, &created)
 
-		got, err := r.GetByID(context.Background(), created.ID)
+		got, err := r.Get(context.Background(), created.ID)
 		if err != nil {
-			t.Fatalf("GetByID() error = %v", err)
+			t.Fatalf("Get() error = %v", err)
 		}
 		if diff := cmp.Diff(created, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("GetByID() mismatch (-want +got):\n%s", diff)
+			t.Errorf("Get() mismatch (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("Not found", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		_, err := r.GetByID(context.Background(), domain.NewColumnID())
+		_, err := r.Get(context.Background(), domain.NewColumnID())
 		assertErrRowNotFound(t, err)
 	})
 }
 
-func TestColumnRepository_UpdateByID(t *testing.T) {
+func TestColumnRepository_Update(t *testing.T) {
 	pool, r := columnRepoPrelude(t)
 
 	assertUpdatedColumn := func(t *testing.T, got domain.Column, want domain.Column) {
@@ -204,7 +204,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "columns", "created_at", "updated_at")
 
-		stored, ok := FindColumnByID(t, pool, want.ID)
+		stored, ok := GetColumn(t, pool, want.ID)
 		if !ok {
 			t.Fatalf("updated column %q not found in DB", want.ID)
 		}
@@ -223,12 +223,12 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		updatedAtBeforeUpdate := createdAtBeforeUpdate
 		created.CreatedAt = createdAtBeforeUpdate
 		created.UpdatedAt = updatedAtBeforeUpdate
-		InsertColumn(t, pool, &created)
+		CreateColumn(t, pool, &created)
 
-		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.FixedTime5mFromNow())
-		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, &want.Name, nil)
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.Fixed5mFromNow())
+		updated, err := r.Update(context.Background(), board.ID, created.ID, &want.Name, nil)
 		if err != nil {
-			t.Fatalf("UpdateByID() error = %v", err)
+			t.Fatalf("Update() error = %v", err)
 		}
 
 		assertUpdatedColumn(t, updated, want)
@@ -243,15 +243,15 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		createdAtBeforeUpdate := time.Now().UTC()
 		created.CreatedAt = createdAtBeforeUpdate
 		created.UpdatedAt = createdAtBeforeUpdate
-		InsertColumn(t, pool, &created)
+		CreateColumn(t, pool, &created)
 
 		newDesc, err := domain.NewColumnDescription("Updated column body")
 		if err != nil {
 			t.Fatalf("NewColumnDescription() error = %v", err)
 		}
-		updated, err := r.UpdateByID(context.Background(), board.ID, created.ID, nil, &newDesc)
+		updated, err := r.Update(context.Background(), board.ID, created.ID, nil, &newDesc)
 		if err != nil {
-			t.Fatalf("UpdateByID() error = %v", err)
+			t.Fatalf("Update() error = %v", err)
 		}
 
 		if updated.Name != created.Name {
@@ -260,7 +260,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		if updated.Description != newDesc {
 			t.Errorf("got description %q, want %q", updated.Description, newDesc)
 		}
-		stored, ok := FindColumnByID(t, pool, created.ID)
+		stored, ok := GetColumn(t, pool, created.ID)
 		if !ok {
 			t.Fatalf("column not found after update")
 		}
@@ -275,7 +275,7 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		board := insertFixedUserAndBoard(t, pool)
 
 		updatedName, _ := domain.NewColumnName("Renamed")
-		_, err := r.UpdateByID(context.Background(), board.ID, domain.NewColumnID(), &updatedName, nil)
+		_, err := r.Update(context.Background(), board.ID, domain.NewColumnID(), &updatedName, nil)
 		assertErrRowNotFound(t, err)
 	})
 
@@ -285,10 +285,10 @@ func TestColumnRepository_UpdateByID(t *testing.T) {
 		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
-		InsertColumn(t, pool, &created)
+		CreateColumn(t, pool, &created)
 
-		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.FixedTime5mFromNow())
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), created.ID, &want.Name, nil)
+		want := testutil.UpdateValidColumn(t, &created, "Renamed", created.Description.String(), testutil.Fixed5mFromNow())
+		_, err := r.Update(context.Background(), domain.NewBoardID(), created.ID, &want.Name, nil)
 		assertErrRowNotFound(t, err)
 	})
 }
@@ -305,9 +305,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
-		InsertColumn(t, pool, &third)
-		InsertColumn(t, pool, &first)
-		InsertColumn(t, pool, &second)
+		CreateColumn(t, pool, &third)
+		CreateColumn(t, pool, &first)
+		CreateColumn(t, pool, &second)
 
 		targetPosition := mustColumnPosition(t, 3)
 
@@ -337,9 +337,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
-		InsertColumn(t, pool, &second)
-		InsertColumn(t, pool, &third)
-		InsertColumn(t, pool, &first)
+		CreateColumn(t, pool, &second)
+		CreateColumn(t, pool, &third)
+		CreateColumn(t, pool, &first)
 
 		targetPosition := mustColumnPosition(t, 1)
 
@@ -368,8 +368,8 @@ func TestColumnRepository_Move(t *testing.T) {
 		first := testutil.ValidColumn(board.ID)
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 
-		InsertColumn(t, pool, &second)
-		InsertColumn(t, pool, &first)
+		CreateColumn(t, pool, &second)
+		CreateColumn(t, pool, &first)
 
 		targetPosition := mustColumnPosition(t, 2)
 
@@ -398,9 +398,9 @@ func TestColumnRepository_Move(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
-		InsertColumn(t, pool, &second)
-		InsertColumn(t, pool, &third)
-		InsertColumn(t, pool, &first)
+		CreateColumn(t, pool, &second)
+		CreateColumn(t, pool, &third)
+		CreateColumn(t, pool, &first)
 
 		targetPosition := mustColumnPosition(t, 4)
 
@@ -435,7 +435,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
-		InsertColumn(t, pool, &created)
+		CreateColumn(t, pool, &created)
 
 		targetPosition := mustColumnPosition(t, 1)
 
@@ -456,9 +456,9 @@ func TestColumnRepository_Delete(t *testing.T) {
 		second := testutil.NewValidColumn(t, board.ID, "In Progress", 2)
 		third := testutil.NewValidColumn(t, board.ID, "Done", 3)
 
-		InsertColumn(t, pool, &third)
-		InsertColumn(t, pool, &first)
-		InsertColumn(t, pool, &second)
+		CreateColumn(t, pool, &third)
+		CreateColumn(t, pool, &first)
+		CreateColumn(t, pool, &second)
 
 		err := r.Delete(context.Background(), board.ID, second.ID)
 		if err != nil {
@@ -473,7 +473,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 		assertColumnIDAndPosition(t, &got[0], first.ID, 1)
 		assertColumnIDAndPosition(t, &got[1], third.ID, 2)
 
-		_, ok := FindColumnByID(t, pool, second.ID)
+		_, ok := GetColumn(t, pool, second.ID)
 		if ok {
 			t.Error("got deleted column in DB, want absent")
 		}
@@ -494,18 +494,18 @@ func TestColumnRepository_Delete(t *testing.T) {
 		board := insertFixedUserAndBoard(t, pool)
 
 		created := testutil.ValidColumn(board.ID)
-		InsertColumn(t, pool, &created)
+		CreateColumn(t, pool, &created)
 
 		err := r.Delete(context.Background(), domain.NewBoardID(), created.ID)
 		assertErrRowNotFound(t, err)
 	})
 }
 
-func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgColumn) {
+func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGColumn) {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
-	return pool, repository.NewPgColumn(pool)
+	return pool, repository.NewPGColumn(pool)
 }

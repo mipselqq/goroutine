@@ -15,19 +15,19 @@ type BoardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
-	GetMany(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
-	UpdateByID(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
+	ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
+	Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error)
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
 type Boards struct {
-	logger    *slog.Logger
-	service   BoardsService
-	responder *httpschema.ErrorResponder
+	logger        *slog.Logger
+	boardsService BoardsService
+	responder     *httpschema.ErrorResponder
 }
 
-func NewBoards(logger *slog.Logger, svc BoardsService, responder *httpschema.ErrorResponder) *Boards {
-	return &Boards{logger: logger, service: svc, responder: responder}
+func NewBoards(logger *slog.Logger, boardsService BoardsService, responder *httpschema.ErrorResponder) *Boards {
+	return &Boards{logger: logger, boardsService: boardsService, responder: responder}
 }
 
 type createBoardBody struct {
@@ -94,7 +94,7 @@ func newBoardAggregateResponse(aggregateBoard *service.AggregateBoard) aggregate
 	}
 }
 
-type getManyBoardsResponse = []boardResponse
+type listBoardsResponse = []boardResponse
 
 // Create godoc
 // @Summary Create a new board
@@ -136,7 +136,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.Create(r.Context(), userID, name, description)
+	board, err := h.boardsService.Create(r.Context(), userID, name, description)
 	if err != nil {
 		h.responder.InternalError(w, r, err)
 		return
@@ -172,7 +172,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.Get(r.Context(), userID, boardID)
+	board, err := h.boardsService.Get(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -212,7 +212,7 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	aggregate, err := h.service.GetAggregate(r.Context(), userID, boardID)
+	aggregate, err := h.boardsService.GetAggregate(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -225,31 +225,31 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, newBoardAggregateResponse(&aggregate))
 }
 
-// GetMany godoc
-// @Summary Get many boards
-// @Description Get many boards for the current user. Results are returned in increasing creation time order.
+// List godoc
+// @Summary List all boards
+// @Description List all boards for the current user. Results are returned in increasing creation time order.
 // @Tags boards
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} getManyBoardsResponse
+// @Success 200 {object} listBoardsResponse
 // @Failure 400 {object} httpschema.DetailedError "VALIDATION_ERROR"
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [get]
-func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
+func (h *Boards) ListByOwnerID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
 	}
 
-	boards, err := h.service.GetMany(r.Context(), userID)
+	boards, err := h.boardsService.ListByOwnerID(r.Context(), userID)
 	if err != nil {
 		h.responder.InternalError(w, r, err)
 		return
 	}
 
-	response := make(getManyBoardsResponse, len(boards))
+	response := make(listBoardsResponse, len(boards))
 	for i := range boards {
 		response[i] = newBoardResponse(&boards[i])
 	}
@@ -257,8 +257,8 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
-// UpdateByID godoc
-// @Summary UpdateByID a board by id
+// Update godoc
+// @Summary Update a board by id
 // @Description Partially update board metadata for the current user (owner only). Provided fields are updated; omitted or null fields are ignored.
 // @Tags boards
 // @Accept json
@@ -273,7 +273,7 @@ func (h *Boards) GetMany(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [patch]
-func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
+func (h *Boards) Update(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
@@ -315,7 +315,7 @@ func (h *Boards) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.service.UpdateByID(r.Context(), userID, boardID, name, description)
+	board, err := h.boardsService.Update(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -355,7 +355,7 @@ func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Delete(r.Context(), userID, boardID)
+	err = h.boardsService.Delete(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})

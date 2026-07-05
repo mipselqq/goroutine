@@ -9,31 +9,31 @@ import (
 	"goroutine/internal/domain"
 )
 
-type TelegramConfig struct {
+type Telegram struct {
 	Token        domain.TelegramToken
 	BaseURL      string
 	LinkTokenTTL time.Duration
 }
 
-func NewTelegramConfigFromEnv(logger *slog.Logger) (TelegramConfig, error) {
+func NewTelegramFromEnv(logger *slog.Logger) (Telegram, error) {
 	envToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if envToken == "" {
-		return TelegramConfig{}, fmt.Errorf("telegram config: TELEGRAM_BOT_TOKEN is required")
+		return Telegram{}, fmt.Errorf("telegram config: TELEGRAM_BOT_TOKEN is required")
 	}
 
 	token, err := domain.NewTelegramToken(envToken)
 	if err != nil {
-		return TelegramConfig{}, fmt.Errorf("telegram config: %w", err)
+		return Telegram{}, fmt.Errorf("telegram config: %w", err)
 	}
 
-	linkTokenTTL, err := getEnvTimeOrDefault("TELEGRAM_LINK_TOKEN_TTL", 15*time.Minute, logger)
+	linkTokenTTL, err := getEnvDurationOrDefault("TELEGRAM_LINK_TOKEN_TTL", 15*time.Minute, logger)
 	if err != nil {
-		return TelegramConfig{}, fmt.Errorf("telegram config: %w", err)
+		return Telegram{}, fmt.Errorf("telegram config: %w", err)
 	}
 
-	baseURL := getenvOrDefault("TELEGRAM_API_BASE_URL", "https://api.telegram.org", logger)
+	baseURL := getEnvStringOrDefault("TELEGRAM_API_BASE_URL", "https://api.telegram.org", logger)
 
-	return TelegramConfig{
+	return Telegram{
 		Token:        token,
 		BaseURL:      baseURL,
 		LinkTokenTTL: linkTokenTTL,
@@ -41,7 +41,7 @@ func NewTelegramConfigFromEnv(logger *slog.Logger) (TelegramConfig, error) {
 }
 
 //nolint:gocritic // Pointer receiver disables formatting
-func (c TelegramConfig) LogValue() slog.Value {
+func (c Telegram) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Any("token", c.Token),
 		slog.String("base_url", c.BaseURL),

@@ -15,7 +15,7 @@ import (
 	"goroutine/internal/testutil"
 )
 
-func TestUserRepository_InsertUser(t *testing.T) {
+func TestUserRepository_CreateUser(t *testing.T) {
 	pool, r := userRepoPrelude(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -27,9 +27,9 @@ func TestUserRepository_InsertUser(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		err := r.InsertUser(ctx, email, hash)
+		err := r.Create(ctx, email, hash)
 		if err != nil {
-			t.Errorf("InsertUser() error = %v", err)
+			t.Errorf("CreateUser() error = %v", err)
 		}
 
 		var dbEmail domain.Email
@@ -45,8 +45,8 @@ func TestUserRepository_InsertUser(t *testing.T) {
 	t.Run("Duplicate email", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		InsertUser(t, pool, testutil.ValidUserID(), email, hash)
-		err := r.InsertUser(ctx, email, hash)
+		CreateUser(t, pool, testutil.ValidUserID(), email, hash)
+		err := r.Create(ctx, email, hash)
 
 		if !errors.Is(err, repository.ErrUniqueViolation) {
 			t.Errorf("got error %v, want ErrUniqueViolation", err)
@@ -54,7 +54,7 @@ func TestUserRepository_InsertUser(t *testing.T) {
 	})
 }
 
-func TestUserRepository_GetUserByEmail(t *testing.T) {
+func TestUserRepository_GetByEmail(t *testing.T) {
 	pool, r := userRepoPrelude(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -67,11 +67,11 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		InsertUser(t, pool, userID, email, hash)
+		CreateUser(t, pool, userID, email, hash)
 
-		user, err := r.GetUserByEmail(ctx, email)
+		user, err := r.GetByEmail(ctx, email)
 		if err != nil {
-			t.Fatalf("GetUserByEmail() error = %v", err)
+			t.Fatalf("GetByEmail() error = %v", err)
 		}
 		if user.PasswordHash != hash {
 			t.Errorf("got hash %q, want %q", user.PasswordHash, hash)
@@ -85,7 +85,7 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		unknownEmail, _ := domain.NewEmail("unknown@example.com")
-		_, err := r.GetUserByEmail(ctx, unknownEmail)
+		_, err := r.GetByEmail(ctx, unknownEmail)
 
 		assertErrRowNotFound(t, err)
 	})
@@ -104,15 +104,15 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		InsertUser(t, pool, userID, testutil.ValidEmail(), testutil.ValidPasswordHash())
+		CreateUser(t, pool, userID, testutil.ValidEmail(), testutil.ValidPasswordHash())
 		err := r.UpdateTelegramInfo(ctx, userID, chatID, username)
 		if err != nil {
 			t.Fatalf("UpdateTelegramInfo() error = %v", err)
 		}
 
-		user, found := FindUserByID(t, pool, userID)
+		user, found := GetUser(t, pool, userID)
 		if !found {
-			t.Fatal("FindUserByID() user not found")
+			t.Fatal("GetUser() user not found")
 		}
 		if user.TelegramChatID != chatID {
 			t.Errorf("got chatID %v, want %v", user.TelegramChatID, chatID)
@@ -130,11 +130,11 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 	})
 }
 
-func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgUser) {
+func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGUser) {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
-	return pool, repository.NewPgUser(pool)
+	return pool, repository.NewPGUser(pool)
 }

@@ -13,10 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupTestPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
+func SetupPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	t.Helper()
 	MustLoadDevEnv()
-	logger := NewTestLogger(t)
+	logger := NewLogger(t)
 
 	pool, err := app.SetupPostgresFromEnv(logger, migrationsDir)
 	if err != nil {

@@ -60,26 +60,26 @@ func TestBoards_Create(t *testing.T) {
 			name:      "Empty name",
 			inputBody: map[string]string{"name": "", "description": validBoard.Description.String()},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+			wantBody:  validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Description too long",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": strings.Repeat("a", 1025)},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("description", []string{"Description is too long"}),
+			wantBody:  validationError("description", []string{"Description is too long"}),
 		},
 		{
 			name:      "Invalid JSON",
 			inputBody: json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, validBoard.Name.String(), validBoard.Description.String()))), // missing closing brace
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "No context user ID",
 			inputBody: map[string]string{"name": validBoard.Name.String(), "description": validBoard.Description.String()},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Internal error",
@@ -90,7 +90,7 @@ func TestBoards_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unknown error",
@@ -101,13 +101,13 @@ func TestBoards_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -129,8 +129,8 @@ func TestBoards_Create(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 
 			h.Create(rr, req)
 
@@ -141,7 +141,7 @@ func TestBoards_Create(t *testing.T) {
 	}
 }
 
-func TestBoards_Get(t *testing.T) {
+func TestBoards_ListByOwnerID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -151,7 +151,7 @@ func TestBoards_Get(t *testing.T) {
 			name:      "Success",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListByOwnerIDFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
@@ -176,29 +176,29 @@ func TestBoards_Get(t *testing.T) {
 			inputBody: "",
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Internal error",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListByOwnerIDFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, service.ErrInternal
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unknown error",
 			inputBody: "",
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.GetManyFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
+				s.ListByOwnerIDFunc = func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
 					return nil, errors.New("unknown error")
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 
@@ -220,10 +220,10 @@ func TestBoards_Get(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 
-			h.GetMany(rr, req)
+			h.ListByOwnerID(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -232,7 +232,7 @@ func TestBoards_Get(t *testing.T) {
 	}
 }
 
-func TestBoards_GetByID(t *testing.T) {
+func TestBoards_Get(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -266,7 +266,7 @@ func TestBoards_GetByID(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Not found",
@@ -277,7 +277,7 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -288,7 +288,7 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -299,14 +299,14 @@ func TestBoards_GetByID(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:     "No context user ID",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 	}
 
@@ -330,8 +330,8 @@ func TestBoards_GetByID(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Get(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -446,7 +446,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Board not found",
@@ -457,7 +457,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -468,7 +468,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -479,14 +479,14 @@ func TestBoards_GetAggregate(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:     "No context user ID",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 	}
 
@@ -510,8 +510,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.GetAggregate(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -521,14 +521,14 @@ func TestBoards_GetAggregate(t *testing.T) {
 	}
 }
 
-func TestBoards_UpdateByID(t *testing.T) {
+func TestBoards_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
-	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.FixedTime5mFromNow())
-	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.FixedTime5mFromNow())
-	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.FixedTime5mFromNow())
-	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "", testutil.FixedTime5mFromNow())
+	updatedValidBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "Updated Board Description", testutil.Fixed5mFromNow())
+	updatedNameOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name Only", validBoard.Description.String(), testutil.Fixed5mFromNow())
+	updatedDescriptionOnlyBoard := testutil.UpdateValidBoard(t, &validBoard, validBoard.Name.String(), "Updated Board Description Only", testutil.Fixed5mFromNow())
+	emptyDescriptionBoard := testutil.UpdateValidBoard(t, &validBoard, "Updated Board Name", "", testutil.Fixed5mFromNow())
 
 	tests := []boardsTestCase{
 		{
@@ -539,7 +539,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": updatedValidBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if ownerID != validBoard.OwnerID {
 						t.Errorf("got ownerID %v, want %v", ownerID, validBoard.OwnerID)
 					}
@@ -573,7 +573,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("name", []string{"Name is too short"}),
+			wantBody: validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:    "Success (name only)",
@@ -582,7 +582,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"name": updatedNameOnlyBoard.Name.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name == nil || *name != updatedNameOnlyBoard.Name {
 						t.Errorf("got name %+v, want %+v", name, updatedNameOnlyBoard.Name)
 					}
@@ -609,7 +609,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": updatedDescriptionOnlyBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
 					}
@@ -634,7 +634,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			boardID:   validBoard.ID.String(),
 			inputBody: map[string]any{"name": nil, "description": nil},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name != nil || description != nil {
 						t.Errorf("got name %+v, description %+v, want nil, nil", name, description)
 					}
@@ -659,7 +659,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": "",
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					if name == nil || description == nil {
 						t.Errorf("got name %+v, description %+v, want non-nil, non-nil", name, description)
 					}
@@ -680,7 +680,7 @@ func TestBoards_UpdateByID(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Not found",
@@ -690,12 +690,12 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrBoardNotFound
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -705,12 +705,12 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, service.ErrInternal
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -720,12 +720,12 @@ func TestBoards_UpdateByID(t *testing.T) {
 				"description": validBoard.Description.String(),
 			},
 			setupBoardService: func(t *testing.T, s *MockBoardService) {
-				s.UpdateByIDFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
+				s.UpdateFunc = func(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
 					return domain.Board{}, errors.New("unknown")
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "No context user ID",
@@ -736,14 +736,14 @@ func TestBoards_UpdateByID(t *testing.T) {
 			},
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -765,9 +765,9 @@ func TestBoards_UpdateByID(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
-			h.UpdateByID(rr, req)
+			logger := testutil.NewLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
+			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -803,7 +803,7 @@ func TestBoards_Delete(t *testing.T) {
 			name:     "Invalid board id",
 			boardID:  "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:    "Not found",
@@ -814,7 +814,7 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: boardNotFoundErrorBody(),
+			wantBody: boardNotFoundError(),
 		},
 		{
 			name:    "Internal error",
@@ -825,7 +825,7 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:    "Unknown error",
@@ -836,14 +836,14 @@ func TestBoards_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:     "No context user ID",
 			boardID:  validBoard.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 	}
 
@@ -867,8 +867,8 @@ func TestBoards_Delete(t *testing.T) {
 				tt.setupBoardService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewBoards(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Delete(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

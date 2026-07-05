@@ -52,7 +52,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_TOKEN",
 				"message":   "Invalid token",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Invalid token"}},
 				},
@@ -71,7 +71,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_TOKEN",
 				"message":   "Invalid token",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Invalid token"}},
 				},
@@ -90,7 +90,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_TOKEN",
 				"message":   "Invalid token",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Invalid token"}},
 				},
@@ -109,7 +109,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Missing authorization header"}},
 				},
@@ -128,7 +128,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Invalid authorization header"}},
 				},
@@ -147,7 +147,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Invalid authorization header"}},
 				},
@@ -166,7 +166,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"Invalid authorization header"}},
 				},
@@ -209,7 +209,7 @@ func TestAuth(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_AUTH_HEADER",
 				"message":   "Invalid authorization header",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "Authorization", "issues": []string{"No Bearer prefix"}},
 				},
@@ -237,8 +237,8 @@ func TestAuth(t *testing.T) {
 				w.WriteHeader(mockStatusCode)
 			})
 
-			logger := testutil.NewTestLogger(t)
-			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			m := middleware.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			wrapped := m.Wrap(h)
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/", "")

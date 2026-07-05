@@ -22,11 +22,11 @@ func trimTrailingNewline(s string) string {
 	return s
 }
 
-func NewTestLogger(t testing.TB) *slog.Logger {
+func NewLogger(t testing.TB) *slog.Logger {
 	return slog.New(slog.NewTextHandler(testWriter{t}, nil))
 }
 
-func NewBufJsonLogger(t testing.TB, level slog.Level) (*slog.Logger, *bytes.Buffer) {
+func NewBufJSONLogger(t testing.TB, level slog.Level) (*slog.Logger, *bytes.Buffer) {
 	var buf bytes.Buffer
 	h := slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: level})
 	logger := slog.New(h)

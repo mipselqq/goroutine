@@ -30,7 +30,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 	tests := []userTestCase{
 		{
 			name:      "Success",
-			inputBody: testutil.Big25KBJson(), // Body is ignored, no error on big payload
+			inputBody: testutil.Big25KBJSON(), // Body is ignored, no error on big payload
 			setupUserService: func(t *testing.T, s *MockUserService) {
 				s.CreateTelegramLinkTokenFunc = func(ctx context.Context, callerID domain.UserID) (domain.TelegramLinkToken, error) {
 					if callerID != authorizedUserID {
@@ -46,7 +46,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			name:     "Missing context user ID",
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:      "Internal error",
@@ -57,7 +57,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unexpected error",
@@ -68,7 +68,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 
@@ -88,8 +88,8 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 				tt.setupUserService(t, mockUser)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewUser(logger, mockUser, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewUser(logger, mockUser, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.CreateTelegramLinkToken(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

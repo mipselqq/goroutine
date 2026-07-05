@@ -14,40 +14,40 @@ const (
 	loginPath       = "/v1/login"
 )
 
-func NewRouter(h *handler.Handlers, m *middleware.Middlewares, telegramWebhook http.Handler) http.Handler {
+func NewRouter(handlers *handler.Handlers, middlewares *middleware.Middlewares, telegramWebhook http.Handler) http.Handler {
 	mux := http.NewServeMux()
 	public := func(h http.HandlerFunc) http.Handler {
-		return m.Metrics.Wrap(h)
+		return middlewares.Metrics.Wrap(h)
 	}
 	protected := func(h http.HandlerFunc) http.Handler {
-		return m.Metrics.Wrap(m.Auth.Wrap(h))
+		return middlewares.Metrics.Wrap(middlewares.Auth.Wrap(h))
 	}
 
-	mux.Handle("POST /v1/register", public(h.Auth.Register))
-	mux.Handle("POST "+loginPath, public(h.Auth.Login))
-	mux.Handle("GET /v1/health", public(h.Health.Health))
-	mux.Handle("GET /v1/whoami", protected(h.Auth.WhoAmI))
-	mux.Handle("POST /v1/users/me/telegram/link", protected(h.User.CreateTelegramLinkToken))
-	mux.Handle("POST /v1/boards", protected(h.Boards.Create))
-	mux.Handle("GET /v1/boards/{boardId}", protected(h.Boards.Get))
-	mux.Handle("GET /v1/boards/{boardId}/aggregate", protected(h.Boards.GetAggregate))
-	mux.Handle("PATCH /v1/boards/{boardId}", protected(h.Boards.UpdateByID))
-	mux.Handle("DELETE /v1/boards/{boardId}", protected(h.Boards.Delete))
-	mux.Handle("GET /v1/boards", protected(h.Boards.GetMany))
-	mux.Handle("POST /v1/boards/{boardId}/columns", protected(h.Columns.Create))
-	mux.Handle("GET /v1/boards/{boardId}/columns", protected(h.Columns.List))
-	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}", protected(h.Columns.UpdateByID))
-	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/position", protected(h.Columns.Move))
-	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}", protected(h.Columns.Delete))
-	mux.Handle("POST /v1/boards/{boardId}/columns/{columnId}/tasks", protected(h.Tasks.Create))
-	mux.Handle("GET /v1/boards/{boardId}/columns/{columnId}/tasks", protected(h.Tasks.List))
-	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(h.Tasks.UpdateByID))
-	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position", protected(h.Tasks.Move))
-	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(h.Tasks.Delete))
+	mux.Handle("POST /v1/register", public(handlers.Auth.Register))
+	mux.Handle("POST "+loginPath, public(handlers.Auth.Login))
+	mux.Handle("GET /v1/health", public(handlers.Health.Health))
+	mux.Handle("GET /v1/whoami", protected(handlers.Auth.WhoAmI))
+	mux.Handle("POST /v1/users/me/telegram/link", protected(handlers.User.CreateTelegramLinkToken))
+	mux.Handle("POST /v1/boards", protected(handlers.Boards.Create))
+	mux.Handle("GET /v1/boards/{boardId}", protected(handlers.Boards.Get))
+	mux.Handle("GET /v1/boards/{boardId}/aggregate", protected(handlers.Boards.GetAggregate))
+	mux.Handle("PATCH /v1/boards/{boardId}", protected(handlers.Boards.Update))
+	mux.Handle("DELETE /v1/boards/{boardId}", protected(handlers.Boards.Delete))
+	mux.Handle("GET /v1/boards", protected(handlers.Boards.ListByOwnerID))
+	mux.Handle("POST /v1/boards/{boardId}/columns", protected(handlers.Columns.Create))
+	mux.Handle("GET /v1/boards/{boardId}/columns", protected(handlers.Columns.ListByBoardID))
+	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}", protected(handlers.Columns.Update))
+	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/position", protected(handlers.Columns.Move))
+	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}", protected(handlers.Columns.Delete))
+	mux.Handle("POST /v1/boards/{boardId}/columns/{columnId}/tasks", protected(handlers.Tasks.Create))
+	mux.Handle("GET /v1/boards/{boardId}/columns/{columnId}/tasks", protected(handlers.Tasks.ListByColumnID))
+	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(handlers.Tasks.Update))
+	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position", protected(handlers.Tasks.Move))
+	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(handlers.Tasks.Delete))
 	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
-	mux.Handle("POST /webhook/telegram", m.Metrics.Wrap(telegramWebhook))
+	mux.Handle("POST /webhook/telegram", middlewares.Metrics.Wrap(telegramWebhook))
 
-	return m.RequestID.Wrap(m.CORS.Wrap(mux))
+	return middlewares.RequestID.Wrap(middlewares.CORS.Wrap(mux))
 }
 
 func NewAdminRouter() *http.ServeMux {

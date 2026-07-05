@@ -58,7 +58,7 @@ func TestAuth_Register(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 			},
 		},
 		{
@@ -68,7 +68,7 @@ func TestAuth_Register(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
 				},
@@ -81,7 +81,7 @@ func TestAuth_Register(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "password", "issues": []string{"Password is too short"}},
 				},
@@ -94,7 +94,7 @@ func TestAuth_Register(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
 				},
@@ -109,7 +109,7 @@ func TestAuth_Register(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusConflict,
-			wantBody: userAlreadyExistsErrorBody(),
+			wantBody: userAlreadyExistsError(),
 		},
 		{
 			name:      "Unknown error",
@@ -123,14 +123,14 @@ func TestAuth_Register(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 			},
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -146,8 +146,8 @@ func TestAuth_Register(t *testing.T) {
 				tt.setupAuthService(t, &s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Register(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -193,7 +193,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INVALID_CREDENTIALS",
 				"message":   "Invalid login or password",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "email or password", "issues": []string{"Invalid"}},
 				},
@@ -211,7 +211,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "USER_NOT_FOUND",
 				"message":   "User not found",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details":   []any{},
 			},
 		},
@@ -227,7 +227,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 			},
 		},
 		{
@@ -237,7 +237,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
 				},
@@ -250,7 +250,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
 				},
@@ -263,7 +263,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "email", "issues": []string{"Invalid email"}},
 					map[string]any{"field": "password", "issues": []string{"Password is too short"}},
@@ -277,7 +277,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "password", "issues": []string{"Password is too short"}},
 				},
@@ -290,7 +290,7 @@ func TestAuth_Login(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "VALIDATION_ERROR",
 				"message":   "Some fields are invalid",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 				"details": []any{
 					map[string]any{"field": "body", "issues": []string{"Invalid JSON body"}},
 				},
@@ -298,9 +298,9 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -315,8 +315,8 @@ func TestAuth_Login(t *testing.T) {
 				tt.setupAuthService(t, s)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Login(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -350,7 +350,7 @@ func TestAuth_WhoAmI(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 			},
 		},
 	}
@@ -362,8 +362,8 @@ func TestAuth_WhoAmI(t *testing.T) {
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/whoami", "")
 			req = req.WithContext(tt.context)
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewAuth(logger, &MockAuthService{}, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewAuth(logger, &MockAuthService{}, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.WhoAmI(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

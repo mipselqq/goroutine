@@ -9,10 +9,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func SetupTestRedis(t *testing.T) *redis.Client {
+func SetupRedis(t *testing.T) *redis.Client {
 	t.Helper()
 	MustLoadDevEnv()
-	logger := NewTestLogger(t)
+	logger := NewLogger(t)
 
 	client, err := app.SetupRedisFromEnv(logger)
 	if err != nil {
@@ -22,7 +22,7 @@ func SetupTestRedis(t *testing.T) *redis.Client {
 	return client
 }
 
-func FlushCurrentRedisDB(t *testing.T, client *redis.Client) {
+func FlushRedisDB(t *testing.T, client *redis.Client) {
 	t.Helper()
 
 	err := client.FlushDB(context.Background()).Err()

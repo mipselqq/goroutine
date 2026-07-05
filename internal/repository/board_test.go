@@ -54,7 +54,7 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := FindBoardByID(t, pool, board.ID)
+		stored, ok := GetBoard(t, pool, board.ID)
 		if !ok {
 			t.Fatalf("created board %q not found in DB", board.ID)
 		}
@@ -76,7 +76,7 @@ func TestBoardRepository_Create(t *testing.T) {
 	})
 }
 
-func TestBoardRepository_GetByID(t *testing.T) {
+func TestBoardRepository_Get(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
 	userID := testutil.ValidUserID()
@@ -97,11 +97,11 @@ func TestBoardRepository_GetByID(t *testing.T) {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		}
-		InsertBoard(t, pool, &want)
+		CreateBoard(t, pool, &want)
 
-		got, err := r.GetByID(context.Background(), want.ID)
+		got, err := r.Get(context.Background(), want.ID)
 		if err != nil {
-			t.Errorf("GetByID() error = %v", err)
+			t.Errorf("Get() error = %v", err)
 		}
 		if got.ID != want.ID {
 			t.Errorf("got id %q, want %q", got.ID, want.ID)
@@ -126,12 +126,12 @@ func TestBoardRepository_GetByID(t *testing.T) {
 	t.Run("Not found", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
-		_, err := r.GetByID(context.Background(), domain.NewBoardID())
+		_, err := r.Get(context.Background(), domain.NewBoardID())
 		assertErrRowNotFound(t, err)
 	})
 }
 
-func TestBoardRepository_GetMany(t *testing.T) {
+func TestBoardRepository_ListByOwnerID(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
 	userID := testutil.ValidUserID()
@@ -143,9 +143,9 @@ func TestBoardRepository_GetMany(t *testing.T) {
 
 		CreateFixedUser(t, pool)
 
-		got, err := r.GetMany(context.Background(), userID)
+		got, err := r.ListByOwnerID(context.Background(), userID)
 		if err != nil {
-			t.Errorf("GetMany() error = %v", err)
+			t.Errorf("ListByOwnerID() error = %v", err)
 		}
 		if len(got) != 0 {
 			t.Errorf("got %d boards, want 0", len(got))
@@ -166,36 +166,36 @@ func TestBoardRepository_GetMany(t *testing.T) {
 			OwnerID:     userID,
 			Name:        boardName,
 			Description: boardDescription,
-			CreatedAt:   testutil.FixedTimeNow(),
-			UpdatedAt:   testutil.FixedTimeNow(),
+			CreatedAt:   testutil.FixedNow(),
+			UpdatedAt:   testutil.FixedNow(),
 		}
 		second := domain.Board{
 			ID:          domain.NewBoardID(),
 			OwnerID:     userID,
 			Name:        otherName,
 			Description: boardDescription,
-			CreatedAt:   testutil.FixedTime5mFromNow(),
-			UpdatedAt:   testutil.FixedTime5mFromNow(),
+			CreatedAt:   testutil.Fixed5mFromNow(),
+			UpdatedAt:   testutil.Fixed5mFromNow(),
 		}
 
-		InsertBoard(t, pool, &second)
-		InsertBoard(t, pool, &first)
+		CreateBoard(t, pool, &second)
+		CreateBoard(t, pool, &first)
 
-		got, err := r.GetMany(context.Background(), userID)
+		got, err := r.ListByOwnerID(context.Background(), userID)
 		if err != nil {
-			t.Errorf("GetMany() error = %v", err)
+			t.Errorf("ListByOwnerID() error = %v", err)
 		}
 		if len(got) != 2 {
 			t.Fatalf("got %d boards, want 2", len(got))
 		}
 		want := []domain.Board{first, second}
 		if diff := cmp.Diff(want, got, testutil.CmpAllowUnexported()); diff != "" {
-			t.Errorf("GetMany() mismatch (-want +got):\n%s", diff)
+			t.Errorf("ListByOwnerID() mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
 
-func TestBoardRepository_UpdateByID(t *testing.T) {
+func TestBoardRepository_Update(t *testing.T) {
 	pool, r := boardRepoPrelude(t)
 
 	validBoard := testutil.ValidBoard()
@@ -234,7 +234,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := FindBoardByID(t, pool, validBoard.ID)
+		stored, ok := GetBoard(t, pool, validBoard.ID)
 		if !ok {
 			t.Fatalf("updated board %q not found in DB", validBoard.ID)
 		}
@@ -247,11 +247,11 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		CreateFixedUser(t, pool)
-		InsertBoard(t, pool, &validBoard)
+		CreateBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
+		got, err := r.Update(context.Background(), validBoard.ID, &updatedName, &updatedDescription)
 		if err != nil {
-			t.Errorf("UpdateByID() error = %v", err)
+			t.Errorf("Update() error = %v", err)
 		}
 		assertUpdatedBoard(t, got, updatedValidBoard)
 	})
@@ -260,11 +260,11 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		CreateFixedUser(t, pool)
-		InsertBoard(t, pool, &validBoard)
+		CreateBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, &updatedNameOnly, nil)
+		got, err := r.Update(context.Background(), validBoard.ID, &updatedNameOnly, nil)
 		if err != nil {
-			t.Errorf("UpdateByID() error = %v", err)
+			t.Errorf("Update() error = %v", err)
 		}
 		assertUpdatedBoard(t, got, updatedNameOnlyBoard)
 	})
@@ -273,11 +273,11 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		CreateFixedUser(t, pool)
-		InsertBoard(t, pool, &validBoard)
+		CreateBoard(t, pool, &validBoard)
 
-		got, err := r.UpdateByID(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
+		got, err := r.Update(context.Background(), validBoard.ID, nil, &updatedDescriptionOnly)
 		if err != nil {
-			t.Errorf("UpdateByID() error = %v", err)
+			t.Errorf("Update() error = %v", err)
 		}
 		assertUpdatedBoard(t, got, updatedDescriptionOnlyBoard)
 	})
@@ -287,7 +287,7 @@ func TestBoardRepository_UpdateByID(t *testing.T) {
 
 		CreateFixedUser(t, pool)
 
-		_, err := r.UpdateByID(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
+		_, err := r.Update(context.Background(), domain.NewBoardID(), &updatedName, &updatedDescription)
 		assertErrRowNotFound(t, err)
 	})
 }
@@ -305,7 +305,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 			t.Errorf("Delete() error = %v", err)
 		}
 
-		_, ok := FindBoardByID(t, pool, board.ID)
+		_, ok := GetBoard(t, pool, board.ID)
 		if ok {
 			t.Errorf("got board %q in DB, want deleted row", board.ID)
 		}
@@ -321,11 +321,11 @@ func TestBoardRepository_Delete(t *testing.T) {
 	})
 }
 
-func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PgBoard) {
+func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGBoard) {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t, "../../migrations")
 	t.Cleanup(func() { pool.Close() })
 
-	return pool, repository.NewPgBoard(pool)
+	return pool, repository.NewPGBoard(pool)
 }

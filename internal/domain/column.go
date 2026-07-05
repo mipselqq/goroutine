@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	ErrColumnNameTooShort  = "Name is too short"
-	ErrColumnNameTooLong   = "Name is too long"
-	ErrColumnPositionValue = "Position is invalid"
+	ErrColumnNameTooShort       = "Name is too short"
+	ErrColumnNameTooLong        = "Name is too long"
+	ErrColumnDescriptionTooLong = "Description is too long"
+	ErrColumnPositionValue      = "Position is invalid"
 )
 
 type Column struct {
@@ -82,7 +83,7 @@ func NewColumnDescription(description string) (ColumnDescription, error) {
 	trimmedDescription := strings.TrimSpace(description)
 	var issues []string
 	if len(trimmedDescription) > 1024 {
-		issues = append(issues, ErrDescriptionTooLong)
+		issues = append(issues, ErrColumnDescriptionTooLong)
 	}
 
 	if len(issues) > 0 {

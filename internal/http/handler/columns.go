@@ -13,20 +13,20 @@ import (
 
 type ColumnsService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
-	List(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
-	UpdateByID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
+	ListByBoardID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
+	Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
 	Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error)
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
 type Columns struct {
-	logger    *slog.Logger
-	service   ColumnsService
-	responder *httpschema.ErrorResponder
+	logger         *slog.Logger
+	columnsService ColumnsService
+	responder      *httpschema.ErrorResponder
 }
 
-func NewColumns(logger *slog.Logger, svc ColumnsService, responder *httpschema.ErrorResponder) *Columns {
-	return &Columns{logger: logger, service: svc, responder: responder}
+func NewColumns(logger *slog.Logger, columnsService ColumnsService, responder *httpschema.ErrorResponder) *Columns {
+	return &Columns{logger: logger, columnsService: columnsService, responder: responder}
 }
 
 type createColumnBody struct {
@@ -117,7 +117,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	column, err := h.service.Create(r.Context(), userID, boardID, name, description)
+	column, err := h.columnsService.Create(r.Context(), userID, boardID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -143,7 +143,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns [get]
-func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
+func (h *Columns) ListByBoardID(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	columns, err := h.service.List(r.Context(), userID, boardID)
+	columns, err := h.columnsService.ListByBoardID(r.Context(), userID, boardID)
 	if err != nil {
 		if errors.Is(err, service.ErrBoardNotFound) {
 			h.responder.BoardNotFound(w, []httpschema.Detail{{Field: "boardId", Issues: []string{"Board not found"}}})
@@ -174,7 +174,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, response)
 }
 
-// UpdateByID godoc
+// Update godoc
 // @Summary Rename a column by id
 // @Description Partially update column metadata for the current user. Provided fields are updated; omitted or null fields are ignored.
 // @Tags columns
@@ -191,7 +191,7 @@ func (h *Columns) List(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId} [patch]
-func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
+func (h *Columns) Update(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -239,7 +239,7 @@ func (h *Columns) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	column, err := h.service.UpdateByID(r.Context(), userID, boardID, columnID, name, description)
+	column, err := h.columnsService.Update(r.Context(), userID, boardID, columnID, name, description)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})
@@ -307,7 +307,7 @@ func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	position, err := h.service.Move(r.Context(), userID, boardID, columnID, targetPosition)
+	position, err := h.columnsService.Move(r.Context(), userID, boardID, columnID, targetPosition)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})
@@ -359,7 +359,7 @@ func (h *Columns) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Delete(r.Context(), userID, boardID, columnID)
+	err = h.columnsService.Delete(r.Context(), userID, boardID, columnID)
 	if err != nil {
 		if errors.Is(err, service.ErrColumnNotFound) {
 			h.responder.ColumnNotFound(w, []httpschema.Detail{{Field: "columnId", Issues: []string{"Column not found"}}})

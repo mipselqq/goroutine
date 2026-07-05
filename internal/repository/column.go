@@ -11,15 +11,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgColumn struct {
-	pool *pgxpool.Pool
+type PGColumn struct {
+	pgPool *pgxpool.Pool
 }
 
-func NewPgColumn(pool *pgxpool.Pool) *PgColumn {
-	return &PgColumn{pool: pool}
+func NewPGColumn(pgPool *pgxpool.Pool) *PGColumn {
+	return &PGColumn{pgPool: pgPool}
 }
 
-func (r *PgColumn) Create(
+func (r *PGColumn) Create(
 	ctx context.Context,
 	boardID domain.BoardID,
 	name domain.ColumnName,
@@ -41,7 +41,7 @@ func (r *PgColumn) Create(
 		RETURNING id, board_id, name, description, position, created_at, updated_at`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("column repo: create begin tx: %v: %w", err, ErrInternal)
 	}
@@ -95,16 +95,16 @@ func (r *PgColumn) Create(
 	return column, nil
 }
 
-func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
+func (r *PGColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
 		WHERE board_id = $1
 		ORDER BY position ASC`
 
-	rows, err := r.pool.Query(ctx, query, boardID)
+	rows, err := r.pgPool.Query(ctx, query, boardID)
 	if err != nil {
-		return nil, fmt.Errorf("column repo: list: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("column repo: list by board id: %v: %w", err, ErrInternal)
 	}
 	defer rows.Close()
 
@@ -121,27 +121,27 @@ func (r *PgColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 			&col.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("column repo: list: scan: %v: %w", err, ErrInternal)
+			return nil, fmt.Errorf("column repo: list by board id: scan: %v: %w", err, ErrInternal)
 		}
 		result = append(result, col)
 	}
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("column repo: list: rows final error: %v: %w", err, ErrInternal)
+		return nil, fmt.Errorf("column repo: list by board id: rows final error: %v: %w", err, ErrInternal)
 	}
 
 	return result, nil
 }
 
-func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+func (r *PGColumn) Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 	const query = `
 		SELECT id, board_id, name, description, position, created_at, updated_at
 		FROM columns
 		WHERE id = $1`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, columnID).Scan(
+	err := r.pgPool.QueryRow(ctx, query, columnID).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
@@ -154,13 +154,13 @@ func (r *PgColumn) GetByID(ctx context.Context, columnID domain.ColumnID) (domai
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, ErrRowNotFound
 		}
-		return domain.Column{}, fmt.Errorf("column repo: get by id: %v: %w", err, ErrInternal)
+		return domain.Column{}, fmt.Errorf("column repo: get: %v: %w", err, ErrInternal)
 	}
 
 	return column, nil
 }
 
-func (r *PgColumn) UpdateByID(
+func (r *PGColumn) Update(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
@@ -178,7 +178,7 @@ func (r *PgColumn) UpdateByID(
 		RETURNING id, board_id, name, description, position, created_at, updated_at`
 
 	var column domain.Column
-	err := r.pool.QueryRow(ctx, query, name, description, boardID, columnID).Scan(
+	err := r.pgPool.QueryRow(ctx, query, name, description, boardID, columnID).Scan(
 		&column.ID,
 		&column.BoardID,
 		&column.Name,
@@ -191,13 +191,13 @@ func (r *PgColumn) UpdateByID(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, ErrRowNotFound
 		}
-		return domain.Column{}, fmt.Errorf("column repo: update by id: %v: %w", err, ErrInternal)
+		return domain.Column{}, fmt.Errorf("column repo: update: %v: %w", err, ErrInternal)
 	}
 
 	return column, nil
 }
 
-func (r *PgColumn) Move(
+func (r *PGColumn) Move(
 	ctx context.Context,
 	boardID domain.BoardID,
 	columnID domain.ColumnID,
@@ -256,7 +256,7 @@ func (r *PgColumn) Move(
 		  AND id = @column_id`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return domain.ColumnPosition{}, fmt.Errorf("column repo: move begin tx: %v: %w", err, ErrInternal)
 	}
@@ -342,7 +342,7 @@ func (r *PgColumn) Move(
 	return targetPosition, nil
 }
 
-func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
+func (r *PGColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
 	const (
 		// 1. Lock the board row so no concurrent operation can reorder columns in the same board.
 		lockBoardQuery = `
@@ -370,7 +370,7 @@ func (r *PgColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 		  AND position > @deleted_position`
 	)
 
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pgPool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("column repo: delete begin tx: %v: %w", err, ErrInternal)
 	}

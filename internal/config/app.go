@@ -10,7 +10,7 @@ import (
 	"goroutine/internal/secrecy"
 )
 
-type AppConfig struct {
+type App struct {
 	Port           string
 	AdminPort      string
 	Host           string
@@ -22,22 +22,22 @@ type AppConfig struct {
 	AllowedOrigins map[string]struct{}
 }
 
-func NewAppConfigFromEnv(logger *slog.Logger) AppConfig {
-	jwtExpStr := getenvOrDefault("JWT_EXP", "24h", logger)
+func NewAppFromEnv(logger *slog.Logger) App {
+	jwtExpStr := getEnvStringOrDefault("JWT_EXP", "24h", logger)
 	jwtExp, err := time.ParseDuration(jwtExpStr)
 	if err != nil {
 		jwtExp = 24 * time.Hour
 	}
 
-	allowedOrigins := getenvOrDefault("ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080", logger)
-	return AppConfig{
-		Port:           getenvOrDefault("PORT", "8080", logger),
-		AdminPort:      getenvOrDefault("ADMIN_PORT", "9091", logger),
-		Host:           getenvOrDefault("HOST", "0.0.0.0", logger),
-		LogLevel:       getenvOrDefault("LOG_LEVEL", "info", logger),
-		Env:            getenvOrDefault("ENV", "dev", logger),
-		SwaggerHost:    getenvOrDefault("SWAGGER_HOST", "localhost:8080", logger),
-		JWTSecret:      secrecy.SecretString(getenvOrDefault("JWT_SECRET", "very_secret", logger)),
+	allowedOrigins := getEnvStringOrDefault("ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080", logger)
+	return App{
+		Port:           getEnvStringOrDefault("PORT", "8080", logger),
+		AdminPort:      getEnvStringOrDefault("ADMIN_PORT", "9091", logger),
+		Host:           getEnvStringOrDefault("HOST", "0.0.0.0", logger),
+		LogLevel:       getEnvStringOrDefault("LOG_LEVEL", "info", logger),
+		Env:            getEnvStringOrDefault("ENV", "dev", logger),
+		SwaggerHost:    getEnvStringOrDefault("SWAGGER_HOST", "localhost:8080", logger),
+		JWTSecret:      secrecy.SecretString(getEnvStringOrDefault("JWT_SECRET", "very_secret", logger)),
 		JWTExp:         jwtExp,
 		AllowedOrigins: ParseAllowedOrigins(allowedOrigins),
 	}
@@ -62,7 +62,7 @@ func ParseAllowedOrigins(origins string) map[string]struct{} {
 }
 
 //nolint:gocritic // Pointer receiver disables formatting
-func (c AppConfig) LogValue() slog.Value {
+func (c App) LogValue() slog.Value {
 	allowedOrigins := make([]string, 0, len(c.AllowedOrigins))
 	for origin := range c.AllowedOrigins {
 		allowedOrigins = append(allowedOrigins, origin)

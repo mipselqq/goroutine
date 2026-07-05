@@ -35,7 +35,7 @@ func TestTask_Create(t *testing.T) {
 			name:     "Success",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					if id != validBoard.ID {
 						t.Errorf("got board id %v, want %v", id, validBoard.ID)
 					}
@@ -43,7 +43,7 @@ func TestTask_Create(t *testing.T) {
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					if columnID != validColumn.ID {
 						t.Errorf("got column id %v, want %v", columnID, validColumn.ID)
 					}
@@ -70,12 +70,12 @@ func TestTask_Create(t *testing.T) {
 			name:     "Board not found",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -92,12 +92,12 @@ func TestTask_Create(t *testing.T) {
 			name:     "Caller has no access",
 			callerID: domain.NewUserID(),
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -114,12 +114,12 @@ func TestTask_Create(t *testing.T) {
 			name:     "Column not found",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return domain.Column{}, repository.ErrRowNotFound
 				}
 			},
@@ -135,12 +135,12 @@ func TestTask_Create(t *testing.T) {
 			name:     "Column belongs to another board",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					otherBoardColumn := validColumn
 					otherBoardColumn.BoardID = domain.NewBoardID()
 					return otherBoardColumn, nil
@@ -158,12 +158,12 @@ func TestTask_Create(t *testing.T) {
 			name:     "Create internal error",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
@@ -202,7 +202,7 @@ func TestTask_Create(t *testing.T) {
 	}
 }
 
-func TestTask_List(t *testing.T) {
+func TestTask_ListByColumnID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -223,12 +223,12 @@ func TestTask_List(t *testing.T) {
 			name:     "Success",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
@@ -246,12 +246,12 @@ func TestTask_List(t *testing.T) {
 			name:     "Board not found",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -268,12 +268,12 @@ func TestTask_List(t *testing.T) {
 			name:     "No access",
 			callerID: domain.NewUserID(),
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
@@ -290,12 +290,12 @@ func TestTask_List(t *testing.T) {
 			name:     "Column not found",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return domain.Column{}, repository.ErrRowNotFound
 				}
 			},
@@ -311,12 +311,12 @@ func TestTask_List(t *testing.T) {
 			name:     "Column belongs to another board",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					otherBoardColumn := validColumn
 					otherBoardColumn.BoardID = domain.NewBoardID()
 					return otherBoardColumn, nil
@@ -334,12 +334,12 @@ func TestTask_List(t *testing.T) {
 			name:     "Repository error",
 			callerID: validBoard.OwnerID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
@@ -364,27 +364,27 @@ func TestTask_List(t *testing.T) {
 			tt.setupTaskRepo(t, taskRepo)
 
 			s := service.NewTask(taskRepo, boardRepo, columnRepo)
-			got, err := s.List(context.Background(), tt.callerID, validBoard.ID, validColumn.ID)
+			got, err := s.ListByColumnID(context.Background(), tt.callerID, validBoard.ID, validColumn.ID)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantTasks, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("List() tasks mismatch (-want +got):\n%s", diff)
+					t.Errorf("ListByColumnID() tasks mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
 	}
 }
 
-func TestTask_UpdateByID(t *testing.T) {
+func TestTask_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
 	validColumn := testutil.ValidColumn(validBoard.ID)
 	validTask := testutil.ValidTask(validColumn.ID)
-	updatedTask := testutil.UpdateValidTask(t, &validTask, "Renamed", "Renamed description", testutil.FixedTimeNow())
+	updatedTask := testutil.UpdateValidTask(t, &validTask, "Renamed", "Renamed description", testutil.FixedNow())
 	updatedName := updatedTask.Name
 	updatedDescription := updatedTask.Description
 
@@ -407,23 +407,23 @@ func TestTask_UpdateByID(t *testing.T) {
 			patchName:        &updatedName,
 			patchDescription: &updatedDescription,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					if taskID != validTask.ID {
 						t.Errorf("got task id %v, want %v", taskID, validTask.ID)
 					}
 					return validTask, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					if columnID != validColumn.ID {
 						t.Errorf("got column id %v, want %v", columnID, validColumn.ID)
 					}
@@ -446,20 +446,20 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -471,22 +471,22 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -498,22 +498,22 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: domain.NewUserID(),
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -525,21 +525,21 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return domain.Column{}, repository.ErrRowNotFound
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -551,23 +551,23 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					otherBoardColumn := validColumn
 					otherBoardColumn.BoardID = domain.NewBoardID()
 					return otherBoardColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -579,20 +579,20 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return domain.Task{}, repository.ErrRowNotFound
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -604,22 +604,22 @@ func TestTask_UpdateByID(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					otherColumnTask := validTask
 					otherColumnTask.ColumnID = domain.NewColumnID()
 					return otherColumnTask, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -632,20 +632,20 @@ func TestTask_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID,
 			patchName: &updatedName,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
-				r.UpdateByIDFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				r.UpdateFunc = func(ctx context.Context, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					return domain.Task{}, errors.New("update failed")
 				}
 			},
@@ -665,14 +665,14 @@ func TestTask_UpdateByID(t *testing.T) {
 			tt.setupTaskRepo(t, taskRepo)
 
 			s := service.NewTask(taskRepo, boardRepo, columnRepo)
-			got, err := s.UpdateByID(context.Background(), tt.callerID, validBoard.ID, validColumn.ID, tt.taskID, tt.patchName, tt.patchDescription)
+			got, err := s.Update(context.Background(), tt.callerID, validBoard.ID, validColumn.ID, tt.taskID, tt.patchName, tt.patchDescription)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
 				if diff := cmp.Diff(tt.wantTask, got, testutil.CmpAllowUnexported()); diff != "" {
-					t.Errorf("UpdateByID() task mismatch (-want +got):\n%s", diff)
+					t.Errorf("Update() task mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
@@ -706,12 +706,12 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: validColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					if columnID != validColumn.ID {
 						t.Errorf("got column id %v, want %v", columnID, validColumn.ID)
 					}
@@ -719,7 +719,7 @@ func TestTask_Move(t *testing.T) {
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -750,12 +750,12 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: targetColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					switch columnID {
 					case validColumn.ID:
 						return validColumn, nil
@@ -768,7 +768,7 @@ func TestTask_Move(t *testing.T) {
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -787,12 +787,12 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: targetColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					if columnID == validColumn.ID {
 						return validColumn, nil
 					}
@@ -800,7 +800,7 @@ func TestTask_Move(t *testing.T) {
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -816,12 +816,12 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: targetColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					if columnID == validColumn.ID {
 						return validColumn, nil
 					}
@@ -831,7 +831,7 @@ func TestTask_Move(t *testing.T) {
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -847,17 +847,17 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: validColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -872,17 +872,17 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: validColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -897,17 +897,17 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: validColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return domain.Task{}, repository.ErrRowNotFound
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -923,17 +923,17 @@ func TestTask_Move(t *testing.T) {
 			taskID:         validTask.ID,
 			targetColumnID: validColumn.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.MoveFunc = func(ctx context.Context, boardID domain.BoardID, currentColumnID domain.ColumnID, taskID domain.TaskID, gotTargetColumnID domain.ColumnID, gotTargetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
@@ -994,17 +994,17 @@ func TestTask_Delete(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error {
@@ -1026,18 +1026,18 @@ func TestTask_Delete(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return domain.Board{}, repository.ErrRowNotFound
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -1053,18 +1053,18 @@ func TestTask_Delete(t *testing.T) {
 			callerID: domain.NewUserID(),
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Column{}, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					t.Fatalf("got call, want no call")
 					return domain.Task{}, nil
 				}
@@ -1080,17 +1080,17 @@ func TestTask_Delete(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error {
@@ -1104,17 +1104,17 @@ func TestTask_Delete(t *testing.T) {
 			callerID: validBoard.OwnerID,
 			taskID:   validTask.ID,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
-				r.GetByIDFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
+				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
 			},
 			setupColumnRepo: func(t *testing.T, r *MockColumnRepository) {
-				r.GetByIDFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
+				r.GetFunc = func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
 					return validColumn, nil
 				}
 			},
 			setupTaskRepo: func(t *testing.T, r *MockTaskRepository) {
-				r.GetByIDFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
+				r.GetFunc = func(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
 					return validTask, nil
 				}
 				r.DeleteFunc = func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error {

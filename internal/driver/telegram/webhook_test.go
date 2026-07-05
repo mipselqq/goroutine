@@ -179,7 +179,7 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 			tt.setupService(svc)
 			tt.setupNotifier(notifier)
 
-			logger := testutil.NewTestLogger(t)
+			logger := testutil.NewLogger(t)
 			h := telegram.NewWebhookHandler(logger, svc, notifier)
 			h.ServeHTTP(rr, req)
 

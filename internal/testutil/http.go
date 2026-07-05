@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, wantMediaType string) {
+func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, want string) {
 	t.Helper()
 
 	contentType := rr.Header().Get("Content-Type")
@@ -19,8 +19,8 @@ func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, wantMediaTyp
 	if err != nil {
 		t.Fatalf("mime.ParseMediaType(%q) error = %v", contentType, err)
 	}
-	if mediaType != wantMediaType {
-		t.Errorf("got content type %q, want %q", mediaType, wantMediaType)
+	if mediaType != want {
+		t.Errorf("got content type %q, want %q", mediaType, want)
 	}
 }
 
@@ -57,11 +57,11 @@ func NewJSONRequestAndRecorder(t *testing.T, method, url string, body any) (*htt
 	return req, rr
 }
 
-func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, wantStatusCode int) {
+func AssertStatusCode(t *testing.T, rr *httptest.ResponseRecorder, want int) {
 	t.Helper()
 
-	if rr.Code != wantStatusCode {
-		t.Errorf("got status %d, want %d", rr.Code, wantStatusCode)
+	if rr.Code != want {
+		t.Errorf("got status %d, want %d", rr.Code, want)
 	}
 }
 

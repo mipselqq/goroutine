@@ -12,7 +12,7 @@ func TestHealthHandler(t *testing.T) {
 	t.Parallel()
 
 	req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodGet, "/health", "")
-	logger := testutil.NewTestLogger(t)
+	logger := testutil.NewLogger(t)
 	h := handler.NewHealth(logger)
 
 	h.Health(rr, req)

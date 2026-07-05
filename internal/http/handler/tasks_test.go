@@ -77,7 +77,7 @@ func TestTasks_Create(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "Name", "description": "Description"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody:  validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
@@ -85,7 +85,7 @@ func TestTasks_Create(t *testing.T) {
 			columnID:  "not-a-uuid",
 			inputBody: map[string]string{"name": "Name", "description": "Description"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody:  validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid JSON",
@@ -93,7 +93,7 @@ func TestTasks_Create(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "Invalid name",
@@ -101,7 +101,7 @@ func TestTasks_Create(t *testing.T) {
 			columnID:  validColumn.ID.String(),
 			inputBody: map[string]string{"name": "   ", "description": "ok"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+			wantBody:  validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Missing context user",
@@ -110,7 +110,7 @@ func TestTasks_Create(t *testing.T) {
 			inputBody: map[string]string{"name": "ok", "description": "ok"},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Column not found",
@@ -123,7 +123,7 @@ func TestTasks_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundByFieldError("columnId"),
+			wantBody: columnNotFoundError("columnId"),
 		},
 		{
 			name:      "Internal error",
@@ -136,7 +136,7 @@ func TestTasks_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Unexpected error",
@@ -149,15 +149,15 @@ func TestTasks_Create(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -181,8 +181,8 @@ func TestTasks_Create(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Create(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -192,7 +192,7 @@ func TestTasks_Create(t *testing.T) {
 	}
 }
 
-func TestTasks_List(t *testing.T) {
+func TestTasks_ListByColumnID(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -215,7 +215,7 @@ func TestTasks_List(t *testing.T) {
 			boardID:  validBoard.ID.String(),
 			columnID: validColumn.ID.String(),
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+				s.ListByColumnIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -255,14 +255,14 @@ func TestTasks_List(t *testing.T) {
 			boardID:  "not-a-uuid",
 			columnID: validColumn.ID.String(),
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:     "Invalid column id",
 			boardID:  validBoard.ID.String(),
 			columnID: "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody: validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:     "Missing context user",
@@ -270,31 +270,31 @@ func TestTasks_List(t *testing.T) {
 			columnID: validColumn.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:     "Column not found",
 			boardID:  validBoard.ID.String(),
 			columnID: validColumn.ID.String(),
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+				s.ListByColumnIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
 					return nil, service.ErrColumnNotFound
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundByFieldError("columnId"),
+			wantBody: columnNotFoundError("columnId"),
 		},
 		{
 			name:     "Internal error",
 			boardID:  validBoard.ID.String(),
 			columnID: validColumn.ID.String(),
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.ListFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
+				s.ListByColumnIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
 					return nil, service.ErrInternal
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 
@@ -318,9 +318,9 @@ func TestTasks_List(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
-			h.List(rr, req)
+			logger := testutil.NewLogger(t)
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
+			h.ListByColumnID(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -329,7 +329,7 @@ func TestTasks_List(t *testing.T) {
 	}
 }
 
-func TestTasks_UpdateByID(t *testing.T) {
+func TestTasks_Update(t *testing.T) {
 	t.Parallel()
 
 	validBoard := testutil.ValidBoard()
@@ -346,7 +346,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 	updatedTask := validTask
 	updatedTask.Name = updatedName
 	updatedTask.Description = updatedDescription
-	updatedTask.UpdatedAt = testutil.FixedTime5mFromNow()
+	updatedTask.UpdatedAt = testutil.Fixed5mFromNow()
 
 	tests := []struct {
 		name             string
@@ -366,7 +366,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": updatedName.String(), "description": updatedDescription.String()},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					if callerID != validBoard.OwnerID {
 						t.Errorf("got caller id %v, want %v", callerID, validBoard.OwnerID)
 					}
@@ -406,7 +406,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]any{},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					if name != nil {
 						t.Errorf("got name %+v, want nil", name)
 					}
@@ -434,7 +434,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody:  validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
@@ -443,7 +443,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody:  validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid task id",
@@ -452,7 +452,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    "not-a-uuid",
 			inputBody: map[string]string{"name": "Renamed"},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("taskId", []string{"Invalid task id"}),
+			wantBody:  validationError("taskId", []string{"Invalid task id"}),
 		},
 		{
 			name:      "Invalid JSON",
@@ -461,7 +461,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: "{\"name\":\"broken\"",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "Invalid name",
@@ -470,7 +470,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "   "},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("name", []string{"Name is too short"}),
+			wantBody:  validationError("name", []string{"Name is too short"}),
 		},
 		{
 			name:      "Missing context user",
@@ -480,7 +480,7 @@ func TestTasks_UpdateByID(t *testing.T) {
 			inputBody: map[string]string{"name": "Renamed"},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Task not found",
@@ -489,12 +489,12 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					return domain.Task{}, service.ErrTaskNotFound
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: taskNotFoundByFieldError("taskId"),
+			wantBody: taskNotFoundError("taskId"),
 		},
 		{
 			name:      "Internal error",
@@ -503,21 +503,21 @@ func TestTasks_UpdateByID(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]string{"name": "Renamed"},
 			setupTaskService: func(t *testing.T, s *MockTaskService) {
-				s.UpdateByIDFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
+				s.UpdateFunc = func(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
 					return domain.Task{}, service.ErrInternal
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
 			taskID:    validTask.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -542,9 +542,9 @@ func TestTasks_UpdateByID(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
-			h.UpdateByID(rr, req)
+			logger := testutil.NewLogger(t)
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
+			h.Update(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
 			testutil.AssertContentType(t, rr, "application/json")
@@ -618,7 +618,7 @@ func TestTasks_Move(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]any{"targetColumnId": targetColumn.ID.String(), "targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody:  validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:      "Invalid column id",
@@ -627,7 +627,7 @@ func TestTasks_Move(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]any{"targetColumnId": targetColumn.ID.String(), "targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody:  validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:      "Invalid task id",
@@ -636,7 +636,7 @@ func TestTasks_Move(t *testing.T) {
 			taskID:    "not-a-uuid",
 			inputBody: map[string]any{"targetColumnId": targetColumn.ID.String(), "targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("taskId", []string{"Invalid task id"}),
+			wantBody:  validationError("taskId", []string{"Invalid task id"}),
 		},
 		{
 			name:      "Invalid JSON",
@@ -645,7 +645,7 @@ func TestTasks_Move(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: "{\"targetPosition\":",
 			wantCode:  http.StatusBadRequest,
-			wantBody:  invalidJsonBody(),
+			wantBody:  invalidJSONError(),
 		},
 		{
 			name:      "Invalid target column id",
@@ -654,7 +654,7 @@ func TestTasks_Move(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]any{"targetColumnId": "not-a-uuid", "targetPosition": 1},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("targetColumnId", []string{"Invalid target column id"}),
+			wantBody:  validationError("targetColumnId", []string{"Invalid target column id"}),
 		},
 		{
 			name:      "Invalid target position",
@@ -663,7 +663,7 @@ func TestTasks_Move(t *testing.T) {
 			taskID:    validTask.ID.String(),
 			inputBody: map[string]any{"targetColumnId": targetColumn.ID.String(), "targetPosition": 0},
 			wantCode:  http.StatusBadRequest,
-			wantBody:  validationErrorBody("targetPosition", []string{"Position is invalid"}),
+			wantBody:  validationError("targetPosition", []string{"Position is invalid"}),
 		},
 		{
 			name:      "Missing context user",
@@ -673,7 +673,7 @@ func TestTasks_Move(t *testing.T) {
 			inputBody: map[string]any{"targetColumnId": targetColumn.ID.String(), "targetPosition": 1},
 			context:   context.Background(),
 			wantCode:  http.StatusUnauthorized,
-			wantBody:  unauthorizedTokenBody(),
+			wantBody:  unauthorizedTokenError(),
 		},
 		{
 			name:      "Index out of bounds",
@@ -687,7 +687,7 @@ func TestTasks_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("targetPosition", []string{"Index out of bounds"}),
+			wantBody: validationError("targetPosition", []string{"Index out of bounds"}),
 		},
 		{
 			name:      "Task not found",
@@ -701,7 +701,7 @@ func TestTasks_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: taskNotFoundByFieldError("taskId"),
+			wantBody: taskNotFoundError("taskId"),
 		},
 		{
 			name:      "Target column not found",
@@ -715,7 +715,7 @@ func TestTasks_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: columnNotFoundByFieldError("targetColumnId"),
+			wantBody: columnNotFoundError("targetColumnId"),
 		},
 		{
 			name:      "Internal error",
@@ -729,16 +729,16 @@ func TestTasks_Move(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
 			taskID:    validTask.ID.String(),
-			inputBody: testutil.Big25KBJson(),
+			inputBody: testutil.Big25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
-			wantBody:  payloadTooLargeBody(),
+			wantBody:  payloadTooLargeError(),
 		},
 	}
 
@@ -763,8 +763,8 @@ func TestTasks_Move(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Move(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -822,7 +822,7 @@ func TestTasks_Delete(t *testing.T) {
 			columnID: validColumn.ID.String(),
 			taskID:   validTask.ID.String(),
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("boardId", []string{"Invalid board id"}),
+			wantBody: validationError("boardId", []string{"Invalid board id"}),
 		},
 		{
 			name:     "Invalid column id",
@@ -830,7 +830,7 @@ func TestTasks_Delete(t *testing.T) {
 			columnID: "not-a-uuid",
 			taskID:   validTask.ID.String(),
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("columnId", []string{"Invalid column id"}),
+			wantBody: validationError("columnId", []string{"Invalid column id"}),
 		},
 		{
 			name:     "Invalid task id",
@@ -838,7 +838,7 @@ func TestTasks_Delete(t *testing.T) {
 			columnID: validColumn.ID.String(),
 			taskID:   "not-a-uuid",
 			wantCode: http.StatusBadRequest,
-			wantBody: validationErrorBody("taskId", []string{"Invalid task id"}),
+			wantBody: validationError("taskId", []string{"Invalid task id"}),
 		},
 		{
 			name:     "Missing context user",
@@ -847,7 +847,7 @@ func TestTasks_Delete(t *testing.T) {
 			taskID:   validTask.ID.String(),
 			context:  context.Background(),
 			wantCode: http.StatusUnauthorized,
-			wantBody: unauthorizedTokenBody(),
+			wantBody: unauthorizedTokenError(),
 		},
 		{
 			name:     "Task not found",
@@ -860,7 +860,7 @@ func TestTasks_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusNotFound,
-			wantBody: taskNotFoundByFieldError("taskId"),
+			wantBody: taskNotFoundError("taskId"),
 		},
 		{
 			name:     "Internal error",
@@ -873,7 +873,7 @@ func TestTasks_Delete(t *testing.T) {
 				}
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: internalErrorBody(),
+			wantBody: internalError(),
 		},
 	}
 
@@ -898,8 +898,8 @@ func TestTasks_Delete(t *testing.T) {
 				tt.setupTaskService(t, mockTasks)
 			}
 
-			logger := testutil.NewTestLogger(t)
-			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr))
+			logger := testutil.NewLogger(t)
+			h := handler.NewTasks(logger, mockTasks, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Delete(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

@@ -136,7 +136,7 @@ func TestColumn_HappyPath(t *testing.T) {
 		checkColumn.Name = createdColumn.Name
 		checkColumn.UpdatedAt = createdColumn.UpdatedAt
 		if diff := cmp.Diff(createdColumn, checkColumn); diff != "" {
-			t.Errorf("UpdateByID() diff (-want +got):\n%s", diff)
+			t.Errorf("Update() diff (-want +got):\n%s", diff)
 		}
 
 		// Verify specific changes

@@ -15,12 +15,12 @@ func UnsetEnv(t *testing.T, keys ...string) {
 	}
 }
 
-func MustNewTelegramConfigFromEnv(t *testing.T) config.TelegramConfig {
+func MustNewTelegramFromEnv(t *testing.T) config.Telegram {
 	t.Helper()
 
-	cfg, err := config.NewTelegramConfigFromEnv(testutil.NewDiscardLogger())
+	cfg, err := config.NewTelegramFromEnv(testutil.NewDiscardLogger())
 	if err != nil {
-		t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+		t.Fatalf("NewTelegramFromEnv() error = %v", err)
 	}
 
 	return cfg

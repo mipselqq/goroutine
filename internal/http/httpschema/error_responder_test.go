@@ -35,7 +35,7 @@ func TestErrorResponder_InternalError(t *testing.T) {
 		},
 		{
 			name:         "wrapped context.DeadlineExceeded returns 408 and logs DEBUG",
-			err:          fmt.Errorf("board repo: get by id: %w", context.DeadlineExceeded),
+			err:          fmt.Errorf("board repo: get: %w", context.DeadlineExceeded),
 			wantHTTPCode: http.StatusRequestTimeout,
 			wantBody:     nil,
 			wantLevel:    "DEBUG",
@@ -47,7 +47,7 @@ func TestErrorResponder_InternalError(t *testing.T) {
 			wantBody: map[string]any{
 				"code":      "INTERNAL_SERVER_ERROR",
 				"message":   "Internal server error",
-				"timestamp": testutil.FixedTimeNowStr(),
+				"timestamp": testutil.FixedNowStr(),
 			},
 			wantLevel: "ERROR",
 		},
@@ -57,8 +57,8 @@ func TestErrorResponder_InternalError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			logger, buf := testutil.NewBufJsonLogger(t, slog.LevelDebug)
-			er := httpschema.MustNewErrorResponder(logger, testutil.FixedTimeNowStr)
+			logger, buf := testutil.NewBufJSONLogger(t, slog.LevelDebug)
+			er := httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr)
 
 			req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 			rr := httptest.NewRecorder()

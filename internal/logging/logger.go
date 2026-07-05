@@ -11,8 +11,12 @@ import (
 type ContextExtractor func(ctx context.Context) []slog.Attr
 
 type ContextHandler struct {
-	slog.Handler
+	Base       slog.Handler
 	extractors []ContextExtractor
+}
+
+func (h *ContextHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	return h.Base.Enabled(ctx, level)
 }
 
 //nolint:gocritic // r must be passed by value to implement slog.Handler
@@ -22,26 +26,26 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 			r.AddAttrs(attrs...)
 		}
 	}
-	return h.Handler.Handle(ctx, r)
+	return h.Base.Handle(ctx, r)
 }
 
 func (h *ContextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &ContextHandler{
-		Handler:    h.Handler.WithAttrs(attrs),
+		Base:       h.Base.WithAttrs(attrs),
 		extractors: h.extractors,
 	}
 }
 
 func (h *ContextHandler) WithGroup(name string) slog.Handler {
 	return &ContextHandler{
-		Handler:    h.Handler.WithGroup(name),
+		Base:       h.Base.WithGroup(name),
 		extractors: h.extractors,
 	}
 }
 
-func NewLogger(env, logLevel string, extractors ...ContextExtractor) *slog.Logger {
+func NewLogger(env, levelStr string, extractors ...ContextExtractor) *slog.Logger {
 	var handler slog.Handler
-	level := parseLevel(logLevel)
+	level := parseLevel(levelStr)
 
 	if env == "dev" {
 		handler = tint.NewHandler(os.Stdout, &tint.Options{Level: level})
@@ -51,7 +55,7 @@ func NewLogger(env, logLevel string, extractors ...ContextExtractor) *slog.Logge
 
 	if len(extractors) > 0 {
 		handler = &ContextHandler{
-			Handler:    handler,
+			Base:       handler,
 			extractors: extractors,
 		}
 	}

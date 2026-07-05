@@ -24,10 +24,10 @@ type User struct {
 	telegramLinkTokenFn func() domain.TelegramLinkToken
 }
 
-func NewUser(ur UserRepository, tr TelegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
+func NewUser(userRepo UserRepository, tokenRepo TelegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
 	return &User{
-		userRepo:            ur,
-		tokenRepo:           tr,
+		userRepo:            userRepo,
+		tokenRepo:           tokenRepo,
 		telegramLinkTokenFn: telegramLinkTokenFn,
 	}
 }

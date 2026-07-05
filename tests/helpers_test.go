@@ -35,7 +35,7 @@ type PreludeResult struct {
 func Prelude(t *testing.T) PreludeResult {
 	t.Helper()
 
-	pool := testutil.SetupTestPostgres(t, "../migrations")
+	pool := testutil.SetupPostgres(t, "../migrations")
 
 	if os.Getenv("ENV") != "prod" {
 		err := godotenv.Load("../.env.dev")
@@ -46,18 +46,18 @@ func Prelude(t *testing.T) PreludeResult {
 		t.Fatalf("ENV = %q, want non-prod", os.Getenv("ENV"))
 	}
 
-	logger := testutil.NewTestLogger(t)
-	cfg := config.NewAppConfigFromEnv(logger)
-	telegramCfg, err := config.NewTelegramConfigFromEnv(logger)
+	logger := testutil.NewLogger(t)
+	cfg := config.NewAppFromEnv(logger)
+	telegramCfg, err := config.NewTelegramFromEnv(logger)
 	if err != nil {
-		t.Fatalf("NewTelegramConfigFromEnv() error = %v", err)
+		t.Fatalf("NewTelegramFromEnv() error = %v", err)
 	}
 	logger.Info("App config", slog.Any("config", cfg))
 
-	redisClient := testutil.SetupTestRedis(t)
-	application := app.New(logger, pool, redisClient, &cfg, &telegramCfg, prometheus.NewRegistry())
+	redisClient := testutil.SetupRedis(t)
+	a := app.New(logger, pool, redisClient, &cfg, &telegramCfg, prometheus.NewRegistry())
 
-	ts := httptest.NewServer(application.Router)
+	ts := httptest.NewServer(a.Router)
 	t.Cleanup(func() {
 		ts.Close()
 		pool.Close()
@@ -146,15 +146,15 @@ type AuthenticatedClient struct {
 	Token   string
 }
 
-func CreateUserAndAuthenticateClient(t *testing.T, httpClient *http.Client, baseURL string) *AuthenticatedClient {
+func CreateUserAndAuthenticateClient(t *testing.T, client *http.Client, baseURL string) *AuthenticatedClient {
 	t.Helper()
 
 	email := fmt.Sprintf("e2e-%s@example.com", uuid.NewString())
 	password := testutil.ValidPassword().String()
-	token := E2ERegisterAndLogin(t, httpClient, baseURL, email, password)
+	token := E2ERegisterAndLogin(t, client, baseURL, email, password)
 
 	return &AuthenticatedClient{
-		Client:  httpClient,
+		Client:  client,
 		BaseURL: baseURL,
 		Token:   token,
 	}

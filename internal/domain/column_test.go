@@ -186,7 +186,7 @@ func TestColumnDescription(t *testing.T) {
 		{
 			name:       "Too long description",
 			input:      borderlineLongDescription + "a",
-			wantIssues: []string{domain.ErrDescriptionTooLong},
+			wantIssues: []string{domain.ErrColumnDescriptionTooLong},
 			wantValue:  "",
 		},
 		{

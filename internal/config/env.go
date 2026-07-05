@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func getenvOrDefault(key, def string, logger *slog.Logger) string {
+func getEnvStringOrDefault(key, def string, logger *slog.Logger) string {
 	env := os.Getenv(key)
 
 	if env == "" {
@@ -17,7 +17,7 @@ func getenvOrDefault(key, def string, logger *slog.Logger) string {
 	return env
 }
 
-func getEnvTimeOrDefault(key string, def time.Duration, logger *slog.Logger) (time.Duration, error) {
+func getEnvDurationOrDefault(key string, def time.Duration, logger *slog.Logger) (time.Duration, error) {
 	env := os.Getenv(key)
 
 	if env == "" {

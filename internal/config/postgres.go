@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgConfig struct {
+type PG struct {
 	User     string
 	Password secrecy.SecretString
 	Host     string
@@ -17,21 +17,21 @@ type PgConfig struct {
 	DB       string
 }
 
-func NewPGFromEnv(logger *slog.Logger) PgConfig {
-	return PgConfig{
-		User:     getenvOrDefault("POSTGRES_USER", "user", logger),
-		Password: secrecy.SecretString(getenvOrDefault("POSTGRES_PASSWORD", "password", logger)),
-		Host:     getenvOrDefault("POSTGRES_HOST", "127.0.0.1", logger),
-		Port:     getenvOrDefault("POSTGRES_PORT", "5432", logger),
-		DB:       getenvOrDefault("POSTGRES_DB", "todo_db", logger),
+func NewPGFromEnv(logger *slog.Logger) PG {
+	return PG{
+		User:     getEnvStringOrDefault("POSTGRES_USER", "user", logger),
+		Password: secrecy.SecretString(getEnvStringOrDefault("POSTGRES_PASSWORD", "password", logger)),
+		Host:     getEnvStringOrDefault("POSTGRES_HOST", "127.0.0.1", logger),
+		Port:     getEnvStringOrDefault("POSTGRES_PORT", "5432", logger),
+		DB:       getEnvStringOrDefault("POSTGRES_DB", "todo_db", logger),
 	}
 }
 
-func (c *PgConfig) BuildDSN() secrecy.SecretString {
+func (c *PG) BuildDSN() secrecy.SecretString {
 	return secrecy.SecretString(fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.User, c.Password.RevealSecret(), c.Host, c.Port, c.DB))
 }
 
-func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
+func (c *PG) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 	config, err := pgxpool.ParseConfig(c.BuildDSN().RevealSecret())
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *PgConfig) ParsePGXpoolConfig() (*pgxpool.Config, error) {
 }
 
 //nolint:gocritic // Pointer receiver disables formatting
-func (c PgConfig) LogValue() slog.Value {
+func (c PG) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("user", c.User),
 		slog.Any("password", c.Password),

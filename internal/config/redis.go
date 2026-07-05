@@ -6,26 +6,26 @@ import (
 	"goroutine/internal/secrecy"
 )
 
-type RedisConfig struct {
+type Redis struct {
 	Host     string
 	Port     string
 	Password secrecy.SecretString
 }
 
-func NewRedisFromEnv(logger *slog.Logger) RedisConfig {
-	return RedisConfig{
-		Host:     getenvOrDefault("REDIS_HOST", "127.0.0.1", logger),
-		Port:     getenvOrDefault("REDIS_PORT", "6379", logger),
-		Password: secrecy.SecretString(getenvOrDefault("REDIS_PASSWORD", "redis_password", logger)),
+func NewRedisFromEnv(logger *slog.Logger) Redis {
+	return Redis{
+		Host:     getEnvStringOrDefault("REDIS_HOST", "127.0.0.1", logger),
+		Port:     getEnvStringOrDefault("REDIS_PORT", "6379", logger),
+		Password: secrecy.SecretString(getEnvStringOrDefault("REDIS_PASSWORD", "redis_password", logger)),
 	}
 }
 
-func (c *RedisConfig) BuildAddr() string {
+func (c *Redis) BuildAddr() string {
 	return c.Host + ":" + c.Port
 }
 
 //nolint:gocritic // Pointer receiver disables formatting
-func (c RedisConfig) LogValue() slog.Value {
+func (c Redis) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("host", c.Host),
 		slog.String("port", c.Port),
