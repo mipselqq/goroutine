@@ -128,7 +128,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -298,7 +298,7 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},

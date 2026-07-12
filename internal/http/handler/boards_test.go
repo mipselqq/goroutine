@@ -103,7 +103,7 @@ func TestBoards_Create(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -739,7 +739,7 @@ func TestBoards_Update(t *testing.T) {
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},

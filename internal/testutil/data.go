@@ -38,10 +38,6 @@ func Fixed5mFromNowStr() string {
 
 func FixedNowStr() string { return FixedNow().UTC().Format(TimeFormat) }
 
-func Big25KBJSON() json.RawMessage {
-	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
-}
-
 func Must[A any, T any](fn func(A) (T, error), arg A) T {
 	v, err := fn(arg)
 	if err != nil {
@@ -90,6 +86,10 @@ func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description stri
 	task.Position = domainPosition
 
 	return task
+}
+
+func Valid25KBJSON() json.RawMessage {
+	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
 }
 
 func ValidUserID() domain.UserID {
