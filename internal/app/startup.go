@@ -27,8 +27,9 @@ func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 		return nil, err
 	}
 
+	pingTimeout := 5 * time.Second
 	cfg.ConnConfig.ConnectTimeout = 10 * time.Second
-	cfg.PingTimeout = 5 * time.Second
+	cfg.PingTimeout = pingTimeout
 	cfg.MaxConnLifetime = 30 * time.Minute
 	cfg.MaxConnIdleTime = 5 * time.Minute
 
@@ -38,13 +39,14 @@ func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 	cfg.ConnConfig.RuntimeParams["statement_timeout"] = "5s"
 	cfg.ConnConfig.RuntimeParams["timezone"] = "UTC"
 
-	ctx := context.Background()
-	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
 	if err != nil {
 		logger.Error("Failed to connect to database", slog.String("err", err.Error()))
 		return nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
+	defer cancel()
 	err = pool.Ping(ctx)
 	if err != nil {
 		logger.Error("Failed to ping database", slog.String("err", err.Error()))
@@ -85,7 +87,7 @@ func SetupRedisFromEnv(logger *slog.Logger) (*redis.Client, error) {
 		ConnMaxIdleTime: 5 * time.Minute,
 	})
 
-	err := client.Ping(context.Background()).Err()
+	err := client.Ping(context.Background()).Err() // Uses client timeouts
 	if err != nil {
 		logger.Error("Failed to ping Redis", slog.String("err", err.Error()))
 		return nil, err
