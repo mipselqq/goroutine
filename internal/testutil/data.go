@@ -30,13 +30,13 @@ func MustLoadDevEnv() {
 func FixedNow() time.Time       { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
 func Fixed5mFromNow() time.Time { return FixedNow().Add(5 * time.Minute) }
 
-const timeFormat = "2006-01-02T15:04:05.000Z07:00"
+const TimeFormat = "2006-01-02T15:04:05.000Z07:00"
 
 func Fixed5mFromNowStr() string {
-	return Fixed5mFromNow().UTC().Format(timeFormat)
+	return Fixed5mFromNow().UTC().Format(TimeFormat)
 }
 
-func FixedNowStr() string { return FixedNow().UTC().Format(timeFormat) }
+func FixedNowStr() string { return FixedNow().UTC().Format(TimeFormat) }
 
 func Big25KBJSON() json.RawMessage {
 	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
