@@ -47,7 +47,7 @@ func NewRouter(handlers *handler.Handlers, middlewares *middleware.Middlewares, 
 	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
 	mux.Handle("POST /webhook/telegram", middlewares.Metrics.Wrap(telegramWebhook))
 
-	return middlewares.RequestID.Wrap(middlewares.CORS.Wrap(mux))
+	return middlewares.Timeout.Wrap(middlewares.RequestID.Wrap(middlewares.CORS.Wrap(mux)))
 }
 
 func NewAdminRouter() *http.ServeMux {
