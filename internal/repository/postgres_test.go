@@ -12,10 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
 )
-
-const telegramTokenPrefix = "tg_token:"
 
 // TODO: remove this function. Too implicit.
 func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
@@ -46,8 +43,8 @@ func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	defer cancel()
 
 	const q = `
-		INSERT INTO boards (id, owner_id, name, description, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)`
+			INSERT INTO boards (id, owner_id, name, description, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := pool.Exec(
 		ctx, q,
 		board.ID,
@@ -69,9 +66,9 @@ func GetBoard(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.
 	defer cancel()
 
 	const q = `
-		SELECT id, owner_id, name, description, created_at, updated_at
-		FROM boards
-		WHERE id = $1`
+			SELECT id, owner_id, name, description, created_at, updated_at
+			FROM boards
+			WHERE id = $1`
 
 	var board domain.Board
 	err := pool.QueryRow(ctx, q, boardID).Scan(
@@ -99,8 +96,8 @@ func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	defer cancel()
 
 	const q = `
-		INSERT INTO columns (id, board_id, name, description, position, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+			INSERT INTO columns (id, board_id, name, description, position, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(
 		ctx, q,
 		column.ID,
@@ -123,9 +120,9 @@ func GetColumn(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (doma
 	defer cancel()
 
 	const q = `
-		SELECT id, board_id, name, description, position, created_at, updated_at
-		FROM columns
-		WHERE id = $1`
+			SELECT id, board_id, name, description, position, created_at, updated_at
+			FROM columns
+			WHERE id = $1`
 
 	var column domain.Column
 	err := pool.QueryRow(ctx, q, columnID).Scan(
@@ -154,10 +151,10 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	defer cancel()
 
 	const q = `
-		SELECT id, board_id, name, description, position, created_at, updated_at
-		FROM columns
-		WHERE board_id = $1
-		ORDER BY position ASC`
+			SELECT id, board_id, name, description, position, created_at, updated_at
+			FROM columns
+			WHERE board_id = $1
+			ORDER BY position ASC`
 
 	rows, err := pool.Query(ctx, q, boardID)
 	if err != nil {
@@ -199,8 +196,8 @@ func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	defer cancel()
 
 	const q = `
-		INSERT INTO tasks (id, column_id, name, description, position, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+			INSERT INTO tasks (id, column_id, name, description, position, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(
 		ctx, q,
 		task.ID,
@@ -223,9 +220,9 @@ func GetTask(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Tas
 	defer cancel()
 
 	const q = `
-		SELECT id, column_id, name, description, position, created_at, updated_at
-		FROM tasks
-		WHERE id = $1`
+			SELECT id, column_id, name, description, position, created_at, updated_at
+			FROM tasks
+			WHERE id = $1`
 
 	var task domain.Task
 	err := pool.QueryRow(ctx, q, taskID).Scan(
@@ -254,10 +251,10 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 	defer cancel()
 
 	const q = `
-		SELECT id, column_id, name, description, position, created_at, updated_at
-		FROM tasks
-		WHERE column_id = $1
-		ORDER BY position ASC`
+			SELECT id, column_id, name, description, position, created_at, updated_at
+			FROM tasks
+			WHERE column_id = $1
+			ORDER BY position ASC`
 
 	rows, err := pool.Query(ctx, q, columnID)
 	if err != nil {
@@ -360,11 +357,11 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 	defer cancel()
 
 	const query = `
-		SELECT datetime_precision
-		FROM information_schema.columns
-		WHERE table_schema = current_schema()
-		  AND table_name = $1
-		  AND column_name = $2`
+			SELECT datetime_precision
+			FROM information_schema.columns
+			WHERE table_schema = current_schema()
+			  AND table_name = $1
+			  AND column_name = $2`
 
 	for _, columnName := range columnNames {
 		var precision int32
@@ -402,29 +399,4 @@ func GetUser(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.Use
 	}
 
 	return user, true
-}
-
-func setUserIDByTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken, userID domain.UserID) {
-	t.Helper()
-
-	err := client.Set(context.Background(), telegramTokenPrefix+token.RevealSecret(), userID.String(), 0).Err()
-	if err != nil {
-		t.Fatalf("setTelegramTokenInRedis() error = %v", err)
-	}
-}
-
-func getUserIDByTelegramLinkToken(t *testing.T, client *redis.Client, token domain.TelegramLinkToken) domain.UserID {
-	t.Helper()
-
-	val, err := client.Get(context.Background(), telegramTokenPrefix+token.RevealSecret()).Result()
-	if err != nil {
-		t.Fatalf("getTelegramTokenFromRedis() error = %v", err)
-	}
-
-	userID, err := domain.ParseUserID(val)
-	if err != nil {
-		t.Fatalf("getUserIDByTelegramLinkToken() error = %v", err)
-	}
-
-	return userID
 }
