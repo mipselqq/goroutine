@@ -70,7 +70,7 @@ func TestAuth_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockUserRepository{}
+			r := NewMockUserRepository(t)
 			tt.setupUserRepo(r)
 			s := service.NewAuth(r, testutil.ValidJWTOptions())
 
@@ -138,7 +138,7 @@ func TestAuth_Login(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockUserRepository{}
+			r := NewMockUserRepository(t)
 			tt.setupUserRepo(r)
 			jwtOpts := testutil.ValidJWTOptions()
 			s := service.NewAuth(r, jwtOpts)

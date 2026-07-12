@@ -83,7 +83,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			mockUser := &MockUserService{}
+			mockUser := NewMockUserService(t)
 			if tt.setupUserService != nil {
 				tt.setupUserService(t, mockUser)
 			}

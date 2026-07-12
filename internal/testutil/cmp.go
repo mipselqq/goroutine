@@ -75,3 +75,10 @@ func CmpAllowUnexported() cmp.Option {
 		domain.TelegramMessage{},
 	)
 }
+
+func AssertFuncNotNil(t *testing.T, name string, fn any) {
+	t.Helper()
+	if fn == nil {
+		t.Fatalf("want no call of %s", name)
+	}
+}

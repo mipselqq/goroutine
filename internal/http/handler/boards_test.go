@@ -123,7 +123,7 @@ func TestBoards_Create(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
@@ -214,7 +214,7 @@ func TestBoards_ListByOwnerID(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
@@ -325,7 +325,7 @@ func TestBoards_Get(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}
@@ -505,7 +505,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}
@@ -760,7 +760,7 @@ func TestBoards_Update(t *testing.T) {
 			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}
@@ -862,7 +862,7 @@ func TestBoards_Delete(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}

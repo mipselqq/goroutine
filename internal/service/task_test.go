@@ -180,9 +180,9 @@ func TestTask_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
-			taskRepo := &MockTaskRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
+			taskRepo := NewMockTaskRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
@@ -356,9 +356,9 @@ func TestTask_ListByColumnID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
-			taskRepo := &MockTaskRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
+			taskRepo := NewMockTaskRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
@@ -657,9 +657,9 @@ func TestTask_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
-			taskRepo := &MockTaskRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
+			taskRepo := NewMockTaskRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
@@ -948,9 +948,9 @@ func TestTask_Move(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
-			taskRepo := &MockTaskRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
+			taskRepo := NewMockTaskRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
@@ -1129,9 +1129,9 @@ func TestTask_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
-			taskRepo := &MockTaskRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
+			taskRepo := NewMockTaskRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)

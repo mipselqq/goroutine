@@ -164,7 +164,7 @@ func TestColumns_Create(t *testing.T) {
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -283,7 +283,7 @@ func TestColumns_ListByBoardID(t *testing.T) {
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -561,7 +561,7 @@ func TestColumns_Update(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -737,7 +737,7 @@ func TestColumns_Move(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -853,7 +853,7 @@ func TestColumns_Delete(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}

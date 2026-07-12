@@ -176,7 +176,7 @@ func TestTasks_Create(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -313,7 +313,7 @@ func TestTasks_ListByColumnID(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -537,7 +537,7 @@ func TestTasks_Update(t *testing.T) {
 			req.SetPathValue("taskId", tt.taskID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -758,7 +758,7 @@ func TestTasks_Move(t *testing.T) {
 			req.SetPathValue("taskId", tt.taskID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -893,7 +893,7 @@ func TestTasks_Delete(t *testing.T) {
 			req.SetPathValue("taskId", tt.taskID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
