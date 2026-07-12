@@ -34,6 +34,7 @@ func TestNewRouter_Full(t *testing.T) {
 		CORS:      &spyCorsMiddleware{},
 		Auth:      &spyAuthMiddleware{},
 		RequestID: &spyRequestIDMiddleware{},
+		Timeout:   &spyTimeoutMiddleware{},
 	}
 	telegramWebhook := telegram.NewWebhookHandler(logger, nil, nil)
 
@@ -51,86 +52,87 @@ func TestNewRouter_Full(t *testing.T) {
 		metrics   bool
 		cors      bool
 		requestID bool
+		timeout   bool
 	}{
 		{
 			entry: entry{"Register", http.MethodPost, "/v1/register"},
-			auth:  false, metrics: true, cors: true, requestID: true,
+			auth:  false, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Login", http.MethodPost, "/v1/login"},
-			auth:  false, metrics: true, cors: true, requestID: true,
+			auth:  false, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Health", http.MethodGet, "/v1/health"},
-			auth:  false, metrics: true, cors: true, requestID: true,
+			auth:  false, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Boards list", http.MethodGet, "/v1/boards"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Board by id", http.MethodGet, "/v1/boards/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Board aggregate by id", http.MethodGet, "/v1/boards/" + UUIDv7 + "/aggregate"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Update board", http.MethodPatch, "/v1/boards/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Delete board", http.MethodDelete, "/v1/boards/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Create column", http.MethodPost, "/v1/boards/" + UUIDv7 + "/columns"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"List columns", http.MethodGet, "/v1/boards/" + UUIDv7 + "/columns"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Update column", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Move column", http.MethodPut, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/position"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Delete column", http.MethodDelete, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Create task", http.MethodPost, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"List tasks", http.MethodGet, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Update task", http.MethodPatch, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Move task", http.MethodPut, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7 + "/position"},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Delete task", http.MethodDelete, "/v1/boards/" + UUIDv7 + "/columns/" + UUIDv7 + "/tasks/" + UUIDv7},
-			auth:  true, metrics: true, cors: true, requestID: true,
+			auth:  true, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Swagger", http.MethodGet, "/v1/swagger/index.html"},
-			auth:  false, metrics: false, cors: true, requestID: true,
+			auth:  false, metrics: false, cors: true, requestID: true, timeout: true,
 		},
 		{
 			entry: entry{"Telegram webhook", http.MethodPost, "/webhook/telegram"},
-			auth:  false, metrics: true, cors: true, requestID: true,
+			auth:  false, metrics: true, cors: true, requestID: true, timeout: true,
 		},
 	}
 
@@ -165,6 +167,11 @@ func TestNewRouter_Full(t *testing.T) {
 			hasReqID := rr.Header().Get("X-RequestId-Tracked") == "true"
 			if hasReqID != tt.requestID {
 				t.Errorf("got request ID middleware=%v for %q, want %v", hasReqID, tt.entry.path, tt.requestID)
+			}
+
+			hasTimeout := rr.Header().Get("X-Timeout-Tracked") == "true"
+			if hasTimeout != tt.timeout {
+				t.Errorf("got timeout middleware=%v for %q, want %v", hasTimeout, tt.entry.path, tt.timeout)
 			}
 		})
 	}

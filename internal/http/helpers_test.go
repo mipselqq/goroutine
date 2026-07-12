@@ -39,3 +39,12 @@ func (s *spyRequestIDMiddleware) Wrap(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+type spyTimeoutMiddleware struct{}
+
+func (s *spyTimeoutMiddleware) Wrap(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Timeout-Tracked", "true")
+		next.ServeHTTP(w, r)
+	})
+}
