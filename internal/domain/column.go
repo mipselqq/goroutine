@@ -134,7 +134,6 @@ func NewColumnPosition(position int64) (ColumnPosition, error) {
 	return ColumnPosition{value: int32(position)}, nil
 }
 
-// TODO: dead code
 func ParseColumnPosition(position string) (ColumnPosition, error) {
 	v, err := strconv.ParseInt(position, 10, 64)
 	if err != nil {
