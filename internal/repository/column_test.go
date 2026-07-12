@@ -309,7 +309,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		CreateColumn(t, pool, &first)
 		CreateColumn(t, pool, &second)
 
-		targetPosition := mustColumnPosition(t, 3)
+		targetPosition := testutil.NewValidColumnPosition(t, 3)
 
 		gotPosition, err := r.Move(context.Background(), board.ID, first.ID, targetPosition)
 		if err != nil {
@@ -341,7 +341,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		CreateColumn(t, pool, &third)
 		CreateColumn(t, pool, &first)
 
-		targetPosition := mustColumnPosition(t, 1)
+		targetPosition := testutil.NewValidColumnPosition(t, 1)
 
 		gotPosition, err := r.Move(context.Background(), board.ID, third.ID, targetPosition)
 		if err != nil {
@@ -371,7 +371,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		CreateColumn(t, pool, &second)
 		CreateColumn(t, pool, &first)
 
-		targetPosition := mustColumnPosition(t, 2)
+		targetPosition := testutil.NewValidColumnPosition(t, 2)
 
 		gotPosition, err := r.Move(context.Background(), board.ID, second.ID, targetPosition)
 		if err != nil {
@@ -402,7 +402,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		CreateColumn(t, pool, &third)
 		CreateColumn(t, pool, &first)
 
-		targetPosition := mustColumnPosition(t, 4)
+		targetPosition := testutil.NewValidColumnPosition(t, 4)
 
 		_, err := r.Move(context.Background(), board.ID, second.ID, targetPosition)
 		if !errors.Is(err, repository.ErrIndexOutOfBounds) {
@@ -423,7 +423,7 @@ func TestColumnRepository_Move(t *testing.T) {
 
 		board := insertFixedUserAndBoard(t, pool)
 
-		targetPosition := mustColumnPosition(t, 1)
+		targetPosition := testutil.NewValidColumnPosition(t, 1)
 
 		_, err := r.Move(context.Background(), board.ID, domain.NewColumnID(), targetPosition)
 		assertErrRowNotFound(t, err)
@@ -437,7 +437,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		created := testutil.ValidColumn(board.ID)
 		CreateColumn(t, pool, &created)
 
-		targetPosition := mustColumnPosition(t, 1)
+		targetPosition := testutil.NewValidColumnPosition(t, 1)
 
 		_, err := r.Move(context.Background(), domain.NewBoardID(), created.ID, targetPosition)
 		assertErrRowNotFound(t, err)
@@ -499,6 +499,17 @@ func TestColumnRepository_Delete(t *testing.T) {
 		err := r.Delete(context.Background(), domain.NewBoardID(), created.ID)
 		assertErrRowNotFound(t, err)
 	})
+}
+
+func assertColumnIDAndPosition(t *testing.T, col *domain.Column, wantID domain.ColumnID, wantPos int64) {
+	t.Helper()
+
+	if col.ID != wantID {
+		t.Errorf("got id %q, want %q", col.ID, wantID)
+	}
+	if col.Position.Int64() != wantPos {
+		t.Errorf("got position %d, want %d", col.Position.Int64(), wantPos)
+	}
 }
 
 func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGColumn) {

@@ -109,6 +109,11 @@ func NewValidTaskPosition(t *testing.T, n int64) domain.TaskPosition {
 	return Must(domain.NewTaskPosition, n)
 }
 
+func NewValidColumnPosition(t *testing.T, n int64) domain.ColumnPosition {
+	t.Helper()
+	return Must(domain.NewColumnPosition, n)
+}
+
 func ValidJWTSecret() secrecy.SecretString {
 	return secrecy.SecretString("secret")
 }
