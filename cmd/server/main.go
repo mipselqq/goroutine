@@ -48,11 +48,13 @@ func main() {
 
 	pool, err := app.SetupPostgresFromEnv(logger, "migrations")
 	if err != nil {
+		logger.Error("failed to setup postgres", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
 	redisClient, err := app.SetupRedisFromEnv(logger)
 	if err != nil {
+		logger.Error("failed to setup redis", slog.String("err", err.Error()))
 		pool.Close()
 		os.Exit(1)
 	}
