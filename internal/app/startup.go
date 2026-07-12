@@ -65,8 +65,13 @@ func SetupRedisFromEnv(logger *slog.Logger) (*redis.Client, error) {
 	logger.Info("Redis config", slog.Any("config", cfg))
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     cfg.BuildAddr(),
-		Password: cfg.Password.RevealSecret(),
+		Addr:            cfg.BuildAddr(),
+		Password:        cfg.Password.RevealSecret(),
+		DialTimeout:     5 * time.Second,
+		ReadTimeout:     3 * time.Second,
+		WriteTimeout:    3 * time.Second,
+		PoolTimeout:     4 * time.Second,
+		ConnMaxIdleTime: 5 * time.Minute,
 	})
 
 	err := client.Ping(context.Background()).Err()
