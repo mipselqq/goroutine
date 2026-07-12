@@ -5,8 +5,6 @@ import (
 	"log/slog"
 
 	"goroutine/internal/secrecy"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PG struct {
@@ -29,20 +27,6 @@ func NewPGFromEnv(logger *slog.Logger) PG {
 
 func (c *PG) BuildDSN() secrecy.SecretString {
 	return secrecy.SecretString(fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.User, c.Password.RevealSecret(), c.Host, c.Port, c.DB))
-}
-
-func (c *PG) ParsePGXpoolConfig() (*pgxpool.Config, error) {
-	config, err := pgxpool.ParseConfig(c.BuildDSN().RevealSecret())
-	if err != nil {
-		return nil, err
-	}
-
-	if config.ConnConfig.RuntimeParams == nil {
-		config.ConnConfig.RuntimeParams = map[string]string{}
-	}
-	config.ConnConfig.RuntimeParams["timezone"] = "UTC"
-
-	return config, nil
 }
 
 //nolint:gocritic // Pointer receiver disables formatting

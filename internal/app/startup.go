@@ -17,18 +17,29 @@ import (
 )
 
 func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.Pool, error) {
-	cfg := config.NewPGFromEnv(logger)
+	envConfig := config.NewPGFromEnv(logger)
 
-	logger.Info("Database config", slog.Any("config", cfg))
+	logger.Info("Database config", slog.Any("config", envConfig))
 
-	poolConfig, err := cfg.ParsePGXpoolConfig()
+	cfg, err := pgxpool.ParseConfig(envConfig.BuildDSN().RevealSecret())
 	if err != nil {
 		logger.Error("Failed to parse database config", slog.String("err", err.Error()))
 		return nil, err
 	}
 
+	cfg.ConnConfig.ConnectTimeout = 10 * time.Second
+	cfg.PingTimeout = 5 * time.Second
+	cfg.MaxConnLifetime = 30 * time.Minute
+	cfg.MaxConnIdleTime = 5 * time.Minute
+
+	if cfg.ConnConfig.RuntimeParams == nil {
+		cfg.ConnConfig.RuntimeParams = map[string]string{}
+	}
+	cfg.ConnConfig.RuntimeParams["statement_timeout"] = "5s"
+	cfg.ConnConfig.RuntimeParams["timezone"] = "UTC"
+
 	ctx := context.Background()
-	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		logger.Error("Failed to connect to database", slog.String("err", err.Error()))
 		return nil, err
