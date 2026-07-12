@@ -11,4 +11,5 @@ type Middlewares struct {
 	CORS      Middleware
 	Auth      Middleware
 	RequestID Middleware
+	Timeout   Middleware
 }

@@ -17,23 +17,36 @@ import (
 )
 
 func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.Pool, error) {
-	cfg := config.NewPGFromEnv(logger)
+	envConfig := config.NewPGFromEnv(logger)
 
-	logger.Info("Database config", slog.Any("config", cfg))
+	logger.Info("Database config", slog.Any("config", envConfig))
 
-	poolConfig, err := cfg.ParsePGXpoolConfig()
+	cfg, err := pgxpool.ParseConfig(envConfig.BuildDSN().RevealSecret())
 	if err != nil {
 		logger.Error("Failed to parse database config", slog.String("err", err.Error()))
 		return nil, err
 	}
 
-	ctx := context.Background()
-	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	pingTimeout := 5 * time.Second
+	cfg.ConnConfig.ConnectTimeout = 10 * time.Second
+	cfg.PingTimeout = pingTimeout
+	cfg.MaxConnLifetime = 30 * time.Minute
+	cfg.MaxConnIdleTime = 5 * time.Minute
+
+	if cfg.ConnConfig.RuntimeParams == nil {
+		cfg.ConnConfig.RuntimeParams = map[string]string{}
+	}
+	cfg.ConnConfig.RuntimeParams["statement_timeout"] = "5s"
+	cfg.ConnConfig.RuntimeParams["timezone"] = "UTC"
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
 	if err != nil {
 		logger.Error("Failed to connect to database", slog.String("err", err.Error()))
 		return nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
+	defer cancel()
 	err = pool.Ping(ctx)
 	if err != nil {
 		logger.Error("Failed to ping database", slog.String("err", err.Error()))
@@ -65,11 +78,16 @@ func SetupRedisFromEnv(logger *slog.Logger) (*redis.Client, error) {
 	logger.Info("Redis config", slog.Any("config", cfg))
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     cfg.BuildAddr(),
-		Password: cfg.Password.RevealSecret(),
+		Addr:            cfg.BuildAddr(),
+		Password:        cfg.Password.RevealSecret(),
+		DialTimeout:     5 * time.Second,
+		ReadTimeout:     3 * time.Second,
+		WriteTimeout:    3 * time.Second,
+		PoolTimeout:     4 * time.Second,
+		ConnMaxIdleTime: 5 * time.Minute,
 	})
 
-	err := client.Ping(context.Background()).Err()
+	err := client.Ping(context.Background()).Err() // Uses client timeouts
 	if err != nil {
 		logger.Error("Failed to ping Redis", slog.String("err", err.Error()))
 		return nil, err

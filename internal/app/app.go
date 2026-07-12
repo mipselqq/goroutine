@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -77,6 +78,7 @@ func New(
 	reqIDMiddleware := middleware.MustNewRequestID(logger, func() string {
 		return fmt.Sprintf("req-%s", uuid.Must(uuid.NewV7()))
 	})
+	timeoutMiddleware := middleware.NewTimeout(30 * time.Second)
 
 	handlers := &handler.Handlers{
 		Auth:    authHandler,
@@ -91,6 +93,7 @@ func New(
 		CORS:      corsMiddleware,
 		Auth:      authMiddleware,
 		RequestID: reqIDMiddleware,
+		Timeout:   timeoutMiddleware,
 	}
 
 	return &App{
