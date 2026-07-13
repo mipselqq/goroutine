@@ -221,7 +221,7 @@ func TestAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := &MockAuthService{}
+			s := NewMockAuthService(t)
 			tt.setupAuthService(s)
 
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

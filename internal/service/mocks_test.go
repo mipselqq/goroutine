@@ -2,63 +2,78 @@ package service_test
 
 import (
 	"context"
-	"fmt"
+	"testing"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/testutil"
 )
 
-func AssertFuncNotNil(funcName string, fn any) {
-	if fn == nil {
-		panic(fmt.Sprintf("%s = nil, want configured mock", funcName))
-	}
-}
-
 type MockUserRepository struct {
+	t *testing.T
+
 	CreateFunc             func(ctx context.Context, email domain.Email, hash string) error
 	GetByEmailFunc         func(ctx context.Context, email domain.Email) (domain.User, error)
 	UpdateTelegramInfoFunc func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
+func NewMockUserRepository(t *testing.T) *MockUserRepository {
+	return &MockUserRepository{t: t}
+}
+
 func (m *MockUserRepository) Create(ctx context.Context, email domain.Email, hash string) error {
-	AssertFuncNotNil("UserRepository.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "UserRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, email, hash)
 }
 
 func (m *MockUserRepository) GetByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	AssertFuncNotNil("UserRepository.GetByEmailFunc", m.GetByEmailFunc)
+	testutil.AssertFuncNotNil(m.t, "UserRepository.GetByEmailFunc", m.GetByEmailFunc)
 	return m.GetByEmailFunc(ctx, email)
 }
 
 func (m *MockUserRepository) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-	AssertFuncNotNil("UserRepository.UpdateTelegramInfoFunc", m.UpdateTelegramInfoFunc)
+	testutil.AssertFuncNotNil(m.t, "UserRepository.UpdateTelegramInfoFunc", m.UpdateTelegramInfoFunc)
 	return m.UpdateTelegramInfoFunc(ctx, userID, chatID, username)
 }
 
 type MockTelegramTokenRepository struct {
+	t *testing.T
+
 	InsertLinkTokenFunc          func(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
 	ConsumeTelegramLinkTokenFunc func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
 }
 
+func NewMockTelegramTokenRepository(t *testing.T) *MockTelegramTokenRepository {
+	return &MockTelegramTokenRepository{t: t}
+}
+
 func (m *MockTelegramTokenRepository) InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error {
-	AssertFuncNotNil("TelegramTokenRepository.InsertLinkTokenFunc", m.InsertLinkTokenFunc)
+	testutil.AssertFuncNotNil(m.t, "TelegramTokenRepository.InsertLinkTokenFunc", m.InsertLinkTokenFunc)
 	return m.InsertLinkTokenFunc(ctx, token, userID)
 }
 
 func (m *MockTelegramTokenRepository) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
-	AssertFuncNotNil("TelegramTokenRepository.ConsumeTelegramLinkTokenFunc", m.ConsumeTelegramLinkTokenFunc)
+	testutil.AssertFuncNotNil(m.t, "TelegramTokenRepository.ConsumeTelegramLinkTokenFunc", m.ConsumeTelegramLinkTokenFunc)
 	return m.ConsumeTelegramLinkTokenFunc(ctx, token)
 }
 
 type MockTelegramNotifier struct {
+	t *testing.T
+
 	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text string) error
 }
 
+func NewMockTelegramNotifier(t *testing.T) *MockTelegramNotifier {
+	return &MockTelegramNotifier{t: t}
+}
+
 func (m *MockTelegramNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error {
-	AssertFuncNotNil("TelegramNotifier.NotifyFunc", m.NotifyFunc)
+	testutil.AssertFuncNotNil(m.t, "TelegramNotifier.NotifyFunc", m.NotifyFunc)
 	return m.NotifyFunc(ctx, chatID, text)
 }
 
 type MockBoardRepository struct {
+	t *testing.T
+
 	CreateFunc        func(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	GetFunc           func(ctx context.Context, id domain.BoardID) (domain.Board, error)
 	ListByOwnerIDFunc func(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
@@ -66,7 +81,13 @@ type MockBoardRepository struct {
 	DeleteFunc        func(ctx context.Context, boardID domain.BoardID) error
 }
 
+func NewMockBoardRepository(t *testing.T) *MockBoardRepository {
+	return &MockBoardRepository{t: t}
+}
+
 type MockColumnRepository struct {
+	t *testing.T
+
 	CreateFunc        func(ctx context.Context, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
 	ListByBoardIDFunc func(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 	GetFunc           func(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
@@ -75,28 +96,32 @@ type MockColumnRepository struct {
 	DeleteFunc        func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
+func NewMockColumnRepository(t *testing.T) *MockColumnRepository {
+	return &MockColumnRepository{t: t}
+}
+
 func (m *MockBoardRepository) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "BoardRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
 func (m *MockBoardRepository) Get(ctx context.Context, id domain.BoardID) (domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.GetFunc", m.GetFunc)
+	testutil.AssertFuncNotNil(m.t, "BoardRepository.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, id)
 }
 
 func (m *MockBoardRepository) ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.ListByOwnerIDFunc", m.ListByOwnerIDFunc)
+	testutil.AssertFuncNotNil(m.t, "BoardRepository.ListByOwnerIDFunc", m.ListByOwnerIDFunc)
 	return m.ListByOwnerIDFunc(ctx, ownerID)
 }
 
 func (m *MockBoardRepository) Update(ctx context.Context, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
-	AssertFuncNotNil("BoardRepository.UpdateFunc", m.UpdateFunc)
+	testutil.AssertFuncNotNil(m.t, "BoardRepository.UpdateFunc", m.UpdateFunc)
 	return m.UpdateFunc(ctx, boardID, name, description)
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID domain.BoardID) error {
-	AssertFuncNotNil("BoardRepository.DeleteFunc", m.DeleteFunc)
+	testutil.AssertFuncNotNil(m.t, "BoardRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID)
 }
 
@@ -106,17 +131,17 @@ func (m *MockColumnRepository) Create(
 	name domain.ColumnName,
 	description domain.ColumnDescription,
 ) (domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "ColumnRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, boardID, name, description)
 }
 
 func (m *MockColumnRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
+	testutil.AssertFuncNotNil(m.t, "ColumnRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
 	return m.ListByBoardIDFunc(ctx, boardID)
 }
 
 func (m *MockColumnRepository) Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.GetFunc", m.GetFunc)
+	testutil.AssertFuncNotNil(m.t, "ColumnRepository.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, columnID)
 }
 
@@ -127,7 +152,7 @@ func (m *MockColumnRepository) Update(
 	name *domain.ColumnName,
 	description *domain.ColumnDescription,
 ) (domain.Column, error) {
-	AssertFuncNotNil("ColumnRepository.UpdateFunc", m.UpdateFunc)
+	testutil.AssertFuncNotNil(m.t, "ColumnRepository.UpdateFunc", m.UpdateFunc)
 	return m.UpdateFunc(ctx, boardID, columnID, name, description)
 }
 
@@ -137,16 +162,18 @@ func (m *MockColumnRepository) Move(
 	columnID domain.ColumnID,
 	targetPosition domain.ColumnPosition,
 ) (domain.ColumnPosition, error) {
-	AssertFuncNotNil("ColumnRepository.MoveFunc", m.MoveFunc)
+	testutil.AssertFuncNotNil(m.t, "ColumnRepository.MoveFunc", m.MoveFunc)
 	return m.MoveFunc(ctx, boardID, columnID, targetPosition)
 }
 
 func (m *MockColumnRepository) Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID) error {
-	AssertFuncNotNil("ColumnRepository.DeleteFunc", m.DeleteFunc)
+	testutil.AssertFuncNotNil(m.t, "ColumnRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID, columnID)
 }
 
 type MockTaskRepository struct {
+	t *testing.T
+
 	CreateFunc         func(ctx context.Context, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
 	ListByBoardIDFunc  func(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error)
 	ListByColumnIDFunc func(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error)
@@ -156,28 +183,32 @@ type MockTaskRepository struct {
 	DeleteFunc         func(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
 }
 
+func NewMockTaskRepository(t *testing.T) *MockTaskRepository {
+	return &MockTaskRepository{t: t}
+}
+
 func (m *MockTaskRepository) Create(
 	ctx context.Context,
 	columnID domain.ColumnID,
 	name domain.TaskName,
 	description domain.TaskDescription,
 ) (domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, columnID, name, description)
 }
 
 func (m *MockTaskRepository) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.ListByBoardIDFunc", m.ListByBoardIDFunc)
 	return m.ListByBoardIDFunc(ctx, boardID)
 }
 
 func (m *MockTaskRepository) ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.ListByColumnIDFunc", m.ListByColumnIDFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.ListByColumnIDFunc", m.ListByColumnIDFunc)
 	return m.ListByColumnIDFunc(ctx, columnID)
 }
 
 func (m *MockTaskRepository) Get(ctx context.Context, taskID domain.TaskID) (domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.GetFunc", m.GetFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, taskID)
 }
 
@@ -188,7 +219,7 @@ func (m *MockTaskRepository) Update(
 	name *domain.TaskName,
 	description *domain.TaskDescription,
 ) (domain.Task, error) {
-	AssertFuncNotNil("TaskRepository.UpdateFunc", m.UpdateFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.UpdateFunc", m.UpdateFunc)
 	return m.UpdateFunc(ctx, columnID, taskID, name, description)
 }
 
@@ -200,7 +231,7 @@ func (m *MockTaskRepository) Move(
 	targetColumnID domain.ColumnID,
 	targetPosition domain.TaskPosition,
 ) (domain.ColumnID, domain.TaskPosition, error) {
-	AssertFuncNotNil("TaskRepository.MoveFunc", m.MoveFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.MoveFunc", m.MoveFunc)
 	return m.MoveFunc(ctx, boardID, currentColumnID, taskID, targetColumnID, targetPosition)
 }
 
@@ -210,6 +241,6 @@ func (m *MockTaskRepository) Delete(
 	columnID domain.ColumnID,
 	taskID domain.TaskID,
 ) error {
-	AssertFuncNotNil("TaskRepository.DeleteFunc", m.DeleteFunc)
+	testutil.AssertFuncNotNil(m.t, "TaskRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID, columnID, taskID)
 }

@@ -174,8 +174,8 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/webhook/telegram", tt.inputBody)
 
-			svc := &MockUserService{}
-			notifier := &MockNotifier{}
+			svc := NewMockUserService(t)
+			notifier := NewMockNotifier(t)
 			tt.setupService(svc)
 			tt.setupNotifier(notifier)
 
