@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -23,8 +24,7 @@ func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 
 	cfg, err := pgxpool.ParseConfig(envConfig.BuildDSN().RevealSecret())
 	if err != nil {
-		logger.Error("Failed to parse database config", slog.String("err", err.Error()))
-		return nil, err
+		return nil, fmt.Errorf("failed to parse database config: %v", err)
 	}
 
 	pingTimeout := 5 * time.Second
@@ -41,32 +41,28 @@ func SetupPostgresFromEnv(logger *slog.Logger, migrationsDir string) (*pgxpool.P
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
 	if err != nil {
-		logger.Error("Failed to connect to database", slog.String("err", err.Error()))
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
 	defer cancel()
 	err = pool.Ping(ctx)
 	if err != nil {
-		logger.Error("Failed to ping database", slog.String("err", err.Error()))
-		return nil, err
+		return nil, fmt.Errorf("failed to ping database: %v", err)
 	}
 
 	goose.SetLogger(&logging.GooseLogger{Base: logger})
 
 	err = goose.SetDialect("postgres")
 	if err != nil {
-		logger.Error("Failed to set goose dialect", slog.String("err", err.Error()))
-		return nil, err
+		return nil, fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
 	db := stdlib.OpenDBFromPool(pool)
 
 	err = goose.Up(db, migrationsDir)
 	if err != nil {
-		logger.Error("Failed to run migrations", slog.String("err", err.Error()))
-		return nil, err
+		return nil, fmt.Errorf("failed to run migrations: %v", err)
 	}
 
 	return pool, nil
@@ -89,8 +85,7 @@ func SetupRedisFromEnv(logger *slog.Logger) (*redis.Client, error) {
 
 	err := client.Ping(context.Background()).Err() // Uses client timeouts
 	if err != nil {
-		logger.Error("Failed to ping Redis", slog.String("err", err.Error()))
-		return nil, err
+		return nil, fmt.Errorf("failed to ping redis: %v", err)
 	}
 
 	return client, nil

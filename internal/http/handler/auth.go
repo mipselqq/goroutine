@@ -166,7 +166,6 @@ type whoAmIResponse struct {
 func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
-		h.logger.ErrorContext(r.Context(), "BUG: failed to get user id from context")
 		h.responder.InternalError(w, r, errors.New("failed to get user id from context"))
 		return
 	}
