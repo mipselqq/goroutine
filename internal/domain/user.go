@@ -39,6 +39,10 @@ type PasswordHash struct {
 	secrecy.SecretString
 }
 
+func NewPasswordHash(hash string) PasswordHash {
+	return PasswordHash{SecretString: secrecy.SecretString(hash)}
+}
+
 const (
 	ErrPasswordTooShort string = "Password is too short"
 	ErrInvalidJWTToken  string = "Invalid JWT token"

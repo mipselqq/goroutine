@@ -45,7 +45,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
-	err = s.userRepo.Create(ctx, email, domain.PasswordHash{SecretString: secrecy.SecretString(hash)})
+	err = s.userRepo.Create(ctx, email, domain.NewPasswordHash(hash))
 	if errors.Is(err, repository.ErrUniqueViolation) {
 		return fmt.Errorf("auth service: register: user insert: %w", ErrUserAlreadyExists)
 	}

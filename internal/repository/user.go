@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"goroutine/internal/domain"
-	"goroutine/internal/secrecy"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -109,7 +108,7 @@ func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
 	return domain.User{
 		ID:               domain.UUIDToUserID(rawID),
 		Email:            email,
-		PasswordHash:     domain.PasswordHash{SecretString: secrecy.SecretString(rawPasswordHash)},
+		PasswordHash:     domain.NewPasswordHash(rawPasswordHash),
 		TelegramChatID:   chatID,
 		TelegramUsername: username,
 	}, nil
