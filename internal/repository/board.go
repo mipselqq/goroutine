@@ -138,9 +138,17 @@ func ScanBoard(row interface{ Scan(...any) error }) (domain.Board, error) {
 	if err != nil {
 		return domain.Board{}, fmt.Errorf("scan board: description: %w: %w", domain.ErrDataCorrupted, err)
 	}
+	id, err := domain.UUIDToBoardID(rawID)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: id: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	ownerID, err := domain.UUIDToUserID(rawOwnerID)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: owner id: %w: %w", domain.ErrDataCorrupted, err)
+	}
 	return domain.Board{
-		ID:          domain.UUIDToBoardID(rawID),
-		OwnerID:     domain.UUIDToUserID(rawOwnerID),
+		ID:          id,
+		OwnerID:     ownerID,
 		Name:        name,
 		Description: desc,
 		CreatedAt:   createdAt,

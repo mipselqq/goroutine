@@ -414,9 +414,17 @@ func ScanColumn(row interface{ Scan(...any) error }) (domain.Column, error) {
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("scan column: position: %w: %w", domain.ErrDataCorrupted, err)
 	}
+	id, err := domain.UUIDToColumnID(rawID)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("scan column: id: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	boardID, err := domain.UUIDToBoardID(rawBoardID)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("scan column: board id: %w: %w", domain.ErrDataCorrupted, err)
+	}
 	return domain.Column{
-		ID:          domain.UUIDToColumnID(rawID),
-		BoardID:     domain.UUIDToBoardID(rawBoardID),
+		ID:          id,
+		BoardID:     boardID,
 		Name:        name,
 		Description: desc,
 		Position:    pos,

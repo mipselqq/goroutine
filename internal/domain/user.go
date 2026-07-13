@@ -4,12 +4,18 @@
 package domain
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
 	"goroutine/internal/secrecy"
 
 	"github.com/google/uuid"
+)
+
+const (
+	ErrPasswordTooShort string = "Password is too short"
+	ErrInvalidJWTToken  string = "Invalid JWT token"
 )
 
 type User struct {
@@ -33,7 +39,12 @@ func ParseUserID(s string) (UserID, error) {
 	return ParseID[userID](s)
 }
 
-func UUIDToUserID(u uuid.UUID) UserID { return UserID{value: u} }
+func UUIDToUserID(u uuid.UUID) (UserID, error) {
+	if u == uuid.Nil {
+		return UserID{}, fmt.Errorf("user id: nil UUID")
+	}
+	return UserID{value: u}, nil
+}
 
 type PasswordHash struct {
 	secrecy.SecretString
@@ -42,11 +53,6 @@ type PasswordHash struct {
 func NewPasswordHash(hash string) PasswordHash {
 	return PasswordHash{SecretString: secrecy.SecretString(hash)}
 }
-
-const (
-	ErrPasswordTooShort string = "Password is too short"
-	ErrInvalidJWTToken  string = "Invalid JWT token"
-)
 
 type UserPassword struct {
 	secrecy.SecretString

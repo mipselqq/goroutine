@@ -555,9 +555,17 @@ func ScanTask(row interface{ Scan(...any) error }) (domain.Task, error) {
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("scan task: position: %w: %w", domain.ErrDataCorrupted, err)
 	}
+	id, err := domain.UUIDToTaskID(rawID)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("scan task: id: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	columnID, err := domain.UUIDToColumnID(rawColumnID)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("scan task: column id: %w: %w", domain.ErrDataCorrupted, err)
+	}
 	return domain.Task{
-		ID:          domain.UUIDToTaskID(rawID),
-		ColumnID:    domain.UUIDToColumnID(rawColumnID),
+		ID:          id,
+		ColumnID:    columnID,
 		Name:        name,
 		Description: desc,
 		Position:    pos,

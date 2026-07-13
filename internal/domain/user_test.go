@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"goroutine/internal/domain"
-	"goroutine/internal/secrecy"
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
@@ -179,7 +178,7 @@ func TestPasswordHash(t *testing.T) {
 	t.Parallel()
 
 	raw := "$argon2id$v=19$m=65536,t=1,p=16$hashhashhashhashhashhash"
-	hash := domain.PasswordHash{SecretString: secrecy.SecretString(raw)}
+	hash := domain.NewPasswordHash(raw)
 
 	testutil.AssertSecretHidden(t, raw, hash)
 

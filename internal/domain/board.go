@@ -2,6 +2,7 @@ package domain
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"strings"
 	"time"
 
@@ -36,7 +37,12 @@ func ParseBoardID(s string) (BoardID, error) {
 	return ParseID[boardTag](s)
 }
 
-func UUIDToBoardID(u uuid.UUID) BoardID { return BoardID{value: u} }
+func UUIDToBoardID(u uuid.UUID) (BoardID, error) {
+	if u == uuid.Nil {
+		return BoardID{}, fmt.Errorf("board id: nil UUID")
+	}
+	return BoardID{value: u}, nil
+}
 
 type BoardName struct {
 	value string
