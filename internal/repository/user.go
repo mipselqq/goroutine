@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/secrecy"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -26,10 +27,10 @@ func NewPGUser(pgPool *pgxpool.Pool) *PGUser {
 
 const pgUniqueViolation = "23505"
 
-func (r *PGUser) Create(ctx context.Context, email domain.Email, hash string) error {
+func (r *PGUser) Create(ctx context.Context, email domain.Email, hash domain.PasswordHash) error {
 	const query = `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
 
-	_, err := r.pgPool.Exec(ctx, query, email, hash)
+	_, err := r.pgPool.Exec(ctx, query, email, hash.RevealSecret())
 	if err == nil {
 		return nil
 	}
@@ -108,7 +109,7 @@ func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
 	return domain.User{
 		ID:               domain.UserIDFromUUID(rawID),
 		Email:            email,
-		PasswordHash:     rawPasswordHash,
+		PasswordHash:     domain.PasswordHash{SecretString: secrecy.SecretString(rawPasswordHash)},
 		TelegramChatID:   chatID,
 		TelegramUsername: username,
 	}, nil

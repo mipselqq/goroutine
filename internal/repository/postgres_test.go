@@ -23,14 +23,14 @@ func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	CreateUser(t, pool, id, domainEmail, testutil.ValidPasswordHash())
 }
 
-func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain.Email, hash string) {
+func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain.Email, hash domain.PasswordHash) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	const query = `INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)`
-	_, err := pool.Exec(ctx, query, id, email, hash)
+	_, err := pool.Exec(ctx, query, id, email, hash.RevealSecret())
 	if err != nil {
 		t.Fatalf("CreateUser() error = %v", err)
 	}

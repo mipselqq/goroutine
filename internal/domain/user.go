@@ -13,7 +13,7 @@ import (
 type User struct {
 	ID               UserID
 	Email            Email
-	PasswordHash     string
+	PasswordHash     PasswordHash
 	TelegramChatID   TelegramChatID
 	TelegramUsername TelegramUsername
 }
@@ -29,6 +29,10 @@ func NewUserID() UserID {
 
 func ParseUserID(s string) (UserID, error) {
 	return ParseID[userID](s)
+}
+
+type PasswordHash struct {
+	secrecy.SecretString
 }
 
 const (

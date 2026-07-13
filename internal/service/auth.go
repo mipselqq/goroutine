@@ -17,7 +17,7 @@ import (
 )
 
 type AuthUserRepository interface {
-	Create(ctx context.Context, email domain.Email, hash string) error
+	Create(ctx context.Context, email domain.Email, hash domain.PasswordHash) error
 	GetByEmail(ctx context.Context, email domain.Email) (domain.User, error)
 }
 
@@ -45,7 +45,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
 	}
 
-	err = s.userRepo.Create(ctx, email, hash)
+	err = s.userRepo.Create(ctx, email, domain.PasswordHash{SecretString: secrecy.SecretString(hash)})
 	if errors.Is(err, repository.ErrUniqueViolation) {
 		return fmt.Errorf("auth service: register: user insert: %w", ErrUserAlreadyExists)
 	}
@@ -65,7 +65,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Us
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %v: %w", err, ErrInternal)
 	}
 
-	isMatch, err := argon2id.ComparePasswordAndHash(password.RevealSecret(), user.PasswordHash)
+	isMatch, err := argon2id.ComparePasswordAndHash(password.RevealSecret(), user.PasswordHash.RevealSecret())
 	if err != nil {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: compare password and hash: %v: %w", err, ErrInternal)
 	}
