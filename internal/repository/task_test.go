@@ -39,7 +39,7 @@ func TestTaskRepository_Create(t *testing.T) {
 			t.Fatalf("Create() error = %v", err)
 		}
 
-		if task.ID.String() == "" {
+		if task.ID.IsNil() {
 			t.Error("got empty task id, want generated id")
 		}
 		if task.ColumnID != column.ID {

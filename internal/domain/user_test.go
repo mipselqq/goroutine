@@ -15,7 +15,7 @@ func TestNewUserID(t *testing.T) {
 
 	id := domain.NewUserID()
 
-	if id.String() == "" {
+	if id.IsNil() {
 		t.Error("got empty UserID from NewUserID(), want non-empty")
 	}
 	if id.UUID().Version() != 7 {

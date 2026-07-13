@@ -32,6 +32,10 @@ func (id UUID[T]) String() string {
 	return id.value.String()
 }
 
+func (id UUID[T]) IsNil() bool {
+	return id.value == uuid.Nil
+}
+
 func (id UUID[T]) UUID() uuid.UUID {
 	return id.value
 }

@@ -36,7 +36,7 @@ func TestColumnRepository_Create(t *testing.T) {
 			t.Fatalf("Create() error = %v", err)
 		}
 
-		if column.ID.String() == "" {
+		if column.ID.IsNil() {
 			t.Error("got empty column id, want generated id")
 		}
 		if column.BoardID != board.ID {
