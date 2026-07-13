@@ -545,23 +545,23 @@ func ScanTask(row interface{ Scan(...any) error }) (domain.Task, error) {
 	}
 	name, err := domain.NewTaskName(rawName)
 	if err != nil {
-		return domain.Task{}, fmt.Errorf("scan task: name: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Task{}, fmt.Errorf("scan task: name: %v: %w", err, ErrDataCorrupted)
 	}
 	desc, err := domain.NewTaskDescription(rawDesc)
 	if err != nil {
-		return domain.Task{}, fmt.Errorf("scan task: description: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Task{}, fmt.Errorf("scan task: description: %v: %w", err, ErrDataCorrupted)
 	}
 	pos, err := domain.NewTaskPosition(rawPos)
 	if err != nil {
-		return domain.Task{}, fmt.Errorf("scan task: position: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Task{}, fmt.Errorf("scan task: position: %v: %w", err, ErrDataCorrupted)
 	}
 	id, err := domain.NewTaskIDFromUUID(rawID)
 	if err != nil {
-		return domain.Task{}, fmt.Errorf("scan task: id: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Task{}, fmt.Errorf("scan task: id: %v: %w", err, ErrDataCorrupted)
 	}
 	columnID, err := domain.NewColumnIDFromUUID(rawColumnID)
 	if err != nil {
-		return domain.Task{}, fmt.Errorf("scan task: column id: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Task{}, fmt.Errorf("scan task: column id: %v: %w", err, ErrDataCorrupted)
 	}
 	return domain.Task{
 		ID:          id,

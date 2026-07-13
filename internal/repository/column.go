@@ -404,23 +404,23 @@ func ScanColumn(row interface{ Scan(...any) error }) (domain.Column, error) {
 	}
 	name, err := domain.NewColumnName(rawName)
 	if err != nil {
-		return domain.Column{}, fmt.Errorf("scan column: name: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Column{}, fmt.Errorf("scan column: name: %v: %w", err, ErrDataCorrupted)
 	}
 	desc, err := domain.NewColumnDescription(rawDesc)
 	if err != nil {
-		return domain.Column{}, fmt.Errorf("scan column: description: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Column{}, fmt.Errorf("scan column: description: %v: %w", err, ErrDataCorrupted)
 	}
 	pos, err := domain.NewColumnPosition(rawPos)
 	if err != nil {
-		return domain.Column{}, fmt.Errorf("scan column: position: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Column{}, fmt.Errorf("scan column: position: %v: %w", err, ErrDataCorrupted)
 	}
 	id, err := domain.NewColumnIDFromUUID(rawID)
 	if err != nil {
-		return domain.Column{}, fmt.Errorf("scan column: id: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Column{}, fmt.Errorf("scan column: id: %v: %w", err, ErrDataCorrupted)
 	}
 	boardID, err := domain.NewBoardIDFromUUID(rawBoardID)
 	if err != nil {
-		return domain.Column{}, fmt.Errorf("scan column: board id: %w: %w", domain.ErrDataCorrupted, err)
+		return domain.Column{}, fmt.Errorf("scan column: board id: %v: %w", err, ErrDataCorrupted)
 	}
 	return domain.Column{
 		ID:          id,
