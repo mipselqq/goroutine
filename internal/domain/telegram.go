@@ -2,9 +2,7 @@ package domain
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
-	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
@@ -29,7 +27,7 @@ var (
 
 // Valid uuidv7 wrapped in SecretString
 type TelegramLinkToken struct {
-	value secrecy.SecretString
+	secrecy.SecretString
 }
 
 func NewTelegramLinkToken(token string) (TelegramLinkToken, error) {
@@ -40,27 +38,7 @@ func NewTelegramLinkToken(token string) (TelegramLinkToken, error) {
 		return TelegramLinkToken{}, &ErrValidation{Issues: []string{ErrInvalidTelegramLinkToken}}
 	}
 
-	return TelegramLinkToken{value: secrecy.SecretString(trimmed)}, nil
-}
-
-func (t TelegramLinkToken) RevealSecret() string {
-	return t.value.RevealSecret()
-}
-
-func (t TelegramLinkToken) String() string {
-	return t.value.String()
-}
-
-func (t TelegramLinkToken) LogValue() slog.Value {
-	return t.value.LogValue()
-}
-
-func (t TelegramLinkToken) GoString() string {
-	return t.String()
-}
-
-func (t TelegramLinkToken) MarshalJSON() ([]byte, error) {
-	return json.Marshal(t.String())
+	return TelegramLinkToken{SecretString: secrecy.SecretString(trimmed)}, nil
 }
 
 // Valid telegram chat id
@@ -120,7 +98,7 @@ func (u TelegramUsername) Value() (driver.Value, error) {
 
 // Valid bot token (digits:alphanumeric), wraps SecretString
 type TelegramToken struct {
-	value secrecy.SecretString
+	secrecy.SecretString
 }
 
 func NewTelegramToken(token string) (TelegramToken, error) {
@@ -128,19 +106,7 @@ func NewTelegramToken(token string) (TelegramToken, error) {
 	if !telegramTokenRegex.MatchString(trimmed) {
 		return TelegramToken{}, &ErrValidation{Issues: []string{ErrInvalidTelegramToken}}
 	}
-	return TelegramToken{value: secrecy.SecretString(trimmed)}, nil
-}
-
-func (t TelegramToken) RevealSecret() string {
-	return t.value.RevealSecret()
-}
-
-func (t TelegramToken) String() string {
-	return t.value.String()
-}
-
-func (t TelegramToken) LogValue() slog.Value {
-	return t.value.LogValue()
+	return TelegramToken{SecretString: secrecy.SecretString(trimmed)}, nil
 }
 
 // Valid message text (1-4096 chars)
