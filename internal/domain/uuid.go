@@ -22,6 +22,9 @@ func ParseID[T any](s string) (UUID[T], error) {
 	if err != nil {
 		return UUID[T]{}, fmt.Errorf("parse id %s: %w", reflect.TypeFor[T](), err)
 	}
+	if u == uuid.Nil {
+		return UUID[T]{}, fmt.Errorf("parse id %s: nil UUID", reflect.TypeFor[T]())
+	}
 	return UUID[T]{value: u}, nil
 }
 

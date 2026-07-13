@@ -26,21 +26,43 @@ func TestNewUserID(t *testing.T) {
 func TestParseUserID(t *testing.T) {
 	t.Parallel()
 
-	u := uuid.New()
-	s := u.String()
-
-	id, err := domain.ParseUserID(s)
-	if err != nil {
-		t.Errorf("ParseUserID() error = %v", err)
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		{
+			name:    "valid UUID",
+			input:   uuid.New().String(),
+			wantErr: false,
+		},
+		{
+			name:    "invalid string",
+			input:   "invalid",
+			wantErr: true,
+		},
+		{
+			name:    "nil UUID",
+			input:   "00000000-0000-0000-0000-000000000000",
+			wantErr: true,
+		},
 	}
 
-	if id.String() != s {
-		t.Errorf("ParseUserID() = %q, want %q", id, s)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	_, err = domain.ParseUserID("invalid")
-	if err == nil {
-		t.Error("got nil error from ParseUserID(\"invalid\"), want non-nil")
+			id, err := domain.ParseUserID(tt.input)
+			if tt.wantErr && err == nil {
+				t.Errorf("got id %q, want error", id)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("got error %v, want nil", err)
+			}
+			if !tt.wantErr && id.String() != tt.input {
+				t.Errorf("got %q, want %q", id, tt.input)
+			}
+		})
 	}
 }
 
