@@ -12,6 +12,14 @@ import (
 	"goroutine/internal/secrecy"
 )
 
+type User struct {
+	ID               UserID
+	Email            Email
+	PasswordHash     string
+	TelegramChatID   TelegramChatID
+	TelegramUsername TelegramUsername
+}
+
 type (
 	userID struct{}
 	UserID = UUID[userID]
@@ -102,12 +110,4 @@ func (t AuthToken) GoString() string {
 
 func (t AuthToken) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.String())
-}
-
-type User struct {
-	ID               UserID
-	Email            Email
-	PasswordHash     string
-	TelegramChatID   TelegramChatID
-	TelegramUsername TelegramUsername
 }

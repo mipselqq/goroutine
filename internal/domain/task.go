@@ -25,6 +25,32 @@ type Task struct {
 	UpdatedAt   time.Time
 }
 
+func (t Task) String() string {
+	return fmt.Sprintf(
+		"id:          %s\ncolumnId:    %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
+		t.ID.String(),
+		t.ColumnID.String(),
+		t.Name.String(),
+		t.Description.String(),
+		t.Position.Int64(),
+		t.CreatedAt.UTC().Format(time.RFC3339Nano),
+		t.UpdatedAt.UTC().Format(time.RFC3339Nano),
+	)
+}
+
+type (
+	taskTag struct{}
+	TaskID  = UUID[taskTag]
+)
+
+func NewTaskID() TaskID {
+	return NewID[taskTag]()
+}
+
+func ParseTaskID(s string) (TaskID, error) {
+	return ParseID[taskTag](s)
+}
+
 type TaskName struct {
 	value string
 }
@@ -97,30 +123,4 @@ func (p TaskPosition) Int64() int64 {
 
 func (p TaskPosition) Value() (driver.Value, error) {
 	return p.value, nil
-}
-
-func (t Task) String() string {
-	return fmt.Sprintf(
-		"id:          %s\ncolumnId:    %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
-		t.ID.String(),
-		t.ColumnID.String(),
-		t.Name.String(),
-		t.Description.String(),
-		t.Position.Int64(),
-		t.CreatedAt.UTC().Format(time.RFC3339Nano),
-		t.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
-}
-
-type (
-	taskTag struct{}
-	TaskID  = UUID[taskTag]
-)
-
-func NewTaskID() TaskID {
-	return NewID[taskTag]()
-}
-
-func ParseTaskID(s string) (TaskID, error) {
-	return ParseID[taskTag](s)
 }

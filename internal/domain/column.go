@@ -26,6 +26,32 @@ type Column struct {
 	UpdatedAt   time.Time
 }
 
+func (c Column) String() string {
+	return fmt.Sprintf(
+		"id:          %s\nboardId:     %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
+		c.ID.String(),
+		c.BoardID.String(),
+		c.Name.String(),
+		c.Description.String(),
+		c.Position.Int64(),
+		c.CreatedAt.UTC().Format(time.RFC3339Nano),
+		c.UpdatedAt.UTC().Format(time.RFC3339Nano),
+	)
+}
+
+type (
+	columnTag struct{}
+	ColumnID  = UUID[columnTag]
+)
+
+func NewColumnID() ColumnID {
+	return NewID[columnTag]()
+}
+
+func ParseColumnID(s string) (ColumnID, error) {
+	return ParseID[columnTag](s)
+}
+
 type ColumnName struct {
 	value string
 }
@@ -99,30 +125,4 @@ func (p ColumnPosition) Int64() int64 {
 
 func (p ColumnPosition) Value() (driver.Value, error) {
 	return p.value, nil
-}
-
-func (c Column) String() string {
-	return fmt.Sprintf(
-		"id:          %s\nboardId:     %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
-		c.ID.String(),
-		c.BoardID.String(),
-		c.Name.String(),
-		c.Description.String(),
-		c.Position.Int64(),
-		c.CreatedAt.UTC().Format(time.RFC3339Nano),
-		c.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
-}
-
-type (
-	columnTag struct{}
-	ColumnID  = UUID[columnTag]
-)
-
-func NewColumnID() ColumnID {
-	return NewID[columnTag]()
-}
-
-func ParseColumnID(s string) (ColumnID, error) {
-	return ParseID[columnTag](s)
 }
