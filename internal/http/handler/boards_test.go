@@ -68,7 +68,7 @@ func TestBoards_Create(t *testing.T) {
 		},
 		{
 			name:      "Invalid JSON",
-			inputBody: json.RawMessage([]byte(fmt.Sprintf(`{"name": %q, "description": %q`, validBoard.Name.String(), validBoard.Description.String()))), // missing closing brace
+			inputBody: json.RawMessage(fmt.Appendf(nil, `{"name": %q, "description": %q`, validBoard.Name.String(), validBoard.Description.String())), // missing closing brace
 			wantCode:  http.StatusBadRequest,
 			wantBody:  invalidJSONError(),
 		},
