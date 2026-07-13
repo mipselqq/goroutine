@@ -104,7 +104,7 @@ func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (domain.Auth
 
 func (s *Auth) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 	tokenString := token.RevealSecret()
-	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if token.Method.Alg() != s.jwtOptions.SigningMethod.Alg() {
 			return nil, ErrInvalidSigningMethod
 		}

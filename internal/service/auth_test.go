@@ -313,7 +313,7 @@ func TestAuth_CreateToken(t *testing.T) {
 		t.Fatalf("CreateToken() error = %v", err)
 	}
 
-	parsedToken, err := jwt.Parse(token.RevealSecret(), func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.Parse(token.RevealSecret(), func(token *jwt.Token) (any, error) {
 		return []byte(testutil.ValidJWTSecret().RevealSecret()), nil
 	})
 	if err != nil {

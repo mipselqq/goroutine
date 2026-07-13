@@ -48,7 +48,7 @@ func NewLogger(env, levelStr string, extractors ...ContextExtractor) *slog.Logge
 	level := parseLevel(levelStr)
 
 	if env == "dev" {
-		handler = tint.NewHandler(os.Stdout, &tint.Options{Level: level})
+		handler = tint.NewTextHandler(os.Stdout, &tint.Options{Level: level})
 	} else {
 		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})
 	}
