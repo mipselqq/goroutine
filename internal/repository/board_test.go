@@ -31,7 +31,7 @@ func TestBoardRepository_Create(t *testing.T) {
 		if err != nil {
 			t.Errorf("Create() error = %v", err)
 		}
-		if board.ID.IsEmpty() {
+		if board.ID.IsNil() {
 			t.Errorf("got empty board ID, want generated ID")
 		}
 		if board.OwnerID != userID {

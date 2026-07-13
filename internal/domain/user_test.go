@@ -1,7 +1,6 @@
 package domain_test
 
 import (
-	"errors"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -15,7 +14,7 @@ func TestNewUserID(t *testing.T) {
 
 	id := domain.NewUserID()
 
-	if id.IsEmpty() {
+	if id.IsNil() {
 		t.Error("got empty UserID from NewUserID(), want non-empty")
 	}
 	if id.UUID().Version() != 7 {
@@ -26,65 +25,24 @@ func TestNewUserID(t *testing.T) {
 func TestParseUserID(t *testing.T) {
 	t.Parallel()
 
-	u := uuid.New()
-	s := u.String()
-
-	id, err := domain.ParseUserID(s)
-	if err != nil {
-		t.Errorf("ParseUserID() error = %v", err)
-	}
-
-	if id.String() != s {
-		t.Errorf("ParseUserID() = %q, want %q", id, s)
-	}
-
-	_, err = domain.ParseUserID("invalid")
-	if err == nil {
-		t.Error("got nil error from ParseUserID(\"invalid\"), want non-nil")
-	}
-}
-
-func TestUserID_Scan(t *testing.T) {
-	t.Parallel()
-
-	u := uuid.New()
-
 	tests := []struct {
 		name    string
-		input   any
+		input   string
 		wantErr bool
-		errIs   error
 	}{
 		{
-			name:    "Valid string",
-			input:   u.String(),
+			name:    "valid UUID",
+			input:   uuid.New().String(),
 			wantErr: false,
 		},
 		{
-			name:    "Valid bytes",
-			input:   u[:],
-			wantErr: false,
-		},
-		{
-			name:    "Invalid string",
-			input:   "invalid-uuid",
+			name:    "invalid string",
+			input:   "invalid",
 			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
 		},
 		{
-			name:    "Invalid bytes",
-			input:   []byte("invalid"),
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			wantErr: false,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
+			name:    "nil UUID",
+			input:   "00000000-0000-0000-0000-000000000000",
 			wantErr: true,
 		},
 	}
@@ -93,22 +51,15 @@ func TestUserID_Scan(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			var id domain.UserID
-			err := id.Scan(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("got error %v, want nil", err)
-				}
-				if tt.input != nil && id.IsEmpty() {
-					t.Error("got empty UserID after Scan, want non-empty")
-				}
+			id, err := domain.ParseUserID(tt.input)
+			if tt.wantErr && err == nil {
+				t.Errorf("got id %q, want error", id)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("got error %v, want nil", err)
+			}
+			if !tt.wantErr && id.String() != tt.input {
+				t.Errorf("got %q, want %q", id, tt.input)
 			}
 		})
 	}
@@ -223,60 +174,15 @@ func TestNewJWTString(t *testing.T) {
 	}
 }
 
-func TestUserPassword_Scan(t *testing.T) {
+func TestPasswordHash(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name    string
-		input   any
-		wantErr bool
-		errIs   error
-	}{
-		{
-			name:    "Valid password",
-			input:   "securePass123",
-			wantErr: false,
-		},
-		{
-			name:    "Too short password",
-			input:   "12345",
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Empty password",
-			input:   "",
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			wantErr: false,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
-			wantErr: true,
-		},
-	}
+	raw := "$argon2id$v=19$m=65536,t=1,p=16$hashhashhashhashhashhash"
+	hash := domain.NewPasswordHash(raw)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+	testutil.AssertSecretHidden(t, raw, hash)
 
-			var p domain.UserPassword
-			err := p.Scan(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-			} else if err != nil {
-				t.Errorf("got error %v, want nil", err)
-			}
-		})
+	if hash.RevealSecret() != raw {
+		t.Errorf("got revealed hash %q, want %q", hash.RevealSecret(), raw)
 	}
 }

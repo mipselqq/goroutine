@@ -32,10 +32,14 @@ func TestUserRepository_CreateUser(t *testing.T) {
 			t.Errorf("CreateUser() error = %v", err)
 		}
 
-		var dbEmail domain.Email
-		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email).Scan(&dbEmail)
+		var rawEmail string
+		err = pool.QueryRow(ctx, "SELECT email FROM users WHERE email=$1", email).Scan(&rawEmail)
 		if err != nil {
 			t.Errorf("User row Scan() error = %v", err)
+		}
+		dbEmail, err := domain.NewEmail(rawEmail)
+		if err != nil {
+			t.Errorf("NewEmail() error = %v", err)
 		}
 		if dbEmail != email {
 			t.Errorf("got email %q, want %q", dbEmail, email)

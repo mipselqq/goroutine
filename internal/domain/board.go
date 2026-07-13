@@ -2,9 +2,10 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -20,6 +21,23 @@ type Board struct {
 	Description BoardDescription
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+type (
+	boardTag struct{}
+	BoardID  = UUID[boardTag]
+)
+
+func NewBoardID() BoardID {
+	return NewID[boardTag]()
+}
+
+func ParseBoardID(s string) (BoardID, error) {
+	return ParseID[boardTag](s)
+}
+
+func NewBoardIDFromUUID(u uuid.UUID) (BoardID, error) {
+	return NewIDFromUUID[boardTag](u)
 }
 
 type BoardName struct {
@@ -44,33 +62,12 @@ func NewBoardName(name string) (BoardName, error) {
 	return BoardName{value: trimmedName}, nil
 }
 
-func (n BoardName) IsEmpty() bool {
-	return n.value == ""
-}
-
 func (n BoardName) String() string {
 	return n.value
 }
 
 func (n BoardName) Value() (driver.Value, error) {
 	return n.value, nil
-}
-
-func (n *BoardName) Scan(value any) error {
-	if value == nil {
-		n.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for BoardName: %T", value)
-	}
-	bn, err := NewBoardName(s)
-	if err != nil {
-		return fmt.Errorf("board name: %w: %v", ErrDataCorrupted, err)
-	}
-	*n = bn
-	return nil
 }
 
 type BoardDescription struct {
@@ -95,52 +92,6 @@ func (d BoardDescription) String() string {
 	return d.value
 }
 
-func (d BoardDescription) IsEmpty() bool {
-	return d.value == ""
-}
-
 func (d BoardDescription) Value() (driver.Value, error) {
 	return d.value, nil
-}
-
-func (d *BoardDescription) Scan(value any) error {
-	if value == nil {
-		d.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for BoardDescription: %T", value)
-	}
-	bd, err := NewBoardDescription(s)
-	if err != nil {
-		return fmt.Errorf("board description: %w: %v", ErrDataCorrupted, err)
-	}
-	*d = bd
-	return nil
-}
-
-func (b Board) String() string {
-	return fmt.Sprintf(
-		"id:          %s\nownerId:     %s\nname:        %q\ndescription: %q\ncreatedAt:   %s\nupdatedAt:   %s",
-		b.ID.String(),
-		b.OwnerID.String(),
-		b.Name.String(),
-		b.Description.String(),
-		b.CreatedAt.UTC().Format(time.RFC3339Nano),
-		b.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
-}
-
-type (
-	boardTag struct{}
-	BoardID  = UUID[boardTag]
-)
-
-func NewBoardID() BoardID {
-	return NewID[boardTag]()
-}
-
-func ParseBoardID(s string) (BoardID, error) {
-	return ParseID[boardTag](s)
 }

@@ -4,15 +4,26 @@
 package domain
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
-	"log/slog"
 	"slices"
 	"strings"
 
 	"goroutine/internal/secrecy"
+
+	"github.com/google/uuid"
 )
+
+const (
+	ErrPasswordTooShort string = "Password is too short"
+	ErrInvalidJWTToken  string = "Invalid JWT token"
+)
+
+type User struct {
+	ID               UserID
+	Email            Email
+	PasswordHash     PasswordHash
+	TelegramChatID   TelegramChatID
+	TelegramUsername TelegramUsername
+}
 
 type (
 	userID struct{}
@@ -27,17 +38,20 @@ func ParseUserID(s string) (UserID, error) {
 	return ParseID[userID](s)
 }
 
-const (
-	ErrPasswordTooShort string = "Password is too short"
-	ErrInvalidJWTToken  string = "Invalid JWT token"
-)
-
-type UserPassword struct {
-	value secrecy.SecretString
+func NewUserIDFromUUID(u uuid.UUID) (UserID, error) {
+	return NewIDFromUUID[userID](u)
 }
 
-type AuthToken struct {
-	value secrecy.SecretString
+type PasswordHash struct {
+	secrecy.SecretString
+}
+
+func NewPasswordHash(hash string) PasswordHash {
+	return PasswordHash{SecretString: secrecy.SecretString(hash)}
+}
+
+type UserPassword struct {
+	secrecy.SecretString
 }
 
 func NewUserPassword(password string) (UserPassword, error) {
@@ -45,49 +59,11 @@ func NewUserPassword(password string) (UserPassword, error) {
 		return UserPassword{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
 	}
 
-	return UserPassword{value: secrecy.SecretString(password)}, nil
+	return UserPassword{SecretString: secrecy.SecretString(password)}, nil
 }
 
-func (p UserPassword) RevealSecret() string {
-	return p.value.RevealSecret()
-}
-
-func (p UserPassword) String() string {
-	return p.value.String()
-}
-
-func (p UserPassword) LogValue() slog.Value {
-	return p.value.LogValue()
-}
-
-func (p UserPassword) GoString() string {
-	return p.String()
-}
-
-func (p UserPassword) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p.String())
-}
-
-// Domain knows about a little about storage, but this is pragmatic solution
-func (p UserPassword) Value() (driver.Value, error) {
-	return p.RevealSecret(), nil
-}
-
-func (p *UserPassword) Scan(value any) error {
-	if value == nil {
-		p.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for Password: %T", value)
-	}
-	password, err := NewUserPassword(s)
-	if err != nil {
-		return fmt.Errorf("password: %w: %v", ErrDataCorrupted, err)
-	}
-	*p = password
-	return nil
+type AuthToken struct {
+	secrecy.SecretString
 }
 
 func NewJWTString(token string) (AuthToken, error) {
@@ -105,33 +81,5 @@ func NewJWTString(token string) (AuthToken, error) {
 		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
 	}
 
-	return AuthToken{value: secrecy.SecretString(trimmed)}, nil
-}
-
-func (t AuthToken) RevealSecret() string {
-	return t.value.RevealSecret()
-}
-
-func (t AuthToken) String() string {
-	return t.value.String()
-}
-
-func (t AuthToken) LogValue() slog.Value {
-	return t.value.LogValue()
-}
-
-func (t AuthToken) GoString() string {
-	return t.String()
-}
-
-func (t AuthToken) MarshalJSON() ([]byte, error) {
-	return json.Marshal(t.String())
-}
-
-type User struct {
-	ID               UserID
-	Email            Email
-	PasswordHash     string
-	TelegramChatID   TelegramChatID
-	TelegramUsername TelegramUsername
+	return AuthToken{SecretString: secrecy.SecretString(trimmed)}, nil
 }

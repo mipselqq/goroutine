@@ -11,7 +11,7 @@ import (
 type MockUserRepository struct {
 	t *testing.T
 
-	CreateFunc             func(ctx context.Context, email domain.Email, hash string) error
+	CreateFunc             func(ctx context.Context, email domain.Email, hash domain.PasswordHash) error
 	GetByEmailFunc         func(ctx context.Context, email domain.Email) (domain.User, error)
 	UpdateTelegramInfoFunc func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
@@ -20,7 +20,7 @@ func NewMockUserRepository(t *testing.T) *MockUserRepository {
 	return &MockUserRepository{t: t}
 }
 
-func (m *MockUserRepository) Create(ctx context.Context, email domain.Email, hash string) error {
+func (m *MockUserRepository) Create(ctx context.Context, email domain.Email, hash domain.PasswordHash) error {
 	testutil.AssertFuncNotNil(m.t, "UserRepository.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, email, hash)
 }

@@ -8,49 +8,45 @@ import (
 	"github.com/google/uuid"
 )
 
-type UUID[T any] struct {
+type UUID[Tag any] struct {
 	value uuid.UUID
 }
 
-func NewID[T any]() UUID[T] {
+func NewID[Tag any]() UUID[Tag] {
 	id, _ := uuid.NewV7()
-	return UUID[T]{value: id}
+	return UUID[Tag]{value: id}
 }
 
-func ParseID[T any](s string) (UUID[T], error) {
+func ParseID[Tag any, Struct UUID[Tag]](s string) (Struct, error) {
 	u, err := uuid.Parse(s)
 	if err != nil {
-		return UUID[T]{}, fmt.Errorf("parse id %s: %w", reflect.TypeFor[T](), err)
+		return Struct{}, fmt.Errorf("parse id %s: %w", reflect.TypeFor[Tag](), err)
 	}
-	return UUID[T]{value: u}, nil
+	if u == uuid.Nil {
+		return Struct{}, fmt.Errorf("parse id %s: nil UUID", reflect.TypeFor[Tag]())
+	}
+	return Struct{value: u}, nil
 }
 
-func (id UUID[T]) String() string {
+func NewIDFromUUID[Tag any, Struct UUID[Tag]](u uuid.UUID) (Struct, error) {
+	if u == uuid.Nil {
+		return Struct{}, fmt.Errorf("nil UUID")
+	}
+	return Struct{value: u}, nil
+}
+
+func (id UUID[Tag]) String() string {
 	return id.value.String()
 }
 
-func (id UUID[T]) IsEmpty() bool {
+func (id UUID[Tag]) IsNil() bool {
 	return id.value == uuid.Nil
 }
 
-func (id UUID[T]) UUID() uuid.UUID {
+func (id UUID[Tag]) UUID() uuid.UUID {
 	return id.value
 }
 
-func (id *UUID[T]) Scan(src any) error {
-	if src == nil {
-		id.value = uuid.Nil
-		return nil
-	}
-
-	err := id.value.Scan(src)
-	if err != nil {
-		return fmt.Errorf("id %s: %w: %v", reflect.TypeFor[T](), ErrDataCorrupted, err)
-	}
-
-	return nil
-}
-
-func (id UUID[T]) Value() (driver.Value, error) {
+func (id UUID[Tag]) Value() (driver.Value, error) {
 	return id.value.Value()
 }
