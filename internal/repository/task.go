@@ -556,8 +556,8 @@ func ScanTask(row interface{ Scan(...any) error }) (domain.Task, error) {
 		return domain.Task{}, fmt.Errorf("scan task: position: %w: %w", domain.ErrDataCorrupted, err)
 	}
 	return domain.Task{
-		ID:          domain.TaskIDFromUUID(rawID),
-		ColumnID:    domain.ColumnIDFromUUID(rawColumnID),
+		ID:          domain.UUIDToTaskID(rawID),
+		ColumnID:    domain.UUIDToColumnID(rawColumnID),
 		Name:        name,
 		Description: desc,
 		Position:    pos,

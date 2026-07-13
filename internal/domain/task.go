@@ -5,6 +5,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -36,6 +38,8 @@ func NewTaskID() TaskID {
 func ParseTaskID(s string) (TaskID, error) {
 	return ParseID[taskTag](s)
 }
+
+func UUIDToTaskID(u uuid.UUID) TaskID { return TaskID{value: u} }
 
 type TaskName struct {
 	value string

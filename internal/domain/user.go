@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"goroutine/internal/secrecy"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -30,6 +32,8 @@ func NewUserID() UserID {
 func ParseUserID(s string) (UserID, error) {
 	return ParseID[userID](s)
 }
+
+func UUIDToUserID(u uuid.UUID) UserID { return UserID{value: u} }
 
 type PasswordHash struct {
 	secrecy.SecretString

@@ -415,8 +415,8 @@ func ScanColumn(row interface{ Scan(...any) error }) (domain.Column, error) {
 		return domain.Column{}, fmt.Errorf("scan column: position: %w: %w", domain.ErrDataCorrupted, err)
 	}
 	return domain.Column{
-		ID:          domain.ColumnIDFromUUID(rawID),
-		BoardID:     domain.BoardIDFromUUID(rawBoardID),
+		ID:          domain.UUIDToColumnID(rawID),
+		BoardID:     domain.UUIDToBoardID(rawBoardID),
 		Name:        name,
 		Description: desc,
 		Position:    pos,

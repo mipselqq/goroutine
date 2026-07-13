@@ -107,7 +107,7 @@ func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
 	}
 
 	return domain.User{
-		ID:               domain.UserIDFromUUID(rawID),
+		ID:               domain.UUIDToUserID(rawID),
 		Email:            email,
 		PasswordHash:     domain.PasswordHash{SecretString: secrecy.SecretString(rawPasswordHash)},
 		TelegramChatID:   chatID,

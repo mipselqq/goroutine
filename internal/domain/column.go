@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -37,6 +39,8 @@ func NewColumnID() ColumnID {
 func ParseColumnID(s string) (ColumnID, error) {
 	return ParseID[columnTag](s)
 }
+
+func UUIDToColumnID(u uuid.UUID) ColumnID { return ColumnID{value: u} }
 
 type ColumnName struct {
 	value string

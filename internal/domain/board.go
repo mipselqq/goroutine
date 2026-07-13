@@ -4,6 +4,8 @@ import (
 	"database/sql/driver"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -33,6 +35,8 @@ func NewBoardID() BoardID {
 func ParseBoardID(s string) (BoardID, error) {
 	return ParseID[boardTag](s)
 }
+
+func UUIDToBoardID(u uuid.UUID) BoardID { return BoardID{value: u} }
 
 type BoardName struct {
 	value string

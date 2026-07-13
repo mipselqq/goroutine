@@ -36,8 +36,3 @@ func (id UUID[T]) UUID() uuid.UUID {
 func (id UUID[T]) Value() (driver.Value, error) {
 	return id.value.Value()
 }
-
-func BoardIDFromUUID(u uuid.UUID) BoardID   { return BoardID{value: u} }
-func ColumnIDFromUUID(u uuid.UUID) ColumnID { return ColumnID{value: u} }
-func TaskIDFromUUID(u uuid.UUID) TaskID     { return TaskID{value: u} }
-func UserIDFromUUID(u uuid.UUID) UserID     { return UserID{value: u} }
