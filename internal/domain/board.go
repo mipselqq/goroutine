@@ -44,10 +44,6 @@ func NewBoardName(name string) (BoardName, error) {
 	return BoardName{value: trimmedName}, nil
 }
 
-func (n BoardName) IsEmpty() bool {
-	return n.value == ""
-}
-
 func (n BoardName) String() string {
 	return n.value
 }
@@ -80,10 +76,6 @@ func (d BoardDescription) String() string {
 
 func (d BoardDescription) Value() (driver.Value, error) {
 	return d.value, nil
-}
-
-func (d BoardDescription) IsEmpty() bool {
-	return d.value == ""
 }
 
 func (b Board) String() string {

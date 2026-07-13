@@ -45,10 +45,6 @@ func NewTaskName(name string) (TaskName, error) {
 	return TaskName{value: trimmedName}, nil
 }
 
-func (n TaskName) IsEmpty() bool {
-	return n.value == ""
-}
-
 func (n TaskName) String() string {
 	return n.value
 }
@@ -73,10 +69,6 @@ func NewTaskDescription(description string) (TaskDescription, error) {
 	}
 
 	return TaskDescription{value: trimmedDescription}, nil
-}
-
-func (d TaskDescription) IsEmpty() bool {
-	return d.value == ""
 }
 
 func (d TaskDescription) String() string {

@@ -46,10 +46,6 @@ func NewColumnName(name string) (ColumnName, error) {
 	return ColumnName{value: trimmedName}, nil
 }
 
-func (n ColumnName) IsEmpty() bool {
-	return n.value == ""
-}
-
 func (n ColumnName) String() string {
 	return n.value
 }
@@ -74,10 +70,6 @@ func NewColumnDescription(description string) (ColumnDescription, error) {
 
 func (d ColumnDescription) String() string {
 	return d.value
-}
-
-func (d ColumnDescription) IsEmpty() bool {
-	return d.value == ""
 }
 
 type ColumnPosition struct {

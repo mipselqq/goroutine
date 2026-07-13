@@ -181,9 +181,6 @@ func TestColumnDescription(t *testing.T) {
 			if description.String() != tt.wantValue {
 				t.Errorf("got value %q, want %q", description, tt.wantValue)
 			}
-			if description.IsEmpty() != (tt.wantValue == "") {
-				t.Errorf("got is empty %t, want %t", description.IsEmpty(), tt.wantValue == "")
-			}
 		})
 	}
 }
