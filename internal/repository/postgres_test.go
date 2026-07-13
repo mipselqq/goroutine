@@ -70,15 +70,7 @@ func GetBoard(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.
 			FROM boards
 			WHERE id = $1`
 
-	var board domain.Board
-	err := pool.QueryRow(ctx, q, boardID).Scan(
-		&board.ID,
-		&board.OwnerID,
-		&board.Name,
-		&board.Description,
-		&board.CreatedAt,
-		&board.UpdatedAt,
-	)
+	board, err := repository.ScanBoard(pool.QueryRow(ctx, q, boardID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Board{}, false
@@ -124,16 +116,7 @@ func GetColumn(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (doma
 			FROM columns
 			WHERE id = $1`
 
-	var column domain.Column
-	err := pool.QueryRow(ctx, q, columnID).Scan(
-		&column.ID,
-		&column.BoardID,
-		&column.Name,
-		&column.Description,
-		&column.Position,
-		&column.CreatedAt,
-		&column.UpdatedAt,
-	)
+	column, err := repository.ScanColumn(pool.QueryRow(ctx, q, columnID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, false
@@ -164,18 +147,9 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 
 	var columns []domain.Column
 	for rows.Next() {
-		var column domain.Column
-		err = rows.Scan(
-			&column.ID,
-			&column.BoardID,
-			&column.Name,
-			&column.Description,
-			&column.Position,
-			&column.CreatedAt,
-			&column.UpdatedAt,
-		)
-		if err != nil {
-			t.Fatalf("Column row Scan() error = %v", err)
+		column, scanErr := repository.ScanColumn(rows)
+		if scanErr != nil {
+			t.Fatalf("Column row Scan() error = %v", scanErr)
 		}
 
 		columns = append(columns, column)
@@ -224,16 +198,7 @@ func GetTask(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Tas
 			FROM tasks
 			WHERE id = $1`
 
-	var task domain.Task
-	err := pool.QueryRow(ctx, q, taskID).Scan(
-		&task.ID,
-		&task.ColumnID,
-		&task.Name,
-		&task.Description,
-		&task.Position,
-		&task.CreatedAt,
-		&task.UpdatedAt,
-	)
+	task, err := repository.ScanTask(pool.QueryRow(ctx, q, taskID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, false
@@ -264,18 +229,9 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 
 	var tasks []domain.Task
 	for rows.Next() {
-		var task domain.Task
-		err = rows.Scan(
-			&task.ID,
-			&task.ColumnID,
-			&task.Name,
-			&task.Description,
-			&task.Position,
-			&task.CreatedAt,
-			&task.UpdatedAt,
-		)
-		if err != nil {
-			t.Fatalf("Task row Scan() error = %v", err)
+		task, scanErr := repository.ScanTask(rows)
+		if scanErr != nil {
+			t.Fatalf("Task row Scan() error = %v", scanErr)
 		}
 
 		tasks = append(tasks, task)
@@ -342,14 +298,7 @@ func GetUser(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.Use
 
 	const q = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE id = $1`
 
-	var user domain.User
-	err := pool.QueryRow(ctx, q, userID).Scan(
-		&user.ID,
-		&user.Email,
-		&user.PasswordHash,
-		&user.TelegramChatID,
-		&user.TelegramUsername,
-	)
+	user, err := repository.ScanUser(pool.QueryRow(ctx, q, userID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.User{}, false

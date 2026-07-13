@@ -57,23 +57,6 @@ func (n TaskName) Value() (driver.Value, error) {
 	return n.value, nil
 }
 
-func (n *TaskName) Scan(value any) error {
-	if value == nil {
-		n.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for TaskName: %T", value)
-	}
-	tn, err := NewTaskName(s)
-	if err != nil {
-		return fmt.Errorf("task name: %w: %v", ErrDataCorrupted, err)
-	}
-	*n = tn
-	return nil
-}
-
 type TaskDescription struct {
 	value string
 }
@@ -104,23 +87,6 @@ func (d TaskDescription) Value() (driver.Value, error) {
 	return d.value, nil
 }
 
-func (d *TaskDescription) Scan(value any) error {
-	if value == nil {
-		d.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for TaskDescription: %T", value)
-	}
-	td, err := NewTaskDescription(s)
-	if err != nil {
-		return fmt.Errorf("task description: %w: %v", ErrDataCorrupted, err)
-	}
-	*d = td
-	return nil
-}
-
 type TaskPosition struct {
 	value int32
 }
@@ -139,26 +105,6 @@ func (p TaskPosition) Int64() int64 {
 
 func (p TaskPosition) Value() (driver.Value, error) {
 	return p.value, nil
-}
-
-func (p *TaskPosition) Scan(value any) error {
-	if value == nil {
-		p.value = 0
-		return nil
-	}
-
-	v, ok := value.(int64)
-	if !ok {
-		return fmt.Errorf("unexpected type for TaskPosition: %T", value)
-	}
-
-	position, err := NewTaskPosition(v)
-	if err != nil {
-		return fmt.Errorf("task position: %w: %v", ErrDataCorrupted, err)
-	}
-
-	*p = position
-	return nil
 }
 
 func (t Task) String() string {

@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"goroutine/internal/domain"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -51,7 +53,7 @@ func (r *PGColumn) Create(
 
 	var locked int
 	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
-		"board_id": boardID,
+		"board_id": boardID.UUID(),
 	}).Scan(&locked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -62,27 +64,18 @@ func (r *PGColumn) Create(
 
 	var nextPosition int64
 	err = tx.QueryRow(ctx, nextPositionQuery, pgx.NamedArgs{
-		"board_id": boardID,
+		"board_id": boardID.UUID(),
 	}).Scan(&nextPosition)
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("column repo: create next position: %v: %w", err, ErrInternal)
 	}
 
-	var column domain.Column
-	err = tx.QueryRow(ctx, insertColumnQuery, pgx.NamedArgs{
+	column, err := ScanColumn(tx.QueryRow(ctx, insertColumnQuery, pgx.NamedArgs{
 		"board_id":    boardID,
 		"name":        name,
 		"description": description,
 		"position":    nextPosition,
-	}).Scan(
-		&column.ID,
-		&column.BoardID,
-		&column.Name,
-		&column.Description,
-		&column.Position,
-		&column.CreatedAt,
-		&column.UpdatedAt,
-	)
+	}))
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("column repo: create insert: %v: %w", err, ErrInternal)
 	}
@@ -110,18 +103,9 @@ func (r *PGColumn) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([
 
 	var result []domain.Column
 	for rows.Next() {
-		var col domain.Column
-		err = rows.Scan(
-			&col.ID,
-			&col.BoardID,
-			&col.Name,
-			&col.Description,
-			&col.Position,
-			&col.CreatedAt,
-			&col.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("column repo: list by board id: scan: %v: %w", err, ErrInternal)
+		col, scanErr := ScanColumn(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("column repo: list by board id: scan: %v: %w", scanErr, ErrInternal)
 		}
 		result = append(result, col)
 	}
@@ -140,16 +124,7 @@ func (r *PGColumn) Get(ctx context.Context, columnID domain.ColumnID) (domain.Co
 		FROM columns
 		WHERE id = $1`
 
-	var column domain.Column
-	err := r.pgPool.QueryRow(ctx, query, columnID).Scan(
-		&column.ID,
-		&column.BoardID,
-		&column.Name,
-		&column.Description,
-		&column.Position,
-		&column.CreatedAt,
-		&column.UpdatedAt,
-	)
+	column, err := ScanColumn(r.pgPool.QueryRow(ctx, query, columnID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, ErrRowNotFound
@@ -177,16 +152,7 @@ func (r *PGColumn) Update(
 		  AND id = $4
 		RETURNING id, board_id, name, description, position, created_at, updated_at`
 
-	var column domain.Column
-	err := r.pgPool.QueryRow(ctx, query, name, description, boardID, columnID).Scan(
-		&column.ID,
-		&column.BoardID,
-		&column.Name,
-		&column.Description,
-		&column.Position,
-		&column.CreatedAt,
-		&column.UpdatedAt,
-	)
+	column, err := ScanColumn(r.pgPool.QueryRow(ctx, query, name, description, boardID, columnID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Column{}, ErrRowNotFound
@@ -266,7 +232,7 @@ func (r *PGColumn) Move(
 
 	var locked int
 	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
-		"board_id": boardID,
+		"board_id": boardID.UUID(),
 	}).Scan(&locked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -282,8 +248,8 @@ func (r *PGColumn) Move(
 
 	var currentPosition int64
 	err = tx.QueryRow(ctx, getCurrentPositionQuery, pgx.NamedArgs{
-		"board_id":  boardID,
-		"column_id": columnID,
+		"board_id":  boardID.UUID(),
+		"column_id": columnID.UUID(),
 	}).Scan(&currentPosition)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -294,7 +260,7 @@ func (r *PGColumn) Move(
 
 	var columnsCount int64
 	err = tx.QueryRow(ctx, countColumnsQuery, pgx.NamedArgs{
-		"board_id": boardID,
+		"board_id": boardID.UUID(),
 	}).Scan(&columnsCount)
 	if err != nil {
 		return domain.ColumnPosition{}, fmt.Errorf("column repo: move count columns: %v: %w", err, ErrInternal)
@@ -380,7 +346,7 @@ func (r *PGColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 
 	var locked int
 	err = tx.QueryRow(ctx, lockBoardQuery, pgx.NamedArgs{
-		"board_id": boardID,
+		"board_id": boardID.UUID(),
 	}).Scan(&locked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -396,8 +362,8 @@ func (r *PGColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 
 	var deletedPosition int64
 	err = tx.QueryRow(ctx, deleteColumnQuery, pgx.NamedArgs{
-		"board_id":  boardID,
-		"column_id": columnID,
+		"board_id":  boardID.UUID(),
+		"column_id": columnID.UUID(),
 	}).Scan(&deletedPosition)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -420,4 +386,41 @@ func (r *PGColumn) Delete(ctx context.Context, boardID domain.BoardID, columnID 
 	}
 
 	return nil
+}
+
+func ScanColumn(row interface{ Scan(...any) error }) (domain.Column, error) {
+	var (
+		rawID      uuid.UUID
+		rawBoardID uuid.UUID
+		rawName    string
+		rawDesc    string
+		rawPos     int64
+		createdAt  time.Time
+		updatedAt  time.Time
+	)
+	err := row.Scan(&rawID, &rawBoardID, &rawName, &rawDesc, &rawPos, &createdAt, &updatedAt)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("scan column: %w", err)
+	}
+	name, err := domain.NewColumnName(rawName)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("scan column: name: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	desc, err := domain.NewColumnDescription(rawDesc)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("scan column: description: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	pos, err := domain.NewColumnPosition(rawPos)
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("scan column: position: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	return domain.Column{
+		ID:          domain.ColumnIDFromUUID(rawID),
+		BoardID:     domain.BoardIDFromUUID(rawBoardID),
+		Name:        name,
+		Description: desc,
+		Position:    pos,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
+	}, nil
 }

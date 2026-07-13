@@ -56,23 +56,6 @@ func (n BoardName) Value() (driver.Value, error) {
 	return n.value, nil
 }
 
-func (n *BoardName) Scan(value any) error {
-	if value == nil {
-		n.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for BoardName: %T", value)
-	}
-	bn, err := NewBoardName(s)
-	if err != nil {
-		return fmt.Errorf("board name: %w: %v", ErrDataCorrupted, err)
-	}
-	*n = bn
-	return nil
-}
-
 type BoardDescription struct {
 	value string
 }
@@ -95,29 +78,12 @@ func (d BoardDescription) String() string {
 	return d.value
 }
 
-func (d BoardDescription) IsEmpty() bool {
-	return d.value == ""
-}
-
 func (d BoardDescription) Value() (driver.Value, error) {
 	return d.value, nil
 }
 
-func (d *BoardDescription) Scan(value any) error {
-	if value == nil {
-		d.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for BoardDescription: %T", value)
-	}
-	bd, err := NewBoardDescription(s)
-	if err != nil {
-		return fmt.Errorf("board description: %w: %v", ErrDataCorrupted, err)
-	}
-	*d = bd
-	return nil
+func (d BoardDescription) IsEmpty() bool {
+	return d.value == ""
 }
 
 func (b Board) String() string {

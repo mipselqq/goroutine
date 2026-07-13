@@ -63,27 +63,6 @@ func (t TelegramLinkToken) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.String())
 }
 
-func (t TelegramLinkToken) Value() (driver.Value, error) {
-	return t.RevealSecret(), nil
-}
-
-func (t *TelegramLinkToken) Scan(value any) error {
-	if value == nil {
-		t.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for TelegramLinkToken: %T", value)
-	}
-	token, err := NewTelegramLinkToken(s)
-	if err != nil {
-		return fmt.Errorf("telegram link token: %w: %v", ErrDataCorrupted, err)
-	}
-	*t = token
-	return nil
-}
-
 // Valid telegram chat id
 type TelegramChatID struct {
 	value int64
@@ -110,29 +89,12 @@ func (c TelegramChatID) Int64() int64 {
 	return c.value
 }
 
-func (c TelegramChatID) String() string {
-	return strconv.FormatInt(c.value, 10)
-}
-
 func (c TelegramChatID) Value() (driver.Value, error) {
 	return c.value, nil
 }
 
-func (c *TelegramChatID) Scan(value any) error {
-	if value == nil {
-		c.value = 0
-		return nil
-	}
-	v, ok := value.(int64)
-	if !ok {
-		return fmt.Errorf("unexpected type for TelegramChatID: %T", value)
-	}
-	chatID, err := NewTelegramChatID(v)
-	if err != nil {
-		return fmt.Errorf("telegram chat id: %w: %v", ErrDataCorrupted, err)
-	}
-	*c = chatID
-	return nil
+func (c TelegramChatID) String() string {
+	return strconv.FormatInt(c.value, 10)
 }
 
 // Valid telegram username starting with @
@@ -154,23 +116,6 @@ func (u TelegramUsername) String() string {
 
 func (u TelegramUsername) Value() (driver.Value, error) {
 	return u.value, nil
-}
-
-func (u *TelegramUsername) Scan(value any) error {
-	if value == nil {
-		u.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for TelegramUsername: %T", value)
-	}
-	username, err := NewTelegramUsername(s)
-	if err != nil {
-		return fmt.Errorf("telegram username: %w: %v", ErrDataCorrupted, err)
-	}
-	*u = username
-	return nil
 }
 
 // Valid bot token (digits:alphanumeric), wraps SecretString

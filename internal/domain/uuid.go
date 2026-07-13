@@ -37,20 +37,11 @@ func (id UUID[T]) UUID() uuid.UUID {
 	return id.value
 }
 
-func (id *UUID[T]) Scan(src any) error {
-	if src == nil {
-		id.value = uuid.Nil
-		return nil
-	}
-
-	err := id.value.Scan(src)
-	if err != nil {
-		return fmt.Errorf("id %s: %w: %v", reflect.TypeFor[T](), ErrDataCorrupted, err)
-	}
-
-	return nil
-}
-
 func (id UUID[T]) Value() (driver.Value, error) {
 	return id.value.Value()
 }
+
+func BoardIDFromUUID(u uuid.UUID) BoardID   { return BoardID{value: u} }
+func ColumnIDFromUUID(u uuid.UUID) ColumnID { return ColumnID{value: u} }
+func TaskIDFromUUID(u uuid.UUID) TaskID     { return TaskID{value: u} }
+func UserIDFromUUID(u uuid.UUID) UserID     { return UserID{value: u} }

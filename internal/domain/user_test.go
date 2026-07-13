@@ -1,7 +1,6 @@
 package domain_test
 
 import (
-	"errors"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -41,76 +40,6 @@ func TestParseUserID(t *testing.T) {
 	_, err = domain.ParseUserID("invalid")
 	if err == nil {
 		t.Error("got nil error from ParseUserID(\"invalid\"), want non-nil")
-	}
-}
-
-func TestUserID_Scan(t *testing.T) {
-	t.Parallel()
-
-	u := uuid.New()
-
-	tests := []struct {
-		name    string
-		input   any
-		wantErr bool
-		errIs   error
-	}{
-		{
-			name:    "Valid string",
-			input:   u.String(),
-			wantErr: false,
-		},
-		{
-			name:    "Valid bytes",
-			input:   u[:],
-			wantErr: false,
-		},
-		{
-			name:    "Invalid string",
-			input:   "invalid-uuid",
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Invalid bytes",
-			input:   []byte("invalid"),
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			wantErr: false,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var id domain.UserID
-			err := id.Scan(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("got error %v, want nil", err)
-				}
-				if tt.input != nil && id.IsEmpty() {
-					t.Error("got empty UserID after Scan, want non-empty")
-				}
-			}
-		})
 	}
 }
 
@@ -218,64 +147,6 @@ func TestNewJWTString(t *testing.T) {
 				if token.RevealSecret() != tt.input {
 					t.Errorf("got revealed token %q, want %q", token.RevealSecret(), tt.input)
 				}
-			}
-		})
-	}
-}
-
-func TestUserPassword_Scan(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   any
-		wantErr bool
-		errIs   error
-	}{
-		{
-			name:    "Valid password",
-			input:   "securePass123",
-			wantErr: false,
-		},
-		{
-			name:    "Too short password",
-			input:   "12345",
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Empty password",
-			input:   "",
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			wantErr: false,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var p domain.UserPassword
-			err := p.Scan(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-			} else if err != nil {
-				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}

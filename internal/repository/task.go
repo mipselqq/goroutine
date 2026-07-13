@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"goroutine/internal/domain"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -61,8 +63,8 @@ func LockTaskColumns(
 
 	locked := 0
 	for rows.Next() {
-		var columnID domain.ColumnID
-		if err = rows.Scan(&columnID); err != nil {
+		var rawColumnID uuid.UUID
+		if err = rows.Scan(&rawColumnID); err != nil {
 			return fmt.Errorf("failed to scan locked column row: %w", err)
 		}
 		locked++
@@ -128,21 +130,12 @@ func (r *PGTask) Create(
 		return domain.Task{}, fmt.Errorf("task repo: create next position: %v: %w", err, ErrInternal)
 	}
 
-	var task domain.Task
-	err = tx.QueryRow(ctx, insertTaskQuery, pgx.NamedArgs{
+	task, err := ScanTask(tx.QueryRow(ctx, insertTaskQuery, pgx.NamedArgs{
 		"column_id":   columnID,
 		"name":        name,
 		"description": description,
 		"position":    nextPosition,
-	}).Scan(
-		&task.ID,
-		&task.ColumnID,
-		&task.Name,
-		&task.Description,
-		&task.Position,
-		&task.CreatedAt,
-		&task.UpdatedAt,
-	)
+	}))
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("task repo: create insert: %v: %w", err, ErrInternal)
 	}
@@ -171,18 +164,9 @@ func (r *PGTask) ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]d
 
 	var result []domain.Task
 	for rows.Next() {
-		var task domain.Task
-		err = rows.Scan(
-			&task.ID,
-			&task.ColumnID,
-			&task.Name,
-			&task.Description,
-			&task.Position,
-			&task.CreatedAt,
-			&task.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("task repo: list by board id: scan: %v: %w", err, ErrInternal)
+		task, scanErr := ScanTask(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("task repo: list by board id: scan: %v: %w", scanErr, ErrInternal)
 		}
 		result = append(result, task)
 	}
@@ -210,18 +194,9 @@ func (r *PGTask) ListByColumnID(ctx context.Context, columnID domain.ColumnID) (
 
 	var result []domain.Task
 	for rows.Next() {
-		var task domain.Task
-		err = rows.Scan(
-			&task.ID,
-			&task.ColumnID,
-			&task.Name,
-			&task.Description,
-			&task.Position,
-			&task.CreatedAt,
-			&task.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("task repo: list by column id: scan: %v: %w", err, ErrInternal)
+		task, scanErr := ScanTask(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("task repo: list by column id: scan: %v: %w", scanErr, ErrInternal)
 		}
 		result = append(result, task)
 	}
@@ -240,16 +215,7 @@ func (r *PGTask) Get(ctx context.Context, taskID domain.TaskID) (domain.Task, er
 		FROM tasks
 		WHERE id = $1`
 
-	var task domain.Task
-	err := r.pgPool.QueryRow(ctx, query, taskID).Scan(
-		&task.ID,
-		&task.ColumnID,
-		&task.Name,
-		&task.Description,
-		&task.Position,
-		&task.CreatedAt,
-		&task.UpdatedAt,
-	)
+	task, err := ScanTask(r.pgPool.QueryRow(ctx, query, taskID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, ErrRowNotFound
@@ -277,16 +243,7 @@ func (r *PGTask) Update(
 		  AND id = $2
 		RETURNING id, column_id, name, description, position, created_at, updated_at`
 
-	var task domain.Task
-	err := r.pgPool.QueryRow(ctx, query, columnID, taskID, name, description).Scan(
-		&task.ID,
-		&task.ColumnID,
-		&task.Name,
-		&task.Description,
-		&task.Position,
-		&task.CreatedAt,
-		&task.UpdatedAt,
-	)
+	task, err := ScanTask(r.pgPool.QueryRow(ctx, query, columnID, taskID, name, description))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Task{}, ErrRowNotFound
@@ -570,4 +527,41 @@ func (r *PGTask) Delete(
 	}
 
 	return nil
+}
+
+func ScanTask(row interface{ Scan(...any) error }) (domain.Task, error) {
+	var (
+		rawID       uuid.UUID
+		rawColumnID uuid.UUID
+		rawName     string
+		rawDesc     string
+		rawPos      int64
+		createdAt   time.Time
+		updatedAt   time.Time
+	)
+	err := row.Scan(&rawID, &rawColumnID, &rawName, &rawDesc, &rawPos, &createdAt, &updatedAt)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("scan task: %w", err)
+	}
+	name, err := domain.NewTaskName(rawName)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("scan task: name: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	desc, err := domain.NewTaskDescription(rawDesc)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("scan task: description: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	pos, err := domain.NewTaskPosition(rawPos)
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("scan task: position: %w: %w", domain.ErrDataCorrupted, err)
+	}
+	return domain.Task{
+		ID:          domain.TaskIDFromUUID(rawID),
+		ColumnID:    domain.ColumnIDFromUUID(rawColumnID),
+		Name:        name,
+		Description: desc,
+		Position:    pos,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
+	}, nil
 }

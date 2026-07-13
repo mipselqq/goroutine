@@ -8,6 +8,7 @@ import (
 
 	"goroutine/internal/domain"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -44,14 +45,7 @@ func (r *PGUser) Create(ctx context.Context, email domain.Email, hash string) er
 func (r *PGUser) GetByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
 	const query = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE email = $1`
 
-	var user domain.User
-	err := r.pgPool.QueryRow(ctx, query, email).Scan( // TODO: Maybe implement Scan for the struct itself?
-		&user.ID,
-		&user.Email,
-		&user.PasswordHash,
-		&user.TelegramChatID,
-		&user.TelegramUsername,
-	)
+	user, err := ScanUser(r.pgPool.QueryRow(ctx, query, email))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.User{}, ErrRowNotFound
@@ -75,4 +69,47 @@ func (r *PGUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, c
 	}
 
 	return nil
+}
+
+func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
+	var (
+		rawID               uuid.UUID
+		rawEmail            string
+		rawPasswordHash     string
+		rawTelegramChatID   *int64
+		rawTelegramUsername *string
+	)
+	err := row.Scan(&rawID, &rawEmail, &rawPasswordHash, &rawTelegramChatID, &rawTelegramUsername)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("scan user: %w", err)
+	}
+
+	email, err := domain.NewEmail(rawEmail)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("scan user: email: %w: %w", domain.ErrDataCorrupted, err)
+	}
+
+	var chatID domain.TelegramChatID
+	if rawTelegramChatID != nil {
+		chatID, err = domain.NewTelegramChatID(*rawTelegramChatID)
+		if err != nil {
+			return domain.User{}, fmt.Errorf("scan user: telegram chat id: %w: %w", domain.ErrDataCorrupted, err)
+		}
+	}
+
+	var username domain.TelegramUsername
+	if rawTelegramUsername != nil {
+		username, err = domain.NewTelegramUsername(*rawTelegramUsername)
+		if err != nil {
+			return domain.User{}, fmt.Errorf("scan user: telegram username: %w: %w", domain.ErrDataCorrupted, err)
+		}
+	}
+
+	return domain.User{
+		ID:               domain.UserIDFromUUID(rawID),
+		Email:            email,
+		PasswordHash:     rawPasswordHash,
+		TelegramChatID:   chatID,
+		TelegramUsername: username,
+	}, nil
 }

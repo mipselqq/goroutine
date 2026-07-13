@@ -1,7 +1,6 @@
 package domain_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -61,71 +60,6 @@ func TestTelegramLinkToken(t *testing.T) {
 				testutil.AssertSecretHidden(t, tt.input, token)
 				if token.RevealSecret() != tt.input {
 					t.Errorf("RevealSecret() = %q, want %q", token.RevealSecret(), tt.input)
-				}
-			}
-		})
-	}
-}
-
-func TestTelegramLinkToken_Scan(t *testing.T) {
-	t.Parallel()
-
-	uuidv7, _ := uuid.NewV7()
-
-	tests := []struct {
-		name    string
-		input   any
-		want    string
-		wantErr bool
-		errIs   error
-	}{
-		{
-			name:    "Valid UUIDv7 string",
-			input:   uuidv7.String(),
-			want:    uuidv7.String(),
-			wantErr: false,
-		},
-		{
-			name:    "Deny UUIDv4 string",
-			input:   uuid.New().String(),
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			want:    "",
-			wantErr: false,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var tok domain.TelegramLinkToken
-			err := tok.Scan(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("got error %v, want nil", err)
-				}
-				if tok.RevealSecret() != tt.want {
-					t.Errorf("got %q, want %q", tok.RevealSecret(), tt.want)
-				}
-				if tt.want != "" {
-					testutil.AssertSecretHidden(t, tt.want, tok)
 				}
 			}
 		})
@@ -230,66 +164,6 @@ func TestParseTelegramChatID(t *testing.T) {
 	}
 }
 
-func TestTelegramChatID_Scan(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   any
-		want    int64
-		wantErr bool
-	}{
-		{
-			name:    "Int64 type",
-			input:   int64(9876),
-			want:    9876,
-			wantErr: false,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			want:    0,
-			wantErr: false,
-		},
-		{
-			name:    "Zero value is invalid",
-			input:   int64(0),
-			wantErr: true,
-		},
-		{
-			name:    "Invalid type (string)",
-			input:   "-555",
-			wantErr: true,
-		},
-		{
-			name:    "Invalid type (int)",
-			input:   123,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var chatID domain.TelegramChatID
-			err := chatID.Scan(tt.input)
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				}
-			} else {
-				if err != nil {
-					t.Errorf("got unexpected error: %v", err)
-				}
-				if chatID.Int64() != tt.want {
-					t.Errorf("got %d, want %d", chatID.Int64(), tt.want)
-				}
-			}
-		})
-	}
-}
-
 func TestTelegramUsername(t *testing.T) {
 	t.Parallel()
 
@@ -363,61 +237,6 @@ func TestTelegramUsername(t *testing.T) {
 
 			if tt.wantIssues == nil && username.String() != tt.input {
 				t.Errorf("got %q, want %q", username.String(), tt.input)
-			}
-		})
-	}
-}
-
-func TestTelegramUsername_Scan(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   any
-		want    string
-		wantErr bool
-	}{
-		{
-			name:    "Valid string",
-			input:   "@user_123",
-			want:    "@user_123",
-			wantErr: false,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			want:    "",
-			wantErr: false,
-		},
-		{
-			name:    "Invalid string",
-			input:   "no_at_symbol",
-			wantErr: true,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var username domain.TelegramUsername
-			err := username.Scan(tt.input)
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				}
-			} else {
-				if err != nil {
-					t.Errorf("got unexpected error: %v", err)
-				}
-				if username.String() != tt.want {
-					t.Errorf("got %q, want %q", username.String(), tt.want)
-				}
 			}
 		})
 	}

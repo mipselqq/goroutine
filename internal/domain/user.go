@@ -4,9 +4,7 @@
 package domain
 
 import (
-	"database/sql/driver"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"slices"
 	"strings"
@@ -66,28 +64,6 @@ func (p UserPassword) GoString() string {
 
 func (p UserPassword) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p.String())
-}
-
-// Domain knows about a little about storage, but this is pragmatic solution
-func (p UserPassword) Value() (driver.Value, error) {
-	return p.RevealSecret(), nil
-}
-
-func (p *UserPassword) Scan(value any) error {
-	if value == nil {
-		p.value = ""
-		return nil
-	}
-	s, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("unexpected type for Password: %T", value)
-	}
-	password, err := NewUserPassword(s)
-	if err != nil {
-		return fmt.Errorf("password: %w: %v", ErrDataCorrupted, err)
-	}
-	*p = password
-	return nil
 }
 
 func NewJWTString(token string) (AuthToken, error) {

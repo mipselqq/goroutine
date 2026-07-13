@@ -1,7 +1,6 @@
 package domain_test
 
 import (
-	"errors"
 	"math"
 	"strings"
 	"testing"
@@ -116,44 +115,6 @@ func TestColumnPosition(t *testing.T) {
 	}
 }
 
-func TestColumnName_Scan(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   any
-		wantErr bool
-		errIs   error
-	}{
-		{name: "Valid", input: "Todo"},
-		{name: "Too long", input: strings.Repeat("a", 129), wantErr: true, errIs: domain.ErrDataCorrupted},
-		{name: "Empty", input: "", wantErr: true, errIs: domain.ErrDataCorrupted},
-		{name: "Nil", input: nil},
-		{name: "Bad type", input: 1, wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var name domain.ColumnName
-			err := name.Scan(tt.input)
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("got error %v, want nil", err)
-			}
-		})
-	}
-}
-
 func TestColumnDescription(t *testing.T) {
 	t.Parallel()
 
@@ -222,96 +183,6 @@ func TestColumnDescription(t *testing.T) {
 			}
 			if description.IsEmpty() != (tt.wantValue == "") {
 				t.Errorf("got is empty %t, want %t", description.IsEmpty(), tt.wantValue == "")
-			}
-		})
-	}
-}
-
-func TestColumnDescription_Scan(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   any
-		wantErr bool
-		errIs   error
-	}{
-		{
-			name:    "Valid description",
-			input:   "Valid description",
-			wantErr: false,
-		},
-		{
-			name:    "Too long description",
-			input:   strings.Repeat("a", 1025),
-			wantErr: true,
-			errIs:   domain.ErrDataCorrupted,
-		},
-		{
-			name:    "Null value",
-			input:   nil,
-			wantErr: false,
-		},
-		{
-			name:    "Invalid type",
-			input:   123,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var d domain.ColumnDescription
-			err := d.Scan(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-			} else if err != nil {
-				t.Errorf("got error %v, want nil", err)
-			}
-		})
-	}
-}
-
-func TestColumnPosition_Scan(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		input   any
-		wantErr bool
-		errIs   error
-	}{
-		{name: "Valid int64", input: int64(1)},
-		{name: "Zero", input: int64(0), wantErr: true, errIs: domain.ErrDataCorrupted},
-		{name: "Nil", input: nil},
-		{name: "Int32 is rejected", input: int32(2), wantErr: true},
-		{name: "Bad type", input: "abc", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var position domain.ColumnPosition
-			err := position.Scan(tt.input)
-			if tt.wantErr {
-				if err == nil {
-					t.Error("got nil error, want non-nil")
-				} else if tt.errIs != nil && !errors.Is(err, tt.errIs) {
-					t.Errorf("got error %v, want %v", err, tt.errIs)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("got error %v, want nil", err)
 			}
 		})
 	}
