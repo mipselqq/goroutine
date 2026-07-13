@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-var ErrDataCorrupted = errors.New("invalid data appeared in the database")
-
 type ErrValidation struct {
 	Issues []string
 }

@@ -29,8 +29,8 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Success",
 			wantErr: nil,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.CreateFunc = func(ctx context.Context, email domain.Email, hash string) error {
-					if hash == testutil.ValidPassword().RevealSecret() {
+				r.CreateFunc = func(ctx context.Context, email domain.Email, hash domain.PasswordHash) error {
+					if hash.RevealSecret() == testutil.ValidPassword().RevealSecret() {
 						return errors.New("service saved plaintext password!")
 					}
 					return nil
@@ -41,7 +41,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "User already exists",
 			wantErr: service.ErrUserAlreadyExists,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.CreateFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.CreateFunc = func(ctx context.Context, email domain.Email, hash domain.PasswordHash) error {
 					return repository.ErrUniqueViolation
 				}
 			},
@@ -50,7 +50,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Internal repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.CreateFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.CreateFunc = func(ctx context.Context, email domain.Email, hash domain.PasswordHash) error {
 					return repository.ErrInternal
 				}
 			},
@@ -59,7 +59,7 @@ func TestAuth_Register(t *testing.T) {
 			name:    "Unexpected repository error",
 			wantErr: service.ErrInternal,
 			setupUserRepo: func(r *MockUserRepository) {
-				r.CreateFunc = func(ctx context.Context, email domain.Email, hash string) error {
+				r.CreateFunc = func(ctx context.Context, email domain.Email, hash domain.PasswordHash) error {
 					return errors.New("Super unknown error happened")
 				}
 			},

@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"goroutine/internal/domain"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -24,15 +26,7 @@ func NewPGBoard(pgPool *pgxpool.Pool) *PGBoard {
 func (r *PGBoard) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 	const query = `INSERT INTO boards (owner_id, name, description) VALUES ($1, $2, $3) RETURNING id, owner_id, name, description, created_at, updated_at`
 
-	var board domain.Board
-	err := r.pgPool.QueryRow(ctx, query, ownerID, name, description).Scan(
-		&board.ID,
-		&board.OwnerID,
-		&board.Name,
-		&board.Description,
-		&board.CreatedAt,
-		&board.UpdatedAt,
-	)
+	board, err := ScanBoard(r.pgPool.QueryRow(ctx, query, ownerID, name, description))
 	if err != nil {
 		return domain.Board{}, fmt.Errorf("board repo: create: %v: %w", err, ErrInternal)
 	}
@@ -46,15 +40,7 @@ func (r *PGBoard) Get(ctx context.Context, boardID domain.BoardID) (domain.Board
 		FROM boards
 		WHERE id = $1`
 
-	var board domain.Board
-	err := r.pgPool.QueryRow(ctx, query, boardID).Scan(
-		&board.ID,
-		&board.OwnerID,
-		&board.Name,
-		&board.Description,
-		&board.CreatedAt,
-		&board.UpdatedAt,
-	)
+	board, err := ScanBoard(r.pgPool.QueryRow(ctx, query, boardID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Board{}, ErrRowNotFound
@@ -80,17 +66,9 @@ func (r *PGBoard) ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]d
 
 	var boards []domain.Board
 	for rows.Next() {
-		var board domain.Board
-		err = rows.Scan(
-			&board.ID,
-			&board.OwnerID,
-			&board.Name,
-			&board.Description,
-			&board.CreatedAt,
-			&board.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("board repo: list by owner id: scan: %v: %w", err, ErrInternal)
+		board, scanErr := ScanBoard(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("board repo: list by owner id: scan: %v: %w", scanErr, ErrInternal)
 		}
 
 		boards = append(boards, board)
@@ -114,15 +92,7 @@ func (r *PGBoard) Update(ctx context.Context, boardID domain.BoardID, name *doma
 		WHERE id = $3
 		RETURNING id, owner_id, name, description, created_at, updated_at`
 
-	var board domain.Board
-	err := r.pgPool.QueryRow(ctx, query, name, description, boardID).Scan(
-		&board.ID,
-		&board.OwnerID,
-		&board.Name,
-		&board.Description,
-		&board.CreatedAt,
-		&board.UpdatedAt,
-	)
+	board, err := ScanBoard(r.pgPool.QueryRow(ctx, query, name, description, boardID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Board{}, ErrRowNotFound
@@ -145,4 +115,43 @@ func (r *PGBoard) Delete(ctx context.Context, boardID domain.BoardID) error {
 	}
 
 	return nil
+}
+
+func ScanBoard(row interface{ Scan(...any) error }) (domain.Board, error) {
+	var (
+		rawID      uuid.UUID
+		rawOwnerID uuid.UUID
+		rawName    string
+		rawDesc    string
+		createdAt  time.Time
+		updatedAt  time.Time
+	)
+	err := row.Scan(&rawID, &rawOwnerID, &rawName, &rawDesc, &createdAt, &updatedAt)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: %w", err)
+	}
+	name, err := domain.NewBoardName(rawName)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: name: %v: %w", err, ErrDataCorrupted)
+	}
+	desc, err := domain.NewBoardDescription(rawDesc)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: description: %v: %w", err, ErrDataCorrupted)
+	}
+	id, err := domain.NewBoardIDFromUUID(rawID)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: id: %v: %w", err, ErrDataCorrupted)
+	}
+	ownerID, err := domain.NewUserIDFromUUID(rawOwnerID)
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("scan board: owner id: %v: %w", err, ErrDataCorrupted)
+	}
+	return domain.Board{
+		ID:          id,
+		OwnerID:     ownerID,
+		Name:        name,
+		Description: desc,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
+	}, nil
 }
