@@ -107,8 +107,8 @@ func TestColumn_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
@@ -214,8 +214,8 @@ func TestColumn_ListByBoardID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
@@ -457,8 +457,8 @@ func TestColumn_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
@@ -674,8 +674,8 @@ func TestColumn_Move(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
@@ -802,8 +802,8 @@ func TestColumn_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 

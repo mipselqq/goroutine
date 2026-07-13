@@ -27,8 +27,6 @@ type boardsTestCase struct {
 	wantBody          any
 }
 
-const timeFormat = "2006-01-02T15:04:05.000Z07:00"
-
 func TestBoards_Create(t *testing.T) {
 	t.Parallel()
 
@@ -52,8 +50,8 @@ func TestBoards_Create(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   validBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -105,7 +103,7 @@ func TestBoards_Create(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -123,7 +121,7 @@ func TestBoards_Create(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
@@ -166,8 +164,8 @@ func TestBoards_ListByOwnerID(t *testing.T) {
 					"ownerId":     validBoard.OwnerID.String(),
 					"name":        validBoard.Name.String(),
 					"description": validBoard.Description.String(),
-					"createdAt":   validBoard.CreatedAt.Format(timeFormat),
-					"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
+					"createdAt":   validBoard.CreatedAt.Format(testutil.TimeFormat),
+					"updatedAt":   validBoard.UpdatedAt.Format(testutil.TimeFormat),
 				},
 			},
 		},
@@ -214,7 +212,7 @@ func TestBoards_ListByOwnerID(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
@@ -258,8 +256,8 @@ func TestBoards_Get(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   validBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -325,7 +323,7 @@ func TestBoards_Get(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}
@@ -386,8 +384,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   validBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(testutil.TimeFormat),
 				"columns": []map[string]any{
 					{
 						"id":          firstColumn.ID.String(),
@@ -395,8 +393,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 						"name":        firstColumn.Name.String(),
 						"description": firstColumn.Description.String(),
 						"position":    firstColumn.Position.Int64(),
-						"createdAt":   firstColumn.CreatedAt.Format(timeFormat),
-						"updatedAt":   firstColumn.UpdatedAt.Format(timeFormat),
+						"createdAt":   firstColumn.CreatedAt.Format(testutil.TimeFormat),
+						"updatedAt":   firstColumn.UpdatedAt.Format(testutil.TimeFormat),
 						"tasks": []map[string]any{
 							{
 								"id":          firstTask.ID.String(),
@@ -404,8 +402,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 								"name":        firstTask.Name.String(),
 								"description": firstTask.Description.String(),
 								"position":    firstTask.Position.Int64(),
-								"createdAt":   firstTask.CreatedAt.Format(timeFormat),
-								"updatedAt":   firstTask.UpdatedAt.Format(timeFormat),
+								"createdAt":   firstTask.CreatedAt.Format(testutil.TimeFormat),
+								"updatedAt":   firstTask.UpdatedAt.Format(testutil.TimeFormat),
 							},
 							{
 								"id":          secondTask.ID.String(),
@@ -413,8 +411,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 								"name":        secondTask.Name.String(),
 								"description": secondTask.Description.String(),
 								"position":    secondTask.Position.Int64(),
-								"createdAt":   secondTask.CreatedAt.Format(timeFormat),
-								"updatedAt":   secondTask.UpdatedAt.Format(timeFormat),
+								"createdAt":   secondTask.CreatedAt.Format(testutil.TimeFormat),
+								"updatedAt":   secondTask.UpdatedAt.Format(testutil.TimeFormat),
 							},
 						},
 					},
@@ -424,8 +422,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 						"name":        secondColumn.Name.String(),
 						"description": secondColumn.Description.String(),
 						"position":    secondColumn.Position.Int64(),
-						"createdAt":   secondColumn.CreatedAt.Format(timeFormat),
-						"updatedAt":   secondColumn.UpdatedAt.Format(timeFormat),
+						"createdAt":   secondColumn.CreatedAt.Format(testutil.TimeFormat),
+						"updatedAt":   secondColumn.UpdatedAt.Format(testutil.TimeFormat),
 						"tasks": []map[string]any{
 							{
 								"id":          doneTask.ID.String(),
@@ -433,8 +431,8 @@ func TestBoards_GetAggregate(t *testing.T) {
 								"name":        doneTask.Name.String(),
 								"description": doneTask.Description.String(),
 								"position":    doneTask.Position.Int64(),
-								"createdAt":   doneTask.CreatedAt.Format(timeFormat),
-								"updatedAt":   doneTask.UpdatedAt.Format(timeFormat),
+								"createdAt":   doneTask.CreatedAt.Format(testutil.TimeFormat),
+								"updatedAt":   doneTask.UpdatedAt.Format(testutil.TimeFormat),
 							},
 						},
 					},
@@ -505,7 +503,7 @@ func TestBoards_GetAggregate(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}
@@ -560,8 +558,8 @@ func TestBoards_Update(t *testing.T) {
 				"ownerId":     updatedValidBoard.OwnerID.String(),
 				"name":        updatedValidBoard.Name.String(),
 				"description": updatedValidBoard.Description.String(),
-				"createdAt":   updatedValidBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   updatedValidBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   updatedValidBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   updatedValidBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 			wantCode: http.StatusOK,
 		},
@@ -597,8 +595,8 @@ func TestBoards_Update(t *testing.T) {
 				"ownerId":     updatedNameOnlyBoard.OwnerID.String(),
 				"name":        updatedNameOnlyBoard.Name.String(),
 				"description": updatedNameOnlyBoard.Description.String(),
-				"createdAt":   updatedNameOnlyBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   updatedNameOnlyBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   updatedNameOnlyBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   updatedNameOnlyBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 			wantCode: http.StatusOK,
 		},
@@ -624,8 +622,8 @@ func TestBoards_Update(t *testing.T) {
 				"ownerId":     updatedDescriptionOnlyBoard.OwnerID.String(),
 				"name":        updatedDescriptionOnlyBoard.Name.String(),
 				"description": updatedDescriptionOnlyBoard.Description.String(),
-				"createdAt":   updatedDescriptionOnlyBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   updatedDescriptionOnlyBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   updatedDescriptionOnlyBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   updatedDescriptionOnlyBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 			wantCode: http.StatusOK,
 		},
@@ -646,8 +644,8 @@ func TestBoards_Update(t *testing.T) {
 				"ownerId":     validBoard.OwnerID.String(),
 				"name":        validBoard.Name.String(),
 				"description": validBoard.Description.String(),
-				"createdAt":   validBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   validBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   validBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 			wantCode: http.StatusOK,
 		},
@@ -671,8 +669,8 @@ func TestBoards_Update(t *testing.T) {
 				"ownerId":     emptyDescriptionBoard.OwnerID.String(),
 				"name":        emptyDescriptionBoard.Name.String(),
 				"description": emptyDescriptionBoard.Description.String(),
-				"createdAt":   emptyDescriptionBoard.CreatedAt.Format(timeFormat),
-				"updatedAt":   emptyDescriptionBoard.UpdatedAt.Format(timeFormat),
+				"createdAt":   emptyDescriptionBoard.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   emptyDescriptionBoard.UpdatedAt.Format(testutil.TimeFormat),
 			},
 			wantCode: http.StatusOK,
 		},
@@ -741,7 +739,7 @@ func TestBoards_Update(t *testing.T) {
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -760,7 +758,7 @@ func TestBoards_Update(t *testing.T) {
 			req = req.WithContext(ctx)
 			req.SetPathValue("boardId", tt.boardID)
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}
@@ -862,7 +860,7 @@ func TestBoards_Delete(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			s := &MockBoardService{}
+			s := NewMockBoardService(t)
 			if tt.setupBoardService != nil {
 				tt.setupBoardService(t, s)
 			}

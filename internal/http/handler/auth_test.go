@@ -128,7 +128,7 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -140,14 +140,14 @@ func TestAuth_Register(t *testing.T) {
 
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/register", tt.inputBody)
 
-			s := MockAuthService{}
+			s := NewMockAuthService(t)
 
 			if tt.setupAuthService != nil {
-				tt.setupAuthService(t, &s)
+				tt.setupAuthService(t, s)
 			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewAuth(logger, &s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
+			h := handler.NewAuth(logger, s, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.Register(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)
@@ -298,7 +298,7 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			name:      "Body too large",
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -309,7 +309,7 @@ func TestAuth_Login(t *testing.T) {
 			t.Parallel()
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/login", tt.inputBody)
 
-			s := &MockAuthService{}
+			s := NewMockAuthService(t)
 
 			if tt.setupAuthService != nil {
 				tt.setupAuthService(t, s)
@@ -363,7 +363,7 @@ func TestAuth_WhoAmI(t *testing.T) {
 			req = req.WithContext(tt.context)
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewAuth(logger, &MockAuthService{}, httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
+			h := handler.NewAuth(logger, NewMockAuthService(t), httpschema.MustNewErrorResponder(logger, testutil.FixedNowStr))
 			h.WhoAmI(rr, req)
 
 			testutil.AssertStatusCode(t, rr, tt.wantCode)

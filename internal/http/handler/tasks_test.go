@@ -67,8 +67,8 @@ func TestTasks_Create(t *testing.T) {
 				"name":        validTask.Name.String(),
 				"description": validTask.Description.String(),
 				"position":    validTask.Position.Int64(),
-				"createdAt":   validTask.CreatedAt.Format(timeFormat),
-				"updatedAt":   validTask.UpdatedAt.Format(timeFormat),
+				"createdAt":   validTask.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validTask.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -155,7 +155,7 @@ func TestTasks_Create(t *testing.T) {
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -176,7 +176,7 @@ func TestTasks_Create(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -236,8 +236,8 @@ func TestTasks_ListByColumnID(t *testing.T) {
 					"name":        first.Name.String(),
 					"description": first.Description.String(),
 					"position":    first.Position.Int64(),
-					"createdAt":   first.CreatedAt.Format(timeFormat),
-					"updatedAt":   first.UpdatedAt.Format(timeFormat),
+					"createdAt":   first.CreatedAt.Format(testutil.TimeFormat),
+					"updatedAt":   first.UpdatedAt.Format(testutil.TimeFormat),
 				},
 				{
 					"id":          second.ID.String(),
@@ -245,8 +245,8 @@ func TestTasks_ListByColumnID(t *testing.T) {
 					"name":        second.Name.String(),
 					"description": second.Description.String(),
 					"position":    second.Position.Int64(),
-					"createdAt":   second.CreatedAt.Format(timeFormat),
-					"updatedAt":   second.UpdatedAt.Format(timeFormat),
+					"createdAt":   second.CreatedAt.Format(testutil.TimeFormat),
+					"updatedAt":   second.UpdatedAt.Format(testutil.TimeFormat),
 				},
 			},
 		},
@@ -313,7 +313,7 @@ func TestTasks_ListByColumnID(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -395,8 +395,8 @@ func TestTasks_Update(t *testing.T) {
 				"name":        updatedTask.Name.String(),
 				"description": updatedTask.Description.String(),
 				"position":    updatedTask.Position.Int64(),
-				"createdAt":   updatedTask.CreatedAt.Format(timeFormat),
-				"updatedAt":   updatedTask.UpdatedAt.Format(timeFormat),
+				"createdAt":   updatedTask.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   updatedTask.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -423,8 +423,8 @@ func TestTasks_Update(t *testing.T) {
 				"name":        validTask.Name.String(),
 				"description": validTask.Description.String(),
 				"position":    validTask.Position.Int64(),
-				"createdAt":   validTask.CreatedAt.Format(timeFormat),
-				"updatedAt":   validTask.UpdatedAt.Format(timeFormat),
+				"createdAt":   validTask.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validTask.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -515,7 +515,7 @@ func TestTasks_Update(t *testing.T) {
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
 			taskID:    validTask.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -537,7 +537,7 @@ func TestTasks_Update(t *testing.T) {
 			req.SetPathValue("taskId", tt.taskID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -736,7 +736,7 @@ func TestTasks_Move(t *testing.T) {
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
 			taskID:    validTask.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -758,7 +758,7 @@ func TestTasks_Move(t *testing.T) {
 			req.SetPathValue("taskId", tt.taskID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}
@@ -893,7 +893,7 @@ func TestTasks_Delete(t *testing.T) {
 			req.SetPathValue("taskId", tt.taskID)
 
 			rr := httptest.NewRecorder()
-			mockTasks := &MockTaskService{}
+			mockTasks := NewMockTaskService(t)
 			if tt.setupTaskService != nil {
 				tt.setupTaskService(t, mockTasks)
 			}

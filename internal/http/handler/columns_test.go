@@ -58,8 +58,8 @@ func TestColumns_Create(t *testing.T) {
 				"name":        validColumn.Name.String(),
 				"description": validColumn.Description.String(),
 				"position":    validColumn.Position.Int64(),
-				"createdAt":   validColumn.CreatedAt.Format(timeFormat),
-				"updatedAt":   validColumn.UpdatedAt.Format(timeFormat),
+				"createdAt":   validColumn.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validColumn.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -137,7 +137,7 @@ func TestColumns_Create(t *testing.T) {
 		{
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -164,7 +164,7 @@ func TestColumns_Create(t *testing.T) {
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -218,8 +218,8 @@ func TestColumns_ListByBoardID(t *testing.T) {
 					"name":        first.Name.String(),
 					"description": first.Description.String(),
 					"position":    first.Position.Int64(),
-					"createdAt":   first.CreatedAt.Format(timeFormat),
-					"updatedAt":   first.UpdatedAt.Format(timeFormat),
+					"createdAt":   first.CreatedAt.Format(testutil.TimeFormat),
+					"updatedAt":   first.UpdatedAt.Format(testutil.TimeFormat),
 				},
 				{
 					"id":          second.ID.String(),
@@ -227,8 +227,8 @@ func TestColumns_ListByBoardID(t *testing.T) {
 					"name":        second.Name.String(),
 					"description": second.Description.String(),
 					"position":    second.Position.Int64(),
-					"createdAt":   second.CreatedAt.Format(timeFormat),
-					"updatedAt":   second.UpdatedAt.Format(timeFormat),
+					"createdAt":   second.CreatedAt.Format(testutil.TimeFormat),
+					"updatedAt":   second.UpdatedAt.Format(testutil.TimeFormat),
 				},
 			},
 		},
@@ -283,7 +283,7 @@ func TestColumns_ListByBoardID(t *testing.T) {
 			req.SetPathValue("boardId", tt.boardID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -371,8 +371,8 @@ func TestColumns_Update(t *testing.T) {
 				"name":        updatedColumn.Name.String(),
 				"description": updatedColumn.Description.String(),
 				"position":    updatedColumn.Position.Int64(),
-				"createdAt":   updatedColumn.CreatedAt.Format(timeFormat),
-				"updatedAt":   updatedColumn.UpdatedAt.Format(timeFormat),
+				"createdAt":   updatedColumn.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   updatedColumn.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -398,8 +398,8 @@ func TestColumns_Update(t *testing.T) {
 				"name":        updatedDescriptionOnlyColumn.Name.String(),
 				"description": updatedDescriptionOnlyColumn.Description.String(),
 				"position":    updatedDescriptionOnlyColumn.Position.Int64(),
-				"createdAt":   updatedDescriptionOnlyColumn.CreatedAt.Format(timeFormat),
-				"updatedAt":   updatedDescriptionOnlyColumn.UpdatedAt.Format(timeFormat),
+				"createdAt":   updatedDescriptionOnlyColumn.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   updatedDescriptionOnlyColumn.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -425,8 +425,8 @@ func TestColumns_Update(t *testing.T) {
 				"name":        validColumn.Name.String(),
 				"description": validColumn.Description.String(),
 				"position":    validColumn.Position.Int64(),
-				"createdAt":   validColumn.CreatedAt.Format(timeFormat),
-				"updatedAt":   validColumn.UpdatedAt.Format(timeFormat),
+				"createdAt":   validColumn.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   validColumn.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -449,8 +449,8 @@ func TestColumns_Update(t *testing.T) {
 				"name":        emptyDescriptionColumn.Name.String(),
 				"description": emptyDescriptionColumn.Description.String(),
 				"position":    emptyDescriptionColumn.Position.Int64(),
-				"createdAt":   emptyDescriptionColumn.CreatedAt.Format(timeFormat),
-				"updatedAt":   emptyDescriptionColumn.UpdatedAt.Format(timeFormat),
+				"createdAt":   emptyDescriptionColumn.CreatedAt.Format(testutil.TimeFormat),
+				"updatedAt":   emptyDescriptionColumn.UpdatedAt.Format(testutil.TimeFormat),
 			},
 		},
 		{
@@ -532,7 +532,7 @@ func TestColumns_Update(t *testing.T) {
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -561,7 +561,7 @@ func TestColumns_Update(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -708,7 +708,7 @@ func TestColumns_Move(t *testing.T) {
 			name:      "Body too large",
 			boardID:   validBoard.ID.String(),
 			columnID:  validColumn.ID.String(),
-			inputBody: testutil.Big25KBJSON(),
+			inputBody: testutil.Valid25KBJSON(),
 			wantCode:  http.StatusRequestEntityTooLarge,
 			wantBody:  payloadTooLargeError(),
 		},
@@ -737,7 +737,7 @@ func TestColumns_Move(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}
@@ -853,7 +853,7 @@ func TestColumns_Delete(t *testing.T) {
 			req.SetPathValue("columnId", tt.columnID)
 
 			rr := httptest.NewRecorder()
-			mockColumns := &MockColumnService{}
+			mockColumns := NewMockColumnService(t)
 			if tt.setupColumnService != nil {
 				tt.setupColumnService(t, mockColumns)
 			}

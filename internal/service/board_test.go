@@ -67,7 +67,7 @@ func TestBoard_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockBoardRepository{}
+			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
 			s := service.NewBoard(r, nil, nil)
 
@@ -133,7 +133,7 @@ func TestBoard_ListByOwnerID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockBoardRepository{}
+			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
 			s := service.NewBoard(r, nil, nil)
 
@@ -226,7 +226,7 @@ func TestBoard_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockBoardRepository{}
+			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
 			s := service.NewBoard(r, nil, nil)
 
@@ -392,9 +392,9 @@ func TestBoard_GetAggregate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			boardRepo := &MockBoardRepository{}
-			columnRepo := &MockColumnRepository{}
-			taskRepo := &MockTaskRepository{}
+			boardRepo := NewMockBoardRepository(t)
+			columnRepo := NewMockColumnRepository(t)
+			taskRepo := NewMockTaskRepository(t)
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
@@ -583,7 +583,7 @@ func TestBoard_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockBoardRepository{}
+			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
 			s := service.NewBoard(r, nil, nil)
 
@@ -704,7 +704,7 @@ func TestBoard_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := &MockBoardRepository{}
+			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
 			s := service.NewBoard(r, nil, nil)
 

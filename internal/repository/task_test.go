@@ -719,6 +719,17 @@ func TestLockTaskColumns_BlocksSecondTransaction(t *testing.T) {
 	rollbackTx(tx3, "3")
 }
 
+func assertTaskIDAndPosition(t *testing.T, task *domain.Task, wantID domain.TaskID, wantPos int64) {
+	t.Helper()
+
+	if task.ID != wantID {
+		t.Errorf("got id %q, want %q", task.ID, wantID)
+	}
+	if task.Position.Int64() != wantPos {
+		t.Errorf("got position %d, want %d", task.Position.Int64(), wantPos)
+	}
+}
+
 func taskRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGTask) {
 	t.Helper()
 

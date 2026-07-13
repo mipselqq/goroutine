@@ -30,7 +30,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 	tests := []userTestCase{
 		{
 			name:      "Success",
-			inputBody: testutil.Big25KBJSON(), // Body is ignored, no error on big payload
+			inputBody: testutil.Valid25KBJSON(), // Body is ignored, no error on big payload
 			setupUserService: func(t *testing.T, s *MockUserService) {
 				s.CreateTelegramLinkTokenFunc = func(ctx context.Context, callerID domain.UserID) (domain.TelegramLinkToken, error) {
 					if callerID != authorizedUserID {
@@ -83,7 +83,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			mockUser := &MockUserService{}
+			mockUser := NewMockUserService(t)
 			if tt.setupUserService != nil {
 				tt.setupUserService(t, mockUser)
 			}

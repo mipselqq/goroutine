@@ -2,22 +2,23 @@ package middleware_test
 
 import (
 	"context"
-	"fmt"
+	"testing"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/testutil"
 )
 
 type MockAuthService struct {
+	t *testing.T
+
 	VerifyTokenFunc func(ctx context.Context, token domain.AuthToken) (domain.UserID, error)
 }
 
-func AssertFuncNotNil(funcName string, fn any) {
-	if fn == nil {
-		panic(fmt.Sprintf("%s = nil, want configured mock", funcName))
-	}
+func NewMockAuthService(t *testing.T) *MockAuthService {
+	return &MockAuthService{t: t}
 }
 
 func (m *MockAuthService) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
-	AssertFuncNotNil("AuthService.VerifyTokenFunc", m.VerifyTokenFunc)
+	testutil.AssertFuncNotNil(m.t, "AuthService.VerifyTokenFunc", m.VerifyTokenFunc)
 	return m.VerifyTokenFunc(ctx, token)
 }
