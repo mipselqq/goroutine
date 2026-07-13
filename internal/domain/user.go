@@ -4,7 +4,6 @@
 package domain
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -39,11 +38,8 @@ func ParseUserID(s string) (UserID, error) {
 	return ParseID[userID](s)
 }
 
-func UUIDToUserID(u uuid.UUID) (UserID, error) {
-	if u == uuid.Nil {
-		return UserID{}, fmt.Errorf("user id: nil UUID")
-	}
-	return UserID{value: u}, nil
+func NewUserIDFromUUID(u uuid.UUID) (UserID, error) {
+	return NewIDFromUUID[userID](u)
 }
 
 type PasswordHash struct {

@@ -106,7 +106,7 @@ func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
 	}
 
 	var id domain.UserID
-	id, err = domain.UUIDToUserID(rawID)
+	id, err = domain.NewUserIDFromUUID(rawID)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("scan user: id: %w: %w", domain.ErrDataCorrupted, err)
 	}

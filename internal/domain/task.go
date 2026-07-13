@@ -2,7 +2,6 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -40,11 +39,8 @@ func ParseTaskID(s string) (TaskID, error) {
 	return ParseID[taskTag](s)
 }
 
-func UUIDToTaskID(u uuid.UUID) (TaskID, error) {
-	if u == uuid.Nil {
-		return TaskID{}, fmt.Errorf("task id: nil UUID")
-	}
-	return TaskID{value: u}, nil
+func NewTaskIDFromUUID(u uuid.UUID) (TaskID, error) {
+	return NewIDFromUUID[taskTag](u)
 }
 
 type TaskName struct {

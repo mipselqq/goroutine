@@ -2,7 +2,6 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -41,11 +40,8 @@ func ParseColumnID(s string) (ColumnID, error) {
 	return ParseID[columnTag](s)
 }
 
-func UUIDToColumnID(u uuid.UUID) (ColumnID, error) {
-	if u == uuid.Nil {
-		return ColumnID{}, fmt.Errorf("column id: nil UUID")
-	}
-	return ColumnID{value: u}, nil
+func NewColumnIDFromUUID(u uuid.UUID) (ColumnID, error) {
+	return NewIDFromUUID[columnTag](u)
 }
 
 type ColumnName struct {
