@@ -2,7 +2,6 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -20,18 +19,6 @@ type Board struct {
 	Description BoardDescription
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-}
-
-func (b Board) String() string {
-	return fmt.Sprintf(
-		"id:          %s\nownerId:     %s\nname:        %q\ndescription: %q\ncreatedAt:   %s\nupdatedAt:   %s",
-		b.ID.String(),
-		b.OwnerID.String(),
-		b.Name.String(),
-		b.Description.String(),
-		b.CreatedAt.UTC().Format(time.RFC3339Nano),
-		b.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
 }
 
 type (

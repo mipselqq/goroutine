@@ -2,7 +2,6 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -23,19 +22,6 @@ type Task struct {
 	Position    TaskPosition
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-}
-
-func (t Task) String() string {
-	return fmt.Sprintf(
-		"id:          %s\ncolumnId:    %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
-		t.ID.String(),
-		t.ColumnID.String(),
-		t.Name.String(),
-		t.Description.String(),
-		t.Position.Int64(),
-		t.CreatedAt.UTC().Format(time.RFC3339Nano),
-		t.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
 }
 
 type (

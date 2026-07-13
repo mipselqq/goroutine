@@ -2,7 +2,6 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -24,19 +23,6 @@ type Column struct {
 	Position    ColumnPosition
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-}
-
-func (c Column) String() string {
-	return fmt.Sprintf(
-		"id:          %s\nboardId:     %s\nname:        %q\ndescription: %q\nposition:    %d\ncreatedAt:   %s\nupdatedAt:   %s",
-		c.ID.String(),
-		c.BoardID.String(),
-		c.Name.String(),
-		c.Description.String(),
-		c.Position.Int64(),
-		c.CreatedAt.UTC().Format(time.RFC3339Nano),
-		c.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
 }
 
 type (
