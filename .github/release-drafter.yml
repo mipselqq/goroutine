@@ -3,21 +3,21 @@ tag-template: 'v$RESOLVED_VERSION'
 
 autolabeler:
   - label: 'feat'
-    title: ['/feat(\(.*\))?:/i', '/feature(\(.*\))?:/i']
+    title: ['/^feat(ure)?:/i']
   - label: 'bug'
-    title: ['/fix(\(.*\))?:/i', '/bug(\(.*\))?:/i']
+    title: ['/^(fix|bug):/i']
   - label: 'security'
-    title: ['/security/i']
+    title: ['/^security/i']
   - label: 'documentation'
-    title: ['/doc(s|umentation)?/i']
+    title: ['/^doc(s|umentation)?\b/i']
   - label: 'go'
-    title: ['/deps\(go\)/i']
+    title: ['/^deps\(go\)/i']
   - label: 'docker'
-    title: ['/deps\(docker\)/i']
+    title: ['/^deps\(docker\)/i']
   - label: 'github-actions'
-    title: ['/deps\(actions\)/i']
+    title: ['/^deps\(actions\)/i']
   - label: 'maintenance'
-    title: ['/chore/i', '/test/i', '/ci/i', '/refactor/i', '/enhancement/i', '/todo/i']
+    title: ['/^(chore|test|ci|refactor|enhancement|todo)/i']
 
 categories:
   - title: 'Features'
@@ -30,7 +30,7 @@ categories:
     labels: ['go', 'docker', 'github-actions']
   - title: 'Docs'
     labels: ['documentation']
-  - title: 'Maintenance & Refactoring'
+  - title: 'Maintenance'
     labels: ['maintenance', 'todo', 'enhancement', 'chore', 'refactor', 'ci', 'test']
 
 exclude-labels:
