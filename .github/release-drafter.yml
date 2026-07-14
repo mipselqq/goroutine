@@ -20,17 +20,17 @@ autolabeler:
     title: ['/chore/i', '/test/i', '/ci/i', '/refactor/i', '/enhancement/i', '/todo/i']
 
 categories:
-  - title: '🚀 Features'
+  - title: 'Features'
     labels: ['feat']
-  - title: '🐛 Bug Fixes'
+  - title: 'Bug Fixes'
     labels: ['bug', 'fix']
-  - title: '🔒 Security'
+  - title: 'Security'
     labels: ['security']
-  - title: '📦 Dependencies'
+  - title: 'Dependencies'
     labels: ['go', 'docker', 'github-actions']
-  - title: '📝 Docs'
+  - title: 'Docs'
     labels: ['documentation']
-  - title: '🛠 Maintenance & Refactoring'
+  - title: 'Maintenance & Refactoring'
     labels: ['maintenance', 'todo', 'enhancement', 'chore', 'refactor', 'ci', 'test']
 
 exclude-labels:
