@@ -7,14 +7,15 @@ on:
   pull_request_target:
     types: [opened, edited, synchronize, reopened]
 
+# Override default permissions
 permissions:
-  contents: read
+  contents: read # To read release drafter config
 
 jobs:
   auto-label:
     if: github.event_name == 'pull_request_target'
     permissions:
-      pull-requests: write
+      pull-requests: write # To add labels
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter/autolabeler@v7
@@ -24,8 +25,8 @@ jobs:
   update-release-draft:
     if: github.event_name == 'push'
     permissions:
-      contents: write
-      pull-requests: read
+      contents: write # To write drafts
+      pull-requests: read # To collect metadata
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter@v7
