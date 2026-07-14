@@ -27,7 +27,7 @@ categories:
   - title: 'Security'
     labels: ['security']
   - title: 'Dependencies'
-    labels: ['go', 'docker', 'github-actions']
+    labels: ['dependency', 'go', 'docker', 'github-actions']
   - title: 'Docs'
     labels: ['documentation']
   - title: 'Maintenance'
