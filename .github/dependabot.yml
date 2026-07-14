@@ -8,7 +8,7 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 10
     labels:
-      - "chore"
+      - "dependency"
       - "github-actions"
     commit-message:
       prefix: "deps(actions)"
@@ -28,7 +28,7 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 10
     labels:
-      - "chore"
+      - "dependency"
       - "go"
     commit-message:
       prefix: "deps(go)"
@@ -48,7 +48,7 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 10
     labels:
-      - "chore"
+      - "dependency"
       - "docker"
     commit-message:
       prefix: "deps(docker)"
