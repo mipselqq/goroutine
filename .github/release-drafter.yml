@@ -3,21 +3,21 @@ tag-template: 'v$RESOLVED_VERSION'
 
 autolabeler:
   - label: 'feat'
-    title: ['/^feat(ure)?:/i']
+    title: ['/^feat(ure)?(\(.*\))?:/i']
   - label: 'bug'
-    title: ['/^(fix|bug):/i']
+    title: ['/^(fix|bug)(\(.*\))?:/i']
   - label: 'security'
-    title: ['/^security/i']
+    title: ['/^security(\(.*\))?:/i']
   - label: 'documentation'
-    title: ['/^doc(s|umentation)?\b/i']
+    title: ['/^doc(s|umentation)?(\(.*\))?:/i']
   - label: 'go'
-    title: ['/^deps\(go\)/i']
+    title: ['/^deps\(go\):/i']
   - label: 'docker'
-    title: ['/^deps\(docker\)/i']
+    title: ['/^deps\(docker\):/i']
   - label: 'github-actions'
-    title: ['/^deps\(actions\)/i']
+    title: ['/^deps\(actions\):/i']
   - label: 'maintenance'
-    title: ['/^(chore|test|ci|refactor|enhancement|todo)/i']
+    title: ['/^(chore|test|ci|refactor|enhancement|todo)(\(.*\))?:/i']
 
 categories:
   - title: 'Features'
