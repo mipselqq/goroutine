@@ -70,7 +70,7 @@ func New(
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
 	userHandler := handler.NewUser(logger, userService, errorResponder)
-	telegramWebhook := handler.NewTelegram(logger, userService, telegramClient)
+	telegramHandler := handler.NewTelegram(logger, userService, telegramClient)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
@@ -81,12 +81,13 @@ func New(
 	timeoutMiddleware := middleware.NewTimeout(30 * time.Second)
 
 	handlers := &handler.Handlers{
-		Auth:    authHandler,
-		Health:  healthHandler,
-		Boards:  boardsHandler,
-		Columns: columnsHandler,
-		Tasks:   tasksHandler,
-		User:    userHandler,
+		Auth:     authHandler,
+		Health:   healthHandler,
+		Boards:   boardsHandler,
+		Columns:  columnsHandler,
+		Tasks:    tasksHandler,
+		User:     userHandler,
+		Telegram: telegramHandler,
 	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   metricsMiddleware,
@@ -97,7 +98,7 @@ func New(
 	}
 
 	return &App{
-		Router:      httpapp.NewRouter(handlers, middlewares, telegramWebhook),
+		Router:      httpapp.NewRouter(handlers, middlewares),
 		AdminRouter: httpapp.NewAdminRouter(),
 	}
 }
