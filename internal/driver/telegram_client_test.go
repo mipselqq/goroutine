@@ -1,4 +1,4 @@
-package telegram_test
+package driver_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"goroutine/internal/driver/telegram"
+	"goroutine/internal/driver"
 	"goroutine/internal/testutil"
 )
 
@@ -16,7 +16,7 @@ type sendMessageQuery struct {
 	Text   string
 }
 
-func TestClient_SendMessage(t *testing.T) {
+func TestTelegramClient_SendMessage(t *testing.T) {
 	token := testutil.ValidTelegramToken()
 	chatID := testutil.ValidTelegramChatID()
 	message := testutil.ValidTelegramMessage()
@@ -48,7 +48,7 @@ func TestClient_SendMessage(t *testing.T) {
 			mock := testutil.NewMockTelegramAPI(t, tt.statusCode)
 			defer mock.Close()
 
-			client := telegram.NewClient(mock.URL(), token)
+			client := driver.NewTelegramClient(mock.URL(), token)
 			err := client.SendMessage(
 				context.Background(),
 				testutil.ValidTelegramChatID().Int64(),

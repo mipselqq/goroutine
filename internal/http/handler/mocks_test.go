@@ -77,6 +77,7 @@ type MockUserService struct {
 	t *testing.T
 
 	CreateTelegramLinkTokenFunc func(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error)
+	LinkTelegramByTokenFunc     func(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
 func NewMockUserService(t *testing.T) *MockUserService {
@@ -86,6 +87,11 @@ func NewMockUserService(t *testing.T) *MockUserService {
 func (m *MockUserService) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
 	testutil.AssertFuncNotNil(m.t, "UserService.CreateTelegramLinkTokenFunc", m.CreateTelegramLinkTokenFunc)
 	return m.CreateTelegramLinkTokenFunc(ctx, userID)
+}
+
+func (m *MockUserService) LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+	testutil.AssertFuncNotNil(m.t, "UserService.LinkTelegramByTokenFunc", m.LinkTelegramByTokenFunc)
+	return m.LinkTelegramByTokenFunc(ctx, token, chatID, username)
 }
 
 func (m *MockBoardService) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
@@ -166,4 +172,19 @@ func (m *MockTaskService) Move(ctx context.Context, callerID domain.UserID, boar
 func (m *MockTaskService) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error {
 	testutil.AssertFuncNotNil(m.t, "TasksService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, callerID, boardID, columnID, taskID)
+}
+
+type MockNotifier struct {
+	t *testing.T
+
+	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
+}
+
+func NewMockNotifier(t *testing.T) *MockNotifier {
+	return &MockNotifier{t: t}
+}
+
+func (m *MockNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
+	testutil.AssertFuncNotNil(m.t, "Notifier.NotifyFunc", m.NotifyFunc)
+	return m.NotifyFunc(ctx, chatID, text)
 }

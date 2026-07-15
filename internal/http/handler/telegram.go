@@ -1,4 +1,4 @@
-package telegram
+package handler
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"goroutine/internal/service"
 )
 
-type UserService interface {
+type TelegramUserService interface {
 	LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
@@ -20,21 +20,21 @@ type Notifier interface {
 	Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
 }
 
-type WebhookHandler struct {
-	userService UserService
+type Telegram struct {
+	userService TelegramUserService
 	notifier    Notifier
 	logger      *slog.Logger
 }
 
-func NewWebhookHandler(logger *slog.Logger, userService UserService, notifier Notifier) *WebhookHandler {
-	return &WebhookHandler{
+func NewTelegram(logger *slog.Logger, userService TelegramUserService, notifier Notifier) *Telegram {
+	return &Telegram{
 		logger:      logger,
 		userService: userService,
 		notifier:    notifier,
 	}
 }
 
-// ServeHTTP godoc
+// Webhook godoc
 // @Summary Receive Telegram webhook updates
 // @Description Receives update objects from Telegram Bot API. Processes /start command with a link token to link a Telegram account to the user.
 // @Tags webhook
@@ -42,7 +42,7 @@ func NewWebhookHandler(logger *slog.Logger, userService UserService, notifier No
 // @Produce json
 // @Success 200 "Always returns 200 OK per Telegram webhook protocol"
 // @Router /webhook/telegram [post]
-func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Telegram) Webhook(w http.ResponseWriter, r *http.Request) {
 	const maxBodySize = 10 * 1024 // 10KB is more than enough for a Telegram update
 
 	var update struct {

@@ -1,4 +1,4 @@
-package telegram_test
+package handler_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"goroutine/internal/domain"
-	"goroutine/internal/driver/telegram"
+	"goroutine/internal/http/handler"
 	"goroutine/internal/service"
 	"goroutine/internal/testutil"
 )
@@ -35,7 +35,7 @@ func update(text string, chatID int64, username string) telegramUpdate {
 	}
 }
 
-func TestWebhookHandler_ServeHTTP(t *testing.T) {
+func TestTelegramHandler_Webhook(t *testing.T) {
 	t.Parallel()
 
 	validToken := testutil.ValidTelegramLinkToken()
@@ -180,8 +180,8 @@ func TestWebhookHandler_ServeHTTP(t *testing.T) {
 			tt.setupNotifier(notifier)
 
 			logger := testutil.NewLogger(t)
-			h := telegram.NewWebhookHandler(logger, svc, notifier)
-			h.ServeHTTP(rr, req)
+			h := handler.NewTelegram(logger, svc, notifier)
+			h.Webhook(rr, req)
 
 			testutil.AssertStatusCode(t, rr, http.StatusOK)
 		})
