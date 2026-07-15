@@ -14,7 +14,7 @@ const (
 	loginPath       = "/v1/login"
 )
 
-func NewRouter(handlers *handler.Handlers, middlewares *middleware.Middlewares, telegramWebhook http.Handler) http.Handler {
+func NewRouter(handlers *handler.Handlers, middlewares *middleware.Middlewares) http.Handler {
 	mux := http.NewServeMux()
 	public := func(h http.HandlerFunc) http.Handler {
 		return middlewares.Metrics.Wrap(h)
@@ -44,8 +44,8 @@ func NewRouter(handlers *handler.Handlers, middlewares *middleware.Middlewares, 
 	mux.Handle("PATCH /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(handlers.Tasks.Update))
 	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position", protected(handlers.Tasks.Move))
 	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(handlers.Tasks.Delete))
+	mux.Handle("POST /webhook/telegram", public(handlers.Telegram.Webhook))
 	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
-	mux.Handle("POST /webhook/telegram", middlewares.Metrics.Wrap(telegramWebhook))
 
 	return middlewares.Timeout.Wrap(middlewares.RequestID.Wrap(middlewares.CORS.Wrap(mux)))
 }
