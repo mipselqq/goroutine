@@ -2,13 +2,11 @@ package handler_test
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"testing"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/handler"
-	"goroutine/internal/service"
 	"goroutine/internal/testutil"
 )
 
@@ -40,131 +38,51 @@ func TestTelegramHandler_Webhook(t *testing.T) {
 
 	validToken := testutil.ValidTelegramLinkToken()
 	validChatID := testutil.ValidTelegramChatID()
+	validUsername := testutil.ValidTelegramUsername()
 
 	tests := []struct {
-		name          string
-		inputBody     any
-		setupService  func(s *MockUserService)
-		setupNotifier func(n *MockNotifier)
+		name             string
+		inputBody        any
+		setupUserService func(s *MockUserService)
 	}{
 		{
 			name:      "Success",
-			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), "testuser"),
-			setupService: func(s *MockUserService) {
+			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), validUsername.String()),
+			setupUserService: func(s *MockUserService) {
 				s.LinkTelegramByTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-					return nil
-				}
-			},
-			setupNotifier: func(n *MockNotifier) {
-				successMsg := domain.MustTelegramMessage("Successfully linked your account <3")
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
+					if token != validToken {
+						t.Errorf("got token %v, want %v", token, validToken)
+					}
 					if chatID != validChatID {
 						t.Errorf("got chatID %v, want %v", chatID, validChatID)
 					}
-					if text != successMsg {
-						t.Errorf("got text %q, want success message", text)
+					if username != validUsername {
+						t.Errorf("got username %v, want %v", username, validUsername)
 					}
+
 					return nil
 				}
 			},
 		},
 		{
-			name:          "Invalid JSON body",
-			inputBody:     []byte("not-json"),
-			setupService:  func(s *MockUserService) {},
-			setupNotifier: func(n *MockNotifier) {},
+			name:      "Invalid JSON body",
+			inputBody: []byte("not-json"),
 		},
 		{
-			name:          "Non-start message",
-			inputBody:     update("/help", validChatID.Int64(), "testuser"),
-			setupService:  func(s *MockUserService) {},
-			setupNotifier: func(n *MockNotifier) {},
+			name:      "Non-start message",
+			inputBody: update("/help", validChatID.Int64(), "testuser"),
 		},
 		{
-			name:          "Invalid link token in start",
-			inputBody:     update("/start not-a-uuid", validChatID.Int64(), "testuser"),
-			setupService:  func(s *MockUserService) {},
-			setupNotifier: func(n *MockNotifier) {},
+			name:      "Invalid link token in start",
+			inputBody: update("/start not-a-uuid", validChatID.Int64(), "testuser"),
 		},
 		{
-			name:          "Invalid chat ID",
-			inputBody:     update("/start "+validToken.RevealSecret(), 0, "testuser"),
-			setupService:  func(s *MockUserService) {},
-			setupNotifier: func(n *MockNotifier) {},
+			name:      "Invalid chat ID",
+			inputBody: update("/start "+validToken.RevealSecret(), 0, "testuser"),
 		},
 		{
-			name:          "Invalid username",
-			inputBody:     update("/start "+validToken.RevealSecret(), validChatID.Int64(), ""),
-			setupService:  func(s *MockUserService) {},
-			setupNotifier: func(n *MockNotifier) {},
-		},
-		{
-			name:      "Token not found",
-			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), "testuser"),
-			setupService: func(s *MockUserService) {
-				s.LinkTelegramByTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-					return service.ErrTelegramLinkTokenNotFound
-				}
-			},
-			setupNotifier: func(n *MockNotifier) {
-				expiredMsg := domain.MustTelegramMessage("This link has expired or is invalid. Please generate a new link in the app.")
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-					if text != expiredMsg {
-						t.Errorf("got text %q, want expired message", text)
-					}
-					return nil
-				}
-			},
-		},
-		{
-			name:      "User not found",
-			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), "testuser"),
-			setupService: func(s *MockUserService) {
-				s.LinkTelegramByTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-					return service.ErrUserNotFound
-				}
-			},
-			setupNotifier: func(n *MockNotifier) {
-				notFoundMsg := domain.MustTelegramMessage("User account not found.")
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-					if text != notFoundMsg {
-						t.Errorf("got text %q, want not found message", text)
-					}
-					return nil
-				}
-			},
-		},
-		{
-			name:      "Internal service error",
-			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), "testuser"),
-			setupService: func(s *MockUserService) {
-				s.LinkTelegramByTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-					return service.ErrInternal
-				}
-			},
-			setupNotifier: func(n *MockNotifier) {
-				internalMsg := domain.MustTelegramMessage("Something went wrong. Please try again later.")
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-					if text != internalMsg {
-						t.Errorf("got text %q, want generic error message", text)
-					}
-					return nil
-				}
-			},
-		},
-		{
-			name:      "Notifier error",
-			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), "testuser"),
-			setupService: func(s *MockUserService) {
-				s.LinkTelegramByTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-					return nil
-				}
-			},
-			setupNotifier: func(n *MockNotifier) {
-				n.NotifyFunc = func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-					return errors.New("network error")
-				}
-			},
+			name:      "Invalid username",
+			inputBody: update("/start "+validToken.RevealSecret(), validChatID.Int64(), ""),
 		},
 	}
 
@@ -175,12 +93,13 @@ func TestTelegramHandler_Webhook(t *testing.T) {
 			req, rr := testutil.NewJSONRequestAndRecorder(t, http.MethodPost, "/webhook/telegram", tt.inputBody)
 
 			svc := NewMockUserService(t)
-			notifier := NewMockNotifier(t)
-			tt.setupService(svc)
-			tt.setupNotifier(notifier)
+
+			if tt.setupUserService != nil {
+				tt.setupUserService(svc)
+			}
 
 			logger := testutil.NewLogger(t)
-			h := handler.NewTelegram(logger, svc, notifier)
+			h := handler.NewTelegram(logger, svc)
 			h.Webhook(rr, req)
 
 			testutil.AssertStatusCode(t, rr, http.StatusOK)

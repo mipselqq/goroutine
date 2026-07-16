@@ -9,28 +9,21 @@ import (
 	"strings"
 
 	"goroutine/internal/domain"
-	"goroutine/internal/service"
 )
 
 type TelegramUserService interface {
 	LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
-type Notifier interface {
-	Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
-}
-
 type Telegram struct {
 	userService TelegramUserService
-	notifier    Notifier
 	logger      *slog.Logger
 }
 
-func NewTelegram(logger *slog.Logger, userService TelegramUserService, notifier Notifier) *Telegram {
+func NewTelegram(logger *slog.Logger, userService TelegramUserService) *Telegram {
 	return &Telegram{
 		logger:      logger,
 		userService: userService,
-		notifier:    notifier,
 	}
 }
 
@@ -95,24 +88,9 @@ func (h *Telegram) Webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := domain.MustTelegramMessage("Something went wrong. Please try again later.")
-	err = h.userService.LinkTelegramByToken(r.Context(), linkToken, chatID, username)
-	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrTelegramLinkTokenNotFound):
-			msg = domain.MustTelegramMessage("This link has expired or is invalid. Please generate a new link in the app.")
-		case errors.Is(err, service.ErrUserNotFound):
-			msg = domain.MustTelegramMessage("User account not found.")
-		}
-
-		h.logger.ErrorContext(r.Context(), "Failed to link telegram by token", slog.String("err", err.Error()))
-	} else {
-		msg = domain.MustTelegramMessage("Successfully linked your account <3")
-	}
-
-	err = h.notifier.Notify(r.Context(), chatID, msg)
-	if err != nil {
-		h.logger.DebugContext(r.Context(), "telegram link final notify failed", slog.String("err", err.Error()))
+	linkErr := h.userService.LinkTelegramByToken(r.Context(), linkToken, chatID, username)
+	if linkErr != nil {
+		h.logger.ErrorContext(r.Context(), "Failed to process Telegram link", slog.String("err", linkErr.Error()))
 	}
 
 	w.WriteHeader(http.StatusOK)

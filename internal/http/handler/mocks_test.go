@@ -173,18 +173,3 @@ func (m *MockTaskService) Delete(ctx context.Context, callerID domain.UserID, bo
 	testutil.AssertFuncNotNil(m.t, "TasksService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, callerID, boardID, columnID, taskID)
 }
-
-type MockNotifier struct {
-	t *testing.T
-
-	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
-}
-
-func NewMockNotifier(t *testing.T) *MockNotifier {
-	return &MockNotifier{t: t}
-}
-
-func (m *MockNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-	testutil.AssertFuncNotNil(m.t, "Notifier.NotifyFunc", m.NotifyFunc)
-	return m.NotifyFunc(ctx, chatID, text)
-}

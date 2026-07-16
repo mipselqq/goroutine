@@ -27,7 +27,7 @@ func TestNewRouter_Full(t *testing.T) {
 		Boards:   handler.NewBoards(logger, nil, responder),
 		Columns:  handler.NewColumns(logger, nil, responder),
 		Tasks:    handler.NewTasks(logger, nil, responder),
-		Telegram: handler.NewTelegram(logger, nil, nil),
+		Telegram: handler.NewTelegram(logger, nil),
 	}
 	middlewares := &middleware.Middlewares{
 		Metrics:   &spyMetricsMiddleware{},
