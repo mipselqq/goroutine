@@ -7,6 +7,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
+	"goroutine/internal/template"
 )
 
 type TaskRepository interface {
@@ -26,17 +27,23 @@ type TaskColumnRepository interface {
 	Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 }
 
-type Task struct {
-	taskRepo   TaskRepository
-	boardRepo  TaskBoardRepository
-	columnRepo TaskColumnRepository
+type taskNotif interface {
+	NotifUser(ctx context.Context, userID domain.UserID, notification fmt.Stringer) error
 }
 
-func NewTask(taskRepo TaskRepository, boardRepo TaskBoardRepository, columnRepo TaskColumnRepository) *Task {
+type Task struct {
+	taskRepo     TaskRepository
+	boardRepo    TaskBoardRepository
+	columnRepo   TaskColumnRepository
+	notifService taskNotif
+}
+
+func NewTask(taskRepo TaskRepository, boardRepo TaskBoardRepository, columnRepo TaskColumnRepository, notifService taskNotif) *Task {
 	return &Task{
-		taskRepo:   taskRepo,
-		boardRepo:  boardRepo,
-		columnRepo: columnRepo,
+		taskRepo:     taskRepo,
+		boardRepo:    boardRepo,
+		columnRepo:   columnRepo,
+		notifService: notifService,
 	}
 }
 
@@ -73,6 +80,10 @@ func (s *Task) Create(
 	task, err := s.taskRepo.Create(ctx, columnID, name, description)
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("task service: create: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.TaskCreateNotif{Name: task.Name})
+	if err != nil {
+		return domain.Task{}, fmt.Errorf("task service: create notify: %v: %w", err, ErrInternal)
 	}
 
 	return task, nil
@@ -168,6 +179,22 @@ func (s *Task) Update(
 		return domain.Task{}, fmt.Errorf("task service: update: %v: %w", err, ErrInternal)
 	}
 
+	if name != nil {
+		err = s.notifService.NotifUser(ctx, callerID, template.TaskRenameNotif{
+			Source: task.Name,
+			Target: updated.Name,
+		})
+		if err != nil {
+			return domain.Task{}, fmt.Errorf("task service: update name notify: %v: %w", err, ErrInternal)
+		}
+	}
+	if description != nil {
+		err = s.notifService.NotifUser(ctx, callerID, template.TaskDescriptionUpdateNotif{Name: updated.Name})
+		if err != nil {
+			return domain.Task{}, fmt.Errorf("task service: update description notify: %v: %w", err, ErrInternal)
+		}
+	}
+
 	return updated, nil
 }
 
@@ -217,6 +244,10 @@ func (s *Task) Delete(
 			return ErrTaskNotFound
 		}
 		return fmt.Errorf("task service: delete: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.TaskDeleteNotif{Name: task.Name})
+	if err != nil {
+		return fmt.Errorf("task service: delete notify: %v: %w", err, ErrInternal)
 	}
 
 	return nil
@@ -287,6 +318,15 @@ func (s *Task) Move(
 			return domain.ColumnID{}, domain.TaskPosition{}, ErrIndexOutOfBounds
 		}
 		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task service: move: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.TaskMoveNotif{
+		SourceColumnID: columnID,
+		TargetColumnID: newColumnID,
+		SourcePosition: task.Position,
+		TargetPosition: newPosition,
+	})
+	if err != nil {
+		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task service: move notify: %v: %w", err, ErrInternal)
 	}
 
 	return newColumnID, newPosition, nil

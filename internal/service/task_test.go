@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,6 +11,7 @@ import (
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
+	"goroutine/internal/template"
 	"goroutine/internal/testutil"
 )
 
@@ -28,6 +30,7 @@ func TestTask_Create(t *testing.T) {
 		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
 		setupTaskRepo   func(t *testing.T, r *MockTaskRepository)
+		wantNotifs      []fmt.Stringer
 		wantErr         error
 		wantTask        domain.Task
 	}{
@@ -64,7 +67,8 @@ func TestTask_Create(t *testing.T) {
 					return validTask, nil
 				}
 			},
-			wantTask: validTask,
+			wantNotifs: []fmt.Stringer{template.TaskCreateNotif{Name: validTask.Name}},
+			wantTask:   validTask,
 		},
 		{
 			name:     "Board not found",
@@ -187,7 +191,8 @@ func TestTask_Create(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
 
-			s := service.NewTask(taskRepo, boardRepo, columnRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewTask(taskRepo, boardRepo, columnRepo, notifService)
 			got, err := s.Create(context.Background(), tt.callerID, validBoard.ID, validColumn.ID, validName, validDescription)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -363,7 +368,7 @@ func TestTask_ListByColumnID(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
 
-			s := service.NewTask(taskRepo, boardRepo, columnRepo)
+			s := service.NewTask(taskRepo, boardRepo, columnRepo, MockUserNotif{})
 			got, err := s.ListByColumnID(context.Background(), tt.callerID, validBoard.ID, validColumn.ID)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -397,6 +402,7 @@ func TestTask_Update(t *testing.T) {
 		setupBoardRepo   func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo  func(t *testing.T, r *MockColumnRepository)
 		setupTaskRepo    func(t *testing.T, r *MockTaskRepository)
+		wantNotifs       []fmt.Stringer
 		wantErr          error
 		wantTask         domain.Task
 	}{
@@ -438,6 +444,10 @@ func TestTask_Update(t *testing.T) {
 					}
 					return updatedTask, nil
 				}
+			},
+			wantNotifs: []fmt.Stringer{
+				template.TaskRenameNotif{Source: validTask.Name, Target: updatedTask.Name},
+				template.TaskDescriptionUpdateNotif{Name: updatedTask.Name},
 			},
 			wantTask: updatedTask,
 		},
@@ -664,7 +674,8 @@ func TestTask_Update(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
 
-			s := service.NewTask(taskRepo, boardRepo, columnRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewTask(taskRepo, boardRepo, columnRepo, notifService)
 			got, err := s.Update(context.Background(), tt.callerID, validBoard.ID, validColumn.ID, tt.taskID, tt.patchName, tt.patchDescription)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -696,6 +707,7 @@ func TestTask_Move(t *testing.T) {
 		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
 		setupTaskRepo   func(t *testing.T, r *MockTaskRepository)
+		wantNotifs      []fmt.Stringer
 		wantErr         error
 		wantColumn      domain.ColumnID
 		wantPosition    domain.TaskPosition
@@ -741,6 +753,12 @@ func TestTask_Move(t *testing.T) {
 					return validColumn.ID, targetPosition, nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{template.TaskMoveNotif{
+				SourceColumnID: validColumn.ID,
+				TargetColumnID: validColumn.ID,
+				SourcePosition: validTask.Position,
+				TargetPosition: targetPosition,
+			}},
 			wantColumn:   validColumn.ID,
 			wantPosition: targetPosition,
 		},
@@ -778,6 +796,12 @@ func TestTask_Move(t *testing.T) {
 					return targetColumn.ID, targetPosition, nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{template.TaskMoveNotif{
+				SourceColumnID: validColumn.ID,
+				TargetColumnID: targetColumn.ID,
+				SourcePosition: validTask.Position,
+				TargetPosition: targetPosition,
+			}},
 			wantColumn:   targetColumn.ID,
 			wantPosition: targetPosition,
 		},
@@ -955,7 +979,8 @@ func TestTask_Move(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
 
-			s := service.NewTask(taskRepo, boardRepo, columnRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewTask(taskRepo, boardRepo, columnRepo, notifService)
 			gotColumn, gotPosition, err := s.Move(context.Background(), tt.callerID, validBoard.ID, validColumn.ID, tt.taskID, tt.targetColumnID, targetPosition)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -987,6 +1012,7 @@ func TestTask_Delete(t *testing.T) {
 		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
 		setupTaskRepo   func(t *testing.T, r *MockTaskRepository)
+		wantNotifs      []fmt.Stringer
 		wantErr         error
 	}{
 		{
@@ -1020,6 +1046,7 @@ func TestTask_Delete(t *testing.T) {
 					return nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{template.TaskDeleteNotif{Name: validTask.Name}},
 		},
 		{
 			name:     "Board not found",
@@ -1136,7 +1163,8 @@ func TestTask_Delete(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
 
-			s := service.NewTask(taskRepo, boardRepo, columnRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewTask(taskRepo, boardRepo, columnRepo, notifService)
 			err := s.Delete(context.Background(), tt.callerID, validBoard.ID, validColumn.ID, tt.taskID)
 
 			if !errors.Is(err, tt.wantErr) {

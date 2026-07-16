@@ -7,6 +7,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
+	"goroutine/internal/template"
 )
 
 type ColumnRepository interface {
@@ -22,13 +23,22 @@ type ColumnBoardRepository interface {
 	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
 }
 
-type Column struct {
-	columnRepo ColumnRepository
-	boardRepo  ColumnBoardRepository
+type columnNotif interface {
+	NotifUser(ctx context.Context, userID domain.UserID, notification fmt.Stringer) error
 }
 
-func NewColumn(columnRepo ColumnRepository, boardRepo ColumnBoardRepository) *Column {
-	return &Column{columnRepo: columnRepo, boardRepo: boardRepo}
+type Column struct {
+	columnRepo   ColumnRepository
+	boardRepo    ColumnBoardRepository
+	notifService columnNotif
+}
+
+func NewColumn(columnRepo ColumnRepository, boardRepo ColumnBoardRepository, notifService columnNotif) *Column {
+	return &Column{
+		columnRepo:   columnRepo,
+		boardRepo:    boardRepo,
+		notifService: notifService,
+	}
 }
 
 func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
@@ -46,6 +56,10 @@ func (s *Column) Create(ctx context.Context, callerID domain.UserID, boardID dom
 	column, err := s.columnRepo.Create(ctx, boardID, name, description)
 	if err != nil {
 		return domain.Column{}, fmt.Errorf("column service: create: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.ColumnCreateNotif{Name: column.Name})
+	if err != nil {
+		return domain.Column{}, fmt.Errorf("column service: create notify: %v: %w", err, ErrInternal)
 	}
 
 	return column, nil
@@ -114,6 +128,22 @@ func (s *Column) Update(
 		return domain.Column{}, fmt.Errorf("column service: update: %v: %w", err, ErrInternal)
 	}
 
+	if name != nil {
+		err = s.notifService.NotifUser(ctx, callerID, template.ColumnRenameNotif{
+			Source: column.Name,
+			Target: updated.Name,
+		})
+		if err != nil {
+			return domain.Column{}, fmt.Errorf("column service: update name notify: %v: %w", err, ErrInternal)
+		}
+	}
+	if description != nil {
+		err = s.notifService.NotifUser(ctx, callerID, template.ColumnDescriptionUpdateNotif{Name: updated.Name})
+		if err != nil {
+			return domain.Column{}, fmt.Errorf("column service: update description notify: %v: %w", err, ErrInternal)
+		}
+	}
+
 	return updated, nil
 }
 
@@ -140,6 +170,10 @@ func (s *Column) Delete(
 			return ErrColumnNotFound
 		}
 		return fmt.Errorf("column service: delete: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.ColumnDeleteNotif{ID: columnID})
+	if err != nil {
+		return fmt.Errorf("column service: delete notify: %v: %w", err, ErrInternal)
 	}
 
 	return nil
@@ -183,6 +217,13 @@ func (s *Column) Move(
 			return domain.ColumnPosition{}, ErrIndexOutOfBounds
 		}
 		return domain.ColumnPosition{}, fmt.Errorf("column service: move: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.ColumnMoveNotif{
+		SourcePosition: column.Position,
+		TargetPosition: position,
+	})
+	if err != nil {
+		return domain.ColumnPosition{}, fmt.Errorf("column service: move notify: %v: %w", err, ErrInternal)
 	}
 
 	return position, nil

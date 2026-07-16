@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,6 +11,7 @@ import (
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
+	"goroutine/internal/template"
 	"goroutine/internal/testutil"
 )
 
@@ -24,6 +26,7 @@ func TestColumn_Create(t *testing.T) {
 		callerID        domain.UserID
 		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
+		wantNotifs      []fmt.Stringer
 		wantErr         error
 		wantColumn      domain.Column
 	}{
@@ -52,6 +55,7 @@ func TestColumn_Create(t *testing.T) {
 					return validColumn, nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{template.ColumnCreateNotif{Name: validColumn.Name}},
 			wantColumn: validColumn,
 		},
 		{
@@ -112,7 +116,8 @@ func TestColumn_Create(t *testing.T) {
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
-			s := service.NewColumn(columnRepo, boardRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewColumn(columnRepo, boardRepo, notifService)
 			got, err := s.Create(context.Background(), tt.callerID, validBoard.ID, validColumn.Name, validColumn.Description)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -219,7 +224,7 @@ func TestColumn_ListByBoardID(t *testing.T) {
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
-			s := service.NewColumn(columnRepo, boardRepo)
+			s := service.NewColumn(columnRepo, boardRepo, MockUserNotif{})
 			got, err := s.ListByBoardID(context.Background(), tt.callerID, validBoard.ID)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -254,6 +259,7 @@ func TestColumn_Update(t *testing.T) {
 	updatedColumnDescOnly := validColumn
 	updatedColumnDescOnly.Description = updatedDesc
 	updatedColumnDescOnly.UpdatedAt = testutil.FixedNow()
+	updatedColumn.Description = updatedDesc
 
 	tests := []struct {
 		name             string
@@ -263,14 +269,16 @@ func TestColumn_Update(t *testing.T) {
 		patchDescription *domain.ColumnDescription
 		setupBoardRepo   func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo  func(t *testing.T, r *MockColumnRepository)
+		wantNotifs       []fmt.Stringer
 		wantErr          error
 		wantColumn       domain.Column
 	}{
 		{
-			name:      "Success",
-			callerID:  validBoard.OwnerID,
-			columnID:  validColumn.ID,
-			patchName: &updatedName,
+			name:             "Success",
+			callerID:         validBoard.OwnerID,
+			columnID:         validColumn.ID,
+			patchName:        &updatedName,
+			patchDescription: &updatedDesc,
 			setupBoardRepo: func(t *testing.T, r *MockBoardRepository) {
 				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
@@ -293,11 +301,15 @@ func TestColumn_Update(t *testing.T) {
 					if name == nil || *name != updatedName {
 						t.Errorf("got name %v, want %v", name, updatedName)
 					}
-					if description != nil {
-						t.Errorf("got description %+v, want nil", description)
+					if description == nil || *description != updatedDesc {
+						t.Errorf("got description %+v, want %+v", description, updatedDesc)
 					}
 					return updatedColumn, nil
 				}
+			},
+			wantNotifs: []fmt.Stringer{
+				template.ColumnRenameNotif{Source: validColumn.Name, Target: updatedColumn.Name},
+				template.ColumnDescriptionUpdateNotif{Name: updatedColumn.Name},
 			},
 			wantColumn: updatedColumn,
 		},
@@ -324,6 +336,9 @@ func TestColumn_Update(t *testing.T) {
 					}
 					return updatedColumnDescOnly, nil
 				}
+			},
+			wantNotifs: []fmt.Stringer{
+				template.ColumnDescriptionUpdateNotif{Name: updatedColumnDescOnly.Name},
 			},
 			wantColumn: updatedColumnDescOnly,
 		},
@@ -462,7 +477,8 @@ func TestColumn_Update(t *testing.T) {
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
-			s := service.NewColumn(columnRepo, boardRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewColumn(columnRepo, boardRepo, notifService)
 			got, err := s.Update(context.Background(), tt.callerID, validBoard.ID, tt.columnID, tt.patchName, tt.patchDescription)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -493,6 +509,7 @@ func TestColumn_Move(t *testing.T) {
 		columnID        domain.ColumnID
 		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
+		wantNotifs      []fmt.Stringer
 		wantErr         error
 		wantPosition    domain.ColumnPosition
 	}{
@@ -525,6 +542,10 @@ func TestColumn_Move(t *testing.T) {
 					return targetPosition, nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{template.ColumnMoveNotif{
+				SourcePosition: validColumn.Position,
+				TargetPosition: targetPosition,
+			}},
 			wantPosition: targetPosition,
 		},
 		{
@@ -679,7 +700,8 @@ func TestColumn_Move(t *testing.T) {
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
-			s := service.NewColumn(columnRepo, boardRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewColumn(columnRepo, boardRepo, notifService)
 			got, err := s.Move(context.Background(), tt.callerID, validBoard.ID, tt.columnID, targetPosition)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -704,6 +726,7 @@ func TestColumn_Delete(t *testing.T) {
 		columnID        domain.ColumnID
 		setupBoardRepo  func(t *testing.T, r *MockBoardRepository)
 		setupColumnRepo func(t *testing.T, r *MockColumnRepository)
+		wantNotifs      []fmt.Stringer
 		wantErr         error
 	}{
 		{
@@ -729,6 +752,7 @@ func TestColumn_Delete(t *testing.T) {
 					return nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{template.ColumnDeleteNotif{ID: validColumn.ID}},
 		},
 		{
 			name:     "Board not found",
@@ -807,7 +831,8 @@ func TestColumn_Delete(t *testing.T) {
 			tt.setupBoardRepo(t, boardRepo)
 			tt.setupColumnRepo(t, columnRepo)
 
-			s := service.NewColumn(columnRepo, boardRepo)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewColumn(columnRepo, boardRepo, notifService)
 			err := s.Delete(context.Background(), tt.callerID, validBoard.ID, tt.columnID)
 
 			if !errors.Is(err, tt.wantErr) {

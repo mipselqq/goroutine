@@ -7,6 +7,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
+	"goroutine/internal/template"
 )
 
 type UserRepository interface {
@@ -18,16 +19,27 @@ type TelegramTokenRepository interface {
 	ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
 }
 
+type telegramLinkNotif interface {
+	NotifChat(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error
+}
+
 type User struct {
 	userRepo            UserRepository
 	tokenRepo           TelegramTokenRepository
+	notifService        telegramLinkNotif
 	telegramLinkTokenFn func() domain.TelegramLinkToken
 }
 
-func NewUser(userRepo UserRepository, tokenRepo TelegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
+func NewUser(
+	userRepo UserRepository,
+	tokenRepo TelegramTokenRepository,
+	notifService telegramLinkNotif,
+	telegramLinkTokenFn func() domain.TelegramLinkToken,
+) *User {
 	return &User{
 		userRepo:            userRepo,
 		tokenRepo:           tokenRepo,
+		notifService:        notifService,
 		telegramLinkTokenFn: telegramLinkTokenFn,
 	}
 }
@@ -50,9 +62,11 @@ func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLin
 	userID, err := s.tokenRepo.ConsumeTelegramLinkToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, repository.ErrKeyNotFound) {
-			return ErrTelegramLinkTokenNotFound
+			return s.notifTelegramLinkResult(ctx, chatID, template.TelegramLinkTokenExpiredNotif{}, ErrTelegramLinkTokenNotFound)
 		}
-		return fmt.Errorf("user service: link telegram by token: %v: %w", err, ErrInternal)
+
+		linkErr := fmt.Errorf("user service: link telegram by token: %v: %w", err, ErrInternal)
+		return s.notifTelegramLinkResult(ctx, chatID, template.TelegramLinkFailedNotif{}, linkErr)
 	}
 
 	// If DB fails here, the token is going to be consumed without actual linking.
@@ -60,10 +74,26 @@ func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLin
 	err = s.userRepo.UpdateTelegramInfo(ctx, userID, chatID, username)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
-			return ErrUserNotFound
+			return s.notifTelegramLinkResult(ctx, chatID, template.TelegramUserNotFoundNotif{}, ErrUserNotFound)
 		}
-		return fmt.Errorf("user service: link update telegram info: %v: %w", err, ErrInternal)
+
+		linkErr := fmt.Errorf("user service: link update telegram info: %v: %w", err, ErrInternal)
+		return s.notifTelegramLinkResult(ctx, chatID, template.TelegramLinkFailedNotif{}, linkErr)
 	}
 
-	return nil
+	return s.notifTelegramLinkResult(ctx, chatID, template.TelegramLinkedNotif{}, nil)
+}
+
+func (s *User) notifTelegramLinkResult(
+	ctx context.Context,
+	chatID domain.TelegramChatID,
+	notification fmt.Stringer,
+	linkErr error,
+) error {
+	err := s.notifService.NotifChat(ctx, chatID, notification)
+	if err != nil {
+		return fmt.Errorf("user service: notify telegram link result: %v: %w", err, ErrInternal)
+	}
+
+	return linkErr
 }

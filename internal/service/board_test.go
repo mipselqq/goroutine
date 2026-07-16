@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,6 +11,7 @@ import (
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
+	"goroutine/internal/template"
 	"goroutine/internal/testutil"
 )
 
@@ -21,6 +23,7 @@ func TestBoard_Create(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupBoardRepo func(t *testing.T, r *MockBoardRepository)
+		wantNotifs     []fmt.Stringer
 		wantErr        error
 		wantBoard      domain.Board
 	}{
@@ -40,8 +43,9 @@ func TestBoard_Create(t *testing.T) {
 					return validBoard, nil
 				}
 			},
-			wantErr:   nil,
-			wantBoard: validBoard,
+			wantNotifs: []fmt.Stringer{template.BoardCreateNotif{Name: validBoard.Name}},
+			wantErr:    nil,
+			wantBoard:  validBoard,
 		},
 		{
 			name: "Internal error",
@@ -69,7 +73,8 @@ func TestBoard_Create(t *testing.T) {
 
 			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r, nil, nil)
+			notifService := NewMockUserNotif(t, validBoard.OwnerID, tt.wantNotifs...)
+			s := service.NewBoard(r, nil, nil, notifService)
 
 			got, err := s.Create(context.Background(), validBoard.OwnerID, validBoard.Name, validBoard.Description)
 
@@ -135,7 +140,7 @@ func TestBoard_ListByOwnerID(t *testing.T) {
 
 			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r, nil, nil)
+			s := service.NewBoard(r, nil, nil, MockUserNotif{})
 
 			got, err := s.ListByOwnerID(context.Background(), validBoard.OwnerID)
 
@@ -228,7 +233,7 @@ func TestBoard_Get(t *testing.T) {
 
 			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r, nil, nil)
+			s := service.NewBoard(r, nil, nil, MockUserNotif{})
 
 			got, err := s.Get(context.Background(), tt.callerID, validBoard.ID)
 
@@ -399,7 +404,7 @@ func TestBoard_GetAggregate(t *testing.T) {
 			tt.setupColumnRepo(t, columnRepo)
 			tt.setupTaskRepo(t, taskRepo)
 
-			s := service.NewBoard(boardRepo, columnRepo, taskRepo)
+			s := service.NewBoard(boardRepo, columnRepo, taskRepo, MockUserNotif{})
 			got, err := s.GetAggregate(context.Background(), tt.callerID, validBoard.ID)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -434,6 +439,7 @@ func TestBoard_Update(t *testing.T) {
 		inputName        *domain.BoardName
 		inputDescription *domain.BoardDescription
 		setupBoardRepo   func(t *testing.T, r *MockBoardRepository)
+		wantNotifs       []fmt.Stringer
 		wantErr          error
 		wantBoard        domain.Board
 	}{
@@ -463,6 +469,10 @@ func TestBoard_Update(t *testing.T) {
 					return validBoard, nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{
+				template.BoardRenameNotif{Source: validBoard.Name, Target: updatedValidBoard.Name},
+				template.BoardDescriptionUpdateNotif{Name: updatedValidBoard.Name},
+			},
 			wantErr:   nil,
 			wantBoard: updatedValidBoard,
 		},
@@ -484,6 +494,9 @@ func TestBoard_Update(t *testing.T) {
 					return validBoard, nil
 				}
 			},
+			wantNotifs: []fmt.Stringer{
+				template.BoardRenameNotif{Source: validBoard.Name, Target: updatedNameOnlyBoard.Name},
+			},
 			wantErr:   nil,
 			wantBoard: updatedNameOnlyBoard,
 		},
@@ -504,6 +517,9 @@ func TestBoard_Update(t *testing.T) {
 				r.GetFunc = func(ctx context.Context, id domain.BoardID) (domain.Board, error) {
 					return validBoard, nil
 				}
+			},
+			wantNotifs: []fmt.Stringer{
+				template.BoardDescriptionUpdateNotif{Name: updatedDescriptionOnlyBoard.Name},
 			},
 			wantErr:   nil,
 			wantBoard: updatedDescriptionOnlyBoard,
@@ -585,7 +601,8 @@ func TestBoard_Update(t *testing.T) {
 
 			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r, nil, nil)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewBoard(r, nil, nil, notifService)
 
 			got, err := s.Update(context.Background(), tt.callerID, validBoard.ID, tt.inputName, tt.inputDescription)
 
@@ -611,6 +628,7 @@ func TestBoard_Delete(t *testing.T) {
 		name           string
 		callerID       domain.UserID
 		setupBoardRepo func(t *testing.T, r *MockBoardRepository)
+		wantNotifs     []fmt.Stringer
 		wantErr        error
 	}{
 		{
@@ -630,7 +648,8 @@ func TestBoard_Delete(t *testing.T) {
 					return nil
 				}
 			},
-			wantErr: nil,
+			wantNotifs: []fmt.Stringer{template.BoardDeleteNotif{Name: validBoard.Name}},
+			wantErr:    nil,
 		},
 		{
 			name:     "Not found when wrong owner",
@@ -706,7 +725,8 @@ func TestBoard_Delete(t *testing.T) {
 
 			r := NewMockBoardRepository(t)
 			tt.setupBoardRepo(t, r)
-			s := service.NewBoard(r, nil, nil)
+			notifService := NewMockUserNotif(t, tt.callerID, tt.wantNotifs...)
+			s := service.NewBoard(r, nil, nil, notifService)
 
 			err := s.Delete(context.Background(), tt.callerID, validBoard.ID)
 

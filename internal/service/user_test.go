@@ -3,11 +3,13 @@ package service_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
+	"goroutine/internal/template"
 	"goroutine/internal/testutil"
 )
 
@@ -85,7 +87,7 @@ func TestUser_CreateTelegramLinkToken(t *testing.T) {
 
 			tr := NewMockTelegramTokenRepository(t)
 			tt.setupTokenRepo(tr)
-			s := service.NewUser(NewMockUserRepository(t), tr, tt.tokenFn)
+			s := service.NewUser(NewMockUserRepository(t), tr, nil, tt.tokenFn)
 
 			gotToken, err := s.CreateTelegramLinkToken(context.Background(), wantUserID)
 
@@ -112,6 +114,7 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 		name           string
 		setupTokenRepo func(r *MockTelegramTokenRepository)
 		setupUserRepo  func(r *MockUserRepository)
+		setupNotif     func(n *MockTelegramLinkNotif)
 		wantErr        error
 	}{
 		{
@@ -138,6 +141,17 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 					return nil
 				}
 			},
+			setupNotif: func(n *MockTelegramLinkNotif) {
+				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+					if chatID != wantChatID {
+						t.Errorf("got chatID %v, want %v", chatID, wantChatID)
+					}
+					if notification != (template.TelegramLinkedNotif{}) {
+						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkedNotif{})
+					}
+					return nil
+				}
+			},
 			wantErr: nil,
 		},
 		{
@@ -148,7 +162,15 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 				}
 			},
 			setupUserRepo: func(r *MockUserRepository) {},
-			wantErr:       service.ErrTelegramLinkTokenNotFound,
+			setupNotif: func(n *MockTelegramLinkNotif) {
+				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+					if notification != (template.TelegramLinkTokenExpiredNotif{}) {
+						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkTokenExpiredNotif{})
+					}
+					return nil
+				}
+			},
+			wantErr: service.ErrTelegramLinkTokenNotFound,
 		},
 		{
 			name: "Consume internal error",
@@ -158,7 +180,15 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 				}
 			},
 			setupUserRepo: func(r *MockUserRepository) {},
-			wantErr:       service.ErrInternal,
+			setupNotif: func(n *MockTelegramLinkNotif) {
+				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+					if notification != (template.TelegramLinkFailedNotif{}) {
+						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkFailedNotif{})
+					}
+					return nil
+				}
+			},
+			wantErr: service.ErrInternal,
 		},
 		{
 			name: "User not found",
@@ -170,6 +200,14 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			setupUserRepo: func(r *MockUserRepository) {
 				r.UpdateTelegramInfoFunc = func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
 					return repository.ErrRowNotFound
+				}
+			},
+			setupNotif: func(n *MockTelegramLinkNotif) {
+				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+					if notification != (template.TelegramUserNotFoundNotif{}) {
+						t.Errorf("got notification %T, want %T", notification, template.TelegramUserNotFoundNotif{})
+					}
+					return nil
 				}
 			},
 			wantErr: service.ErrUserNotFound,
@@ -186,6 +224,36 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 					return repository.ErrInternal
 				}
 			},
+			setupNotif: func(n *MockTelegramLinkNotif) {
+				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+					if notification != (template.TelegramLinkFailedNotif{}) {
+						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkFailedNotif{})
+					}
+					return nil
+				}
+			},
+			wantErr: service.ErrInternal,
+		},
+		{
+			name: "Notif error",
+			setupTokenRepo: func(r *MockTelegramTokenRepository) {
+				r.ConsumeTelegramLinkTokenFunc = func(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
+					return wantUserID, nil
+				}
+			},
+			setupUserRepo: func(r *MockUserRepository) {
+				r.UpdateTelegramInfoFunc = func(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+					return nil
+				}
+			},
+			setupNotif: func(n *MockTelegramLinkNotif) {
+				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+					if notification != (template.TelegramLinkedNotif{}) {
+						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkedNotif{})
+					}
+					return errors.New("telegram unavailable")
+				}
+			},
 			wantErr: service.ErrInternal,
 		},
 	}
@@ -196,16 +264,21 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 
 			tokenRepo := NewMockTelegramTokenRepository(t)
 			userRepo := NewMockUserRepository(t)
+			notifService := MockTelegramLinkNotif{}
 
 			tt.setupTokenRepo(tokenRepo)
 			tt.setupUserRepo(userRepo)
+			tt.setupNotif(&notifService)
 
-			s := service.NewUser(userRepo, tokenRepo, nil)
+			s := service.NewUser(userRepo, tokenRepo, &notifService, nil)
 
 			err := s.LinkTelegramByToken(context.Background(), wantToken, wantChatID, wantUsername)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("got error %v, want %v", err, tt.wantErr)
+			}
+			if notifService.NotifChatCalls != 1 {
+				t.Errorf("got %d notifications, want 1", notifService.NotifChatCalls)
 			}
 		})
 	}

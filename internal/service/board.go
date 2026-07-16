@@ -8,6 +8,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/repository"
+	"goroutine/internal/template"
 )
 
 type BoardRepository interface {
@@ -26,14 +27,24 @@ type BoardTaskRepository interface {
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error)
 }
 
-type Board struct {
-	boardRepo  BoardRepository
-	columnRepo BoardColumnRepository
-	taskRepo   BoardTaskRepository
+type boardNotif interface {
+	NotifUser(ctx context.Context, userID domain.UserID, notification fmt.Stringer) error
 }
 
-func NewBoard(boardRepo BoardRepository, columnRepo BoardColumnRepository, taskRepo BoardTaskRepository) *Board {
-	return &Board{boardRepo: boardRepo, columnRepo: columnRepo, taskRepo: taskRepo}
+type Board struct {
+	boardRepo    BoardRepository
+	columnRepo   BoardColumnRepository
+	taskRepo     BoardTaskRepository
+	notifService boardNotif
+}
+
+func NewBoard(boardRepo BoardRepository, columnRepo BoardColumnRepository, taskRepo BoardTaskRepository, notifService boardNotif) *Board {
+	return &Board{
+		boardRepo:    boardRepo,
+		columnRepo:   columnRepo,
+		taskRepo:     taskRepo,
+		notifService: notifService,
+	}
 }
 
 type AggregateBoard struct {
@@ -50,6 +61,10 @@ func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.
 	board, err := s.boardRepo.Create(ctx, callerID, name, description)
 	if err != nil {
 		return domain.Board{}, fmt.Errorf("board service: create: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.BoardCreateNotif{Name: board.Name})
+	if err != nil {
+		return domain.Board{}, fmt.Errorf("board service: create notify: %v: %w", err, ErrInternal)
 	}
 
 	return board, nil
@@ -164,6 +179,22 @@ func (s *Board) Update(
 		return domain.Board{}, fmt.Errorf("board service: update: %v: %w", err, ErrInternal)
 	}
 
+	if name != nil {
+		err = s.notifService.NotifUser(ctx, callerID, template.BoardRenameNotif{
+			Source: board.Name,
+			Target: updated.Name,
+		})
+		if err != nil {
+			return domain.Board{}, fmt.Errorf("board service: update name notify: %v: %w", err, ErrInternal)
+		}
+	}
+	if description != nil {
+		err = s.notifService.NotifUser(ctx, callerID, template.BoardDescriptionUpdateNotif{Name: updated.Name})
+		if err != nil {
+			return domain.Board{}, fmt.Errorf("board service: update description notify: %v: %w", err, ErrInternal)
+		}
+	}
+
 	return updated, nil
 }
 
@@ -185,6 +216,10 @@ func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID doma
 			return ErrBoardNotFound
 		}
 		return fmt.Errorf("board service: delete: %v: %w", err, ErrInternal)
+	}
+	err = s.notifService.NotifUser(ctx, callerID, template.BoardDeleteNotif{Name: board.Name})
+	if err != nil {
+		return fmt.Errorf("board service: delete notify: %v: %w", err, ErrInternal)
 	}
 
 	return nil

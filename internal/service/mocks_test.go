@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"goroutine/internal/domain"
@@ -54,21 +55,6 @@ func (m *MockTelegramTokenRepository) InsertLinkToken(ctx context.Context, token
 func (m *MockTelegramTokenRepository) ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error) {
 	testutil.AssertFuncNotNil(m.t, "TelegramTokenRepository.ConsumeTelegramLinkTokenFunc", m.ConsumeTelegramLinkTokenFunc)
 	return m.ConsumeTelegramLinkTokenFunc(ctx, token)
-}
-
-type MockTelegramNotifier struct {
-	t *testing.T
-
-	NotifyFunc func(ctx context.Context, chatID domain.TelegramChatID, text string) error
-}
-
-func NewMockTelegramNotifier(t *testing.T) *MockTelegramNotifier {
-	return &MockTelegramNotifier{t: t}
-}
-
-func (m *MockTelegramNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text string) error {
-	testutil.AssertFuncNotNil(m.t, "TelegramNotifier.NotifyFunc", m.NotifyFunc)
-	return m.NotifyFunc(ctx, chatID, text)
 }
 
 type MockBoardRepository struct {
@@ -243,4 +229,61 @@ func (m *MockTaskRepository) Delete(
 ) error {
 	testutil.AssertFuncNotNil(m.t, "TaskRepository.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, boardID, columnID, taskID)
+}
+
+type MockUserNotif struct {
+	NotifUserFunc func(ctx context.Context, userID domain.UserID, notification fmt.Stringer) error
+}
+
+func (m MockUserNotif) NotifUser(ctx context.Context, userID domain.UserID, notification fmt.Stringer) error {
+	if m.NotifUserFunc != nil {
+		return m.NotifUserFunc(ctx, userID, notification)
+	}
+
+	return nil
+}
+
+func NewMockUserNotif(t *testing.T, wantUserID domain.UserID, wantNotifs ...fmt.Stringer) MockUserNotif {
+	t.Helper()
+
+	notifCalls := 0
+	t.Cleanup(func() {
+		if notifCalls != len(wantNotifs) {
+			t.Errorf("got %d notifications, want %d", notifCalls, len(wantNotifs))
+		}
+	})
+
+	return MockUserNotif{
+		NotifUserFunc: func(ctx context.Context, userID domain.UserID, notification fmt.Stringer) error {
+			if userID != wantUserID {
+				t.Errorf("got userID %v, want %v", userID, wantUserID)
+			}
+			if notifCalls == len(wantNotifs) {
+				t.Errorf("got unexpected notification %T", notification)
+				return nil
+			}
+
+			wantNotif := wantNotifs[notifCalls]
+			if notification != wantNotif {
+				t.Errorf("got notification %T, want %T", notification, wantNotif)
+			}
+			notifCalls++
+
+			return nil
+		},
+	}
+}
+
+type MockTelegramLinkNotif struct {
+	NotifChatFunc  func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error
+	NotifChatCalls int
+}
+
+func (m *MockTelegramLinkNotif) NotifChat(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
+	m.NotifChatCalls++
+	if m.NotifChatFunc == nil {
+		return nil
+	}
+
+	return m.NotifChatFunc(ctx, chatID, notification)
 }

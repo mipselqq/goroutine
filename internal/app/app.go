@@ -51,7 +51,8 @@ func New(
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	telegramClient := driver.NewTelegramClient(telegramCfg.BaseURL, telegramCfg.Token)
-	userService := service.NewUser(userRepo, telegramTokenRepo, func() domain.TelegramLinkToken {
+	telegramNotifService := service.NewSyncTelegramNotif(telegramClient, userRepo)
+	userService := service.NewUser(userRepo, telegramTokenRepo, telegramNotifService, func() domain.TelegramLinkToken {
 		tok, err := domain.NewTelegramLinkToken(uuid.Must(uuid.NewV7()).String())
 		if err != nil {
 			logger.Error(fmt.Sprintf("BUG: NewTelegramLinkToken() rejected UUIDv7: %v", err))
@@ -59,9 +60,9 @@ func New(
 		}
 		return tok
 	})
-	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo)
-	columnsService := service.NewColumn(columnsRepo, boardsRepo)
-	tasksService := service.NewTask(tasksRepo, boardsRepo, columnsRepo)
+	boardsService := service.NewBoard(boardsRepo, columnsRepo, tasksRepo, telegramNotifService)
+	columnsService := service.NewColumn(columnsRepo, boardsRepo, telegramNotifService)
+	tasksService := service.NewTask(tasksRepo, boardsRepo, columnsRepo, telegramNotifService)
 
 	errorResponder := httpschema.MustNewErrorResponder(logger, service.TimeNowRFC3339Millis)
 	authHandler := handler.NewAuth(logger, authService, errorResponder)
@@ -70,7 +71,7 @@ func New(
 	columnsHandler := handler.NewColumns(logger, columnsService, errorResponder)
 	tasksHandler := handler.NewTasks(logger, tasksService, errorResponder)
 	userHandler := handler.NewUser(logger, userService, errorResponder)
-	telegramHandler := handler.NewTelegram(logger, userService, telegramClient)
+	telegramHandler := handler.NewTelegram(logger, userService)
 
 	metricsMiddleware := middleware.NewMetrics(reg)
 	corsMiddleware := middleware.NewCORS(logger, cfg.AllowedOrigins)
