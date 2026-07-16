@@ -48,7 +48,7 @@ func TestTelegramClient_SendMessage(t *testing.T) {
 			mock := testutil.NewMockTelegramAPI(t, tt.statusCode)
 			defer mock.Close()
 
-			client := driver.NewTelegramClient(mock.URL(), token)
+			client := driver.NewTelegramClient(mock.URL, token)
 			err := client.SendMessage(
 				context.Background(),
 				testutil.ValidTelegramChatID().Int64(),
@@ -65,7 +65,7 @@ func TestTelegramClient_SendMessage(t *testing.T) {
 			if tt.wantQuery != nil {
 				got := sendMessageQuery{
 					ChatID: mock.LastChatID,
-					Text:   mock.LastText,
+					Text:   mock.LastMessage,
 				}
 				diff := cmp.Diff(*tt.wantQuery, got)
 				if diff != "" {

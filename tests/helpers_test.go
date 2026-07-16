@@ -26,10 +26,11 @@ import (
 )
 
 type PreludeResult struct {
-	HTTPClient  *http.Client
-	Server      *httptest.Server
-	Pool        *pgxpool.Pool
-	RedisClient *redis.Client
+	HTTPClient   *http.Client
+	Server       *httptest.Server
+	Pool         *pgxpool.Pool
+	RedisClient  *redis.Client
+	MockTelegram *testutil.MockTelegramAPI
 }
 
 func Prelude(t *testing.T) PreludeResult {
@@ -46,6 +47,9 @@ func Prelude(t *testing.T) PreludeResult {
 		t.Fatalf("ENV = %q, want non-prod", os.Getenv("ENV"))
 	}
 
+	mockTelegram := testutil.NewMockTelegramAPI(t, http.StatusOK)
+	t.Setenv("TELEGRAM_API_BASE_URL", mockTelegram.URL)
+
 	logger := testutil.NewLogger(t)
 	cfg := config.NewAppFromEnv(logger)
 	telegramCfg, err := config.NewTelegramFromEnv(logger)
@@ -60,15 +64,17 @@ func Prelude(t *testing.T) PreludeResult {
 	ts := httptest.NewServer(a.Router)
 	t.Cleanup(func() {
 		ts.Close()
+		mockTelegram.Close()
 		pool.Close()
 		_ = redisClient.Close()
 	})
 
 	return PreludeResult{
-		HTTPClient:  ts.Client(),
-		Server:      ts,
-		Pool:        pool,
-		RedisClient: redisClient,
+		HTTPClient:   ts.Client(),
+		Server:       ts,
+		Pool:         pool,
+		RedisClient:  redisClient,
+		MockTelegram: mockTelegram,
 	}
 }
 
@@ -157,6 +163,53 @@ func CreateUserAndAuthenticateClient(t *testing.T, client *http.Client, baseURL 
 		Client:  client,
 		BaseURL: baseURL,
 		Token:   token,
+	}
+}
+
+func LinkTelegram(t *testing.T, ac *AuthenticatedClient) {
+	t.Helper()
+
+	linkResp := ac.Do(t, http.MethodPost, "/v1/users/me/telegram/link", nil)
+	defer func() {
+		_ = linkResp.Body.Close()
+	}()
+
+	if linkResp.StatusCode != http.StatusOK {
+		t.Fatalf("LinkTelegram() link status = %d, want %d", linkResp.StatusCode, http.StatusOK)
+	}
+
+	var linkBody struct {
+		Token string `json:"token"`
+	}
+	err := json.NewDecoder(linkResp.Body).Decode(&linkBody)
+	if err != nil {
+		t.Fatalf("LinkTelegram() link response Decode() error = %v", err)
+	}
+
+	webhookBody := map[string]any{
+		"message": map[string]any{
+			"text": "/start " + linkBody.Token,
+			"chat": map[string]any{
+				"id":       int64(123456789),
+				"username": "testuser",
+			},
+		},
+	}
+	body, err := json.Marshal(webhookBody)
+	if err != nil {
+		t.Fatalf("LinkTelegram() json.Marshal() error = %v", err)
+	}
+
+	webhookResp, err := ac.Client.Post(ac.BaseURL+"/webhook/telegram", "application/json", bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("LinkTelegram() webhook Post() error = %v", err)
+	}
+	defer func() {
+		_ = webhookResp.Body.Close()
+	}()
+
+	if webhookResp.StatusCode != http.StatusOK {
+		t.Fatalf("LinkTelegram() webhook status = %d, want %d", webhookResp.StatusCode, http.StatusOK)
 	}
 }
 

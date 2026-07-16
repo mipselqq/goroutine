@@ -9,17 +9,18 @@ import (
 )
 
 type MockTelegramAPI struct {
-	Server *httptest.Server
+	t *testing.T
+	*httptest.Server
 
-	LastChatID int64
-	LastText   string
-	Called     bool
+	LastChatID    int64
+	LastMessage   string
+	messagesCount int
 }
 
 func NewMockTelegramAPI(t *testing.T, statusCode int) *MockTelegramAPI {
 	t.Helper()
 
-	m := &MockTelegramAPI{}
+	m := &MockTelegramAPI{t: t}
 
 	m.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasSuffix(r.URL.Path, "/sendMessage") {
@@ -28,10 +29,13 @@ func NewMockTelegramAPI(t *testing.T, statusCode int) *MockTelegramAPI {
 			return
 		}
 
-		q := r.URL.Query()
-		m.LastChatID, _ = strconv.ParseInt(q.Get("chat_id"), 10, 64)
-		m.LastText = q.Get("text")
-		m.Called = true
+		chatID, err := strconv.ParseInt(r.FormValue("chat_id"), 10, 64)
+		if err != nil {
+			t.Errorf("mock Telegram API: failed to parse chat_id: %v", err)
+		}
+		m.LastChatID = chatID
+		m.LastMessage = r.FormValue("text")
+		m.messagesCount++
 
 		w.WriteHeader(statusCode)
 	}))
@@ -39,10 +43,10 @@ func NewMockTelegramAPI(t *testing.T, statusCode int) *MockTelegramAPI {
 	return m
 }
 
-func (m *MockTelegramAPI) URL() string {
-	return m.Server.URL
-}
+func (m *MockTelegramAPI) AssertMessagesCount(count int) {
+	m.t.Helper()
 
-func (m *MockTelegramAPI) Close() {
-	m.Server.Close()
+	if m.messagesCount != count {
+		m.t.Errorf("mock Telegram API: expected %d messages, got %d", count, m.messagesCount)
+	}
 }
