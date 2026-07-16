@@ -56,6 +56,29 @@ func (r *PGUser) GetByEmail(ctx context.Context, email domain.Email) (domain.Use
 	return user, nil
 }
 
+func (r *PGUser) GetChatID(ctx context.Context, userID domain.UserID) (domain.TelegramChatID, error) {
+	const query = `SELECT telegram_chat_id FROM users WHERE id = $1`
+
+	var rawChatID *int64
+	err := r.pgPool.QueryRow(ctx, query, userID).Scan(&rawChatID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.TelegramChatID{}, ErrRowNotFound
+		}
+		return domain.TelegramChatID{}, fmt.Errorf("user repo: get chat id: %v: %w", err, ErrInternal)
+	}
+	if rawChatID == nil {
+		return domain.TelegramChatID{}, ErrRowNotFound
+	}
+
+	chatID, err := domain.NewTelegramChatID(*rawChatID)
+	if err != nil {
+		return domain.TelegramChatID{}, fmt.Errorf("user repo: get chat id: %v: %w", err, ErrDataCorrupted)
+	}
+
+	return chatID, nil
+}
+
 func (r *PGUser) UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
 	const query = `UPDATE users SET telegram_chat_id = $1, telegram_username = $2 WHERE id = $3`
 

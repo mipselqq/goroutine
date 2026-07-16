@@ -134,6 +134,49 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 	})
 }
 
+func TestUserRepository_GetChatID(t *testing.T) {
+	pool, r := userRepoPrelude(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	userID := testutil.ValidUserID()
+	chatID := testutil.ValidTelegramChatID()
+
+	t.Run("Success", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		CreateUser(t, pool, userID, testutil.ValidEmail(), testutil.ValidPasswordHash())
+		err := r.UpdateTelegramInfo(ctx, userID, chatID, testutil.ValidTelegramUsername())
+		if err != nil {
+			t.Fatalf("UpdateTelegramInfo() error = %v", err)
+		}
+
+		got, err := r.GetChatID(ctx, userID)
+		if err != nil {
+			t.Fatalf("GetChatID() error = %v", err)
+		}
+		if got != chatID {
+			t.Errorf("got chatID %v, want %v", got, chatID)
+		}
+	})
+
+	t.Run("User not linked", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		CreateUser(t, pool, userID, testutil.ValidEmail(), testutil.ValidPasswordHash())
+		_, err := r.GetChatID(ctx, userID)
+		assertErrRowNotFound(t, err)
+	})
+
+	t.Run("User not found", func(t *testing.T) {
+		testutil.TruncateAllTables(t, pool)
+
+		_, err := r.GetChatID(ctx, userID)
+		assertErrRowNotFound(t, err)
+	})
+}
+
 func userRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGUser) {
 	t.Helper()
 
