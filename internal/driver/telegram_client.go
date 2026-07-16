@@ -48,7 +48,3 @@ func (c *TelegramClient) SendMessage(ctx context.Context, chatID int64, text dom
 
 	return nil
 }
-
-func (c *TelegramClient) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-	return c.SendMessage(ctx, chatID.Int64(), text)
-}
