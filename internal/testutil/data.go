@@ -88,6 +88,11 @@ func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description stri
 	return task
 }
 
+func NewTelegramMessage(t *testing.T, text string) domain.TelegramMessage {
+	t.Helper()
+	return Must(domain.NewTelegramMessage, text)
+}
+
 func Valid25KBJSON() json.RawMessage {
 	return json.RawMessage(`{"a":"` + strings.Repeat("b", 25*1024) + `"}`)
 }

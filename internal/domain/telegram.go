@@ -2,7 +2,6 @@ package domain
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -124,12 +123,4 @@ func NewTelegramMessage(text string) (TelegramMessage, error) {
 
 func (m TelegramMessage) String() string {
 	return m.value
-}
-
-func MustTelegramMessage(text string) TelegramMessage {
-	m, err := NewTelegramMessage(text)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: MustTelegramMessage(%q): %v", text, err))
-	}
-	return m
 }
