@@ -146,8 +146,9 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 					if chatID != wantChatID {
 						t.Errorf("got chatID %v, want %v", chatID, wantChatID)
 					}
-					if notification != (template.TelegramLinkedNotif{}) {
-						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkedNotif{})
+					wantNotif := template.TelegramLinkedNotif{}
+					if notification != wantNotif {
+						t.Errorf("got notification %T, want %T", notification, wantNotif)
 					}
 					return nil
 				}
@@ -164,8 +165,9 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			setupUserRepo: func(r *MockUserRepository) {},
 			setupNotif: func(n *MockTelegramLinkNotif) {
 				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
-					if notification != (template.TelegramLinkTokenExpiredNotif{}) {
-						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkTokenExpiredNotif{})
+					wantNotif := template.TelegramLinkTokenExpiredNotif{}
+					if notification != wantNotif {
+						t.Errorf("got notification %T, want %T", notification, wantNotif)
 					}
 					return nil
 				}
@@ -182,8 +184,9 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			setupUserRepo: func(r *MockUserRepository) {},
 			setupNotif: func(n *MockTelegramLinkNotif) {
 				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
-					if notification != (template.TelegramLinkFailedNotif{}) {
-						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkFailedNotif{})
+					wantNotif := template.TelegramLinkFailedNotif{}
+					if notification != wantNotif {
+						t.Errorf("got notification %T, want %T", notification, wantNotif)
 					}
 					return nil
 				}
@@ -204,8 +207,9 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			},
 			setupNotif: func(n *MockTelegramLinkNotif) {
 				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
-					if notification != (template.TelegramUserNotFoundNotif{}) {
-						t.Errorf("got notification %T, want %T", notification, template.TelegramUserNotFoundNotif{})
+					wantNotif := template.TelegramUserNotFoundNotif{}
+					if notification != wantNotif {
+						t.Errorf("got notification %T, want %T", notification, wantNotif)
 					}
 					return nil
 				}
@@ -226,8 +230,9 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			},
 			setupNotif: func(n *MockTelegramLinkNotif) {
 				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
-					if notification != (template.TelegramLinkFailedNotif{}) {
-						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkFailedNotif{})
+					wantNotif := template.TelegramLinkFailedNotif{}
+					if notification != wantNotif {
+						t.Errorf("got notification %T, want %T", notification, wantNotif)
 					}
 					return nil
 				}
@@ -248,8 +253,9 @@ func TestUser_LinkTelegramByToken(t *testing.T) {
 			},
 			setupNotif: func(n *MockTelegramLinkNotif) {
 				n.NotifChatFunc = func(ctx context.Context, chatID domain.TelegramChatID, notification fmt.Stringer) error {
-					if notification != (template.TelegramLinkedNotif{}) {
-						t.Errorf("got notification %T, want %T", notification, template.TelegramLinkedNotif{})
+					wantNotif := template.TelegramLinkedNotif{}
+					if notification != wantNotif {
+						t.Errorf("got notification %T, want %T", notification, wantNotif)
 					}
 					return errors.New("telegram unavailable")
 				}
