@@ -32,15 +32,15 @@ type (
 )
 
 func NewTaskID() TaskID {
-	return NewID[taskTag]()
+	return newID[taskTag]()
 }
 
 func ParseTaskID(s string) (TaskID, error) {
-	return ParseID[taskTag](s)
+	return parseID[taskTag](s)
 }
 
 func NewTaskIDFromUUID(u uuid.UUID) (TaskID, error) {
-	return NewIDFromUUID[taskTag](u)
+	return newIDFromUUID[taskTag](u)
 }
 
 type TaskName struct {
@@ -57,7 +57,7 @@ func NewTaskName(name string) (TaskName, error) {
 		issues = append(issues, ErrTaskNameTooLong)
 	}
 	if len(issues) > 0 {
-		return TaskName{}, &ErrValidation{Issues: issues}
+		return TaskName{}, &errValidation{Issues: issues}
 	}
 
 	return TaskName{value: trimmedName}, nil
@@ -83,7 +83,7 @@ func NewTaskDescription(description string) (TaskDescription, error) {
 	}
 
 	if len(issues) > 0 {
-		return TaskDescription{}, &ErrValidation{Issues: issues}
+		return TaskDescription{}, &errValidation{Issues: issues}
 	}
 
 	return TaskDescription{value: trimmedDescription}, nil
@@ -103,7 +103,7 @@ type TaskPosition struct {
 
 func NewTaskPosition(position int64) (TaskPosition, error) {
 	if position <= 0 || position > math.MaxInt32 {
-		return TaskPosition{}, &ErrValidation{Issues: []string{ErrTaskPositionValue}}
+		return TaskPosition{}, &errValidation{Issues: []string{ErrTaskPositionValue}}
 	}
 
 	return TaskPosition{value: int32(position)}, nil

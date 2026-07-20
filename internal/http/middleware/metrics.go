@@ -10,13 +10,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type Metrics struct {
+type metrics struct {
 	HttpRequests *prometheus.CounterVec
 	HttpDuration *prometheus.HistogramVec
 }
 
-func NewMetrics(reg prometheus.Registerer) *Metrics {
-	m := Metrics{
+func NewMetrics(reg prometheus.Registerer) *metrics {
+	m := metrics{
 		HttpRequests: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "http_requests_total",
@@ -38,22 +38,22 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 	return &m
 }
 
-type StatusSpyWriter struct {
+type statusSpyWriter struct {
 	http.ResponseWriter
 	StatusCode int
 }
 
-func (w *StatusSpyWriter) WriteHeader(code int) {
+func (w *statusSpyWriter) WriteHeader(code int) {
 	w.StatusCode = code
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func (m *Metrics) Wrap(next http.Handler) http.Handler {
+func (m *metrics) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		abstractPath := AbstractMetricPath(r.URL.Path)
 
 		startTime := time.Now()
-		spy := &StatusSpyWriter{ResponseWriter: w, StatusCode: http.StatusOK}
+		spy := &statusSpyWriter{ResponseWriter: w, StatusCode: http.StatusOK}
 
 		next.ServeHTTP(spy, r)
 

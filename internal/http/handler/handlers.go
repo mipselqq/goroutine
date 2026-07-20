@@ -11,13 +11,13 @@ import (
 )
 
 type Handlers struct {
-	Auth     *Auth
-	Health   *Health
-	Boards   *Boards
-	Columns  *Columns
-	Tasks    *Tasks
-	User     *User
-	Telegram *Telegram
+	Auth     *auth
+	Health   *health
+	Boards   *boards
+	Columns  *columns
+	Tasks    *tasks
+	User     *user
+	Telegram *telegram
 }
 
 var errBodyTooLarge = errors.New("request body too large")

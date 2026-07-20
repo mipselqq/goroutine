@@ -2,20 +2,16 @@ package service
 
 import "time"
 
-const RFC3339MillisLayout = "2006-01-02T15:04:05.000Z07:00"
-
-type TimeStrFunc func() string
+const rfc3339MillisLayout = "2006-01-02T15:04:05.000Z07:00"
 
 func FormatRFC3339Millis(t time.Time) string {
-	return t.UTC().Format(RFC3339MillisLayout)
+	return t.UTC().Format(rfc3339MillisLayout)
 }
 
 func TimeNowRFC3339Millis() string {
-	return FormatRFC3339Millis(TimeNow())
+	return FormatRFC3339Millis(timeNow())
 }
 
-type TimeFunc func() time.Time
-
-func TimeNow() time.Time {
+func timeNow() time.Time {
 	return time.Now().UTC()
 }

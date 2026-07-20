@@ -11,23 +11,23 @@ import (
 	"goroutine/internal/logging"
 )
 
-type TokenVerifier interface {
+type tokenVerifier interface {
 	VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error)
 }
 
-type Auth struct {
+type auth struct {
 	logger    *slog.Logger
-	verifier  TokenVerifier
+	verifier  tokenVerifier
 	responder *httpschema.ErrorResponder
 }
 
-func NewAuth(logger *slog.Logger, verifier TokenVerifier, responder *httpschema.ErrorResponder) *Auth {
+func NewAuth(logger *slog.Logger, verifier tokenVerifier, responder *httpschema.ErrorResponder) *auth {
 	moduleLogger := logging.WithModule(logger, "middleware.auth")
 
-	return &Auth{logger: moduleLogger, verifier: verifier, responder: responder}
+	return &auth{logger: moduleLogger, verifier: verifier, responder: responder}
 }
 
-func (m *Auth) Wrap(next http.Handler) http.Handler {
+func (m *auth) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 

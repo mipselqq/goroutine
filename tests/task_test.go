@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type TaskJSON struct {
+type taskJSON struct {
 	ID          string `json:"id"`
 	ColumnID    string `json:"columnId"`
 	Name        string `json:"name"`
@@ -24,18 +24,18 @@ type TaskJSON struct {
 	UpdatedAt   string `json:"updatedAt"`
 }
 
-type TaskPositionJSON struct {
+type taskPositionJSON struct {
 	ColumnID string `json:"columnId"`
 	Position int64  `json:"position"`
 }
 
 func TestTask_HappyPath(t *testing.T) {
-	p := Prelude(t)
+	p := prelude(t)
 
 	testutil.TruncateAllTables(t, p.Pool)
 
 	// 1. Register (already done via ac client)
-	ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
+	ac := createUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 	boardName := testutil.ValidBoardName().String()
 	boardDescription := testutil.ValidBoardDescription().String()
@@ -135,14 +135,14 @@ func TestTask_HappyPath(t *testing.T) {
 	if len(listedTasks) != 1 {
 		t.Fatalf("got %d tasks in list, want 1", len(listedTasks))
 	}
-	if diff := cmp.Diff(createdTask, listedTasks[0]); diff != "" {
+	if diff := cmp.Diff(createdTask, listedTasks[0], cmp.AllowUnexported(taskJSON{})); diff != "" {
 		t.Errorf("List item mismatch (-want +got):\n%s", diff)
 	}
 
 	// 5. Update by id with name and description, store response in updatedTask, validate fields, and ensure updatedAt advanced
 	updatedName := "Updated Name"
 	updatedDescription := "Updated description"
-	WaitForTimestampTicker(t)
+	waitForTimestampTicker(t)
 	updateResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+board.ID+"/columns/"+columnA.ID+"/tasks/"+createdTask.ID, map[string]string{
 		"name":        updatedName,
 		"description": updatedDescription,
@@ -161,7 +161,7 @@ func TestTask_HappyPath(t *testing.T) {
 	checkTask.Name = createdTask.Name
 	checkTask.Description = createdTask.Description
 	checkTask.UpdatedAt = createdTask.UpdatedAt
-	if diff := cmp.Diff(createdTask, checkTask); diff != "" {
+	if diff := cmp.Diff(createdTask, checkTask, cmp.AllowUnexported(taskJSON{})); diff != "" {
 		t.Errorf("Update() diff (-want +got):\n%s", diff)
 	}
 
@@ -343,9 +343,9 @@ func TestTask_HappyPath(t *testing.T) {
 	}
 }
 
-func parseTask(t *testing.T, resp *http.Response) TaskJSON {
+func parseTask(t *testing.T, resp *http.Response) taskJSON {
 	t.Helper()
-	var tk TaskJSON
+	var tk taskJSON
 	err := json.NewDecoder(resp.Body).Decode(&tk)
 	if err != nil {
 		t.Fatalf("Task Decode() error = %v", err)
@@ -353,9 +353,9 @@ func parseTask(t *testing.T, resp *http.Response) TaskJSON {
 	return tk
 }
 
-func parseTasksList(t *testing.T, resp *http.Response) []TaskJSON {
+func parseTasksList(t *testing.T, resp *http.Response) []taskJSON {
 	t.Helper()
-	var tasks []TaskJSON
+	var tasks []taskJSON
 	err := json.NewDecoder(resp.Body).Decode(&tasks)
 	if err != nil {
 		t.Fatalf("Tasks list Decode() error = %v", err)
@@ -363,9 +363,9 @@ func parseTasksList(t *testing.T, resp *http.Response) []TaskJSON {
 	return tasks
 }
 
-func parseTaskPosition(t *testing.T, resp *http.Response) TaskPositionJSON {
+func parseTaskPosition(t *testing.T, resp *http.Response) taskPositionJSON {
 	t.Helper()
-	var p TaskPositionJSON
+	var p taskPositionJSON
 	err := json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
 		t.Fatalf("Task position Decode() error = %v", err)

@@ -13,24 +13,24 @@ import (
 	"goroutine/internal/service"
 )
 
-type TelegramUserService interface {
+type telegramUserService interface {
 	LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
-type Notifier interface {
+type notifier interface {
 	Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
 }
 
-type Telegram struct {
-	userService TelegramUserService
-	notifier    Notifier
+type telegram struct {
+	userService telegramUserService
+	notifier    notifier
 	logger      *slog.Logger
 }
 
-func NewTelegram(logger *slog.Logger, userService TelegramUserService, notifier Notifier) *Telegram {
+func NewTelegram(logger *slog.Logger, userService telegramUserService, notifier notifier) *telegram {
 	moduleLogger := logging.WithModule(logger, "handler.telegram")
 
-	return &Telegram{
+	return &telegram{
 		logger:      moduleLogger,
 		userService: userService,
 		notifier:    notifier,
@@ -45,7 +45,7 @@ func NewTelegram(logger *slog.Logger, userService TelegramUserService, notifier 
 // @Produce json
 // @Success 200 "Always returns 200 OK per Telegram webhook protocol"
 // @Router /webhook/telegram [post]
-func (h *Telegram) Webhook(w http.ResponseWriter, r *http.Request) {
+func (h *telegram) Webhook(w http.ResponseWriter, r *http.Request) {
 	const maxBodySize = 10 * 1024 // 10KB is more than enough for a Telegram update
 
 	var update struct {

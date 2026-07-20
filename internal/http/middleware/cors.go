@@ -10,24 +10,24 @@ import (
 // Every method used by NewRouter + OPTIONS for preflight
 const corsAllowedMethods = "DELETE, GET, OPTIONS, PATCH, POST, PUT"
 
-type CORS struct {
+type cors struct {
 	allowedOrigins map[string]struct{}
 }
 
-func NewCORS(logger *slog.Logger, allowedOrigins map[string]struct{}) *CORS {
+func NewCORS(logger *slog.Logger, allowedOrigins map[string]struct{}) *cors {
 	moduleLogger := logging.WithModule(logger, "middleware.cors")
 
 	for origin := range allowedOrigins {
 		if origin == "*" {
 			moduleLogger.Warn("CORS middleware is too permissive, allowing any origin")
-			return &CORS{allowedOrigins: allowedOrigins}
+			return &cors{allowedOrigins: allowedOrigins}
 		}
 	}
 
-	return &CORS{allowedOrigins: allowedOrigins}
+	return &cors{allowedOrigins: allowedOrigins}
 }
 
-func (m *CORS) Wrap(next http.Handler) http.Handler {
+func (m *cors) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "Origin")
 

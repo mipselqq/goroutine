@@ -12,7 +12,7 @@ import (
 	"goroutine/internal/service"
 )
 
-type ColumnsService interface {
+type columnsService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error)
 	ListByBoardID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error)
 	Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error)
@@ -20,16 +20,16 @@ type ColumnsService interface {
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error
 }
 
-type Columns struct {
+type columns struct {
 	logger         *slog.Logger
-	columnsService ColumnsService
+	columnsService columnsService
 	responder      *httpschema.ErrorResponder
 }
 
-func NewColumns(logger *slog.Logger, columnsService ColumnsService, responder *httpschema.ErrorResponder) *Columns {
+func NewColumns(logger *slog.Logger, columnsService columnsService, responder *httpschema.ErrorResponder) *columns {
 	moduleLogger := logging.WithModule(logger, "handler.columns")
 
-	return &Columns{logger: moduleLogger, columnsService: columnsService, responder: responder}
+	return &columns{logger: moduleLogger, columnsService: columnsService, responder: responder}
 }
 
 type createColumnBody struct {
@@ -88,7 +88,7 @@ func newColumnResponse(column *domain.Column) columnResponse {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns [post]
-func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
+func (h *columns) Create(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -146,7 +146,7 @@ func (h *Columns) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns [get]
-func (h *Columns) ListByBoardID(w http.ResponseWriter, r *http.Request) {
+func (h *columns) ListByBoardID(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -194,7 +194,7 @@ func (h *Columns) ListByBoardID(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId} [patch]
-func (h *Columns) Update(w http.ResponseWriter, r *http.Request) {
+func (h *columns) Update(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -272,7 +272,7 @@ func (h *Columns) Update(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/position [put]
-func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
+func (h *columns) Move(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -342,7 +342,7 @@ func (h *Columns) Move(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId} [delete]
-func (h *Columns) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *columns) Delete(w http.ResponseWriter, r *http.Request) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"goroutine/internal/repository"
 )
 
-type TaskRepository interface {
+type taskRepository interface {
 	Create(ctx context.Context, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
 	ListByColumnID(ctx context.Context, columnID domain.ColumnID) ([]domain.Task, error)
 	Get(ctx context.Context, taskID domain.TaskID) (domain.Task, error)
@@ -18,29 +18,29 @@ type TaskRepository interface {
 	Delete(ctx context.Context, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
 }
 
-type TaskBoardRepository interface {
+type taskBoardRepository interface {
 	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
 }
 
-type TaskColumnRepository interface {
+type taskColumnRepository interface {
 	Get(ctx context.Context, columnID domain.ColumnID) (domain.Column, error)
 }
 
-type Task struct {
-	taskRepo   TaskRepository
-	boardRepo  TaskBoardRepository
-	columnRepo TaskColumnRepository
+type task struct {
+	taskRepo   taskRepository
+	boardRepo  taskBoardRepository
+	columnRepo taskColumnRepository
 }
 
-func NewTask(taskRepo TaskRepository, boardRepo TaskBoardRepository, columnRepo TaskColumnRepository) *Task {
-	return &Task{
+func NewTask(taskRepo taskRepository, boardRepo taskBoardRepository, columnRepo taskColumnRepository) *task {
+	return &task{
 		taskRepo:   taskRepo,
 		boardRepo:  boardRepo,
 		columnRepo: columnRepo,
 	}
 }
 
-func (s *Task) Create(
+func (s *task) Create(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
@@ -78,7 +78,7 @@ func (s *Task) Create(
 	return task, nil
 }
 
-func (s *Task) ListByColumnID(
+func (s *task) ListByColumnID(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
@@ -114,7 +114,7 @@ func (s *Task) ListByColumnID(
 	return tasks, nil
 }
 
-func (s *Task) Update(
+func (s *task) Update(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
@@ -171,7 +171,7 @@ func (s *Task) Update(
 	return updated, nil
 }
 
-func (s *Task) Delete(
+func (s *task) Delete(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
@@ -222,7 +222,7 @@ func (s *Task) Delete(
 	return nil
 }
 
-func (s *Task) Move(
+func (s *task) Move(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,

@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type ColumnJSON struct {
+type columnJSON struct {
 	ID          string `json:"id"`
 	BoardID     string `json:"boardId"`
 	Name        string `json:"name"`
@@ -24,17 +24,17 @@ type ColumnJSON struct {
 	UpdatedAt   string `json:"updatedAt"`
 }
 
-type ColumnPositionJSON struct {
+type columnPositionJSON struct {
 	Position int64 `json:"position"`
 }
 
 func TestColumn_HappyPath(t *testing.T) {
-	p := Prelude(t)
+	p := prelude(t)
 
 	testutil.TruncateAllTables(t, p.Pool)
 
 	// 1. Register (already done via ac client)
-	ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
+	ac := createUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 	boardName := testutil.ValidBoardName().String()
 	boardDescription := testutil.ValidBoardDescription().String()
@@ -111,13 +111,13 @@ func TestColumn_HappyPath(t *testing.T) {
 	if len(listedColumns) != 1 {
 		t.Fatalf("got %d columns in list, want 1", len(listedColumns))
 	}
-	if diff := cmp.Diff(createdColumn, listedColumns[0]); diff != "" {
+	if diff := cmp.Diff(createdColumn, listedColumns[0], cmp.AllowUnexported(columnJSON{})); diff != "" {
 		t.Errorf("List item mismatch (-want +got):\n%s", diff)
 	}
 
 	// 4. Update by id with name only, store response in updatedNameColumn, validate fields, and ensure updatedAt advanced
 	updatedName := "Updated Name Only"
-	WaitForTimestampTicker(t)
+	waitForTimestampTicker(t)
 	updateNameResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+board.ID+"/columns/"+createdColumn.ID, map[string]string{
 		"name": updatedName,
 	})
@@ -134,7 +134,7 @@ func TestColumn_HappyPath(t *testing.T) {
 	checkColumn := updatedNameColumn
 	checkColumn.Name = createdColumn.Name
 	checkColumn.UpdatedAt = createdColumn.UpdatedAt
-	if diff := cmp.Diff(createdColumn, checkColumn); diff != "" {
+	if diff := cmp.Diff(createdColumn, checkColumn, cmp.AllowUnexported(columnJSON{})); diff != "" {
 		t.Errorf("Update() diff (-want +got):\n%s", diff)
 	}
 
@@ -147,7 +147,7 @@ func TestColumn_HappyPath(t *testing.T) {
 	}
 
 	updatedDesc := "Updated column description body"
-	WaitForTimestampTicker(t)
+	waitForTimestampTicker(t)
 	updateDescResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+board.ID+"/columns/"+createdColumn.ID, map[string]string{
 		"description": updatedDesc,
 	})
@@ -198,7 +198,7 @@ func TestColumn_HappyPath(t *testing.T) {
 	if len(listedAfterUpdate) != 1 {
 		t.Fatalf("got %d columns after update, want 1", len(listedAfterUpdate))
 	}
-	if diff := cmp.Diff(updatedDescColumn, listedAfterUpdate[0]); diff != "" {
+	if diff := cmp.Diff(updatedDescColumn, listedAfterUpdate[0], cmp.AllowUnexported(columnJSON{})); diff != "" {
 		t.Errorf("List item after update mismatch (-want +got):\n%s", diff)
 	}
 
@@ -300,9 +300,9 @@ func TestColumn_HappyPath(t *testing.T) {
 	}
 }
 
-func parseColumn(t *testing.T, resp *http.Response) ColumnJSON {
+func parseColumn(t *testing.T, resp *http.Response) columnJSON {
 	t.Helper()
-	var c ColumnJSON
+	var c columnJSON
 	err := json.NewDecoder(resp.Body).Decode(&c)
 	if err != nil {
 		t.Fatalf("Column Decode() error = %v", err)
@@ -310,9 +310,9 @@ func parseColumn(t *testing.T, resp *http.Response) ColumnJSON {
 	return c
 }
 
-func parseColumnsList(t *testing.T, resp *http.Response) []ColumnJSON {
+func parseColumnsList(t *testing.T, resp *http.Response) []columnJSON {
 	t.Helper()
-	var c []ColumnJSON
+	var c []columnJSON
 	err := json.NewDecoder(resp.Body).Decode(&c)
 	if err != nil {
 		t.Fatalf("Columns list Decode() error = %v", err)
@@ -320,9 +320,9 @@ func parseColumnsList(t *testing.T, resp *http.Response) []ColumnJSON {
 	return c
 }
 
-func parseColumnPosition(t *testing.T, resp *http.Response) ColumnPositionJSON {
+func parseColumnPosition(t *testing.T, resp *http.Response) columnPositionJSON {
 	t.Helper()
-	var p ColumnPositionJSON
+	var p columnPositionJSON
 	err := json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
 		t.Fatalf("Column position Decode() error = %v", err)

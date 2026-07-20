@@ -16,7 +16,7 @@ import (
 
 const timeFormat = "2006-01-02T15:04:05.000Z07:00"
 
-type BoardJSON struct {
+type boardJSON struct {
 	ID          string `json:"id"`
 	OwnerID     string `json:"ownerId"`
 	Name        string `json:"name"`
@@ -25,23 +25,23 @@ type BoardJSON struct {
 	UpdatedAt   string `json:"updatedAt"`
 }
 
-type AggregateColumnJSON struct {
-	ColumnJSON
-	Tasks []TaskJSON `json:"tasks"`
+type aggregateColumnJSON struct {
+	columnJSON
+	Tasks []taskJSON `json:"tasks"`
 }
 
-type BoardAggregateJSON struct {
-	BoardJSON
-	Columns []AggregateColumnJSON `json:"columns"`
+type boardAggregateJSON struct {
+	boardJSON
+	Columns []aggregateColumnJSON `json:"columns"`
 }
 
 func TestBoard_HappyPath(t *testing.T) {
-	p := Prelude(t)
+	p := prelude(t)
 
 	testutil.TruncateAllTables(t, p.Pool)
 
 	// 1. Register (already done via ac client)
-	ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
+	ac := createUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 	name := testutil.ValidBoardName().String()
 	description := testutil.ValidBoardDescription().String()
@@ -94,7 +94,7 @@ func TestBoard_HappyPath(t *testing.T) {
 	}
 
 	getByIDBoard := parseBoard(t, oneResp)
-	if diff := cmp.Diff(createdBoard, getByIDBoard); diff != "" {
+	if diff := cmp.Diff(createdBoard, getByIDBoard, cmp.AllowUnexported(boardJSON{})); diff != "" {
 		t.Errorf("Get by id mismatch (-want +got):\n%s", diff)
 	}
 
@@ -112,13 +112,13 @@ func TestBoard_HappyPath(t *testing.T) {
 	if len(listedBoards) != 1 {
 		t.Fatalf("got %d boards in list, want 1", len(listedBoards))
 	}
-	if diff := cmp.Diff(createdBoard, listedBoards[0]); diff != "" {
+	if diff := cmp.Diff(createdBoard, listedBoards[0], cmp.AllowUnexported(boardJSON{})); diff != "" {
 		t.Errorf("List item mismatch (-want +got):\n%s", diff)
 	}
 
 	// 5. Update by id with name only, store response in updatedNameBoard, validate fields, and ensure updatedAt advanced
 	updatedName := "Updated Name Only"
-	WaitForTimestampTicker(t)
+	waitForTimestampTicker(t)
 	updateNameResp := ac.Do(t, http.MethodPatch, "/v1/boards/"+createdBoard.ID, map[string]string{
 		"name": updatedName,
 	})
@@ -135,7 +135,7 @@ func TestBoard_HappyPath(t *testing.T) {
 	checkBoard := updatedNameBoard
 	checkBoard.Name = createdBoard.Name
 	checkBoard.UpdatedAt = createdBoard.UpdatedAt
-	if diff := cmp.Diff(createdBoard, checkBoard); diff != "" {
+	if diff := cmp.Diff(createdBoard, checkBoard, cmp.AllowUnexported(boardJSON{})); diff != "" {
 		t.Errorf("Update() diff (-want +got):\n%s", diff)
 	}
 
@@ -161,7 +161,7 @@ func TestBoard_HappyPath(t *testing.T) {
 	}
 
 	getByIDBoardAfterUpdate := parseBoard(t, afterUpdateResp)
-	if diff := cmp.Diff(updatedNameBoard, getByIDBoardAfterUpdate); diff != "" {
+	if diff := cmp.Diff(updatedNameBoard, getByIDBoardAfterUpdate, cmp.AllowUnexported(boardJSON{})); diff != "" {
 		t.Errorf("Get by id after update mismatch (-want +got):\n%s", diff)
 	}
 
@@ -190,13 +190,13 @@ func TestBoard_HappyPath(t *testing.T) {
 	}
 	gotAgg := parseBoardAggregate(t, aggResp)
 
-	wantAgg := BoardAggregateJSON{
-		BoardJSON: getByIDBoardAfterUpdate,
-		Columns: []AggregateColumnJSON{
-			{ColumnJSON: col, Tasks: []TaskJSON{task}},
+	wantAgg := boardAggregateJSON{
+		boardJSON: getByIDBoardAfterUpdate,
+		Columns: []aggregateColumnJSON{
+			{columnJSON: col, Tasks: []taskJSON{task}},
 		},
 	}
-	if diff := cmp.Diff(wantAgg, gotAgg); diff != "" {
+	if diff := cmp.Diff(wantAgg, gotAgg, cmp.AllowUnexported(boardAggregateJSON{}, boardJSON{}, aggregateColumnJSON{}, columnJSON{}, taskJSON{})); diff != "" {
 		t.Errorf("aggregate vs POST responses (-want +got):\n%s", diff)
 	}
 
@@ -224,9 +224,9 @@ func TestBoard_HappyPath(t *testing.T) {
 	}
 }
 
-func parseBoard(t *testing.T, resp *http.Response) BoardJSON {
+func parseBoard(t *testing.T, resp *http.Response) boardJSON {
 	t.Helper()
-	var b BoardJSON
+	var b boardJSON
 	err := json.NewDecoder(resp.Body).Decode(&b)
 	if err != nil {
 		t.Fatalf("Board Decode() error = %v", err)
@@ -234,9 +234,9 @@ func parseBoard(t *testing.T, resp *http.Response) BoardJSON {
 	return b
 }
 
-func parseBoardsList(t *testing.T, resp *http.Response) []BoardJSON {
+func parseBoardsList(t *testing.T, resp *http.Response) []boardJSON {
 	t.Helper()
-	var b []BoardJSON
+	var b []boardJSON
 	err := json.NewDecoder(resp.Body).Decode(&b)
 	if err != nil {
 		t.Fatalf("Boards list Decode() error = %v", err)
@@ -244,9 +244,9 @@ func parseBoardsList(t *testing.T, resp *http.Response) []BoardJSON {
 	return b
 }
 
-func parseBoardAggregate(t *testing.T, resp *http.Response) BoardAggregateJSON {
+func parseBoardAggregate(t *testing.T, resp *http.Response) boardAggregateJSON {
 	t.Helper()
-	var b BoardAggregateJSON
+	var b boardAggregateJSON
 	err := json.NewDecoder(resp.Body).Decode(&b)
 	if err != nil {
 		t.Fatalf("Board aggregate Decode() error = %v", err)

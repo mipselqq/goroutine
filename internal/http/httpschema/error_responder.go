@@ -38,53 +38,49 @@ func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	r.logger.ErrorContext(req.Context(), "Internal server error", slog.String("err", err.Error()))
-	r.Error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
+	r.error(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR")
 }
 
 func (r *ErrorResponder) PayloadTooLarge(w http.ResponseWriter) {
-	r.DetailedError(w, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", []Detail{
+	r.detailedError(w, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", []Detail{
 		{Field: "body", Issues: []string{"Please stop spamming >_<"}},
 	})
 }
 
 func (r *ErrorResponder) BoardNotFound(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusNotFound, "BOARD_NOT_FOUND", details)
+	r.detailedError(w, http.StatusNotFound, "BOARD_NOT_FOUND", details)
 }
 
 func (r *ErrorResponder) ColumnNotFound(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusNotFound, "COLUMN_NOT_FOUND", details)
+	r.detailedError(w, http.StatusNotFound, "COLUMN_NOT_FOUND", details)
 }
 
 func (r *ErrorResponder) TaskNotFound(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusNotFound, "TASK_NOT_FOUND", details)
-}
-
-func (r *ErrorResponder) IndexOutOfBounds(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusBadRequest, "INDEX_OUT_OF_BOUNDS", details)
+	r.detailedError(w, http.StatusNotFound, "TASK_NOT_FOUND", details)
 }
 
 func (r *ErrorResponder) UserNotFound(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusUnauthorized, "USER_NOT_FOUND", details)
+	r.detailedError(w, http.StatusUnauthorized, "USER_NOT_FOUND", details)
 }
 
 func (r *ErrorResponder) ValidationError(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusBadRequest, "VALIDATION_ERROR", details)
+	r.detailedError(w, http.StatusBadRequest, "VALIDATION_ERROR", details)
 }
 
 func (r *ErrorResponder) InvalidCredentials(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", details)
+	r.detailedError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", details)
 }
 
 func (r *ErrorResponder) UserAlreadyExists(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusConflict, "USER_ALREADY_EXISTS", details)
+	r.detailedError(w, http.StatusConflict, "USER_ALREADY_EXISTS", details)
 }
 
 func (r *ErrorResponder) InvalidToken(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusUnauthorized, "INVALID_TOKEN", details)
+	r.detailedError(w, http.StatusUnauthorized, "INVALID_TOKEN", details)
 }
 
 func (r *ErrorResponder) InvalidAuthHeader(w http.ResponseWriter, details []Detail) {
-	r.DetailedError(w, http.StatusUnauthorized, "INVALID_AUTH_HEADER", details)
+	r.detailedError(w, http.StatusUnauthorized, "INVALID_AUTH_HEADER", details)
 }
 
 type Error struct {
@@ -103,7 +99,7 @@ type Detail struct {
 	Issues []string `json:"issues" example:"must be a valid email,too short"`
 }
 
-func (r *ErrorResponder) NewError(code, message string) *Error {
+func (r *ErrorResponder) newError(code, message string) *Error {
 	return &Error{
 		Code:      code,
 		Message:   message,
@@ -111,17 +107,17 @@ func (r *ErrorResponder) NewError(code, message string) *Error {
 	}
 }
 
-func (r *ErrorResponder) NewDetailedError(code string, details []Detail) *DetailedError {
+func (r *ErrorResponder) newDetailedError(code string, details []Detail) *DetailedError {
 	return &DetailedError{
-		Error:   *r.NewError(code, MapCodeToDescription(code)),
+		Error:   *r.newError(code, mapCodeToDescription(code)),
 		Details: details,
 	}
 }
 
-func (r *ErrorResponder) Error(w http.ResponseWriter, statusCode int, code string) {
-	RespondJSON(w, r.logger, statusCode, r.NewError(code, MapCodeToDescription(code)))
+func (r *ErrorResponder) error(w http.ResponseWriter, statusCode int, code string) {
+	RespondJSON(w, r.logger, statusCode, r.newError(code, mapCodeToDescription(code)))
 }
 
-func (r *ErrorResponder) DetailedError(w http.ResponseWriter, statusCode int, code string, details []Detail) {
-	RespondJSON(w, r.logger, statusCode, r.NewDetailedError(code, details))
+func (r *ErrorResponder) detailedError(w http.ResponseWriter, statusCode int, code string, details []Detail) {
+	RespondJSON(w, r.logger, statusCode, r.newDetailedError(code, details))
 }

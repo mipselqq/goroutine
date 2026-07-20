@@ -49,9 +49,9 @@ func TestTelegramClient_SendMessage(t *testing.T) {
 			defer mock.Close()
 
 			client := driver.NewTelegramClient(mock.URL(), token)
-			err := client.SendMessage(
+			err := client.Notify(
 				context.Background(),
-				testutil.ValidTelegramChatID().Int64(),
+				chatID,
 				message,
 			)
 

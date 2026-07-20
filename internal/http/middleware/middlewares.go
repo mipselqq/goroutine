@@ -2,14 +2,14 @@ package middleware
 
 import "net/http"
 
-type Middleware interface {
+type middleware interface {
 	Wrap(next http.Handler) http.Handler
 }
 
 type Middlewares struct {
-	Metrics   Middleware
-	CORS      Middleware
-	Auth      Middleware
-	RequestID Middleware
-	Timeout   Middleware
+	Metrics   middleware
+	CORS      middleware
+	Auth      middleware
+	RequestID middleware
+	Timeout   middleware
 }

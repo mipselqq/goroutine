@@ -12,13 +12,13 @@ import (
 	"goroutine/internal/domain"
 )
 
-type SecretValue interface {
+type secretValue interface {
 	fmt.Stringer
 	LogValue() slog.Value
 	MarshalJSON() ([]byte, error)
 }
 
-func AssertSecretHidden(t *testing.T, raw string, secret SecretValue) {
+func AssertSecretHidden(t *testing.T, raw string, secret secretValue) {
 	t.Helper()
 
 	rawLower := strings.ToLower(raw)

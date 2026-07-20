@@ -25,14 +25,14 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type PreludeResult struct {
+type preludeResult struct {
 	HTTPClient  *http.Client
 	Server      *httptest.Server
 	Pool        *pgxpool.Pool
 	RedisClient *redis.Client
 }
 
-func Prelude(t *testing.T) PreludeResult {
+func prelude(t *testing.T) preludeResult {
 	t.Helper()
 
 	pool := testutil.SetupPostgres(t, "../migrations")
@@ -64,7 +64,7 @@ func Prelude(t *testing.T) PreludeResult {
 		_ = redisClient.Close()
 	})
 
-	return PreludeResult{
+	return preludeResult{
 		HTTPClient:  ts.Client(),
 		Server:      ts,
 		Pool:        pool,
@@ -72,7 +72,7 @@ func Prelude(t *testing.T) PreludeResult {
 	}
 }
 
-func Register(t *testing.T, c *http.Client, baseURL, email, password string) {
+func register(t *testing.T, c *http.Client, baseURL, email, password string) {
 	t.Helper()
 
 	body, err := json.Marshal(map[string]string{
@@ -96,7 +96,7 @@ func Register(t *testing.T, c *http.Client, baseURL, email, password string) {
 	}
 }
 
-func Login(t *testing.T, c *http.Client, baseURL, email, password string) string {
+func login(t *testing.T, c *http.Client, baseURL, email, password string) string {
 	t.Helper()
 
 	body, err := json.Marshal(map[string]string{
@@ -133,34 +133,34 @@ func Login(t *testing.T, c *http.Client, baseURL, email, password string) string
 	return out.Token
 }
 
-func E2ERegisterAndLogin(t *testing.T, c *http.Client, baseURL, email, password string) string {
+func e2eRegisterAndLogin(t *testing.T, c *http.Client, baseURL, email, password string) string {
 	t.Helper()
-	Register(t, c, baseURL, email, password)
+	register(t, c, baseURL, email, password)
 
-	return Login(t, c, baseURL, email, password)
+	return login(t, c, baseURL, email, password)
 }
 
-type AuthenticatedClient struct {
+type authenticatedClient struct {
 	Client  *http.Client
 	BaseURL string
 	Token   string
 }
 
-func CreateUserAndAuthenticateClient(t *testing.T, client *http.Client, baseURL string) *AuthenticatedClient {
+func createUserAndAuthenticateClient(t *testing.T, client *http.Client, baseURL string) *authenticatedClient {
 	t.Helper()
 
 	email := fmt.Sprintf("e2e-%s@example.com", uuid.NewString())
 	password := testutil.ValidPassword().String()
-	token := E2ERegisterAndLogin(t, client, baseURL, email, password)
+	token := e2eRegisterAndLogin(t, client, baseURL, email, password)
 
-	return &AuthenticatedClient{
+	return &authenticatedClient{
 		Client:  client,
 		BaseURL: baseURL,
 		Token:   token,
 	}
 }
 
-func (c *AuthenticatedClient) Do(t *testing.T, method, path string, body any) *http.Response {
+func (c *authenticatedClient) Do(t *testing.T, method, path string, body any) *http.Response {
 	t.Helper()
 
 	var rdr io.Reader = http.NoBody
@@ -194,7 +194,7 @@ func (c *AuthenticatedClient) Do(t *testing.T, method, path string, body any) *h
 	return resp
 }
 
-func WaitForTimestampTicker(t *testing.T) {
+func waitForTimestampTicker(t *testing.T) {
 	t.Helper()
 	time.Sleep(5 * time.Millisecond)
 }

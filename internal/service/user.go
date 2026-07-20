@@ -9,30 +9,30 @@ import (
 	"goroutine/internal/repository"
 )
 
-type UserRepository interface {
+type userRepository interface {
 	UpdateTelegramInfo(ctx context.Context, userID domain.UserID, chatID domain.TelegramChatID, username domain.TelegramUsername) error
 }
 
-type TelegramTokenRepository interface {
+type telegramTokenRepository interface {
 	InsertLinkToken(ctx context.Context, token domain.TelegramLinkToken, userID domain.UserID) error
 	ConsumeTelegramLinkToken(ctx context.Context, token domain.TelegramLinkToken) (domain.UserID, error)
 }
 
-type User struct {
-	userRepo            UserRepository
-	tokenRepo           TelegramTokenRepository
+type user struct {
+	userRepo            userRepository
+	tokenRepo           telegramTokenRepository
 	telegramLinkTokenFn func() domain.TelegramLinkToken
 }
 
-func NewUser(userRepo UserRepository, tokenRepo TelegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *User {
-	return &User{
+func NewUser(userRepo userRepository, tokenRepo telegramTokenRepository, telegramLinkTokenFn func() domain.TelegramLinkToken) *user {
+	return &user{
 		userRepo:            userRepo,
 		tokenRepo:           tokenRepo,
 		telegramLinkTokenFn: telegramLinkTokenFn,
 	}
 }
 
-func (s *User) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
+func (s *user) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
 	token := s.telegramLinkTokenFn()
 
 	err := s.tokenRepo.InsertLinkToken(ctx, token, userID)
@@ -46,7 +46,7 @@ func (s *User) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID
 	return token, nil
 }
 
-func (s *User) LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
+func (s *user) LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
 	userID, err := s.tokenRepo.ConsumeTelegramLinkToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, repository.ErrKeyNotFound) {

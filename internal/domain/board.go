@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	ErrBoardNameTooShort       string = "Name is too short"
-	ErrBoardNameTooLong        string = "Name is too long"
-	ErrBoardDescriptionTooLong string = "Description is too long"
+	errBoardNameTooShort       string = "Name is too short"
+	errBoardNameTooLong        string = "Name is too long"
+	errBoardDescriptionTooLong string = "Description is too long"
 )
 
 type Board struct {
@@ -29,15 +29,15 @@ type (
 )
 
 func NewBoardID() BoardID {
-	return NewID[boardTag]()
+	return newID[boardTag]()
 }
 
 func ParseBoardID(s string) (BoardID, error) {
-	return ParseID[boardTag](s)
+	return parseID[boardTag](s)
 }
 
 func NewBoardIDFromUUID(u uuid.UUID) (BoardID, error) {
-	return NewIDFromUUID[boardTag](u)
+	return newIDFromUUID[boardTag](u)
 }
 
 type BoardName struct {
@@ -48,15 +48,15 @@ func NewBoardName(name string) (BoardName, error) {
 	trimmedName := strings.TrimSpace(name)
 	var issues []string
 	if trimmedName == "" {
-		issues = append(issues, ErrBoardNameTooShort)
+		issues = append(issues, errBoardNameTooShort)
 	}
 
 	if len(trimmedName) > 128 {
-		issues = append(issues, ErrBoardNameTooLong)
+		issues = append(issues, errBoardNameTooLong)
 	}
 
 	if len(issues) > 0 {
-		return BoardName{}, &ErrValidation{Issues: issues}
+		return BoardName{}, &errValidation{Issues: issues}
 	}
 
 	return BoardName{value: trimmedName}, nil
@@ -78,11 +78,11 @@ func NewBoardDescription(description string) (BoardDescription, error) {
 	trimmedDescription := strings.TrimSpace(description)
 	var issues []string
 	if len(trimmedDescription) > 1024 {
-		issues = append(issues, ErrBoardDescriptionTooLong)
+		issues = append(issues, errBoardDescriptionTooLong)
 	}
 
 	if len(issues) > 0 {
-		return BoardDescription{}, &ErrValidation{Issues: issues}
+		return BoardDescription{}, &errValidation{Issues: issues}
 	}
 
 	return BoardDescription{value: trimmedDescription}, nil

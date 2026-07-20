@@ -15,11 +15,11 @@ import (
 )
 
 func TestAuth_HappyPath(t *testing.T) {
-	p := Prelude(t)
+	p := prelude(t)
 
 	testutil.TruncateAllTables(t, p.Pool)
 
-	ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
+	ac := createUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 	parts := strings.Split(ac.Token, ".")
 	if len(parts) != 3 {

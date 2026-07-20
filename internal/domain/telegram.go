@@ -16,8 +16,8 @@ const (
 	ErrInvalidTelegramLinkToken = "Telegram link token must be a valid UUIDv7"
 	ErrInvalidTelegramChatID    = "Telegram chat ID must be a non-zero 64-bit integer"
 	ErrInvalidTelegramUsername  = "Telegram username must start with '@' and be 5-32 alphanumeric characters or underscores"
-	ErrInvalidTelegramToken     = "Telegram bot token must be in format digits:alphanumeric"
-	ErrInvalidTelegramMessage   = "Telegram message must be 1-4096 characters"
+	errInvalidTelegramToken     = "Telegram bot token must be in format digits:alphanumeric"
+	errInvalidTelegramMessage   = "Telegram message must be 1-4096 characters"
 )
 
 var (
@@ -35,7 +35,7 @@ func NewTelegramLinkToken(token string) (TelegramLinkToken, error) {
 
 	u, err := uuid.Parse(trimmed)
 	if err != nil || u.Version() != 7 {
-		return TelegramLinkToken{}, &ErrValidation{Issues: []string{ErrInvalidTelegramLinkToken}}
+		return TelegramLinkToken{}, &errValidation{Issues: []string{ErrInvalidTelegramLinkToken}}
 	}
 
 	return TelegramLinkToken{SecretString: secrecy.SecretString(trimmed)}, nil
@@ -48,7 +48,7 @@ type TelegramChatID struct {
 
 func NewTelegramChatID(id int64) (TelegramChatID, error) {
 	if id == 0 {
-		return TelegramChatID{}, &ErrValidation{Issues: []string{ErrInvalidTelegramChatID}}
+		return TelegramChatID{}, &errValidation{Issues: []string{ErrInvalidTelegramChatID}}
 	}
 	return TelegramChatID{value: id}, nil
 }
@@ -57,7 +57,7 @@ func ParseTelegramChatID(s string) (TelegramChatID, error) {
 	trimmed := strings.TrimSpace(s)
 	id, err := strconv.ParseInt(trimmed, 10, 64)
 	if err != nil {
-		return TelegramChatID{}, &ErrValidation{Issues: []string{ErrInvalidTelegramChatID}}
+		return TelegramChatID{}, &errValidation{Issues: []string{ErrInvalidTelegramChatID}}
 	}
 
 	return NewTelegramChatID(id)
@@ -83,7 +83,7 @@ type TelegramUsername struct {
 func NewTelegramUsername(username string) (TelegramUsername, error) {
 	trimmed := strings.TrimSpace(username)
 	if !telegramUsernameRegex.MatchString(trimmed) {
-		return TelegramUsername{}, &ErrValidation{Issues: []string{ErrInvalidTelegramUsername}}
+		return TelegramUsername{}, &errValidation{Issues: []string{ErrInvalidTelegramUsername}}
 	}
 	return TelegramUsername{value: trimmed}, nil
 }
@@ -104,7 +104,7 @@ type TelegramToken struct {
 func NewTelegramToken(token string) (TelegramToken, error) {
 	trimmed := strings.TrimSpace(token)
 	if !telegramTokenRegex.MatchString(trimmed) {
-		return TelegramToken{}, &ErrValidation{Issues: []string{ErrInvalidTelegramToken}}
+		return TelegramToken{}, &errValidation{Issues: []string{errInvalidTelegramToken}}
 	}
 	return TelegramToken{SecretString: secrecy.SecretString(trimmed)}, nil
 }
@@ -117,7 +117,7 @@ type TelegramMessage struct {
 func NewTelegramMessage(text string) (TelegramMessage, error) {
 	trimmed := strings.TrimSpace(text)
 	if len(trimmed) < 1 || len(trimmed) > 4096 {
-		return TelegramMessage{}, &ErrValidation{Issues: []string{ErrInvalidTelegramMessage}}
+		return TelegramMessage{}, &errValidation{Issues: []string{errInvalidTelegramMessage}}
 	}
 	return TelegramMessage{value: trimmed}, nil
 }

@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	ErrPasswordTooShort string = "Password is too short"
-	ErrInvalidJWTToken  string = "Invalid JWT token"
+	errPasswordTooShort string = "Password is too short"
+	errInvalidJWTToken  string = "Invalid JWT token"
 )
 
 type User struct {
@@ -31,15 +31,15 @@ type (
 )
 
 func NewUserID() UserID {
-	return NewID[userID]()
+	return newID[userID]()
 }
 
 func ParseUserID(s string) (UserID, error) {
-	return ParseID[userID](s)
+	return parseID[userID](s)
 }
 
 func NewUserIDFromUUID(u uuid.UUID) (UserID, error) {
-	return NewIDFromUUID[userID](u)
+	return newIDFromUUID[userID](u)
 }
 
 type PasswordHash struct {
@@ -56,7 +56,7 @@ type UserPassword struct {
 
 func NewUserPassword(password string) (UserPassword, error) {
 	if len(password) < 6 || strings.TrimSpace(password) == "" {
-		return UserPassword{}, &ErrValidation{Issues: []string{ErrPasswordTooShort}}
+		return UserPassword{}, &errValidation{Issues: []string{errPasswordTooShort}}
 	}
 
 	return UserPassword{SecretString: secrecy.SecretString(password)}, nil
@@ -69,16 +69,16 @@ type AuthToken struct {
 func NewJWTString(token string) (AuthToken, error) {
 	trimmed := strings.TrimSpace(token)
 	if trimmed == "" {
-		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
+		return AuthToken{}, &errValidation{Issues: []string{errInvalidJWTToken}}
 	}
 
 	parts := strings.Split(trimmed, ".")
 	if len(parts) != 3 {
-		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
+		return AuthToken{}, &errValidation{Issues: []string{errInvalidJWTToken}}
 	}
 
 	if slices.Contains(parts, "") {
-		return AuthToken{}, &ErrValidation{Issues: []string{ErrInvalidJWTToken}}
+		return AuthToken{}, &errValidation{Issues: []string{errInvalidJWTToken}}
 	}
 
 	return AuthToken{SecretString: secrecy.SecretString(trimmed)}, nil
