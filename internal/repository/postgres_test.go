@@ -40,11 +40,11 @@ func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			INSERT INTO boards (id, owner_id, name, description, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := pool.Exec(
-		ctx, q,
+		ctx, query,
 		board.ID,
 		board.OwnerID,
 		board.Name,
@@ -63,12 +63,12 @@ func ListBoards(t *testing.T, pool *pgxpool.Pool) []domain.Board {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			SELECT id, owner_id, name, description, created_at, updated_at
 			FROM boards
 			ORDER BY created_at ASC`
 
-	rows, err := pool.Query(ctx, q)
+	rows, err := pool.Query(ctx, query)
 	if err != nil {
 		t.Fatalf("ListBoards() error = %v", err)
 	}
@@ -97,11 +97,11 @@ func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			INSERT INTO columns (id, board_id, name, description, position, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(
-		ctx, q,
+		ctx, query,
 		column.ID,
 		column.BoardID,
 		column.Name,
@@ -121,13 +121,13 @@ func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.Board
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			SELECT id, board_id, name, description, position, created_at, updated_at
 			FROM columns
 			WHERE board_id = $1
 			ORDER BY position ASC`
 
-	rows, err := pool.Query(ctx, q, boardID)
+	rows, err := pool.Query(ctx, query, boardID)
 	if err != nil {
 		t.Fatalf("ListColumnsByBoardID() error = %v", err)
 	}
@@ -157,11 +157,11 @@ func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			INSERT INTO tasks (id, column_id, name, description, position, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(
-		ctx, q,
+		ctx, query,
 		task.ID,
 		task.ColumnID,
 		task.Name,
@@ -181,13 +181,13 @@ func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.Colum
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			SELECT id, column_id, name, description, position, created_at, updated_at
 			FROM tasks
 			WHERE column_id = $1
 			ORDER BY position ASC`
 
-	rows, err := pool.Query(ctx, q, columnID)
+	rows, err := pool.Query(ctx, query, columnID)
 	if err != nil {
 		t.Fatalf("ListTasksByColumnID() error = %v", err)
 	}
@@ -262,9 +262,9 @@ func ListUsers(t *testing.T, pool *pgxpool.Pool) []domain.User {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users ORDER BY id`
+	const query = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users ORDER BY id`
 
-	rows, err := pool.Query(ctx, q)
+	rows, err := pool.Query(ctx, query)
 	if err != nil {
 		t.Fatalf("ListUsers() error = %v", err)
 	}
