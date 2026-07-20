@@ -18,12 +18,12 @@ func TestUser_HappyPath(t *testing.T) {
 
 	t.Setenv("TELEGRAM_API_BASE_URL", mockTelegram.URL())
 
-	p := Prelude(t)
+	p := prelude(t)
 
 	testutil.TruncateAllTables(t, p.Pool)
 	testutil.FlushRedisDB(t, p.RedisClient)
 
-	ac := CreateUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
+	ac := createUserAndAuthenticateClient(t, p.HTTPClient, p.Server.URL)
 
 	// 1. Get Telegram link token.
 	linkResp := ac.Do(t, http.MethodPost, "/v1/users/me/telegram/link", nil)

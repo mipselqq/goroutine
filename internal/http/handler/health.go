@@ -8,14 +8,14 @@ import (
 	"goroutine/internal/logging"
 )
 
-type Health struct {
+type health struct {
 	logger *slog.Logger
 }
 
-func NewHealth(logger *slog.Logger) *Health {
+func NewHealth(logger *slog.Logger) *health {
 	moduleLogger := logging.WithModule(logger, "handler.health")
 
-	return &Health{
+	return &health{
 		logger: moduleLogger,
 	}
 }
@@ -27,6 +27,6 @@ func NewHealth(logger *slog.Logger) *Health {
 // @Produce json
 // @Success 200 {object} httpschema.Status
 // @Router /v1/health [get]
-func (h *Health) Health(w http.ResponseWriter, r *http.Request) {
+func (h *health) Health(w http.ResponseWriter, r *http.Request) {
 	httpschema.RespondJSON(w, h.logger, http.StatusOK, httpschema.Status{Status: "ok"})
 }

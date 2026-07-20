@@ -10,20 +10,20 @@ import (
 	"goroutine/internal/logging"
 )
 
-type UserService interface {
+type userService interface {
 	CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error)
 }
 
-type User struct {
+type user struct {
 	logger      *slog.Logger
-	userService UserService
+	userService userService
 	responder   *httpschema.ErrorResponder
 }
 
-func NewUser(logger *slog.Logger, userService UserService, responder *httpschema.ErrorResponder) *User {
+func NewUser(logger *slog.Logger, userService userService, responder *httpschema.ErrorResponder) *user {
 	moduleLogger := logging.WithModule(logger, "handler.user")
 
-	return &User{
+	return &user{
 		logger:      moduleLogger,
 		userService: userService,
 		responder:   responder,
@@ -44,7 +44,7 @@ type telegramLinkTokenResponse struct {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/users/me/telegram/link [post]
-func (u *User) CreateTelegramLinkToken(w http.ResponseWriter, r *http.Request) {
+func (u *user) CreateTelegramLinkToken(w http.ResponseWriter, r *http.Request) {
 	userID, ok := extractUserIDOrHandleMissing(w, r, u.logger, u.responder)
 	if !ok {
 		return

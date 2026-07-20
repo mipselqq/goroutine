@@ -15,7 +15,7 @@ import (
 
 func SetupPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	t.Helper()
-	MustLoadDevEnv()
+	mustLoadDevEnv()
 	logger := NewLogger(t)
 
 	pool, err := app.SetupPostgresFromEnv(logger, migrationsDir)
@@ -24,20 +24,6 @@ func SetupPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	}
 
 	return pool
-}
-
-func TruncateTable(t *testing.T, pool *pgxpool.Pool, name string) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", pgx.Identifier{name}.Sanitize())
-
-	_, err := pool.Exec(ctx, query)
-	if err != nil {
-		t.Fatalf("TRUNCATE TABLE %q error = %v", name, err)
-	}
 }
 
 // TruncateAllTables clears application tables in dependency order (FK-safe).

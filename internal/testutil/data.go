@@ -15,7 +15,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func MustLoadDevEnv() {
+func mustLoadDevEnv() {
 	err := godotenv.Load("../../.env.dev")
 	if err == nil {
 		return
@@ -32,13 +32,9 @@ func Fixed5mFromNow() time.Time { return FixedNow().Add(5 * time.Minute) }
 
 const TimeFormat = "2006-01-02T15:04:05.000Z07:00"
 
-func Fixed5mFromNowStr() string {
-	return Fixed5mFromNow().UTC().Format(TimeFormat)
-}
-
 func FixedNowStr() string { return FixedNow().UTC().Format(TimeFormat) }
 
-func Must[A any, T any](fn func(A) (T, error), arg A) T {
+func must[A any, T any](fn func(A) (T, error), arg A) T {
 	v, err := fn(arg)
 	if err != nil {
 		panic(err)
@@ -50,12 +46,12 @@ const validUUIDv7 = "018e1000-0000-7000-8000-000000000000"
 
 func NewValidColumnPosition(t *testing.T, n int64) domain.ColumnPosition {
 	t.Helper()
-	return Must(domain.NewColumnPosition, n)
+	return must(domain.NewColumnPosition, n)
 }
 
 func NewValidTaskPosition(t *testing.T, n int64) domain.TaskPosition {
 	t.Helper()
-	return Must(domain.NewTaskPosition, n)
+	return must(domain.NewTaskPosition, n)
 }
 
 func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position int64) domain.Column {
@@ -63,8 +59,8 @@ func NewValidColumn(t *testing.T, boardID domain.BoardID, name string, position 
 
 	column := ValidColumn(boardID)
 
-	domainName := Must(domain.NewColumnName, name)
-	domainPosition := Must(domain.NewColumnPosition, position)
+	domainName := must(domain.NewColumnName, name)
+	domainPosition := must(domain.NewColumnPosition, position)
 
 	column.Name = domainName
 	column.Position = domainPosition
@@ -77,9 +73,9 @@ func NewValidTask(t *testing.T, columnID domain.ColumnID, name, description stri
 
 	task := ValidTask(columnID)
 
-	domainName := Must(domain.NewTaskName, name)
-	domainDescription := Must(domain.NewTaskDescription, description)
-	domainPosition := Must(domain.NewTaskPosition, position)
+	domainName := must(domain.NewTaskName, name)
+	domainDescription := must(domain.NewTaskDescription, description)
+	domainPosition := must(domain.NewTaskPosition, position)
 
 	task.Name = domainName
 	task.Description = domainDescription
@@ -93,15 +89,15 @@ func Valid25KBJSON() json.RawMessage {
 }
 
 func ValidUserID() domain.UserID {
-	return Must(domain.ParseUserID, validUUIDv7)
+	return must(domain.ParseUserID, validUUIDv7)
 }
 
 func ValidEmail() domain.Email {
-	return Must(domain.NewEmail, "test@example.com")
+	return must(domain.NewEmail, "test@example.com")
 }
 
 func ValidPassword() domain.UserPassword {
-	return Must(domain.NewUserPassword, "qwerty")
+	return must(domain.NewUserPassword, "qwerty")
 }
 
 func ValidPasswordHash() domain.PasswordHash {
@@ -113,35 +109,35 @@ func AnotherValidPasswordHash() domain.PasswordHash {
 }
 
 func ValidBoardName() domain.BoardName {
-	return Must(domain.NewBoardName, "Test Board")
+	return must(domain.NewBoardName, "Test Board")
 }
 
 func ValidBoardDescription() domain.BoardDescription {
-	return Must(domain.NewBoardDescription, "Test Board Description")
+	return must(domain.NewBoardDescription, "Test Board Description")
 }
 
-func ValidColumnName() domain.ColumnName {
-	return Must(domain.NewColumnName, "To Do")
+func validColumnName() domain.ColumnName {
+	return must(domain.NewColumnName, "To Do")
 }
 
-func ValidColumnPosition() domain.ColumnPosition {
-	return Must(domain.NewColumnPosition, 1)
+func validColumnPosition() domain.ColumnPosition {
+	return must(domain.NewColumnPosition, 1)
 }
 
 func ValidColumnDescription() domain.ColumnDescription {
-	return Must(domain.NewColumnDescription, "Test Column Description")
+	return must(domain.NewColumnDescription, "Test Column Description")
 }
 
-func ValidTaskName() domain.TaskName {
-	return Must(domain.NewTaskName, "Write tests")
+func validTaskName() domain.TaskName {
+	return must(domain.NewTaskName, "Write tests")
 }
 
-func ValidTaskDescription() domain.TaskDescription {
-	return Must(domain.NewTaskDescription, "Cover the new endpoint with tests")
+func validTaskDescription() domain.TaskDescription {
+	return must(domain.NewTaskDescription, "Cover the new endpoint with tests")
 }
 
-func ValidTaskPosition() domain.TaskPosition {
-	return Must(domain.NewTaskPosition, 1)
+func validTaskPosition() domain.TaskPosition {
+	return must(domain.NewTaskPosition, 1)
 }
 
 func ValidJWTSecret() secrecy.SecretString {
@@ -176,9 +172,9 @@ func ValidBoard() domain.Board {
 }
 
 func ValidColumn(boardID domain.BoardID) domain.Column {
-	name := ValidColumnName()
+	name := validColumnName()
 	description := ValidColumnDescription()
-	position := ValidColumnPosition()
+	position := validColumnPosition()
 	pseudoNow := FixedNow()
 
 	return domain.Column{
@@ -193,9 +189,9 @@ func ValidColumn(boardID domain.BoardID) domain.Column {
 }
 
 func ValidTask(columnID domain.ColumnID) domain.Task {
-	name := ValidTaskName()
-	description := ValidTaskDescription()
-	position := ValidTaskPosition()
+	name := validTaskName()
+	description := validTaskDescription()
+	position := validTaskPosition()
 	pseudoNow := FixedNow()
 
 	return domain.Task{
@@ -210,34 +206,34 @@ func ValidTask(columnID domain.ColumnID) domain.Task {
 }
 
 func ValidTelegramToken() domain.TelegramToken {
-	return Must(domain.NewTelegramToken, "8927121804:MOCKhk1QdJpRJdISscC0COr19kH79_4f9vw")
+	return must(domain.NewTelegramToken, "8927121804:MOCKhk1QdJpRJdISscC0COr19kH79_4f9vw")
 }
 
 func AnotherValidTelegramToken() domain.TelegramToken {
-	return Must(domain.NewTelegramToken, "8927121804:MOCKtw0QdJpRJdISscC0COr19kH79_4f9vw")
+	return must(domain.NewTelegramToken, "8927121804:MOCKtw0QdJpRJdISscC0COr19kH79_4f9vw")
 }
 
 func ValidTelegramLinkToken() domain.TelegramLinkToken {
-	return Must(domain.NewTelegramLinkToken, validUUIDv7)
+	return must(domain.NewTelegramLinkToken, validUUIDv7)
 }
 
 func ValidTelegramChatID() domain.TelegramChatID {
-	return Must(domain.NewTelegramChatID, int64(123456789))
+	return must(domain.NewTelegramChatID, int64(123456789))
 }
 
 func ValidTelegramUsername() domain.TelegramUsername {
-	return Must(domain.NewTelegramUsername, "@testuser")
+	return must(domain.NewTelegramUsername, "@testuser")
 }
 
 func ValidTelegramMessage() domain.TelegramMessage {
-	return Must(domain.NewTelegramMessage, "Hello, world!")
+	return must(domain.NewTelegramMessage, "Hello, world!")
 }
 
 func UpdateValidColumn(t *testing.T, base *domain.Column, name, description string, updatedAt time.Time) domain.Column {
 	t.Helper()
 
-	domainName := Must(domain.NewColumnName, name)
-	domainDescription := Must(domain.NewColumnDescription, description)
+	domainName := must(domain.NewColumnName, name)
+	domainDescription := must(domain.NewColumnDescription, description)
 
 	return domain.Column{
 		ID:          base.ID,
@@ -252,8 +248,8 @@ func UpdateValidColumn(t *testing.T, base *domain.Column, name, description stri
 
 func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string, updatedAt time.Time) domain.Board {
 	t.Helper()
-	domainName := Must(domain.NewBoardName, name)
-	domainDescription := Must(domain.NewBoardDescription, description)
+	domainName := must(domain.NewBoardName, name)
+	domainDescription := must(domain.NewBoardDescription, description)
 
 	return domain.Board{
 		ID:          base.ID,
@@ -268,8 +264,8 @@ func UpdateValidBoard(t *testing.T, base *domain.Board, name, description string
 func UpdateValidTask(t *testing.T, base *domain.Task, name, description string, updatedAt time.Time) domain.Task {
 	t.Helper()
 
-	domainName := Must(domain.NewTaskName, name)
-	domainDescription := Must(domain.NewTaskDescription, description)
+	domainName := must(domain.NewTaskName, name)
+	domainDescription := must(domain.NewTaskDescription, description)
 
 	return domain.Task{
 		ID:          base.ID,

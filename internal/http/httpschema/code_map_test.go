@@ -1,9 +1,7 @@
-package httpschema_test
+package httpschema
 
 import (
 	"testing"
-
-	"goroutine/internal/http/httpschema"
 )
 
 func TestMapCodeToDescription(t *testing.T) {
@@ -41,7 +39,7 @@ func TestMapCodeToDescription(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			description := httpschema.MapCodeToDescription(tt.code)
+			description := mapCodeToDescription(tt.code)
 			if description != tt.description {
 				t.Errorf("got %q, want %q", description, tt.description)
 			}

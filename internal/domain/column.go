@@ -33,15 +33,15 @@ type (
 )
 
 func NewColumnID() ColumnID {
-	return NewID[columnTag]()
+	return newID[columnTag]()
 }
 
 func ParseColumnID(s string) (ColumnID, error) {
-	return ParseID[columnTag](s)
+	return parseID[columnTag](s)
 }
 
 func NewColumnIDFromUUID(u uuid.UUID) (ColumnID, error) {
-	return NewIDFromUUID[columnTag](u)
+	return newIDFromUUID[columnTag](u)
 }
 
 type ColumnName struct {
@@ -58,7 +58,7 @@ func NewColumnName(name string) (ColumnName, error) {
 		issues = append(issues, ErrColumnNameTooLong)
 	}
 	if len(issues) > 0 {
-		return ColumnName{}, &ErrValidation{Issues: issues}
+		return ColumnName{}, &errValidation{Issues: issues}
 	}
 
 	return ColumnName{value: trimmedName}, nil
@@ -80,7 +80,7 @@ func NewColumnDescription(description string) (ColumnDescription, error) {
 	}
 
 	if len(issues) > 0 {
-		return ColumnDescription{}, &ErrValidation{Issues: issues}
+		return ColumnDescription{}, &errValidation{Issues: issues}
 	}
 
 	return ColumnDescription{value: trimmedDescription}, nil
@@ -96,7 +96,7 @@ type ColumnPosition struct {
 
 func NewColumnPosition(position int64) (ColumnPosition, error) {
 	if position <= 0 || position > math.MaxInt32 {
-		return ColumnPosition{}, &ErrValidation{Issues: []string{ErrColumnPositionValue}}
+		return ColumnPosition{}, &errValidation{Issues: []string{ErrColumnPositionValue}}
 	}
 
 	return ColumnPosition{value: int32(position)}, nil
@@ -105,7 +105,7 @@ func NewColumnPosition(position int64) (ColumnPosition, error) {
 func ParseColumnPosition(position string) (ColumnPosition, error) {
 	v, err := strconv.ParseInt(position, 10, 64)
 	if err != nil {
-		return ColumnPosition{}, &ErrValidation{Issues: []string{ErrColumnPositionValue}}
+		return ColumnPosition{}, &errValidation{Issues: []string{ErrColumnPositionValue}}
 	}
 
 	return NewColumnPosition(v)

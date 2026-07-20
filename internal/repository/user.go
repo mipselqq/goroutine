@@ -86,14 +86,14 @@ func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
 
 	email, err := domain.NewEmail(rawEmail)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("scan user: email: %v: %w", err, ErrDataCorrupted)
+		return domain.User{}, fmt.Errorf("scan user: email: %v: %w", err, errDataCorrupted)
 	}
 
 	var chatID domain.TelegramChatID
 	if rawTelegramChatID != nil {
 		chatID, err = domain.NewTelegramChatID(*rawTelegramChatID)
 		if err != nil {
-			return domain.User{}, fmt.Errorf("scan user: telegram chat id: %v: %w", err, ErrDataCorrupted)
+			return domain.User{}, fmt.Errorf("scan user: telegram chat id: %v: %w", err, errDataCorrupted)
 		}
 	}
 
@@ -101,14 +101,14 @@ func ScanUser(row interface{ Scan(...any) error }) (domain.User, error) {
 	if rawTelegramUsername != nil {
 		username, err = domain.NewTelegramUsername(*rawTelegramUsername)
 		if err != nil {
-			return domain.User{}, fmt.Errorf("scan user: telegram username: %v: %w", err, ErrDataCorrupted)
+			return domain.User{}, fmt.Errorf("scan user: telegram username: %v: %w", err, errDataCorrupted)
 		}
 	}
 
 	var id domain.UserID
 	id, err = domain.NewUserIDFromUUID(rawID)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("scan user: id: %v: %w", err, ErrDataCorrupted)
+		return domain.User{}, fmt.Errorf("scan user: id: %v: %w", err, errDataCorrupted)
 	}
 
 	return domain.User{

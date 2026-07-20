@@ -11,7 +11,7 @@ import (
 
 func SetupRedis(t *testing.T) *redis.Client {
 	t.Helper()
-	MustLoadDevEnv()
+	mustLoadDevEnv()
 	logger := NewLogger(t)
 
 	client, err := app.SetupRedisFromEnv(logger)

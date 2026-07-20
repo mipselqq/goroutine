@@ -24,17 +24,6 @@ func AssertContentType(t *testing.T, rr *httptest.ResponseRecorder, want string)
 	}
 }
 
-func MarshalJSONBody(t *testing.T, body any) string {
-	t.Helper()
-
-	b, err := json.Marshal(body)
-	if err != nil {
-		t.Fatalf("json.Marshal() error = %v", err)
-	}
-
-	return string(b)
-}
-
 func NewJSONRequestAndRecorder(t *testing.T, method, url string, body any) (*http.Request, *httptest.ResponseRecorder) {
 	t.Helper()
 

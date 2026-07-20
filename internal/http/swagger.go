@@ -6,7 +6,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func SwaggerAutoAuthOnLoginScript(loginPath string) string {
+func swaggerAutoAuthOnLoginScript(loginPath string) string {
 	return `
 		function(response) {
 			try {
@@ -30,12 +30,12 @@ func SwaggerAutoAuthOnLoginScript(loginPath string) string {
 	`
 }
 
-func NewSwaggerHandler(basePath, loginPath string) http.Handler {
+func newSwaggerHandler(basePath, loginPath string) http.Handler {
 	return httpSwagger.Handler(
 		httpSwagger.URL(basePath+"doc.json"),
 		httpSwagger.PersistAuthorization(true), // Doesn't work with auto-authorize at /login
 		httpSwagger.UIConfig(map[string]string{
-			"responseInterceptor": SwaggerAutoAuthOnLoginScript(loginPath),
+			"responseInterceptor": swaggerAutoAuthOnLoginScript(loginPath),
 		}),
 	)
 }

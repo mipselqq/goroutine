@@ -10,7 +10,7 @@ import (
 	"goroutine/internal/repository"
 )
 
-type BoardRepository interface {
+type boardRepository interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, boardID domain.BoardID) (domain.Board, error)
 	ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error)
@@ -18,22 +18,22 @@ type BoardRepository interface {
 	Delete(ctx context.Context, boardID domain.BoardID) error
 }
 
-type BoardColumnRepository interface {
+type boardColumnRepository interface {
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Column, error)
 }
 
-type BoardTaskRepository interface {
+type boardTaskRepository interface {
 	ListByBoardID(ctx context.Context, boardID domain.BoardID) ([]domain.Task, error)
 }
 
-type Board struct {
-	boardRepo  BoardRepository
-	columnRepo BoardColumnRepository
-	taskRepo   BoardTaskRepository
+type board struct {
+	boardRepo  boardRepository
+	columnRepo boardColumnRepository
+	taskRepo   boardTaskRepository
 }
 
-func NewBoard(boardRepo BoardRepository, columnRepo BoardColumnRepository, taskRepo BoardTaskRepository) *Board {
-	return &Board{boardRepo: boardRepo, columnRepo: columnRepo, taskRepo: taskRepo}
+func NewBoard(boardRepo boardRepository, columnRepo boardColumnRepository, taskRepo boardTaskRepository) *board {
+	return &board{boardRepo: boardRepo, columnRepo: columnRepo, taskRepo: taskRepo}
 }
 
 type AggregateBoard struct {
@@ -46,7 +46,7 @@ type AggregateColumn struct {
 	Tasks  []domain.Task
 }
 
-func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
+func (s *board) Create(ctx context.Context, callerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
 	board, err := s.boardRepo.Create(ctx, callerID, name, description)
 	if err != nil {
 		return domain.Board{}, fmt.Errorf("board service: create: %v: %w", err, ErrInternal)
@@ -55,7 +55,7 @@ func (s *Board) Create(ctx context.Context, callerID domain.UserID, name domain.
 	return board, nil
 }
 
-func (s *Board) ListByOwnerID(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
+func (s *board) ListByOwnerID(ctx context.Context, callerID domain.UserID) ([]domain.Board, error) {
 	boards, err := s.boardRepo.ListByOwnerID(ctx, callerID)
 	if err != nil {
 		return nil, fmt.Errorf("board service: list by owner id: %v: %w", err, ErrInternal)
@@ -64,7 +64,7 @@ func (s *Board) ListByOwnerID(ctx context.Context, callerID domain.UserID) ([]do
 	return boards, nil
 }
 
-func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
+func (s *board) Get(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
 	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
@@ -79,7 +79,7 @@ func (s *Board) Get(ctx context.Context, callerID domain.UserID, boardID domain.
 	return board, nil
 }
 
-func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (AggregateBoard, error) {
+func (s *board) GetAggregate(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) (AggregateBoard, error) {
 	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {
@@ -134,7 +134,7 @@ func (s *Board) GetAggregate(ctx context.Context, callerID domain.UserID, boardI
 	return aggregate, nil
 }
 
-func (s *Board) Update(
+func (s *board) Update(
 	ctx context.Context,
 	callerID domain.UserID,
 	boardID domain.BoardID,
@@ -167,7 +167,7 @@ func (s *Board) Update(
 	return updated, nil
 }
 
-func (s *Board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {
+func (s *board) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) error {
 	board, err := s.boardRepo.Get(ctx, boardID)
 	if err != nil {
 		if errors.Is(err, repository.ErrRowNotFound) {

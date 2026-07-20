@@ -10,7 +10,7 @@ type Email struct {
 	value string
 }
 
-const ErrInvalidEmail = "Invalid email"
+const errInvalidEmail = "Invalid email"
 
 func NewEmail(email string) (Email, error) {
 	trimmedEmail := strings.TrimSpace(email)
@@ -18,7 +18,7 @@ func NewEmail(email string) (Email, error) {
 
 	_, err := mail.ParseAddress(lowercasedEmail)
 	if err != nil {
-		return Email{}, &ErrValidation{Issues: []string{ErrInvalidEmail}}
+		return Email{}, &errValidation{Issues: []string{errInvalidEmail}}
 	}
 
 	return Email{value: lowercasedEmail}, nil

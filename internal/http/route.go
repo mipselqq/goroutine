@@ -45,7 +45,7 @@ func NewRouter(handlers *handler.Handlers, middlewares *middleware.Middlewares) 
 	mux.Handle("PUT /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position", protected(handlers.Tasks.Move))
 	mux.Handle("DELETE /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}", protected(handlers.Tasks.Delete))
 	mux.Handle("POST /webhook/telegram", public(handlers.Telegram.Webhook))
-	mux.Handle("GET "+swaggerBasePath, NewSwaggerHandler(swaggerBasePath, loginPath))
+	mux.Handle("GET "+swaggerBasePath, newSwaggerHandler(swaggerBasePath, loginPath))
 
 	return middlewares.Timeout.Wrap(middlewares.RequestID.Wrap(middlewares.CORS.Wrap(mux)))
 }

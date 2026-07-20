@@ -15,7 +15,7 @@ var codeMap = map[string]string{
 	"PAYLOAD_TOO_LARGE":     "Request body too large",
 }
 
-func MapCodeToDescription(code string) string {
+func mapCodeToDescription(code string) string {
 	description, ok := codeMap[code]
 	if !ok {
 		return "Unknown error"

@@ -64,12 +64,12 @@ func NewMockTaskService(t *testing.T) *MockTaskService {
 }
 
 func (m *MockAuthService) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
-	testutil.AssertFuncNotNil(m.t, "AuthService.RegisterFunc", m.RegisterFunc)
+	testutil.AssertFuncNotNil(m.t, "authService.RegisterFunc", m.RegisterFunc)
 	return m.RegisterFunc(ctx, email, password)
 }
 
 func (m *MockAuthService) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
-	testutil.AssertFuncNotNil(m.t, "AuthService.LoginFunc", m.LoginFunc)
+	testutil.AssertFuncNotNil(m.t, "authService.LoginFunc", m.LoginFunc)
 	return m.LoginFunc(ctx, email, password)
 }
 
@@ -85,92 +85,92 @@ func NewMockUserService(t *testing.T) *MockUserService {
 }
 
 func (m *MockUserService) CreateTelegramLinkToken(ctx context.Context, userID domain.UserID) (domain.TelegramLinkToken, error) {
-	testutil.AssertFuncNotNil(m.t, "UserService.CreateTelegramLinkTokenFunc", m.CreateTelegramLinkTokenFunc)
+	testutil.AssertFuncNotNil(m.t, "userService.CreateTelegramLinkTokenFunc", m.CreateTelegramLinkTokenFunc)
 	return m.CreateTelegramLinkTokenFunc(ctx, userID)
 }
 
 func (m *MockUserService) LinkTelegramByToken(ctx context.Context, token domain.TelegramLinkToken, chatID domain.TelegramChatID, username domain.TelegramUsername) error {
-	testutil.AssertFuncNotNil(m.t, "UserService.LinkTelegramByTokenFunc", m.LinkTelegramByTokenFunc)
+	testutil.AssertFuncNotNil(m.t, "userService.LinkTelegramByTokenFunc", m.LinkTelegramByTokenFunc)
 	return m.LinkTelegramByTokenFunc(ctx, token, chatID, username)
 }
 
 func (m *MockBoardService) Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error) {
-	testutil.AssertFuncNotNil(m.t, "BoardsService.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "boardsService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, ownerID, name, description)
 }
 
 func (m *MockBoardService) Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error) {
-	testutil.AssertFuncNotNil(m.t, "BoardsService.GetFunc", m.GetFunc)
+	testutil.AssertFuncNotNil(m.t, "boardsService.GetFunc", m.GetFunc)
 	return m.GetFunc(ctx, ownerID, boardID)
 }
 
 func (m *MockBoardService) GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error) {
-	testutil.AssertFuncNotNil(m.t, "BoardsService.GetAggregateFunc", m.GetAggregateFunc)
+	testutil.AssertFuncNotNil(m.t, "boardsService.GetAggregateFunc", m.GetAggregateFunc)
 	return m.GetAggregateFunc(ctx, ownerID, boardID)
 }
 
 func (m *MockBoardService) ListByOwnerID(ctx context.Context, ownerID domain.UserID) ([]domain.Board, error) {
-	testutil.AssertFuncNotNil(m.t, "BoardsService.ListByOwnerIDFunc", m.ListByOwnerIDFunc)
+	testutil.AssertFuncNotNil(m.t, "boardsService.ListByOwnerIDFunc", m.ListByOwnerIDFunc)
 	return m.ListByOwnerIDFunc(ctx, ownerID)
 }
 
 func (m *MockBoardService) Update(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID, name *domain.BoardName, description *domain.BoardDescription) (domain.Board, error) {
-	testutil.AssertFuncNotNil(m.t, "BoardsService.UpdateFunc", m.UpdateFunc)
+	testutil.AssertFuncNotNil(m.t, "boardsService.UpdateFunc", m.UpdateFunc)
 	return m.UpdateFunc(ctx, ownerID, boardID, name, description)
 }
 
 func (m *MockBoardService) Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error {
-	testutil.AssertFuncNotNil(m.t, "BoardsService.DeleteFunc", m.DeleteFunc)
+	testutil.AssertFuncNotNil(m.t, "boardsService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, ownerID, boardID)
 }
 
 func (m *MockColumnService) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, name domain.ColumnName, description domain.ColumnDescription) (domain.Column, error) {
-	testutil.AssertFuncNotNil(m.t, "ColumnsService.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "columnsService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, callerID, boardID, name, description)
 }
 
 func (m *MockColumnService) ListByBoardID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID) ([]domain.Column, error) {
-	testutil.AssertFuncNotNil(m.t, "ColumnsService.ListByBoardIDFunc", m.ListByBoardIDFunc)
+	testutil.AssertFuncNotNil(m.t, "columnsService.ListByBoardIDFunc", m.ListByBoardIDFunc)
 	return m.ListByBoardIDFunc(ctx, callerID, boardID)
 }
 
 func (m *MockColumnService) Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name *domain.ColumnName, description *domain.ColumnDescription) (domain.Column, error) {
-	testutil.AssertFuncNotNil(m.t, "ColumnsService.UpdateFunc", m.UpdateFunc)
+	testutil.AssertFuncNotNil(m.t, "columnsService.UpdateFunc", m.UpdateFunc)
 	return m.UpdateFunc(ctx, callerID, boardID, columnID, name, description)
 }
 
 func (m *MockColumnService) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, targetPosition domain.ColumnPosition) (domain.ColumnPosition, error) {
-	testutil.AssertFuncNotNil(m.t, "ColumnsService.MoveFunc", m.MoveFunc)
+	testutil.AssertFuncNotNil(m.t, "columnsService.MoveFunc", m.MoveFunc)
 	return m.MoveFunc(ctx, callerID, boardID, columnID, targetPosition)
 }
 
 func (m *MockColumnService) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) error {
-	testutil.AssertFuncNotNil(m.t, "ColumnsService.DeleteFunc", m.DeleteFunc)
+	testutil.AssertFuncNotNil(m.t, "columnsService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, callerID, boardID, columnID)
 }
 
 func (m *MockTaskService) Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error) {
-	testutil.AssertFuncNotNil(m.t, "TasksService.CreateFunc", m.CreateFunc)
+	testutil.AssertFuncNotNil(m.t, "tasksService.CreateFunc", m.CreateFunc)
 	return m.CreateFunc(ctx, callerID, boardID, columnID, name, description)
 }
 
 func (m *MockTaskService) ListByColumnID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error) {
-	testutil.AssertFuncNotNil(m.t, "TasksService.ListByColumnIDFunc", m.ListByColumnIDFunc)
+	testutil.AssertFuncNotNil(m.t, "tasksService.ListByColumnIDFunc", m.ListByColumnIDFunc)
 	return m.ListByColumnIDFunc(ctx, callerID, boardID, columnID)
 }
 
 func (m *MockTaskService) Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error) {
-	testutil.AssertFuncNotNil(m.t, "TasksService.UpdateFunc", m.UpdateFunc)
+	testutil.AssertFuncNotNil(m.t, "tasksService.UpdateFunc", m.UpdateFunc)
 	return m.UpdateFunc(ctx, callerID, boardID, columnID, taskID, name, description)
 }
 
 func (m *MockTaskService) Move(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, targetColumnID domain.ColumnID, targetPosition domain.TaskPosition) (domain.ColumnID, domain.TaskPosition, error) {
-	testutil.AssertFuncNotNil(m.t, "TasksService.MoveFunc", m.MoveFunc)
+	testutil.AssertFuncNotNil(m.t, "tasksService.MoveFunc", m.MoveFunc)
 	return m.MoveFunc(ctx, callerID, boardID, columnID, taskID, targetColumnID, targetPosition)
 }
 
 func (m *MockTaskService) Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error {
-	testutil.AssertFuncNotNil(m.t, "TasksService.DeleteFunc", m.DeleteFunc)
+	testutil.AssertFuncNotNil(m.t, "tasksService.DeleteFunc", m.DeleteFunc)
 	return m.DeleteFunc(ctx, callerID, boardID, columnID, taskID)
 }
 
@@ -185,6 +185,6 @@ func NewMockNotifier(t *testing.T) *MockNotifier {
 }
 
 func (m *MockNotifier) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {
-	testutil.AssertFuncNotNil(m.t, "Notifier.NotifyFunc", m.NotifyFunc)
+	testutil.AssertFuncNotNil(m.t, "notifier.NotifyFunc", m.NotifyFunc)
 	return m.NotifyFunc(ctx, chatID, text)
 }

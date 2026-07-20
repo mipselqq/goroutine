@@ -15,21 +15,21 @@ import (
 	"goroutine/internal/service"
 )
 
-type AuthService interface {
+type authService interface {
 	Register(ctx context.Context, email domain.Email, password domain.UserPassword) error
 	Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error)
 }
 
-type Auth struct {
+type auth struct {
 	logger      *slog.Logger
-	authService AuthService
+	authService authService
 	responder   *httpschema.ErrorResponder
 }
 
-func NewAuth(logger *slog.Logger, authService AuthService, responder *httpschema.ErrorResponder) *Auth {
+func NewAuth(logger *slog.Logger, authService authService, responder *httpschema.ErrorResponder) *auth {
 	moduleLogger := logging.WithModule(logger, "handler.auth")
 
-	return &Auth{
+	return &auth{
 		authService: authService,
 		logger:      moduleLogger,
 		responder:   responder,
@@ -54,7 +54,7 @@ type registerBody struct {
 // @Failure 409 {object} httpschema.DetailedError "USER_ALREADY_EXISTS"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/register [post]
-func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
+func (h *auth) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 
 	err := decodeJSONLimited(r, &body)
@@ -113,7 +113,7 @@ type loginResponse struct {
 // @Failure 401 {object} httpschema.DetailedError "INVALID_CREDENTIALS or USER_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/login [post]
-func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
+func (h *auth) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
 
 	err := decodeJSONLimited(r, &body)
@@ -165,7 +165,7 @@ type whoAmIResponse struct {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN (handler) or INVALID_AUTH_HEADER / INVALID_TOKEN (auth middleware)"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/whoami [get]
-func (h *Auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
+func (h *auth) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(httpschema.ContextKeyUserID).(domain.UserID)
 	if !ok {
 		h.responder.InternalError(w, r, errors.New("failed to get user id from context"))

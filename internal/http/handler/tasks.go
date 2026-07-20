@@ -12,7 +12,7 @@ import (
 	"goroutine/internal/service"
 )
 
-type TasksService interface {
+type tasksService interface {
 	Create(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, name domain.TaskName, description domain.TaskDescription) (domain.Task, error)
 	ListByColumnID(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID) ([]domain.Task, error)
 	Update(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, name *domain.TaskName, description *domain.TaskDescription) (domain.Task, error)
@@ -20,16 +20,16 @@ type TasksService interface {
 	Delete(ctx context.Context, callerID domain.UserID, boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID) error
 }
 
-type Tasks struct {
+type tasks struct {
 	logger       *slog.Logger
-	tasksService TasksService
+	tasksService tasksService
 	responder    *httpschema.ErrorResponder
 }
 
-func NewTasks(logger *slog.Logger, tasksService TasksService, responder *httpschema.ErrorResponder) *Tasks {
+func NewTasks(logger *slog.Logger, tasksService tasksService, responder *httpschema.ErrorResponder) *tasks {
 	moduleLogger := logging.WithModule(logger, "handler.tasks")
 
-	return &Tasks{logger: moduleLogger, tasksService: tasksService, responder: responder}
+	return &tasks{logger: moduleLogger, tasksService: tasksService, responder: responder}
 }
 
 type createTaskBody struct {
@@ -91,7 +91,7 @@ func newTaskResponse(task *domain.Task) taskResponse {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks [post]
-func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
+func (h *tasks) Create(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, ok := h.parseBoardAndColumnID(w, r)
 	if !ok {
 		return
@@ -148,7 +148,7 @@ func (h *Tasks) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks [get]
-func (h *Tasks) ListByColumnID(w http.ResponseWriter, r *http.Request) {
+func (h *tasks) ListByColumnID(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, ok := h.parseBoardAndColumnID(w, r)
 	if !ok {
 		return
@@ -195,7 +195,7 @@ func (h *Tasks) ListByColumnID(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "TASK_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId} [patch]
-func (h *Tasks) Update(w http.ResponseWriter, r *http.Request) {
+func (h *tasks) Update(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, taskID, ok := h.parseBoardColumnAndTaskID(w, r)
 	if !ok {
 		return
@@ -264,7 +264,7 @@ func (h *Tasks) Update(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "TASK_NOT_FOUND or COLUMN_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId}/position [put]
-func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
+func (h *tasks) Move(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, taskID, ok := h.parseBoardColumnAndTaskID(w, r)
 	if !ok {
 		return
@@ -337,7 +337,7 @@ func (h *Tasks) Move(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "TASK_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/columns/{columnId}/tasks/{taskId} [delete]
-func (h *Tasks) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *tasks) Delete(w http.ResponseWriter, r *http.Request) {
 	boardID, columnID, taskID, ok := h.parseBoardColumnAndTaskID(w, r)
 	if !ok {
 		return
@@ -361,7 +361,7 @@ func (h *Tasks) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *Tasks) parseBoardAndColumnID(w http.ResponseWriter, r *http.Request) (boardID domain.BoardID, columnID domain.ColumnID, ok bool) {
+func (h *tasks) parseBoardAndColumnID(w http.ResponseWriter, r *http.Request) (boardID domain.BoardID, columnID domain.ColumnID, ok bool) {
 	rawBoardID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawBoardID)
 	if err != nil {
@@ -379,7 +379,7 @@ func (h *Tasks) parseBoardAndColumnID(w http.ResponseWriter, r *http.Request) (b
 	return boardID, columnID, true
 }
 
-func (h *Tasks) parseBoardColumnAndTaskID(w http.ResponseWriter, r *http.Request) (boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, ok bool) {
+func (h *tasks) parseBoardColumnAndTaskID(w http.ResponseWriter, r *http.Request) (boardID domain.BoardID, columnID domain.ColumnID, taskID domain.TaskID, ok bool) {
 	boardID, columnID, ok = h.parseBoardAndColumnID(w, r)
 	if !ok {
 		return domain.BoardID{}, domain.ColumnID{}, domain.TaskID{}, false

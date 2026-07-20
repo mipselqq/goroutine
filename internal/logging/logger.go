@@ -10,17 +10,17 @@ import (
 
 type ContextExtractor func(ctx context.Context) []slog.Attr
 
-type ContextHandler struct {
+type contextHandler struct {
 	Base       slog.Handler
 	extractors []ContextExtractor
 }
 
-func (h *ContextHandler) Enabled(ctx context.Context, level slog.Level) bool {
+func (h *contextHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.Base.Enabled(ctx, level)
 }
 
 //nolint:gocritic // r must be passed by value to implement slog.Handler
-func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
+func (h *contextHandler) Handle(ctx context.Context, r slog.Record) error {
 	for _, extractor := range h.extractors {
 		if attrs := extractor(ctx); len(attrs) > 0 {
 			r.AddAttrs(attrs...)
@@ -29,15 +29,15 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	return h.Base.Handle(ctx, r)
 }
 
-func (h *ContextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &ContextHandler{
+func (h *contextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &contextHandler{
 		Base:       h.Base.WithAttrs(attrs),
 		extractors: h.extractors,
 	}
 }
 
-func (h *ContextHandler) WithGroup(name string) slog.Handler {
-	return &ContextHandler{
+func (h *contextHandler) WithGroup(name string) slog.Handler {
+	return &contextHandler{
 		Base:       h.Base.WithGroup(name),
 		extractors: h.extractors,
 	}
@@ -54,7 +54,7 @@ func NewLogger(env, levelStr string, extractors ...ContextExtractor) *slog.Logge
 	}
 
 	if len(extractors) > 0 {
-		handler = &ContextHandler{
+		handler = &contextHandler{
 			Base:       handler,
 			extractors: extractors,
 		}

@@ -10,24 +10,24 @@ import (
 	"goroutine/internal/logging"
 )
 
-type GenerateRequestIDFn func() string
+type generateRequestIDFn func() string
 
-type RequestID struct {
+type requestID struct {
 	logger *slog.Logger
-	gen    GenerateRequestIDFn
+	gen    generateRequestIDFn
 }
 
-func MustNewRequestID(logger *slog.Logger, gen GenerateRequestIDFn) *RequestID {
+func MustNewRequestID(logger *slog.Logger, gen generateRequestIDFn) *requestID {
 	if gen == nil {
 		panic("BUG: gen is nil")
 	}
 
 	moduleLogger := logging.WithModule(logger, "middleware.requestid")
 
-	return &RequestID{logger: moduleLogger, gen: gen}
+	return &requestID{logger: moduleLogger, gen: gen}
 }
 
-func (m *RequestID) Wrap(next http.Handler) http.Handler {
+func (m *requestID) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID := strings.TrimSpace(r.Header.Get("X-Request-Id"))
 		if reqID == "" {

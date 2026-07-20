@@ -12,7 +12,7 @@ import (
 	"goroutine/internal/service"
 )
 
-type BoardsService interface {
+type boardsService interface {
 	Create(ctx context.Context, ownerID domain.UserID, name domain.BoardName, description domain.BoardDescription) (domain.Board, error)
 	Get(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (domain.Board, error)
 	GetAggregate(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) (service.AggregateBoard, error)
@@ -21,16 +21,16 @@ type BoardsService interface {
 	Delete(ctx context.Context, ownerID domain.UserID, boardID domain.BoardID) error
 }
 
-type Boards struct {
+type boards struct {
 	logger        *slog.Logger
-	boardsService BoardsService
+	boardsService boardsService
 	responder     *httpschema.ErrorResponder
 }
 
-func NewBoards(logger *slog.Logger, boardsService BoardsService, responder *httpschema.ErrorResponder) *Boards {
+func NewBoards(logger *slog.Logger, boardsService boardsService, responder *httpschema.ErrorResponder) *boards {
 	moduleLogger := logging.WithModule(logger, "handler.boards")
 
-	return &Boards{logger: moduleLogger, boardsService: boardsService, responder: responder}
+	return &boards{logger: moduleLogger, boardsService: boardsService, responder: responder}
 }
 
 type createBoardBody struct {
@@ -113,7 +113,7 @@ type listBoardsResponse = []boardResponse
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [post]
-func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
+func (h *boards) Create(w http.ResponseWriter, r *http.Request) {
 	var body createBoardBody
 
 	err := decodeJSONLimited(r, &body)
@@ -162,7 +162,7 @@ func (h *Boards) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [get]
-func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
+func (h *boards) Get(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
@@ -202,7 +202,7 @@ func (h *Boards) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId}/aggregate [get]
-func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
+func (h *boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
@@ -240,7 +240,7 @@ func (h *Boards) GetAggregate(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} httpschema.DetailedError "Unauthorized: INVALID_TOKEN or INVALID_AUTH_HEADER"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards [get]
-func (h *Boards) ListByOwnerID(w http.ResponseWriter, r *http.Request) {
+func (h *boards) ListByOwnerID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := extractUserIDOrHandleMissing(w, r, h.logger, h.responder)
 	if !ok {
 		return
@@ -276,7 +276,7 @@ func (h *Boards) ListByOwnerID(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [patch]
-func (h *Boards) Update(w http.ResponseWriter, r *http.Request) {
+func (h *boards) Update(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {
@@ -345,7 +345,7 @@ func (h *Boards) Update(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} httpschema.DetailedError "BOARD_NOT_FOUND"
 // @Failure 500 {object} httpschema.Error "Internal server error"
 // @Router /v1/boards/{boardId} [delete]
-func (h *Boards) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *boards) Delete(w http.ResponseWriter, r *http.Request) {
 	rawID := r.PathValue("boardId")
 	boardID, err := domain.ParseBoardID(rawID)
 	if err != nil {

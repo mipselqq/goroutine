@@ -12,12 +12,12 @@ type UUID[Tag any] struct {
 	value uuid.UUID
 }
 
-func NewID[Tag any]() UUID[Tag] {
+func newID[Tag any]() UUID[Tag] {
 	id, _ := uuid.NewV7()
 	return UUID[Tag]{value: id}
 }
 
-func ParseID[Tag any, Struct UUID[Tag]](s string) (Struct, error) {
+func parseID[Tag any, Struct UUID[Tag]](s string) (Struct, error) {
 	u, err := uuid.Parse(s)
 	if err != nil {
 		return Struct{}, fmt.Errorf("parse id %s: %w", reflect.TypeFor[Tag](), err)
@@ -28,7 +28,7 @@ func ParseID[Tag any, Struct UUID[Tag]](s string) (Struct, error) {
 	return Struct{value: u}, nil
 }
 
-func NewIDFromUUID[Tag any, Struct UUID[Tag]](u uuid.UUID) (Struct, error) {
+func newIDFromUUID[Tag any, Struct UUID[Tag]](u uuid.UUID) (Struct, error) {
 	if u == uuid.Nil {
 		return Struct{}, fmt.Errorf("nil UUID")
 	}

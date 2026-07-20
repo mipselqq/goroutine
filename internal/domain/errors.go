@@ -6,23 +6,16 @@ import (
 	"strings"
 )
 
-type ErrValidation struct {
+type errValidation struct {
 	Issues []string
 }
 
-func (e *ErrValidation) Error() string {
+func (e *errValidation) Error() string {
 	return fmt.Sprintf("validation error: %s", strings.Join(e.Issues, ", "))
 }
 
-func NewValidationError(issues ...string) error {
-	if len(issues) == 0 {
-		return nil
-	}
-	return &ErrValidation{Issues: issues}
-}
-
 func ExtractValidationIssues(err error) []string {
-	var ve *ErrValidation
+	var ve *errValidation
 	if errors.As(err, &ve) {
 		return ve.Issues
 	}

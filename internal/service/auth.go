@@ -16,7 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type AuthUserRepository interface {
+type authUserRepository interface {
 	Create(ctx context.Context, email domain.Email, hash domain.PasswordHash) error
 	GetByEmail(ctx context.Context, email domain.Email) (domain.User, error)
 }
@@ -27,19 +27,19 @@ type JWTOptions struct {
 	SigningMethod jwt.SigningMethod
 }
 
-type Auth struct {
-	userRepo   AuthUserRepository
+type auth struct {
+	userRepo   authUserRepository
 	jwtOptions JWTOptions
 }
 
-func NewAuth(userRepo AuthUserRepository, opts JWTOptions) *Auth {
-	return &Auth{
+func NewAuth(userRepo authUserRepository, opts JWTOptions) *auth {
+	return &auth{
 		userRepo:   userRepo,
 		jwtOptions: opts,
 	}
 }
 
-func (s *Auth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
+func (s *auth) Register(ctx context.Context, email domain.Email, password domain.UserPassword) error {
 	hash, err := argon2id.CreateHash(password.RevealSecret(), argon2id.DefaultParams)
 	if err != nil {
 		return fmt.Errorf("auth service: register: hash password: %v: %w", err, ErrInternal)
@@ -56,7 +56,7 @@ func (s *Auth) Register(ctx context.Context, email domain.Email, password domain
 	return nil
 }
 
-func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
+func (s *auth) Login(ctx context.Context, email domain.Email, password domain.UserPassword) (domain.AuthToken, error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if errors.Is(err, repository.ErrRowNotFound) {
 		return domain.AuthToken{}, fmt.Errorf("auth service: login: hash by email: %w", ErrUserNotFound)
@@ -80,7 +80,7 @@ func (s *Auth) Login(ctx context.Context, email domain.Email, password domain.Us
 	return token, nil
 }
 
-func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (domain.AuthToken, error) {
+func (s *auth) CreateToken(userID domain.UserID, exp time.Duration) (domain.AuthToken, error) {
 	claims := jwt.MapClaims{
 		"sub": userID.String(),
 		"exp": time.Now().Add(exp).Unix(),
@@ -102,7 +102,7 @@ func (s *Auth) CreateToken(userID domain.UserID, exp time.Duration) (domain.Auth
 	return jwtToken, nil
 }
 
-func (s *Auth) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
+func (s *auth) VerifyToken(ctx context.Context, token domain.AuthToken) (domain.UserID, error) {
 	tokenString := token.RevealSecret()
 	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if token.Method.Alg() != s.jwtOptions.SigningMethod.Alg() {
