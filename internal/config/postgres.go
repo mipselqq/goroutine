@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	"goroutine/internal/logging"
 	"goroutine/internal/secrecy"
 )
 
@@ -17,8 +16,6 @@ type PG struct {
 }
 
 func NewPGFromEnv(logger *slog.Logger) PG {
-	logger = logging.WithModule(logger, "config.postgres")
-
 	return PG{
 		User:     getEnvStringOrDefault("POSTGRES_USER", "user", logger),
 		Password: secrecy.SecretString(getEnvStringOrDefault("POSTGRES_PASSWORD", "password", logger)),
