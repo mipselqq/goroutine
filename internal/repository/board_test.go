@@ -58,20 +58,9 @@ func TestBoardRepository_Create(t *testing.T) {
 		if !ok {
 			t.Fatalf("created board %q not found in DB", board.ID)
 		}
-		if stored.OwnerID != userID {
-			t.Errorf("DB: got owner ID %q, want %q", stored.OwnerID, userID)
-		}
-		if stored.Name != boardName {
-			t.Errorf("DB: got name %q, want %q", stored.Name, boardName)
-		}
-		if stored.Description != boardDescription {
-			t.Errorf("DB: got description %q, want %q", stored.Description, boardDescription)
-		}
-		if !stored.CreatedAt.Equal(board.CreatedAt) {
-			t.Errorf("DB: got created_at %v, want %v", stored.CreatedAt, board.CreatedAt)
-		}
-		if !stored.UpdatedAt.Equal(board.UpdatedAt) {
-			t.Errorf("DB: got updated_at %v, want %v", stored.UpdatedAt, board.UpdatedAt)
+		diff := cmp.Diff(board, stored, testutil.CmpAllowUnexported())
+		if diff != "" {
+			t.Errorf("stored board mismatch (-returned +stored):\n%s", diff)
 		}
 	})
 }
