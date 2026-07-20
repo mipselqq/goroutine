@@ -14,7 +14,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// TODO: remove this function. Too implicit.
 func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
