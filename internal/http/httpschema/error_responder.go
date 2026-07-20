@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+
+	"goroutine/internal/logging"
 )
 
 type timeFunc func() string
@@ -19,7 +21,9 @@ func MustNewErrorResponder(logger *slog.Logger, timeFn timeFunc) *ErrorResponder
 		panic("BUG: timeFn is nil")
 	}
 
-	return &ErrorResponder{logger: logger, timeFn: timeFn}
+	moduleLogger := logging.WithModule(logger, "httpschema.responder")
+
+	return &ErrorResponder{logger: moduleLogger, timeFn: timeFn}
 }
 
 func (r *ErrorResponder) InternalError(w http.ResponseWriter, req *http.Request, err error) {

@@ -22,7 +22,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get many boards for the current user. Results are returned in increasing creation time order.",
+                "description": "List all boards for the current user. Results are returned in increasing creation time order.",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,7 +32,7 @@ const docTemplate = `{
                 "tags": [
                     "boards"
                 ],
-                "summary": "Get many boards",
+                "summary": "List all boards",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -257,7 +257,7 @@ const docTemplate = `{
                 "tags": [
                     "boards"
                 ],
-                "summary": "UpdateByID a board by id",
+                "summary": "Update a board by id",
                 "parameters": [
                     {
                         "type": "string",
