@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/logging"
 	"goroutine/internal/service"
 )
 
@@ -27,8 +28,10 @@ type Telegram struct {
 }
 
 func NewTelegram(logger *slog.Logger, userService TelegramUserService, notifier Notifier) *Telegram {
+	moduleLogger := logging.WithModule(logger, "handler.telegram")
+
 	return &Telegram{
-		logger:      logger,
+		logger:      moduleLogger,
 		userService: userService,
 		notifier:    notifier,
 	}

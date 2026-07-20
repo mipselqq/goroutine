@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/logging"
 )
 
 type GenerateRequestIDFn func() string
@@ -21,7 +22,9 @@ func MustNewRequestID(logger *slog.Logger, gen GenerateRequestIDFn) *RequestID {
 		panic("BUG: gen is nil")
 	}
 
-	return &RequestID{logger: logger, gen: gen}
+	moduleLogger := logging.WithModule(logger, "middleware.requestid")
+
+	return &RequestID{logger: moduleLogger, gen: gen}
 }
 
 func (m *RequestID) Wrap(next http.Handler) http.Handler {

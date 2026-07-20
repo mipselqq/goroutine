@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/logging"
 )
 
 type Health struct {
@@ -12,8 +13,10 @@ type Health struct {
 }
 
 func NewHealth(logger *slog.Logger) *Health {
+	moduleLogger := logging.WithModule(logger, "handler.health")
+
 	return &Health{
-		logger: logger,
+		logger: moduleLogger,
 	}
 }
 

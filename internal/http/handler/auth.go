@@ -27,9 +27,11 @@ type Auth struct {
 }
 
 func NewAuth(logger *slog.Logger, authService AuthService, responder *httpschema.ErrorResponder) *Auth {
+	moduleLogger := logging.WithModule(logger, "handler.auth")
+
 	return &Auth{
 		authService: authService,
-		logger:      logging.WithModule(logger, "handler.auth"),
+		logger:      moduleLogger,
 		responder:   responder,
 	}
 }

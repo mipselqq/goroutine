@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"goroutine/internal/logging"
 	"goroutine/internal/secrecy"
 )
 
@@ -23,6 +24,8 @@ type App struct {
 }
 
 func NewAppFromEnv(logger *slog.Logger) App {
+	logger = logging.WithModule(logger, "config.app")
+
 	jwtExpStr := getEnvStringOrDefault("JWT_EXP", "24h", logger)
 	jwtExp, err := time.ParseDuration(jwtExpStr)
 	if err != nil {

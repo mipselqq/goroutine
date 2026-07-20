@@ -8,6 +8,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/logging"
 	"goroutine/internal/service"
 )
 
@@ -26,7 +27,9 @@ type Tasks struct {
 }
 
 func NewTasks(logger *slog.Logger, tasksService TasksService, responder *httpschema.ErrorResponder) *Tasks {
-	return &Tasks{logger: logger, tasksService: tasksService, responder: responder}
+	moduleLogger := logging.WithModule(logger, "handler.tasks")
+
+	return &Tasks{logger: moduleLogger, tasksService: tasksService, responder: responder}
 }
 
 type createTaskBody struct {

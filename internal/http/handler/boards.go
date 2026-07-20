@@ -8,6 +8,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/logging"
 	"goroutine/internal/service"
 )
 
@@ -27,7 +28,9 @@ type Boards struct {
 }
 
 func NewBoards(logger *slog.Logger, boardsService BoardsService, responder *httpschema.ErrorResponder) *Boards {
-	return &Boards{logger: logger, boardsService: boardsService, responder: responder}
+	moduleLogger := logging.WithModule(logger, "handler.boards")
+
+	return &Boards{logger: moduleLogger, boardsService: boardsService, responder: responder}
 }
 
 type createBoardBody struct {
