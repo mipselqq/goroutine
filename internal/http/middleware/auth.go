@@ -8,6 +8,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/logging"
 )
 
 type TokenVerifier interface {
@@ -21,7 +22,9 @@ type Auth struct {
 }
 
 func NewAuth(logger *slog.Logger, verifier TokenVerifier, responder *httpschema.ErrorResponder) *Auth {
-	return &Auth{logger: logger, verifier: verifier, responder: responder}
+	moduleLogger := logging.WithModule(logger, "middleware.auth")
+
+	return &Auth{logger: moduleLogger, verifier: verifier, responder: responder}
 }
 
 func (m *Auth) Wrap(next http.Handler) http.Handler {

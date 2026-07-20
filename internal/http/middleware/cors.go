@@ -3,6 +3,8 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
+
+	"goroutine/internal/logging"
 )
 
 // Every method used by NewRouter + OPTIONS for preflight
@@ -13,9 +15,11 @@ type CORS struct {
 }
 
 func NewCORS(logger *slog.Logger, allowedOrigins map[string]struct{}) *CORS {
+	moduleLogger := logging.WithModule(logger, "middleware.cors")
+
 	for origin := range allowedOrigins {
 		if origin == "*" {
-			logger.Warn("CORS middleware is too permissive, allowing any origin")
+			moduleLogger.Warn("CORS middleware is too permissive, allowing any origin")
 			return &CORS{allowedOrigins: allowedOrigins}
 		}
 	}

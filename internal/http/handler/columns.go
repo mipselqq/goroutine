@@ -8,6 +8,7 @@ import (
 
 	"goroutine/internal/domain"
 	"goroutine/internal/http/httpschema"
+	"goroutine/internal/logging"
 	"goroutine/internal/service"
 )
 
@@ -26,7 +27,9 @@ type Columns struct {
 }
 
 func NewColumns(logger *slog.Logger, columnsService ColumnsService, responder *httpschema.ErrorResponder) *Columns {
-	return &Columns{logger: logger, columnsService: columnsService, responder: responder}
+	moduleLogger := logging.WithModule(logger, "handler.columns")
+
+	return &Columns{logger: moduleLogger, columnsService: columnsService, responder: responder}
 }
 
 type createColumnBody struct {
