@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:b6a16ed0eb96e2c362811f7eeb951eac8b459e7b40be4149ea5444aa7c65569b
     container_name: goro-postgres-dev
     cpu_shares: 1024
     oom_score_adj: -800
@@ -22,7 +22,7 @@ services:
       - postgres_data_dev:/var/lib/postgresql
 
   redis:
-    image: redis:8.6.3-alpine
+    image: redis:8.6.3-alpine@sha256:02c2454cd3b6277389101b9d42d009f8518255930f8b06ae33624e324f8c6455
     container_name: goro-redis-dev
     cpu_shares: 512
     oom_score_adj: -500
@@ -39,7 +39,7 @@ services:
       - redis_data_dev:/data
 
   prometheus:
-    image: prom/prometheus:v3.9.1
+    image: prom/prometheus:v3.9.1@sha256:2024d7bdfc559f6254de22d65e62d799eaa8eb818fe5dbeca212d3f200b70890
     container_name: goro-prometheus-dev
     cpu_shares: 512
     oom_score_adj: 100
@@ -80,7 +80,7 @@ services:
           --web.config.file=/etc/prometheus/web-config.yml
 
   grafana:
-    image: grafana/grafana:12.3.2
+    image: grafana/grafana:12.3.2@sha256:5c1eb28c96c2a8a103384183fb2c32f9cb499904b310b9ba8cdd6bdae435509a
     container_name: goro-grafana-dev
     cpu_shares: 256
     oom_score_adj: 200
@@ -104,7 +104,7 @@ services:
       retries: 3
 
   node_exporter:
-    image: prom/node-exporter:v1.10.2
+    image: prom/node-exporter:v1.10.2@sha256:7bcf2839f207d926b908cd3c566c9f1577efb72268062be0c96cd3b17a5cb283
     container_name: goro-node-exporter-dev
     cpu_shares: 128
     oom_score_adj: 500
@@ -118,7 +118,7 @@ services:
       retries: 3
 
   loki:
-    image: grafana/loki:3.3.2
+    image: grafana/loki:3.3.2@sha256:e9d0a18363c9c3022aef6793a7e135000d11127fb0e18b89de08b1e21e629d60
     container_name: goro-loki-dev
     cpu_shares: 256
     oom_score_adj: 300
@@ -135,7 +135,7 @@ services:
       retries: 3
 
   alloy:
-    image: grafana/alloy:v1.6.1
+    image: grafana/alloy:v1.6.1@sha256:da82cb8b6c5939fac71e2206b05101ca7581f929d6ea7c1e8dd311ccc69176fa
     container_name: goro-alloy-dev
     cpu_shares: 128
     oom_score_adj: 400
