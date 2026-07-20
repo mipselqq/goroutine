@@ -54,24 +54,12 @@ func TestBoardRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := GetBoard(t, pool, board.ID)
-		if !ok {
-			t.Fatalf("created board %q not found in DB", board.ID)
+		storedBoards := ListBoards(t, pool)
+		if len(storedBoards) != 1 {
+			t.Fatalf("ListBoards() returned %d boards, want exactly 1", len(storedBoards))
 		}
-		if stored.OwnerID != userID {
-			t.Errorf("DB: got owner ID %q, want %q", stored.OwnerID, userID)
-		}
-		if stored.Name != boardName {
-			t.Errorf("DB: got name %q, want %q", stored.Name, boardName)
-		}
-		if stored.Description != boardDescription {
-			t.Errorf("DB: got description %q, want %q", stored.Description, boardDescription)
-		}
-		if !stored.CreatedAt.Equal(board.CreatedAt) {
-			t.Errorf("DB: got created_at %v, want %v", stored.CreatedAt, board.CreatedAt)
-		}
-		if !stored.UpdatedAt.Equal(board.UpdatedAt) {
-			t.Errorf("DB: got updated_at %v, want %v", stored.UpdatedAt, board.UpdatedAt)
+		if diff := cmp.Diff(board, storedBoards[0], testutil.CmpAllowUnexported()); diff != "" {
+			t.Errorf("stored board mismatch (-returned +stored):\n%s", diff)
 		}
 	})
 }
@@ -234,11 +222,11 @@ func TestBoardRepository_Update(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "boards", "created_at", "updated_at")
 
-		stored, ok := GetBoard(t, pool, validBoard.ID)
-		if !ok {
-			t.Fatalf("updated board %q not found in DB", validBoard.ID)
+		storedBoards := ListBoards(t, pool)
+		if len(storedBoards) != 1 {
+			t.Fatalf("ListBoards() returned %d boards, want exactly 1", len(storedBoards))
 		}
-		if diff := cmp.Diff(got, stored, testutil.CmpAllowUnexported()); diff != "" {
+		if diff := cmp.Diff(got, storedBoards[0], testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("got stored board mismatch (-want +got):\n%s", diff)
 		}
 	}
@@ -305,9 +293,9 @@ func TestBoardRepository_Delete(t *testing.T) {
 			t.Errorf("Delete() error = %v", err)
 		}
 
-		_, ok := GetBoard(t, pool, board.ID)
-		if ok {
-			t.Errorf("got board %q in DB, want deleted row", board.ID)
+		storedBoards := ListBoards(t, pool)
+		if len(storedBoards) != 0 {
+			t.Errorf("ListBoards() returned %d boards after delete, want 0", len(storedBoards))
 		}
 	})
 

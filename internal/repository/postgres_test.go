@@ -10,11 +10,9 @@ import (
 	"goroutine/internal/repository"
 	"goroutine/internal/testutil"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// TODO: remove this function. Too implicit.
 func CreateFixedUser(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
@@ -42,11 +40,11 @@ func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			INSERT INTO boards (id, owner_id, name, description, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := pool.Exec(
-		ctx, q,
+		ctx, query,
 		board.ID,
 		board.OwnerID,
 		board.Name,
@@ -59,26 +57,38 @@ func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	}
 }
 
-func GetBoard(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.Board, bool) {
+func ListBoards(t *testing.T, pool *pgxpool.Pool) []domain.Board {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			SELECT id, owner_id, name, description, created_at, updated_at
 			FROM boards
-			WHERE id = $1`
+			ORDER BY created_at ASC`
 
-	board, err := repository.ScanBoard(pool.QueryRow(ctx, q, boardID))
+	rows, err := pool.Query(ctx, query)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Board{}, false
+		t.Fatalf("ListBoards() error = %v", err)
+	}
+	defer rows.Close()
+
+	var boards []domain.Board
+	for rows.Next() {
+		board, scanErr := repository.ScanBoard(rows)
+		if scanErr != nil {
+			t.Fatalf("Board row Scan() error = %v", scanErr)
 		}
-		t.Fatalf("GetBoard() error = %v", err)
+		boards = append(boards, board)
 	}
 
-	return board, true
+	err = rows.Err()
+	if err != nil {
+		t.Fatalf("rows.Err() error = %v", err)
+	}
+
+	return boards
 }
 
 func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
@@ -87,11 +97,11 @@ func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			INSERT INTO columns (id, board_id, name, description, position, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(
-		ctx, q,
+		ctx, query,
 		column.ID,
 		column.BoardID,
 		column.Name,
@@ -105,41 +115,19 @@ func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	}
 }
 
-func GetColumn(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	const q = `
-			SELECT id, board_id, name, description, position, created_at, updated_at
-			FROM columns
-			WHERE id = $1`
-
-	column, err := repository.ScanColumn(pool.QueryRow(ctx, q, columnID))
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Column{}, false
-		}
-		t.Fatalf("GetColumn() error = %v", err)
-	}
-
-	return column, true
-}
-
 func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) []domain.Column {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			SELECT id, board_id, name, description, position, created_at, updated_at
 			FROM columns
 			WHERE board_id = $1
 			ORDER BY position ASC`
 
-	rows, err := pool.Query(ctx, q, boardID)
+	rows, err := pool.Query(ctx, query, boardID)
 	if err != nil {
 		t.Fatalf("ListColumnsByBoardID() error = %v", err)
 	}
@@ -169,11 +157,11 @@ func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			INSERT INTO tasks (id, column_id, name, description, position, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := pool.Exec(
-		ctx, q,
+		ctx, query,
 		task.ID,
 		task.ColumnID,
 		task.Name,
@@ -187,41 +175,19 @@ func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	}
 }
 
-func GetTask(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	const q = `
-			SELECT id, column_id, name, description, position, created_at, updated_at
-			FROM tasks
-			WHERE id = $1`
-
-	task, err := repository.ScanTask(pool.QueryRow(ctx, q, taskID))
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Task{}, false
-		}
-		t.Fatalf("GetTask() error = %v", err)
-	}
-
-	return task, true
-}
-
 func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) []domain.Task {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `
+	const query = `
 			SELECT id, column_id, name, description, position, created_at, updated_at
 			FROM tasks
 			WHERE column_id = $1
 			ORDER BY position ASC`
 
-	rows, err := pool.Query(ctx, q, columnID)
+	rows, err := pool.Query(ctx, query, columnID)
 	if err != nil {
 		t.Fatalf("ListTasksByColumnID() error = %v", err)
 	}
@@ -290,23 +256,35 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 	}
 }
 
-func GetUser(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
+func ListUsers(t *testing.T, pool *pgxpool.Pool) []domain.User {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE id = $1`
+	const query = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users ORDER BY id`
 
-	user, err := repository.ScanUser(pool.QueryRow(ctx, q, userID))
+	rows, err := pool.Query(ctx, query)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.User{}, false
+		t.Fatalf("ListUsers() error = %v", err)
+	}
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		user, scanErr := repository.ScanUser(rows)
+		if scanErr != nil {
+			t.Fatalf("User row Scan() error = %v", scanErr)
 		}
-		t.Fatalf("GetUser() error = %v", err)
+		users = append(users, user)
 	}
 
-	return user, true
+	err = rows.Err()
+	if err != nil {
+		t.Fatalf("rows.Err() error = %v", err)
+	}
+
+	return users
 }
 
 func assertErrRowNotFound(t *testing.T, err error) {

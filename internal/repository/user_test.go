@@ -114,15 +114,16 @@ func TestUserRepository_UpdateTelegramInfo(t *testing.T) {
 			t.Fatalf("UpdateTelegramInfo() error = %v", err)
 		}
 
-		user, found := GetUser(t, pool, userID)
-		if !found {
-			t.Fatal("GetUser() user not found")
+		storedUsers := ListUsers(t, pool)
+		if len(storedUsers) != 1 {
+			t.Fatalf("ListUsers() returned %d users, want exactly 1", len(storedUsers))
 		}
-		if user.TelegramChatID != chatID {
-			t.Errorf("got chatID %v, want %v", user.TelegramChatID, chatID)
+		storedUser := storedUsers[0]
+		if storedUser.TelegramChatID != chatID {
+			t.Errorf("got chatID %v, want %v", storedUser.TelegramChatID, chatID)
 		}
-		if user.TelegramUsername != username {
-			t.Errorf("got username %v, want %v", user.TelegramUsername, username)
+		if storedUser.TelegramUsername != username {
+			t.Errorf("got username %v, want %v", storedUser.TelegramUsername, username)
 		}
 	})
 
