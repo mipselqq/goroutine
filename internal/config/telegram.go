@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/logging"
 )
 
 type Telegram struct {
@@ -16,6 +17,8 @@ type Telegram struct {
 }
 
 func NewTelegramFromEnv(logger *slog.Logger) (Telegram, error) {
+	logger = logging.WithModule(logger, "config.telegram")
+
 	envToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if envToken == "" {
 		return Telegram{}, fmt.Errorf("telegram config: TELEGRAM_BOT_TOKEN is required")

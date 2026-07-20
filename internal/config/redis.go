@@ -3,6 +3,7 @@ package config
 import (
 	"log/slog"
 
+	"goroutine/internal/logging"
 	"goroutine/internal/secrecy"
 )
 
@@ -13,6 +14,8 @@ type Redis struct {
 }
 
 func NewRedisFromEnv(logger *slog.Logger) Redis {
+	logger = logging.WithModule(logger, "config.redis")
+
 	return Redis{
 		Host:     getEnvStringOrDefault("REDIS_HOST", "127.0.0.1", logger),
 		Port:     getEnvStringOrDefault("REDIS_PORT", "6379", logger),
