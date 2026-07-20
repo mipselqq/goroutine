@@ -10,7 +10,6 @@ import (
 	"goroutine/internal/repository"
 	"goroutine/internal/testutil"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -58,7 +57,7 @@ func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	}
 }
 
-func GetBoard(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.Board, bool) {
+func ListBoards(t *testing.T, pool *pgxpool.Pool) []domain.Board {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -67,17 +66,29 @@ func GetBoard(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) (domain.
 	const q = `
 			SELECT id, owner_id, name, description, created_at, updated_at
 			FROM boards
-			WHERE id = $1`
+			ORDER BY created_at ASC`
 
-	board, err := repository.ScanBoard(pool.QueryRow(ctx, q, boardID))
+	rows, err := pool.Query(ctx, q)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Board{}, false
+		t.Fatalf("ListBoards() error = %v", err)
+	}
+	defer rows.Close()
+
+	var boards []domain.Board
+	for rows.Next() {
+		board, scanErr := repository.ScanBoard(rows)
+		if scanErr != nil {
+			t.Fatalf("Board row Scan() error = %v", scanErr)
 		}
-		t.Fatalf("GetBoard() error = %v", err)
+		boards = append(boards, board)
 	}
 
-	return board, true
+	err = rows.Err()
+	if err != nil {
+		t.Fatalf("rows.Err() error = %v", err)
+	}
+
+	return boards
 }
 
 func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
@@ -102,28 +113,6 @@ func CreateColumn(t *testing.T, pool *pgxpool.Pool, column *domain.Column) {
 	if err != nil {
 		t.Fatalf("CreateColumn() error = %v", err)
 	}
-}
-
-func GetColumn(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) (domain.Column, bool) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	const q = `
-			SELECT id, board_id, name, description, position, created_at, updated_at
-			FROM columns
-			WHERE id = $1`
-
-	column, err := repository.ScanColumn(pool.QueryRow(ctx, q, columnID))
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Column{}, false
-		}
-		t.Fatalf("GetColumn() error = %v", err)
-	}
-
-	return column, true
 }
 
 func ListColumnsByBoardID(t *testing.T, pool *pgxpool.Pool, boardID domain.BoardID) []domain.Column {
@@ -184,28 +173,6 @@ func CreateTask(t *testing.T, pool *pgxpool.Pool, task *domain.Task) {
 	if err != nil {
 		t.Fatalf("CreateTask() error = %v", err)
 	}
-}
-
-func GetTask(t *testing.T, pool *pgxpool.Pool, taskID domain.TaskID) (domain.Task, bool) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	const q = `
-			SELECT id, column_id, name, description, position, created_at, updated_at
-			FROM tasks
-			WHERE id = $1`
-
-	task, err := repository.ScanTask(pool.QueryRow(ctx, q, taskID))
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Task{}, false
-		}
-		t.Fatalf("GetTask() error = %v", err)
-	}
-
-	return task, true
 }
 
 func ListTasksByColumnID(t *testing.T, pool *pgxpool.Pool, columnID domain.ColumnID) []domain.Task {
@@ -289,23 +256,35 @@ func AssertTimestampPrecisionAtLeastMillis(t *testing.T, pool *pgxpool.Pool, tab
 	}
 }
 
-func GetUser(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) (domain.User, bool) {
+func ListUsers(t *testing.T, pool *pgxpool.Pool) []domain.User {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	const q = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users WHERE id = $1`
+	const q = `SELECT id, email, password_hash, telegram_chat_id, telegram_username FROM users ORDER BY id`
 
-	user, err := repository.ScanUser(pool.QueryRow(ctx, q, userID))
+	rows, err := pool.Query(ctx, q)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.User{}, false
+		t.Fatalf("ListUsers() error = %v", err)
+	}
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		user, scanErr := repository.ScanUser(rows)
+		if scanErr != nil {
+			t.Fatalf("User row Scan() error = %v", scanErr)
 		}
-		t.Fatalf("GetUser() error = %v", err)
+		users = append(users, user)
 	}
 
-	return user, true
+	err = rows.Err()
+	if err != nil {
+		t.Fatalf("rows.Err() error = %v", err)
+	}
+
+	return users
 }
 
 func assertErrRowNotFound(t *testing.T, err error) {

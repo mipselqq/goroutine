@@ -65,11 +65,11 @@ func TestTaskRepository_Create(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "tasks", "created_at", "updated_at")
 
-		stored, ok := GetTask(t, pool, task.ID)
-		if !ok {
-			t.Fatalf("created task %q not found in DB", task.ID)
+		storedTasks := ListTasksByColumnID(t, pool, column.ID)
+		if len(storedTasks) != 1 {
+			t.Fatalf("ListTasksByColumnID() returned %d tasks, want exactly 1", len(storedTasks))
 		}
-		if diff := cmp.Diff(task, stored, testutil.CmpAllowUnexported()); diff != "" {
+		if diff := cmp.Diff(task, storedTasks[0], testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("got stored task mismatch (-want +got):\n%s", diff)
 		}
 	})
@@ -239,11 +239,11 @@ func TestTaskRepository_Update(t *testing.T) {
 		}
 		AssertTimestampPrecisionAtLeastMillis(t, pool, "tasks", "created_at", "updated_at")
 
-		stored, ok := GetTask(t, pool, want.ID)
-		if !ok {
-			t.Fatalf("updated task %q not found in DB", want.ID)
+		storedTasks := ListTasksByColumnID(t, pool, want.ColumnID)
+		if len(storedTasks) != 1 {
+			t.Fatalf("ListTasksByColumnID() returned %d tasks, want exactly 1", len(storedTasks))
 		}
-		if diff := cmp.Diff(got, stored, testutil.CmpAllowUnexported()); diff != "" {
+		if diff := cmp.Diff(got, storedTasks[0], testutil.CmpAllowUnexported()); diff != "" {
 			t.Errorf("got stored task mismatch (-want +got):\n%s", diff)
 		}
 	}
@@ -474,14 +474,6 @@ func TestTaskRepository_Move(t *testing.T) {
 		assertTaskIDAndPosition(t, &gotB[0], b1.ID, 1)
 		assertTaskIDAndPosition(t, &gotB[1], a2.ID, 2)
 		assertTaskIDAndPosition(t, &gotB[2], b2.ID, 3)
-
-		movedTask, ok := GetTask(t, pool, a2.ID)
-		if !ok {
-			t.Fatalf("moved task %q not found in DB", a2.ID)
-		}
-		if movedTask.ColumnID != columnB.ID {
-			t.Errorf("got moved columnID %q, want %q", movedTask.ColumnID, columnB.ID)
-		}
 	})
 
 	t.Run("Success move across columns to append", func(t *testing.T) {
@@ -610,11 +602,6 @@ func TestTaskRepository_Delete(t *testing.T) {
 		}
 		assertTaskIDAndPosition(t, &got[0], first.ID, 1)
 		assertTaskIDAndPosition(t, &got[1], third.ID, 2)
-
-		_, ok := GetTask(t, pool, second.ID)
-		if ok {
-			t.Error("got deleted task in DB, want absent")
-		}
 	})
 
 	t.Run("Not found by task id", func(t *testing.T) {
