@@ -1,0 +1,63 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "docker:pinDigests"
+  ],
+  "dependencyDashboard": true,
+  "timezone": "Europe/Moscow",
+  "schedule": ["before 4am on monday"],
+  "minimumReleaseAge": "3 days",
+  "rangeStrategy": "pin",
+  "labels": ["dependency"],
+  "commitMessagePrefix": "deps:",
+  "postUpdateOptions": [
+    "gomodTidy",
+    "npmDedupe"
+  ],
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": null,
+    "schedule": ["at any time"],
+    "labels": ["security"]
+  },
+  "packageRules": [
+    {
+      "description": "Group npm non-major",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["nodejs"],
+      "commitMessagePrefix": "deps(node):",
+      "groupName": "npm non-major"
+    },
+    {
+      "description": "Group GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+      "addLabels": ["github-actions"],
+      "commitMessagePrefix": "deps(actions):",
+      "groupName": "GitHub Actions non-major"
+    },
+    {
+      "description": "Group Docker and Compose",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+      "addLabels": ["docker"],
+      "commitMessagePrefix": "deps(docker):",
+      "groupName": "Docker non-major"
+    },
+    {
+      "description": "Group Go",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["go"],
+      "commitMessagePrefix": "deps(go):",
+      "groupName": "Go non-major"
+    },
+    {
+      "description": "Separate major updates and quarantine for longer",
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "7 days"
+    }
+  ]
+}
