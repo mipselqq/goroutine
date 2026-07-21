@@ -23,6 +23,14 @@
   },
   "packageRules": [
     {
+      "description": "Group ansible pip + collections",
+      "matchManagers": ["custom.regex"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["ansible"],
+      "commitMessagePrefix": "deps(ansible):",
+      "groupName": "ansible non-major"
+    },
+    {
       "description": "Group npm non-major",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
@@ -58,6 +66,26 @@
       "description": "Separate major updates and quarantine for longer",
       "matchUpdateTypes": ["major"],
       "minimumReleaseAge": "7 days"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update ansible-core pip package in deploy workflow. Matches: pip install --user ansible-core==2.20.2",
+      "fileMatch": ["workflows/generic-deploy\\.yml$"],
+      "matchStrings": [
+        "pip install --user (?<depName>ansible-core)==(?<currentValue>[^\\s]+)"
+      ],
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "Update ansible-galaxy collections in deploy workflow. Matches: ansible-galaxy collection install community.general:12.3.0...",
+      "fileMatch": ["workflows/generic-deploy\\.yml$"],
+      "matchStrings": [
+        "(?<depName>[\\w.-]+):(?<currentValue>[^\\s]+)"
+      ],
+      "datasourceTemplate": "galaxy-collection"
     }
   ]
 }
