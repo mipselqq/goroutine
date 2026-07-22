@@ -23,31 +23,39 @@
   },
   "packageRules": [
     {
-      "description": "Group ansible pip + collections",
-      "matchManagers": ["custom.regex"],
+      "description": "Group Ansible",
+      "matchDepTypes": ["ansible"],
       "matchUpdateTypes": ["minor", "patch"],
       "addLabels": ["ansible"],
       "commitMessagePrefix": "deps(ansible):",
-      "groupName": "ansible non-major"
+      "groupName": "Ansible non-major"
     },
     {
-      "description": "Group npm non-major",
-      "matchManagers": ["npm"],
+      "description": "Group Tools",
+      "matchDepTypes": ["tools"],
       "matchUpdateTypes": ["minor", "patch"],
-      "addLabels": ["nodejs"],
-      "commitMessagePrefix": "deps(node):",
-      "groupName": "npm non-major"
+      "addLabels": ["tools"],
+      "commitMessagePrefix": "deps(tools):",
+      "groupName": "Tools non-major"
     },
     {
-      "description": "Group GitHub Actions",
+      "description": "Group Npm",
+      "matchDatasources": ["npm"],
+      "matchUpdateTypes": ["minor", "patch", "pin"],
+      "addLabels": ["npm"],
+      "commitMessagePrefix": "deps(npm):",
+      "groupName": "Npm non-major"
+    },
+    {
+      "description": "Group Actions",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
-      "addLabels": ["github-actions"],
-      "commitMessagePrefix": "deps(actions):",
-      "groupName": "GitHub Actions non-major"
+      "addLabels": ["workflows"],
+      "commitMessagePrefix": "deps(workflows):",
+      "groupName": "Workflows non-major"
     },
     {
-      "description": "Group Docker and Compose",
+      "description": "Group Docker",
       "matchManagers": ["dockerfile", "docker-compose"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
       "addLabels": ["docker"],
@@ -65,27 +73,52 @@
     {
       "description": "Separate major updates and quarantine for longer",
       "matchUpdateTypes": ["major"],
+      "groupName": null,
       "minimumReleaseAge": "7 days"
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update ansible-core pip package in deploy workflow. Matches: pip install --user ansible-core==2.20.2",
-      "fileMatch": ["workflows/generic-deploy\\.yml$"],
+      "description": "Update ansible-core in deploy workflow",
+      "managerFilePatterns": ["/workflows/generic-deploy\\.yml$/"],
       "matchStrings": [
-        "pip install --user (?<depName>ansible-core)==(?<currentValue>[^\\s]+)"
+        "(?<depName>ansible-core)==(?<currentValue>\\S+)"
       ],
-      "datasourceTemplate": "pypi"
+      "datasourceTemplate": "pypi",
+      "depTypeTemplate": "ansible"
     },
     {
       "customType": "regex",
-      "description": "Update ansible-galaxy collections in deploy workflow. Matches: ansible-galaxy collection install community.general:12.3.0...",
-      "fileMatch": ["workflows/generic-deploy\\.yml$"],
+      "description": "Update Ansible Galaxy collections in deploy workflow",
+      "managerFilePatterns": ["/workflows/generic-deploy\\.yml$/"],
+      "matchStringsStrategy": "recursive",
       "matchStrings": [
-        "(?<depName>[\\w.-]+):(?<currentValue>[^\\s]+)"
+        "ansible-galaxy collection install .+",
+        "(?<depName>[\\w.-]+):(?<currentValue>\\S+)"
       ],
-      "datasourceTemplate": "galaxy-collection"
+      "datasourceTemplate": "galaxy-collection",
+      "depTypeTemplate": "ansible"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Go tools in Makefile",
+      "managerFilePatterns": ["/^Makefile$/"],
+      "matchStrings": [
+        "go install (?<depName>\\S+)@(?<currentValue>\\S+)"
+      ],
+      "packageNameTemplate": "{{{replace '/cmd/.*$' '' depName}}}",
+      "datasourceTemplate": "go",
+      "depTypeTemplate": "tools"
+    },
+    {
+      "customType": "regex",
+      "description": "Update npm tools in Makefile",
+      "managerFilePatterns": ["/^Makefile$/"],
+      "matchStrings": [
+        "npm install -D (?<depName>\\S+)@(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "npm"
     }
   ]
 }

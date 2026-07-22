@@ -157,7 +157,7 @@ services:
       retries: 3
 
   loki:
-    image: grafana/loki:3.3.2@sha256:e9d0a18363c9c3022aef6793a7e135000d11127fb0e18b89de08b1e21e629d60
+    image: grafana/loki:3.7.3@sha256:d14b3a2c419b72fe27cd094c017863bd37a5ea9ac7d72f35bcd25f5bd081dc47
     container_name: goro-loki-prod
     cpu_shares: 256
     oom_score_adj: 300
