@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.env_name }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup SSH Key
         shell: bash
@@ -26,19 +26,18 @@ jobs:
 
       - name: Cache Ansible
         id: cache-ansible
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.local
             ~/.ansible/collections
-          key: ${{ runner.os }}-ansible-${{ hashFiles('infra/ansible/server-setup-ubuntu.yml') }}
+          key: ${{ runner.os }}-ansible-${{ hashFiles('infra/ansible/requirements.txt', 'infra/ansible/requirements.yml') }}
 
       - name: Install Ansible Core & Collections
         if: steps.cache-ansible.outputs.cache-hit != 'true'
-        run:
-          | # WARN: Dependabot won't update these versions, manual bump required.
-          pip install --user ansible-core==2.20.2
-          ansible-galaxy collection install community.general:12.3.0 ansible.posix:2.1.0 community.docker:5.0.5
+        run: |
+          pip install --user -r infra/ansible/requirements.txt
+          ansible-galaxy collection install -r infra/ansible/requirements.yml
 
       - name: Create .env file from GitHub Vars/Secrets
         run: |

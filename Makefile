@@ -94,15 +94,15 @@ migrate-up migrate-down migrate-status: migrate-%:
 
 # Install development tools
 tools:
-	go install github.com/evilmartians/lefthook@latest
+	go install github.com/evilmartians/lefthook@v1.13.6
 	lefthook install
-	go install github.com/pressly/goose/v3/cmd/goose@latest
-	go install github.com/swaggo/swag/cmd/swag@latest
-	go install mvdan.cc/gofumpt@latest
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-	go install golang.org/x/vuln/cmd/govulncheck@latest
-	go install go.k6.io/k6@latest
-	npm install -D @types/k6
+	go install github.com/pressly/goose/v3/cmd/goose@v3.27.2
+	go install github.com/swaggo/swag/cmd/swag@v1.16.6
+	go install mvdan.cc/gofumpt@v0.10.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+	go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+	go install go.k6.io/k6@v1.8.0
+	npm install -D @types/k6@2.0.1
 
 # Load testing configuration
 K6_PROMETHEUS_RW_SERVER_URL ?=

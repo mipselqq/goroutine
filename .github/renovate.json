@@ -1,0 +1,97 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "docker:pinDigests"
+  ],
+  "dependencyDashboard": true,
+  "timezone": "Europe/Moscow",
+  "schedule": ["before 4am on monday"],
+  "minimumReleaseAge": "3 days",
+  "rangeStrategy": "pin",
+  "labels": ["dependency"],
+  "commitMessagePrefix": "deps:",
+  "postUpdateOptions": [
+    "gomodTidy",
+    "npmDedupe"
+  ],
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": null,
+    "schedule": ["at any time"],
+    "labels": ["security"]
+  },
+  "packageRules": [
+    {
+      "description": "Group Ansible",
+      "matchManagers": ["pip_requirements", "ansible-galaxy"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["ansible"],
+      "commitMessagePrefix": "deps(ansible):",
+      "groupName": "Ansible non-major"
+    },
+    {
+      "description": "Group Tools",
+      "matchDepTypes": ["tools"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["tools"],
+      "commitMessagePrefix": "deps(tools):",
+      "groupName": "Tools non-major"
+    },
+    {
+      "description": "Group Actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+      "addLabels": ["workflows"],
+      "commitMessagePrefix": "deps(workflows):",
+      "groupName": "Workflows non-major"
+    },
+    {
+      "description": "Group Docker",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+      "addLabels": ["docker"],
+      "commitMessagePrefix": "deps(docker):",
+      "groupName": "Docker non-major"
+    },
+    {
+      "description": "Group Go",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["go"],
+      "commitMessagePrefix": "deps(go):",
+      "groupName": "Go non-major"
+    },
+    {
+      "description": "Separate major updates and quarantine for longer",
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "minimumReleaseAge": "7 days"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Go tools", // Tools directive in go.mod causes dependency conflicts,
+      "managerFilePatterns": [          // so we install tools separately
+        "/^Makefile$/",
+        "/^\\.github/workflows/quality-check\\.yml$/"
+      ],
+      "matchStrings": [
+        "go install (?<depName>\\S+)@(?<currentValue>\\S+)"
+      ],
+      "packageNameTemplate": "{{{replace '/cmd/.*$' '' depName}}}",
+      "datasourceTemplate": "go",
+      "depTypeTemplate": "tools"
+    },
+    {
+      "customType": "regex",
+      "description": "Update npm tools in Makefile",
+      "managerFilePatterns": ["/^Makefile$/"],
+      "matchStrings": [
+        "npm install -D (?<depName>\\S+)@(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "tools"
+    }
+  ]
+}
