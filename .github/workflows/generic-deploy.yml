@@ -31,13 +31,13 @@ jobs:
           path: |
             ~/.local
             ~/.ansible/collections
-          key: ${{ runner.os }}-ansible-${{ hashFiles('infra/ansible/server-setup-ubuntu.yml') }}
+          key: ${{ runner.os }}-ansible-${{ hashFiles('infra/ansible/requirements.txt', 'infra/ansible/requirements.yml') }}
 
       - name: Install Ansible Core & Collections
         if: steps.cache-ansible.outputs.cache-hit != 'true'
         run: |
-          pip install --user ansible-core==2.20.2
-          ansible-galaxy collection install community.general:12.3.0 ansible.posix:2.1.0 community.docker:5.0.5
+          pip install --user -r infra/ansible/requirements.txt
+          ansible-galaxy collection install -r infra/ansible/requirements.yml
 
       - name: Create .env file from GitHub Vars/Secrets
         run: |

@@ -24,7 +24,7 @@
   "packageRules": [
     {
       "description": "Group Ansible",
-      "matchDepTypes": ["ansible"],
+      "matchManagers": ["pip_requirements", "ansible-galaxy"],
       "matchUpdateTypes": ["minor", "patch"],
       "addLabels": ["ansible"],
       "commitMessagePrefix": "deps(ansible):",
@@ -80,30 +80,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update ansible-core in deploy workflow",
-      "managerFilePatterns": ["/workflows/generic-deploy\\.yml$/"],
-      "matchStrings": [
-        "(?<depName>ansible-core)==(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "pypi",
-      "depTypeTemplate": "ansible"
-    },
-    {
-      "customType": "regex",
-      "description": "Update Ansible Galaxy collections in deploy workflow",
-      "managerFilePatterns": ["/workflows/generic-deploy\\.yml$/"],
-      "matchStringsStrategy": "recursive",
-      "matchStrings": [
-        "ansible-galaxy collection install .+",
-        "(?<depName>[\\w.-]+):(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "galaxy-collection",
-      "depTypeTemplate": "ansible"
-    },
-    {
-      "customType": "regex",
-      "description": "Update Go tools in Makefile",
-      "managerFilePatterns": ["/^Makefile$/"],
+      "description": "Update Go tools in Makefile", // Tools directive in go.mod causes dependency conflicts,
+      "managerFilePatterns": ["/^Makefile$/"],      // so we install tools separately
       "matchStrings": [
         "go install (?<depName>\\S+)@(?<currentValue>\\S+)"
       ],
