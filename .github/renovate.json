@@ -39,14 +39,6 @@
       "groupName": "Tools non-major"
     },
     {
-      "description": "Group Npm",
-      "matchDatasources": ["npm"],
-      "matchUpdateTypes": ["minor", "patch", "pin"],
-      "addLabels": ["npm"],
-      "commitMessagePrefix": "deps(npm):",
-      "groupName": "Npm non-major"
-    },
-    {
       "description": "Group Actions",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
@@ -80,8 +72,11 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update Go tools in Makefile", // Tools directive in go.mod causes dependency conflicts,
-      "managerFilePatterns": ["/^Makefile$/"],      // so we install tools separately
+      "description": "Update Go tools", // Tools directive in go.mod causes dependency conflicts,
+      "managerFilePatterns": [          // so we install tools separately
+        "/^Makefile$/",
+        "/^\\.github/workflows/quality-check\\.yml$/"
+      ],
       "matchStrings": [
         "go install (?<depName>\\S+)@(?<currentValue>\\S+)"
       ],
@@ -96,7 +91,7 @@
       "matchStrings": [
         "npm install -D (?<depName>\\S+)@(?<currentValue>\\S+)"
       ],
-      "datasourceTemplate": "npm"
+      "datasourceTemplate": "tools"
     }
   ]
 }
