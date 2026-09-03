@@ -107,7 +107,7 @@ tools:
 	go install mvdan.cc/gofumpt@v0.11.0
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 	go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
-	go install go.k6.io/k6@v1.8.1
+	go install go.k6.io/k6@v2.2.0
 	npm install -D @types/k6@2.2.0
 
 # Load testing configuration
