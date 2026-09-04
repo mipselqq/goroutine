@@ -15,6 +15,7 @@ FROM gcr.io/distroless/static-debian12@sha256:61b7ccecebc7c474a531717de80a94709d
 COPY --from=builder /bin/app /app
 COPY --from=builder /bin/notify /notify
 COPY --from=builder /bin/ping /ping
+COPY --from=builder /bin/migrate /migrate
 COPY --from=builder /app/migrations /migrations
 
 ENTRYPOINT ["/app"]

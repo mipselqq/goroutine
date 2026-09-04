@@ -34,6 +34,20 @@ services:
     volumes:
       - redis_data_prod:/data
 
+  migrator:
+    image: ghcr.io/mipselqq/goroutine:latest
+    entrypoint: ["/migrate"]
+    restart: "no"
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+    depends_on:
+      db:
+        condition: service_healthy
+
   app:
     image: ghcr.io/mipselqq/goroutine:latest
     container_name: goro-goroutine-prod
@@ -68,6 +82,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "/ping"]
       interval: 10s
@@ -93,8 +109,10 @@ services:
       - NOTIFY_ENV
       - NOTIFY_LOG_LEVEL
     depends_on:
-      app:
+      db:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
 
   prometheus:
     image: prom/prometheus:v3.13.2@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7

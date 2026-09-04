@@ -12,8 +12,6 @@ import (
 	"goroutine/internal/logging"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -54,19 +52,6 @@ func SetupPostgresFromEnv(logger *slog.Logger) (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
-}
-
-func MigratePostgres(pool *pgxpool.Pool, logger *slog.Logger, migrationsDir string) error {
-	logger = logging.WithModule(logger, "app.startup")
-
-	goose.SetLogger(&logging.GooseLogger{Base: logger})
-
-	err := goose.SetDialect("postgres")
-	if err != nil {
-		return err
-	}
-
-	return goose.Up(stdlib.OpenDBFromPool(pool), migrationsDir)
 }
 
 func SetupRedisFromEnv(logger *slog.Logger) (*redis.Client, error) {

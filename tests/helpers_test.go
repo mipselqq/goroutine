@@ -35,7 +35,7 @@ type preludeResult struct {
 func prelude(t *testing.T) preludeResult {
 	t.Helper()
 
-	pool := testutil.SetupPostgres(t, "../migrations")
+	pool := testutil.SetupPostgres(t)
 
 	if os.Getenv("APP_ENV") != "prod" {
 		err := godotenv.Load("../.env.dev")

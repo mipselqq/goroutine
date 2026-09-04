@@ -729,7 +729,7 @@ func assertColumnIDAndPosition(t *testing.T, col *domain.Column, wantID domain.C
 func columnRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGColumn) {
 	t.Helper()
 
-	pool := testutil.SetupPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t)
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGColumn(pool)

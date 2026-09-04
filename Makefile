@@ -71,6 +71,9 @@ build-bin: try-fetch-tags
 	CGO_ENABLED=0 GOOS=linux go build \
     	-o /bin/ping ./cmd/ping/main.go
 
+	CGO_ENABLED=0 GOOS=linux go build \
+    	-o /bin/migrate ./cmd/migrate/main.go
+
 # Try to fetch tags
 try-fetch-tags:
 	git fetch --tags || true
@@ -98,9 +101,12 @@ migrate-create:
 migrate-up migrate-down migrate-status: migrate-%:
 	export $$(cat .env.dev | xargs) && goose -dir migrations postgres "user=$$POSTGRES_USER password=$$POSTGRES_PASSWORD dbname=$$POSTGRES_DB host=$$POSTGRES_HOST sslmode=disable" $*
 
+migrate-up-go:
+	go run ./cmd/migrate
+
 # Install development tools
 tools:
-	go install github.com/evilmartians/lefthook@v1.13.6
+	go install github.com/evilmartians/lefthook@v1.12.2
 	lefthook install
 	go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 	go install github.com/swaggo/swag/cmd/swag@v1.16.6

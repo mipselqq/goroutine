@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
+func SetupPostgres(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	mustLoadDevEnv()
 	logger := NewLogger(t)
@@ -21,10 +21,6 @@ func SetupPostgres(t *testing.T, migrationsDir string) *pgxpool.Pool {
 	pool, err := app.SetupPostgresFromEnv(logger)
 	if err != nil {
 		t.Fatalf("Failed to setup Postgres: %v", err)
-	}
-	err = app.MigratePostgres(pool, logger, migrationsDir)
-	if err != nil {
-		t.Fatalf("Failed to migrate Postgres: %v", err)
 	}
 
 	return pool

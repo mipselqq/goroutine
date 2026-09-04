@@ -472,7 +472,7 @@ func TestBoardRepository_GetAggregate(t *testing.T) {
 func boardRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGBoard) {
 	t.Helper()
 
-	pool := testutil.SetupPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t)
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGBoard(pool)

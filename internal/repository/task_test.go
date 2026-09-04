@@ -1085,7 +1085,7 @@ func assertTaskIDAndPosition(t *testing.T, task *domain.Task, wantID domain.Task
 func taskRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGTask) {
 	t.Helper()
 
-	pool := testutil.SetupPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t)
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGTask(pool)

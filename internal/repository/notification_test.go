@@ -97,7 +97,7 @@ func TestNotificationRepository_Ack(t *testing.T) {
 func notificationRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGNotification) {
 	t.Helper()
 
-	pool := testutil.SetupPostgres(t, "../../migrations")
+	pool := testutil.SetupPostgres(t)
 	t.Cleanup(func() { pool.Close() })
 
 	return pool, repository.NewPGNotification(pool)
