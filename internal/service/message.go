@@ -1,10 +1,35 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/repository"
 )
+
+func (w *notificationWorker) TelegramMessageFromNotificationOutbox(ctx context.Context, event *repository.OutboxEvent) (domain.TelegramMessage, error) {
+	notificationType, err := domain.NewNotificationType(event.EventType)
+	if err != nil {
+		return domain.TelegramMessage{}, fmt.Errorf("invalid notification type: %v", err)
+	}
+
+	payload, issues := ParseNotificationPayload(notificationType, event.Payload)
+	if len(issues) > 0 {
+		return domain.TelegramMessage{}, fmt.Errorf("invalid notification payload: %v", issues)
+	}
+
+	message := FormatNotificationMessage(domain.Notification{
+		Type:    notificationType,
+		Payload: payload,
+	})
+	telegramMessage, err := domain.NewTelegramMessage(message)
+	if err != nil {
+		return domain.TelegramMessage{}, fmt.Errorf("invalid telegram message: %v", err)
+	}
+
+	return telegramMessage, nil
+}
 
 func FormatNotificationMessage(notification domain.Notification) string {
 	switch p := notification.Payload.(type) {

@@ -16,14 +16,25 @@ type notificationRepository interface {
 	Ack(ctx context.Context, ids []int64) error
 }
 
+type Notifier interface {
+	Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error
+}
+
 type notificationWorker struct {
 	notificationRepo notificationRepository
+	notifier         Notifier
 	logger           *slog.Logger
 	pollInterval     time.Duration
 	claimBatchSize   int
 }
 
-func NewNotificationWorker(logger *slog.Logger, notificationRepo notificationRepository, pollInterval time.Duration, claimBatchSize int) *notificationWorker {
+func NewNotificationWorker(
+	logger *slog.Logger,
+	notificationRepo notificationRepository,
+	notify Notifier,
+	pollInterval time.Duration,
+	claimBatchSize int,
+) *notificationWorker {
 	return &notificationWorker{
 		notificationRepo: notificationRepo,
 		logger:           logging.WithModule(logger, "service.notification_worker"),
@@ -52,7 +63,7 @@ func (w *notificationWorker) Run(ctx context.Context) error {
 func (w *notificationWorker) processBatch(ctx context.Context) error {
 	events, err := w.notificationRepo.Claim(ctx, w.claimBatchSize)
 	if err != nil {
-		return fmt.Errorf("notification worker: claim: %v: %w", err, ErrInternal)
+		return fmt.Errorf("claim: %v: %w", err, ErrInternal)
 	}
 	if len(events) == 0 {
 		return nil
@@ -61,33 +72,21 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 	ids := make([]int64, len(events))
 	for i, event := range events {
 		ids[i] = event.ID
-		w.logNotification(ctx, &event)
+		message, formatErr := w.TelegramMessageFromNotificationOutbox(ctx, &event)
+		if formatErr != nil {
+			return fmt.Errorf("create message: %v: %w", err, ErrInternal)
+		}
+
+		err = w.notifier.Notify(ctx, domain.TelegramChatID{}, message)
+		if err != nil {
+			return fmt.Errorf("notify: %v: %w", err, ErrInternal)
+		}
 	}
 
 	err = w.notificationRepo.Ack(ctx, ids)
 	if err != nil {
-		return fmt.Errorf("notification worker: ack: %v: %w", err, ErrInternal)
+		return fmt.Errorf("ack: %v: %w", err, ErrInternal)
 	}
 
 	return nil
-}
-
-func (w *notificationWorker) logNotification(ctx context.Context, event *repository.OutboxEvent) {
-	notificationType, err := domain.NewNotificationType(event.EventType)
-	if err != nil {
-		w.logger.DebugContext(ctx, "Invalid notification type", slog.Int64("id", event.ID), slog.String("err", err.Error()))
-		return
-	}
-
-	payload, issues := ParseNotificationPayload(notificationType, event.Payload)
-	if len(issues) > 0 {
-		w.logger.DebugContext(ctx, "Invalid notification payload", slog.Int64("id", event.ID), slog.Any("issues", issues))
-		return
-	}
-
-	message := FormatNotificationMessage(domain.Notification{
-		Type:    notificationType,
-		Payload: payload,
-	})
-	w.logger.DebugContext(ctx, "Notification", slog.Int64("id", event.ID), slog.String("message", message))
 }
