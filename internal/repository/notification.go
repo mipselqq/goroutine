@@ -23,6 +23,7 @@ func NewPGNotification(pgPool *pgxpool.Pool) *PGNotification {
 type OutboxEvent struct {
 	ID              int64
 	RecipientUserID uuid.UUID
+	TelegramChatID  int64
 	EventType       string
 	Payload         []byte
 	CreatedAt       time.Time
@@ -30,9 +31,10 @@ type OutboxEvent struct {
 
 func (r *PGNotification) Claim(ctx context.Context, count int) ([]OutboxEvent, error) {
 	const query = `
-		SELECT id, recipient_user_id, event_type, payload, created_at
-		FROM notification_outbox
-		ORDER BY row_number() OVER (PARTITION BY recipient_user_id ORDER BY id), id
+		SELECT o.id, o.recipient_user_id, u.telegram_chat_id, o.event_type, o.payload, o.created_at
+		FROM notification_outbox o
+		JOIN users u ON u.id = o.recipient_user_id
+		ORDER BY row_number() OVER (PARTITION BY o.recipient_user_id ORDER BY o.id), o.id
 		LIMIT @count`
 
 	rows, err := r.pgPool.Query(ctx, query, pgx.NamedArgs{"count": count})
@@ -71,9 +73,11 @@ func (r *PGNotification) Ack(ctx context.Context, ids []int64) error {
 
 func ScanOutboxRecord(row interface{ Scan(...any) error }) (OutboxEvent, error) {
 	var record OutboxEvent
+
 	err := row.Scan(
 		&record.ID,
 		&record.RecipientUserID,
+		&record.TelegramChatID,
 		&record.EventType,
 		&record.Payload,
 		&record.CreatedAt,

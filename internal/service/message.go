@@ -8,7 +8,7 @@ import (
 	"goroutine/internal/repository"
 )
 
-func (w *notificationWorker) TelegramMessageFromNotificationOutbox(ctx context.Context, event *repository.OutboxEvent) (domain.TelegramMessage, error) {
+func TelegramMessageFromNotificationOutbox(ctx context.Context, event *repository.OutboxEvent) (domain.TelegramMessage, error) {
 	notificationType, err := domain.NewNotificationType(event.EventType)
 	if err != nil {
 		return domain.TelegramMessage{}, fmt.Errorf("invalid notification type: %v", err)

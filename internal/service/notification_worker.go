@@ -72,7 +72,7 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 	ids := make([]int64, len(events))
 	for i, event := range events {
 		ids[i] = event.ID
-		message, formatErr := w.TelegramMessageFromNotificationOutbox(ctx, &event)
+		message, formatErr := TelegramMessageFromNotificationOutbox(ctx, &event)
 		if formatErr != nil {
 			return fmt.Errorf("create message: %v: %w", err, ErrInternal)
 		}

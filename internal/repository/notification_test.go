@@ -23,6 +23,7 @@ func EventsForRecipients(userIDs ...domain.UserID) []repository.OutboxEvent {
 			RecipientUserID: userID.UUID(),
 			EventType:       "board.created",
 			Payload:         []byte(`{"boardName": "Work", "callerEmail": "a@x.com"}`),
+			TelegramChatID:  1,
 		}
 	}
 	return events
@@ -61,6 +62,10 @@ func TestNotificationRepository_Claim(t *testing.T) {
 	CreateUser(t, pool, userA, testutil.ValidEmail(), testutil.ValidPasswordHash())
 	CreateUser(t, pool, userB, testutil.AnotherValidEmail(), testutil.ValidPasswordHash())
 	CreateUser(t, pool, userC, emailC, testutil.ValidPasswordHash())
+	_, err = pool.Exec(context.Background(), `UPDATE users SET telegram_chat_id = $1`, testutil.ValidTelegramChatID())
+	if err != nil {
+		t.Fatalf("UPDATE telegram_chat_id: %v", err)
+	}
 
 	events := EventsForRecipients(userA, userA, userB, userB, userC, userC)
 	want := EventsForRecipients(userA, userB, userC, userA, userB)
@@ -71,7 +76,7 @@ func TestNotificationRepository_Claim(t *testing.T) {
 		t.Fatalf("Claim() error = %v", err)
 	}
 
-	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(repository.OutboxEvent{}, "ID", "CreatedAt"))
+	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(repository.OutboxEvent{}, "ID", "CreatedAt", "TelegramChatID"))
 	if diff != "" {
 		t.Errorf("Claim() mismatch (-want +got):\n%s", diff)
 	}
