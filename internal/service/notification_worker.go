@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"goroutine/internal/domain"
+	"goroutine/internal/driver"
 	"goroutine/internal/logging"
 	"goroutine/internal/repository"
 )
@@ -76,9 +79,32 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 		if formatErr != nil {
 			return fmt.Errorf("create message: %v: %w", err, ErrInternal)
 		}
+		chatID, chatIDErr := domain.NewTelegramChatID(event.TelegramChatID)
+		if chatIDErr != nil {
+			return fmt.Errorf("create chat id: %v: %w", err, ErrInternal)
+		}
 
-		err = w.notifier.Notify(ctx, domain.TelegramChatID{}, message)
+		err = w.notifier.Notify(ctx, chatID, message)
 		if err != nil {
+			var responseErr *driver.ErrTelegramResponse
+			if errors.Is(err, driver.ErrNetwork) {
+				// Retry
+				continue
+			}
+			if errors.As(err, &responseErr) {
+				if slices.Contains([]int{429, 500, 502, 503, 504}, responseErr.Status) {
+					// Retry
+					continue
+				}
+				if responseErr.Status == 400 && responseErr.Type == "INPUT_USER_DEACTIVATED" {
+					// Unlink Telegram
+					continue
+				}
+				if slices.Contains([]int{400, 401, 403, 404}, responseErr.Status) {
+					// Drop
+					continue
+				}
+			}
 			return fmt.Errorf("notify: %v: %w", err, ErrInternal)
 		}
 	}
