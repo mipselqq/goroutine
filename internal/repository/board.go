@@ -47,6 +47,7 @@ func (r *PGBoard) Create(ctx context.Context, ownerID domain.UserID, name domain
 				)
 			FROM created_board b
 			JOIN users u ON u.id = b.owner_id
+			WHERE u.telegram_chat_id IS NOT NULL
 		)
 		SELECT b.id, b.owner_id, b.name, b.description, b.created_at, b.updated_at
 		FROM created_board b`
@@ -221,7 +222,8 @@ func (r *PGBoard) Update(
 				)
 			FROM updated_board b
 			JOIN users u ON u.id = b.owner_id
-			WHERE $1 IS NOT NULL OR $2 IS NOT NULL
+			WHERE ($1 IS NOT NULL OR $2 IS NOT NULL)
+			  AND u.telegram_chat_id IS NOT NULL
 		)
 		SELECT b.id, b.owner_id, b.name, b.description, b.created_at, b.updated_at
 		FROM updated_board b`
@@ -256,6 +258,7 @@ func (r *PGBoard) Delete(ctx context.Context, callerID domain.UserID, boardID do
 				)
 			FROM deleted_board b
 			JOIN users u ON u.id = b.owner_id
+			WHERE u.telegram_chat_id IS NOT NULL
 		)
 		SELECT b.id
 		FROM deleted_board b`

@@ -72,6 +72,7 @@ func (r *PGColumn) Create(
 			FROM created_column c
 			JOIN boards b ON b.id = c.board_id
 			JOIN users u ON u.id = b.owner_id
+			WHERE u.telegram_chat_id IS NOT NULL
 		)
 		SELECT c.id, c.board_id, c.name, c.description, c.position, c.created_at, c.updated_at
 		FROM created_column c`
@@ -250,7 +251,8 @@ func (r *PGColumn) Update(
 			FROM updated_column c
 			JOIN boards b ON b.id = c.board_id
 			JOIN users u ON u.id = b.owner_id
-			WHERE $1 IS NOT NULL OR $2 IS NOT NULL
+			WHERE ($1 IS NOT NULL OR $2 IS NOT NULL)
+			  AND u.telegram_chat_id IS NOT NULL
 		)
 		SELECT c.id, c.board_id, c.name, c.description, c.position, c.created_at, c.updated_at
 		FROM updated_column c`
@@ -342,7 +344,8 @@ func (r *PGColumn) Move(
 		JOIN boards b ON b.id = c.board_id
 		JOIN users u ON u.id = b.owner_id
 		WHERE c.board_id = @board_id
-		  AND c.id = @column_id`
+		  AND c.id = @column_id
+		  AND u.telegram_chat_id IS NOT NULL`
 	)
 
 	tx, err := r.pgPool.Begin(ctx)
@@ -424,7 +427,7 @@ func (r *PGColumn) Move(
 		return domain.ColumnPosition{}, fmt.Errorf("column repo: move column into target: %v: %w", err, ErrInternal)
 	}
 
-	cmd, err := tx.Exec(ctx, insertMovedEventQuery, pgx.NamedArgs{
+	_, err = tx.Exec(ctx, insertMovedEventQuery, pgx.NamedArgs{
 		"board_id":         boardID,
 		"column_id":        columnID,
 		"current_position": currentPosition,
@@ -432,9 +435,6 @@ func (r *PGColumn) Move(
 	})
 	if err != nil {
 		return domain.ColumnPosition{}, fmt.Errorf("column repo: move insert outbox event: %v: %w", err, ErrInternal)
-	}
-	if cmd.RowsAffected() != 1 {
-		return domain.ColumnPosition{}, fmt.Errorf("column repo: move insert outbox event: got %d rows: %w", cmd.RowsAffected(), ErrInternal)
 	}
 
 	err = tx.Commit(ctx)
@@ -490,7 +490,8 @@ func (r *PGColumn) Delete(
 			)
 		FROM boards b
 		JOIN users u ON u.id = b.owner_id
-		WHERE b.id = @board_id`
+		WHERE b.id = @board_id
+		  AND u.telegram_chat_id IS NOT NULL`
 	)
 
 	tx, err := r.pgPool.Begin(ctx)
@@ -541,16 +542,13 @@ func (r *PGColumn) Delete(
 		return fmt.Errorf("column repo: delete compact trailing columns: %v: %w", err, ErrInternal)
 	}
 
-	cmd, err := tx.Exec(ctx, insertDeletedEventQuery, pgx.NamedArgs{
+	_, err = tx.Exec(ctx, insertDeletedEventQuery, pgx.NamedArgs{
 		"board_id":    boardID,
 		"column_name": deletedName,
 		"event_type":  domain.TypeColumnDeleted,
 	})
 	if err != nil {
 		return fmt.Errorf("column repo: delete insert outbox event: %v: %w", err, ErrInternal)
-	}
-	if cmd.RowsAffected() != 1 {
-		return fmt.Errorf("column repo: delete insert outbox event: got %d rows: %w", cmd.RowsAffected(), ErrInternal)
 	}
 
 	err = tx.Commit(ctx)

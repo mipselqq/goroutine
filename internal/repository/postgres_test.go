@@ -31,6 +31,23 @@ func CreateUser(t *testing.T, pool *pgxpool.Pool, id domain.UserID, email domain
 	}
 }
 
+func LinkTelegramChat(t *testing.T, pool *pgxpool.Pool, userID domain.UserID) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	const query = `
+		UPDATE users
+		SET telegram_chat_id = $1,
+			telegram_username = $2
+		WHERE id = $3`
+	_, err := pool.Exec(ctx, query, testutil.ValidTelegramChatID(), testutil.ValidTelegramUsername(), userID)
+	if err != nil {
+		t.Fatalf("LinkTelegramChat() error = %v", err)
+	}
+}
+
 func CreateBoard(t *testing.T, pool *pgxpool.Pool, board *domain.Board) {
 	t.Helper()
 
