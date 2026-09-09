@@ -39,7 +39,8 @@ func InsertOutboxEvents(t *testing.T, pool *pgxpool.Pool, events []repository.Ou
 		INSERT INTO notification_outbox (recipient_user_id, event_type, payload)
 		VALUES ($1, $2, $3)`
 
-	for _, event := range events {
+	for i := range events {
+		event := &events[i]
 		_, err := pool.Exec(ctx, query, event.RecipientUserID, event.EventType, event.Payload)
 		if err != nil {
 			t.Fatalf("InsertOutboxEvents() error = %v", err)
@@ -110,11 +111,10 @@ func TestNotificationRepository_Retry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UPDATE telegram_chat_id: %v", err)
 	}
-	events := EventsForRecipients(user)
-	InsertOutboxEvents(t, pool, events)
+	InsertOutboxEvents(t, pool, EventsForRecipients(user))
 
 	availableAt := time.Now().UTC().Add(time.Hour)
-	err = r.Retry(context.Background(), events[0].ID, availableAt)
+	err = r.Retry(context.Background(), 1, availableAt)
 	if err != nil {
 		t.Fatalf("Retry() error = %v", err)
 	}
@@ -124,7 +124,7 @@ func TestNotificationRepository_Retry(t *testing.T) {
 		t.Fatalf("Claim() error = %v", err)
 	}
 	if len(got) != 0 {
-		t.Fatalf("got %d events, want 0 while available_at is in the future", len(got))
+		t.Fatalf("Claim() got %d events, want 0 while available_at is in the future", len(got))
 	}
 }
 
