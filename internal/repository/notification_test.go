@@ -76,7 +76,7 @@ func TestNotificationRepository_Claim(t *testing.T) {
 		t.Fatalf("Claim() error = %v", err)
 	}
 
-	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(repository.OutboxEvent{}, "ID", "CreatedAt", "TelegramChatID"))
+	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(repository.OutboxEvent{}, "ID", "CreatedAt", "AvailableAt", "TelegramChatID"))
 	if diff != "" {
 		t.Errorf("Claim() mismatch (-want +got):\n%s", diff)
 	}
@@ -97,6 +97,35 @@ func TestNotificationRepository_Ack(t *testing.T) {
 	}
 
 	AssertOutboxEvents(t, pool, []WantOutboxEvent{})
+}
+
+func TestNotificationRepository_Retry(t *testing.T) {
+	pool, r := notificationRepoPrelude(t)
+
+	testutil.TruncateAllTables(t, pool)
+
+	user := domain.NewUserID()
+	CreateUser(t, pool, user, testutil.ValidEmail(), testutil.ValidPasswordHash())
+	_, err := pool.Exec(context.Background(), `UPDATE users SET telegram_chat_id = $1`, testutil.ValidTelegramChatID())
+	if err != nil {
+		t.Fatalf("UPDATE telegram_chat_id: %v", err)
+	}
+	events := EventsForRecipients(user)
+	InsertOutboxEvents(t, pool, events)
+
+	availableAt := time.Now().UTC().Add(time.Hour)
+	err = r.Retry(context.Background(), events[0].ID, availableAt)
+	if err != nil {
+		t.Fatalf("Retry() error = %v", err)
+	}
+
+	got, err := r.Claim(context.Background(), 5)
+	if err != nil {
+		t.Fatalf("Claim() error = %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("got %d events, want 0 while available_at is in the future", len(got))
+	}
 }
 
 func notificationRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGNotification) {
