@@ -94,11 +94,10 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 	for i := range events {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			results[i] = sendResult{event: &events[i], err: w.send(ctx, &events[i])}
-		}()
+		wg.Go(func() {
+			err = w.send(ctx, &events[i])
+			results[i] = sendResult{event: &events[i], err: err}
+		})
 	}
 	wg.Wait()
 
