@@ -54,6 +54,7 @@ func NewNotificationWorker(
 ) *notificationWorker {
 	return &notificationWorker{
 		notificationRepo: notificationRepo,
+		notifier:         notify,
 		logger:           logging.WithModule(logger, "service.notification_worker"),
 		pollInterval:     pollInterval,
 		claimBatchSize:   claimBatchSize,
@@ -95,8 +96,7 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 	var wg sync.WaitGroup
 	for i := range events {
 		wg.Go(func() {
-			err = w.send(ctx, &events[i])
-			results[i] = sendResult{event: &events[i], err: err}
+			results[i] = sendResult{event: &events[i], err: w.send(ctx, &events[i])}
 		})
 	}
 	wg.Wait()
