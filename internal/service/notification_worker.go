@@ -119,6 +119,7 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 			w.logger.InfoContext(ctx, "dropping outbox event for deactivated telegram user", slog.Int64("id", result.event.ID))
 			ack = append(ack, result.event.ID)
 		case actionDrop:
+			w.logger.InfoContext(ctx, "dropping outbox event", slog.Int64("id", result.event.ID), slog.String("http_status", httpStatus(result.err)))
 			ack = append(ack, result.event.ID)
 		case actionExit:
 			if len(ack) > 0 {
@@ -127,7 +128,7 @@ func (w *notificationWorker) processBatch(ctx context.Context) error {
 					return fmt.Errorf("ack: %v: %w", err, ErrInternal)
 				}
 			}
-			w.logger.ErrorContext(ctx, fmt.Sprintf("got unrecoverable status code %s, exiting...", unrecoverableStatus(result.err)))
+			w.logger.ErrorContext(ctx, fmt.Sprintf("got unrecoverable status code %s, exiting...", httpStatus(result.err)))
 			return result.err
 		}
 	}
@@ -181,10 +182,10 @@ func classify(err error) string {
 		return actionDrop
 	}
 
-	return ""
+	return actionDrop
 }
 
-func unrecoverableStatus(err error) string {
+func httpStatus(err error) string {
 	var tg *driver.ErrTelegramResponse
 	if errors.As(err, &tg) {
 		return http.StatusText(tg.Status)
