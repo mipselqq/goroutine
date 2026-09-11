@@ -45,6 +45,7 @@ func TestTaskRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			columnWithoutTasks := testutil.NewValidColumn(t, fixture.board.ID, "Empty", 3)
 			CreateColumn(t, pool, &columnWithoutTasks)
 			validTask := testutil.ValidTask(columnWithoutTasks.ID)
@@ -140,6 +141,7 @@ func TestTaskRepository_Create_AppendsPosition(t *testing.T) {
 	testutil.TruncateAllTables(t, pool)
 
 	fixture := setupDefaultBoardHierarchy(t, pool)
+	LinkTelegramChat(t, pool, fixture.board.OwnerID)
 	column := fixture.column
 
 	secondTask := testutil.NewValidTask(t, column.ID, "Second", "Second description", 2)
@@ -186,6 +188,7 @@ func TestTaskRepository_ListByColumnID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			columnWithoutTasks := testutil.NewValidColumn(t, fixture.board.ID, "Empty", 3)
 			CreateColumn(t, pool, &columnWithoutTasks)
 
@@ -225,6 +228,7 @@ func TestTaskRepository_ListByColumnID(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		firstColumn := fixture.column
 		secondTask := testutil.NewValidTask(t, firstColumn.ID, "Second", "second", 2)
@@ -274,6 +278,7 @@ func TestTaskRepository_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			callerID := fixture.board.OwnerID
 			board := fixture.board
 			column := fixture.column
@@ -404,6 +409,7 @@ func TestTaskRepository_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			want := testutil.UpdateValidTask(t, &fixture.task, "Renamed", "Renamed description", fixture.task.UpdatedAt)
 
 			callerID := fixture.board.OwnerID
@@ -458,6 +464,7 @@ func TestTaskRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		want := testutil.UpdateValidTask(
 			t,
 			&fixture.task,
@@ -486,6 +493,7 @@ func TestTaskRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		want := testutil.UpdateValidTask(
 			t,
 			&fixture.task,
@@ -514,6 +522,7 @@ func TestTaskRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 		got, err := r.Update(
 			context.Background(),
@@ -570,6 +579,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			secondTask := testutil.NewValidTask(t, fixture.column.ID, "Second", "second", 2)
 			thirdTask := testutil.NewValidTask(t, fixture.column.ID, "Third", "third", 3)
 			CreateTask(t, pool, &thirdTask)
@@ -655,6 +665,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		sourceColumn := fixture.column
 		secondTask := testutil.NewValidTask(t, sourceColumn.ID, "Second", "second", 2)
@@ -689,6 +700,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		sourceColumn := fixture.column
 		secondTask := testutil.NewValidTask(t, sourceColumn.ID, "Second", "second", 2)
@@ -721,6 +733,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		sourceColumn := fixture.column
 		secondTask := testutil.NewValidTask(t, sourceColumn.ID, "Second", "second", 2)
@@ -749,6 +762,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		sourceColumn := fixture.column
 		firstTask := fixture.task
@@ -819,6 +833,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		sourceColumn := fixture.column
 		firstTask := fixture.task
@@ -855,6 +870,7 @@ func TestTaskRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		sourceColumn := fixture.column
 		firstTask := fixture.task
@@ -914,6 +930,7 @@ func TestTaskRepository_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			secondTask := testutil.NewValidTask(t, fixture.column.ID, "Second", "second", 2)
 			thirdTask := testutil.NewValidTask(t, fixture.column.ID, "Third", "third", 3)
 			CreateTask(t, pool, &thirdTask)
@@ -995,6 +1012,7 @@ func TestLockTaskColumns_BlocksSecondTransaction(t *testing.T) {
 	testutil.TruncateAllTables(t, pool)
 
 	fixture := setupDefaultBoardHierarchy(t, pool)
+	LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 	beginTx := func(id string) pgx.Tx {
 		tx, err := pool.Begin(context.Background())

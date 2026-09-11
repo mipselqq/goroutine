@@ -23,6 +23,7 @@ func EventsForRecipients(userIDs ...domain.UserID) []repository.OutboxEvent {
 			RecipientUserID: userID.UUID(),
 			EventType:       "board.created",
 			Payload:         []byte(`{"boardName": "Work", "callerEmail": "a@x.com"}`),
+			TelegramChatID:  1,
 		}
 	}
 	return events
@@ -38,7 +39,8 @@ func InsertOutboxEvents(t *testing.T, pool *pgxpool.Pool, events []repository.Ou
 		INSERT INTO notification_outbox (recipient_user_id, event_type, payload)
 		VALUES ($1, $2, $3)`
 
-	for _, event := range events {
+	for i := range events {
+		event := &events[i]
 		_, err := pool.Exec(ctx, query, event.RecipientUserID, event.EventType, event.Payload)
 		if err != nil {
 			t.Fatalf("InsertOutboxEvents() error = %v", err)
@@ -61,6 +63,10 @@ func TestNotificationRepository_Claim(t *testing.T) {
 	CreateUser(t, pool, userA, testutil.ValidEmail(), testutil.ValidPasswordHash())
 	CreateUser(t, pool, userB, testutil.AnotherValidEmail(), testutil.ValidPasswordHash())
 	CreateUser(t, pool, userC, emailC, testutil.ValidPasswordHash())
+	_, err = pool.Exec(context.Background(), `UPDATE users SET telegram_chat_id = $1`, testutil.ValidTelegramChatID())
+	if err != nil {
+		t.Fatalf("UPDATE telegram_chat_id: %v", err)
+	}
 
 	events := EventsForRecipients(userA, userA, userB, userB, userC, userC)
 	want := EventsForRecipients(userA, userB, userC, userA, userB)
@@ -71,7 +77,7 @@ func TestNotificationRepository_Claim(t *testing.T) {
 		t.Fatalf("Claim() error = %v", err)
 	}
 
-	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(repository.OutboxEvent{}, "ID", "CreatedAt"))
+	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(repository.OutboxEvent{}, "ID", "CreatedAt", "AvailableAt", "TelegramChatID"))
 	if diff != "" {
 		t.Errorf("Claim() mismatch (-want +got):\n%s", diff)
 	}
@@ -92,6 +98,34 @@ func TestNotificationRepository_Ack(t *testing.T) {
 	}
 
 	AssertOutboxEvents(t, pool, []WantOutboxEvent{})
+}
+
+func TestNotificationRepository_Retry(t *testing.T) {
+	pool, r := notificationRepoPrelude(t)
+
+	testutil.TruncateAllTables(t, pool)
+
+	user := domain.NewUserID()
+	CreateUser(t, pool, user, testutil.ValidEmail(), testutil.ValidPasswordHash())
+	_, err := pool.Exec(context.Background(), `UPDATE users SET telegram_chat_id = $1`, testutil.ValidTelegramChatID())
+	if err != nil {
+		t.Fatalf("UPDATE telegram_chat_id: %v", err)
+	}
+	InsertOutboxEvents(t, pool, EventsForRecipients(user))
+
+	availableAt := time.Now().UTC().Add(time.Hour)
+	err = r.Retry(context.Background(), 1, availableAt)
+	if err != nil {
+		t.Fatalf("Retry() error = %v", err)
+	}
+
+	got, err := r.Claim(context.Background(), 5)
+	if err != nil {
+		t.Fatalf("Claim() error = %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("Claim() got %d events, want 0 while available_at is in the future", len(got))
+	}
 }
 
 func notificationRepoPrelude(t *testing.T) (*pgxpool.Pool, *repository.PGNotification) {

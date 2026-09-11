@@ -13,6 +13,7 @@ import (
 
 	"goroutine/internal/app"
 	"goroutine/internal/config"
+	"goroutine/internal/driver"
 	"goroutine/internal/logging"
 	"goroutine/internal/repository"
 	"goroutine/internal/service"
@@ -40,7 +41,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	worker := service.NewNotificationWorker(logger, repository.NewPGNotification(pool), time.Second, 30)
+	telegramCfg, err := config.NewTelegramFromEnv(logger)
+	if err != nil {
+		logger.Error("Failed to load telegram config", slog.String("err", err.Error()))
+		os.Exit(1)
+	}
+	telegramClient := driver.NewTelegramClient(telegramCfg.BaseURL, telegramCfg.Token)
+
+	worker := service.NewNotificationWorker(logger, repository.NewPGNotification(pool), telegramClient, time.Second, 30)
 
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 
