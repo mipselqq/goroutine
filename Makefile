@@ -106,13 +106,13 @@ migrate-up-go:
 
 # Install development tools
 tools:
-	go install github.com/evilmartians/lefthook@v1.12.2
+	go install github.com/evilmartians/lefthook@v1.13.6
 	lefthook install
-	go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
+	go install github.com/pressly/goose/v3/cmd/goose@v3.28.0
 	go install github.com/swaggo/swag/cmd/swag@v1.16.6
-	go install mvdan.cc/gofumpt@v0.11.0
+	go install mvdan.cc/gofumpt@v0.12.0
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
-	go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
+	go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
 	go install go.k6.io/k6@v1.8.1
 	npm install -D @types/k6@2.2.0
 
