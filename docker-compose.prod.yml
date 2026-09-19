@@ -35,7 +35,7 @@ services:
       - redis_data_prod:/data
 
   migrator:
-    image: ghcr.io/mipselqq/goroutine:latest
+    image: ghcr.io/mipselqq/goroutine:latest@sha256:0f375b2a9d4d9af373a37549f7c708a4d0b18b6d301de9e39df0ab5c213f1df1
     entrypoint: ["/migrate"]
     restart: "no"
     environment:
@@ -49,7 +49,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ghcr.io/mipselqq/goroutine:latest
+    image: ghcr.io/mipselqq/goroutine:latest@sha256:0f375b2a9d4d9af373a37549f7c708a4d0b18b6d301de9e39df0ab5c213f1df1
     container_name: goro-goroutine-prod
     cpu_shares: 1024
     oom_score_adj: -900
@@ -93,7 +93,7 @@ services:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
 
   notify:
-    image: ghcr.io/mipselqq/goroutine:latest
+    image: ghcr.io/mipselqq/goroutine:latest@sha256:0f375b2a9d4d9af373a37549f7c708a4d0b18b6d301de9e39df0ab5c213f1df1
     container_name: goro-notify-prod
     cpu_shares: 512
     oom_score_adj: -800
@@ -115,7 +115,7 @@ services:
         condition: service_completed_successfully
 
   prometheus:
-    image: prom/prometheus:v3.13.2@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7
+    image: prom/prometheus:v3.14.0@sha256:e906cef998316bbe319f98711e1b4d8613ad37e14b08ff831d7036e77b7464f9
     container_name: goro-prometheus-prod
     cpu_shares: 512
     oom_score_adj: 100
@@ -152,7 +152,7 @@ services:
           --web.config.file=/etc/prometheus/web-config.yml
 
   grafana:
-    image: grafana/grafana:12.4.8@sha256:cc3b7fb512d9ce210e0185394a05f46fd85417a84c7dfff92094c1148ba6fbfe
+    image: grafana/grafana:12.4.11@sha256:bb505d45e6757432f494ff0d252c1ce9f5cf130ce8a6246632d02c1bfa282d76
     container_name: goro-grafana-prod
     cpu_shares: 256
     oom_score_adj: 200
@@ -195,7 +195,7 @@ services:
       retries: 3
 
   loki:
-    image: grafana/loki:3.7.6@sha256:83c76da7858a8f4f88117ac521864ac33896fdae7a352a1df4068556e7513f64
+    image: grafana/loki:3.7.7@sha256:550d599ec4efacd8ebc0a5871766855057cba2bd0c669c0711d898c00d6d901f
     container_name: goro-loki-prod
     cpu_shares: 256
     oom_score_adj: 300
@@ -210,7 +210,7 @@ services:
       retries: 3
 
   alloy:
-    image: grafana/alloy:v1.18.1@sha256:754409730f1a4ed9781f8a2ea3b6a8c55750ee125a267ecf8fb449f9a25c109a
+    image: grafana/alloy:v1.19.2@sha256:1eeba15ef3193438c72f66efd3d76f769c523a4c661db0fae6eddde906004bc8
     container_name: goro-alloy-prod
     cpu_shares: 128
     oom_score_adj: 400
