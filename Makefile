@@ -106,7 +106,7 @@ migrate-up-go:
 
 # Install development tools
 tools:
-	go install github.com/evilmartians/lefthook@v1.12.2
+	go install github.com/evilmartians/lefthook@v2.1.14
 	lefthook install
 	go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 	go install github.com/swaggo/swag/cmd/swag@v1.16.6
