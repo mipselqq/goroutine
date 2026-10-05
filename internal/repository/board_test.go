@@ -25,6 +25,7 @@ func TestBoardRepository_Create(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 		board, err := r.Create(context.Background(), fixture.board.OwnerID, boardName, boardDescription)
 		if err != nil {
@@ -99,6 +100,7 @@ func TestBoardRepository_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 			callerID := fixture.board.OwnerID
 			board := fixture.board
@@ -145,6 +147,7 @@ func TestBoardRepository_ListByOwnerID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 			ownerID := fixture.board.OwnerID
 			want := []domain.Board{fixture.board}
@@ -170,6 +173,7 @@ func TestBoardRepository_ListByOwnerID(t *testing.T) {
 	t.Run("Success ordered and filtered by owner", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 		newerBoard := testutil.ValidBoardForOwner(fixture.board.OwnerID)
 		newerBoard.CreatedAt = testutil.Fixed5mFromNow()
@@ -258,6 +262,7 @@ func TestBoardRepository_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 			callerID := fixture.board.OwnerID
 			board := fixture.board
@@ -295,6 +300,7 @@ func TestBoardRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		want := testutil.UpdateValidBoard(
 			t,
 			&fixture.board,
@@ -315,6 +321,7 @@ func TestBoardRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		want := testutil.UpdateValidBoard(
 			t,
 			&fixture.board,
@@ -335,6 +342,7 @@ func TestBoardRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 		got, err := r.Update(context.Background(), fixture.board.OwnerID, fixture.board.ID, nil, nil)
 		if err != nil {
@@ -369,6 +377,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 			callerID := fixture.board.OwnerID
 			board := fixture.board
@@ -434,6 +443,7 @@ func TestBoardRepository_GetAggregate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 			callerID := fixture.board.OwnerID
 			board := fixture.board

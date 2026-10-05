@@ -2,7 +2,9 @@ package driver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -38,15 +40,31 @@ func (c *TelegramClient) sendMessage(ctx context.Context, chatID int64, text dom
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrNetwork, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status %d", resp.StatusCode)
+		return telegramResponseError(resp)
 	}
 
 	return nil
+}
+
+func telegramResponseError(resp *http.Response) *ErrTelegramResponse {
+	var parsed struct {
+		Description string `json:"description"`
+		Parameters  struct {
+			RetryAfter int `json:"retry_after"`
+		} `json:"parameters"`
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err == nil {
+		_ = json.Unmarshal(body, &parsed)
+	}
+
+	return newTelegramResponseError(resp.StatusCode, parsed.Description, parsed.Parameters.RetryAfter)
 }
 
 func (c *TelegramClient) Notify(ctx context.Context, chatID domain.TelegramChatID, text domain.TelegramMessage) error {

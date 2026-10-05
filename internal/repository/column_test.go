@@ -38,6 +38,7 @@ func TestColumnRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			boardWithoutColumns := testutil.ValidBoardForOwner(fixture.board.OwnerID)
 			CreateBoard(t, pool, &boardWithoutColumns)
 			newColumn := testutil.ValidColumn(boardWithoutColumns.ID)
@@ -124,6 +125,7 @@ func TestColumnRepository_Create_AppendsPosition(t *testing.T) {
 	testutil.TruncateAllTables(t, pool)
 
 	fixture := setupDefaultBoardHierarchy(t, pool)
+	LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 	newColumn := testutil.NewValidColumn(t, fixture.board.ID, "Done", 3)
 
@@ -164,6 +166,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			boardWithoutColumns := testutil.ValidBoardForOwner(fixture.board.OwnerID)
 			CreateBoard(t, pool, &boardWithoutColumns)
 
@@ -195,6 +198,7 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 	t.Run("Success ordered and filtered by board", func(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 		got, err := r.ListByBoardID(context.Background(), fixture.board.OwnerID, fixture.board.ID)
 		if err != nil {
@@ -234,6 +238,7 @@ func TestColumnRepository_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 			callerID := fixture.board.OwnerID
 			board := fixture.board
@@ -353,6 +358,7 @@ func TestColumnRepository_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			want := testutil.UpdateValidColumn(t, &fixture.column, "Renamed", fixture.column.Description.String(), fixture.column.UpdatedAt)
 
 			callerID := fixture.board.OwnerID
@@ -397,6 +403,7 @@ func TestColumnRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		column := fixture.column
 
 		newDesc, err := domain.NewColumnDescription("Updated column body")
@@ -434,6 +441,7 @@ func TestColumnRepository_Update(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 
 		got, err := r.Update(context.Background(), fixture.board.OwnerID, fixture.board.ID, fixture.column.ID, nil, nil)
 		if err != nil {
@@ -472,6 +480,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			firstColumn := fixture.column
 			secondColumn := fixture.siblingColumn
 			thirdColumn := testutil.NewValidColumn(t, fixture.board.ID, "Done", 3)
@@ -546,6 +555,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		secondColumn := fixture.siblingColumn
 		thirdColumn := testutil.NewValidColumn(t, board.ID, "Done", 3)
@@ -575,6 +585,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		secondColumn := fixture.siblingColumn
 
@@ -601,6 +612,7 @@ func TestColumnRepository_Move(t *testing.T) {
 		testutil.TruncateAllTables(t, pool)
 
 		fixture := setupDefaultBoardHierarchy(t, pool)
+		LinkTelegramChat(t, pool, fixture.board.OwnerID)
 		board := fixture.board
 		secondColumn := fixture.siblingColumn
 		thirdColumn := testutil.NewValidColumn(t, board.ID, "Done", 3)
@@ -650,6 +662,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testutil.TruncateAllTables(t, pool)
 			fixture := setupDefaultBoardHierarchy(t, pool)
+			LinkTelegramChat(t, pool, fixture.board.OwnerID)
 			firstColumn := fixture.column
 			secondColumn := fixture.siblingColumn
 			thirdColumn := testutil.NewValidColumn(t, fixture.board.ID, "Done", 3)

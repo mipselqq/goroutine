@@ -4,6 +4,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +17,9 @@ import (
 
 	"goroutine/internal/app"
 	"goroutine/internal/config"
+	"goroutine/internal/driver"
+	"goroutine/internal/repository"
+	"goroutine/internal/service"
 	"goroutine/internal/testutil"
 
 	"github.com/google/uuid"
@@ -197,4 +201,29 @@ func (c *authenticatedClient) Do(t *testing.T, method, path string, body any) *h
 func waitForTimestampTicker(t *testing.T) {
 	t.Helper()
 	time.Sleep(5 * time.Millisecond)
+}
+
+func startBackgroundNotificationsWorker(t *testing.T, pool *pgxpool.Pool) {
+	t.Helper()
+
+	logger := testutil.NewLogger(t)
+	telegramCfg, err := config.NewTelegramFromEnv(logger)
+	if err != nil {
+		t.Fatalf("NewTelegramFromEnv() error = %v", err)
+	}
+
+	worker := service.NewNotificationWorker(
+		logger,
+		repository.NewPGNotification(pool),
+		driver.NewTelegramClient(telegramCfg.BaseURL, telegramCfg.Token),
+		time.Second,
+		30,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	go func() {
+		_ = worker.Run(ctx)
+	}()
 }

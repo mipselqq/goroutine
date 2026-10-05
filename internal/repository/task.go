@@ -139,6 +139,7 @@ func (r *PGTask) Create(
 			JOIN columns c ON c.id = t.column_id
 			JOIN boards b ON b.id = c.board_id
 			JOIN users u ON u.id = b.owner_id
+			WHERE u.telegram_chat_id IS NOT NULL
 		)
 		SELECT t.id, t.column_id, t.name, t.description, t.position, t.created_at, t.updated_at
 		FROM created_task t`
@@ -342,7 +343,8 @@ func (r *PGTask) Update(
 			JOIN columns c ON c.id = t.column_id
 			JOIN boards b ON b.id = c.board_id
 			JOIN users u ON u.id = b.owner_id
-			WHERE $5 IS NOT NULL OR $6 IS NOT NULL
+			WHERE ($5 IS NOT NULL OR $6 IS NOT NULL)
+			  AND u.telegram_chat_id IS NOT NULL
 		)
 		SELECT t.id, t.column_id, t.name, t.description, t.position, t.created_at, t.updated_at
 		FROM updated_task t`
@@ -454,7 +456,8 @@ func (r *PGTask) Move(
 		WHERE t.id = @task_id
 		  AND source_column.board_id = b.id
 		  AND target_column.board_id = b.id
-		  AND t.column_id = target_column.id`
+		  AND t.column_id = target_column.id
+		  AND u.telegram_chat_id IS NOT NULL`
 	)
 
 	tx, err := r.pgPool.Begin(ctx)
@@ -580,7 +583,7 @@ func (r *PGTask) Move(
 		}
 	}
 
-	cmd, err := tx.Exec(ctx, insertMovedEventQuery, pgx.NamedArgs{
+	_, err = tx.Exec(ctx, insertMovedEventQuery, pgx.NamedArgs{
 		"board_id":          boardID,
 		"current_column_id": currentColumnID,
 		"task_id":           taskID,
@@ -590,9 +593,6 @@ func (r *PGTask) Move(
 	})
 	if err != nil {
 		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task repo: move insert outbox event: %v: %w", err, ErrInternal)
-	}
-	if cmd.RowsAffected() != 1 {
-		return domain.ColumnID{}, domain.TaskPosition{}, fmt.Errorf("task repo: move insert outbox event: got %d rows: %w", cmd.RowsAffected(), ErrInternal)
 	}
 
 	err = tx.Commit(ctx)
@@ -644,7 +644,8 @@ func (r *PGTask) Delete(
 		JOIN boards b ON b.id = c.board_id
 		JOIN users u ON u.id = b.owner_id
 		WHERE c.id = @column_id
-		  AND b.id = @board_id`
+		  AND b.id = @board_id
+		  AND u.telegram_chat_id IS NOT NULL`
 	)
 
 	tx, err := r.pgPool.Begin(ctx)
@@ -692,7 +693,7 @@ func (r *PGTask) Delete(
 		return fmt.Errorf("task repo: delete compact trailing tasks: %v: %w", err, ErrInternal)
 	}
 
-	cmd, err := tx.Exec(ctx, insertDeletedEventQuery, pgx.NamedArgs{
+	_, err = tx.Exec(ctx, insertDeletedEventQuery, pgx.NamedArgs{
 		"board_id":         boardID,
 		"column_id":        columnID,
 		"task_name":        deletedName,
@@ -701,9 +702,6 @@ func (r *PGTask) Delete(
 	})
 	if err != nil {
 		return fmt.Errorf("task repo: delete insert outbox event: %v: %w", err, ErrInternal)
-	}
-	if cmd.RowsAffected() != 1 {
-		return fmt.Errorf("task repo: delete insert outbox event: got %d rows: %w", cmd.RowsAffected(), ErrInternal)
 	}
 
 	err = tx.Commit(ctx)
