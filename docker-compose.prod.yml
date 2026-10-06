@@ -152,7 +152,7 @@ services:
           --web.config.file=/etc/prometheus/web-config.yml
 
   grafana:
-    image: grafana/grafana:12.4.8@sha256:cc3b7fb512d9ce210e0185394a05f46fd85417a84c7dfff92094c1148ba6fbfe
+    image: grafana/grafana:13.2.3@sha256:d84563330dc9d2fd2bc096d0fb96021b5319c75bf6ed555566709998e823dec4
     container_name: goro-grafana-prod
     cpu_shares: 256
     oom_score_adj: 200
