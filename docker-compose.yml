@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:18-alpine@sha256:b6a16ed0eb96e2c362811f7eeb951eac8b459e7b40be4149ea5444aa7c65569b
+    image: postgres:18-alpine@sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503
     container_name: goro-postgres-dev
     cpu_shares: 1024
     oom_score_adj: -800
@@ -22,7 +22,7 @@ services:
       - postgres_data_dev:/var/lib/postgresql
 
   redis:
-    image: redis:8.10.0-alpine@sha256:a6a88248ad5b0c724b7f2b380b7d21f46097db158b2b077ef85bcb97f90aee3a
+    image: redis:8.10.2-alpine@sha256:16b124a2d3eacd620d917ead6fd26cbf1f1d7117fa94122398971931cfe2d403
     container_name: goro-redis-dev
     cpu_shares: 512
     oom_score_adj: -500
@@ -39,7 +39,7 @@ services:
       - redis_data_dev:/data
 
   prometheus:
-    image: prom/prometheus:v3.13.2@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7
+    image: prom/prometheus:v3.15.1@sha256:d445d1806b38f85b5c394a1b87f94113fde0473b45245922c2e8b1bd41fa68ae
     container_name: goro-prometheus-dev
     cpu_shares: 512
     oom_score_adj: 100
@@ -80,7 +80,7 @@ services:
           --web.config.file=/etc/prometheus/web-config.yml
 
   grafana:
-    image: grafana/grafana:12.4.8@sha256:cc3b7fb512d9ce210e0185394a05f46fd85417a84c7dfff92094c1148ba6fbfe
+    image: grafana/grafana:12.4.14@sha256:1b59d2076a5e08e0e9929a1225f37869ee7719f4a11c004fbfcfa8b772858e89
     container_name: goro-grafana-dev
     cpu_shares: 256
     oom_score_adj: 200
@@ -118,7 +118,7 @@ services:
       retries: 3
 
   loki:
-    image: grafana/loki:3.7.6@sha256:83c76da7858a8f4f88117ac521864ac33896fdae7a352a1df4068556e7513f64
+    image: grafana/loki:3.7.9@sha256:569e5cab050b7705eb82080335ff9a8bd329650b358bb0d42131e3ced8d9492e
     container_name: goro-loki-dev
     cpu_shares: 256
     oom_score_adj: 300
@@ -135,7 +135,7 @@ services:
       retries: 3
 
   alloy:
-    image: grafana/alloy:v1.18.1@sha256:754409730f1a4ed9781f8a2ea3b6a8c55750ee125a267ecf8fb449f9a25c109a
+    image: grafana/alloy:v1.21.2@sha256:2fc2ae17ed3b712e37047724efd1cdf7a4124016c0b7522ac469dab0ddf8a8d7
     container_name: goro-alloy-dev
     cpu_shares: 128
     oom_score_adj: 400
